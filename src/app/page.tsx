@@ -8,7 +8,8 @@ const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  // store mouse position in a ref to avoid re-renders (was unused state)
+  const mousePositionRef = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
@@ -111,13 +112,13 @@ const NyantaraLanding = () => {
     };
   }, []);
 
-  // Mouse tracking
+  // Mouse tracking (store in ref to avoid causing re-renders)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
     };
-    window.addEventListener('mousemove', handleMouseMove as EventListener);
-    return () => window.removeEventListener('mousemove', handleMouseMove as EventListener);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   // Scroll detection
