@@ -1,13 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useSpring, AnimatePresence} from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, AlertCircle, ArrowRight, FileText, Smartphone, Globe, BarChart3, Clock, MapPin, Heart, Award, Bell, Eye, RefreshCw, Download, Upload, Search, Filter, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, PieChart, LineChart, Settings, HelpCircle, Phone, Mail, MapPinned, Calendar, BadgeCheck, Fingerprint, Sparkles, Rocket, TrendingDown, Package, Briefcase, BookOpen, Radio, Wifi } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle,  ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('victim');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -367,7 +366,7 @@ const NyantaraLanding = () => {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100
       }
     }
@@ -378,7 +377,7 @@ const NyantaraLanding = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
+      transition: { duration: 0.6, ease: "easeOut" as const }
     }
   };
 
