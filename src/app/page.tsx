@@ -507,8 +507,8 @@ const NyantaraLanding = () => {
       {/* Enhanced Gradient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
         <motion.div 
-          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl ${
-            theme === 'dark' ? 'bg-blue-600 opacity-20' : 'bg-blue-200 opacity-30'
+          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${
+            theme === 'dark' ? 'opacity-20' : 'opacity-30'
           }`}
           animate={{
             x: [0, 100, 0],
@@ -521,8 +521,8 @@ const NyantaraLanding = () => {
           }}
         />
         <motion.div 
-          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl ${
-            theme === 'dark' ? 'bg-amber-500 opacity-20' : 'bg-amber-200 opacity-30'
+          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${
+            theme === 'dark' ? 'opacity-20' : 'opacity-30'
           }`}
           animate={{
             x: [0, -100, 0],
@@ -553,8 +553,8 @@ const NyantaraLanding = () => {
                 className="flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
+                  <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
                 </div>
                 <span className="text-2xl font-bold text-accent-gradient">
                   Nyantara
@@ -591,9 +591,9 @@ const NyantaraLanding = () => {
                   aria-label="Toggle theme"
                 >
                   {theme === 'dark' ? (
-                    <Sun className="w-5 h-5 text-amber-400" />
+                    <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} />
                   ) : (
-                    <Moon className="w-5 h-5 text-blue-600" />
+                    <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
                   )}
                 </motion.button>
               </div>
@@ -642,7 +642,7 @@ const NyantaraLanding = () => {
                       onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
                       className="w-full px-6 py-3 rounded-xl theme-border-glass border theme-bg-glass flex items-center justify-center space-x-2 theme-text-primary"
                     >
-                      {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-blue-600" />}
+                      {theme === 'dark' ? <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} /> : <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />}
                       <span className="font-medium">Toggle Theme</span>
                     </button>
                   </div>
@@ -753,7 +753,9 @@ const NyantaraLanding = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 accent-gradient rounded-xl" />
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-transparent">
+                          <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
+                        </div>
                         <div>
                           <p className="font-semibold theme-text-primary">Application Status</p>
                           <p className="text-xs theme-text-muted">Real-time tracking</p>
@@ -1013,11 +1015,9 @@ const NyantaraLanding = () => {
 
             <div className="relative">
               {/* Connection Line */}
-              <div className={`hidden lg:block absolute top-1/2 left-0 right-0 h-1 transform -translate-y-1/2 opacity-30 ${
-                theme === 'dark' 
-                  ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500'
-                  : 'bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400'
-              }`} />
+              <div className={`hidden lg:block absolute top-1/2 left-0 right-0 h-1 transform -translate-y-1/2 opacity-30`} style={{
+                background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))`
+              }} />
 
               <motion.div 
                 className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative"
@@ -1145,8 +1145,8 @@ const NyantaraLanding = () => {
               {/* Company Info */}
               <div>
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
+                    <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
                   </div>
                   <span className="text-2xl font-bold text-accent-gradient">
                     Nyantara
@@ -1290,12 +1290,8 @@ const NyantaraLanding = () => {
 
         {/* Enhanced Progress Bar */}
         <motion.div
-          className={`fixed top-0 left-0 right-0 h-1 transform origin-left z-50 ${
-            theme === 'dark' 
-              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500'
-              : 'bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400'
-          }`}
-          style={{ scaleX: scaleProgress }}
+          className={`fixed top-0 left-0 right-0 h-1 transform origin-left z-50`}
+          style={{ scaleX: scaleProgress, background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))` }}
         />
       </div>
     </div>
