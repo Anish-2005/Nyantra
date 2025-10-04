@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientCursor from "../components/ClientCursor";
 import ClientBackgroundCursor from "../components/ClientBackgroundCursor";
+import { ThemeProvider } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ThemeProvider>
         {/* Background cursor layer (above background canvases/orbs, below content) */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
           <ClientBackgroundCursor />
@@ -38,6 +41,7 @@ export default function RootLayout({
 
         {/* Foreground pointer cursor */}
         <ClientCursor />
+        </ThemeProvider>
       </body>
     </html>
   );

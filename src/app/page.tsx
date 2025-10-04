@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
+import { useTheme } from '../context/ThemeContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi, Sun, Moon } from 'lucide-react';
@@ -20,17 +22,8 @@ const NyantaraLanding = () => {
     satisfaction: 0
   });
 
-  // Professional theme state with better initialization
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('nyantara-theme');
-        if (stored === 'light' || stored === 'dark') return stored;
-      } catch (e) { }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'dark';
-  });
+  // Use global theme from ThemeContext
+  const { theme, toggleTheme } = useTheme();
 
   // Enhanced Three.js Scene with theme-aware colors
   useEffect(() => {
@@ -50,9 +43,16 @@ const NyantaraLanding = () => {
     // Ensure canvas is transparent so underlying CSS gradient shows through
     renderer.setClearColor(0x000000, 0);
 
-    // Theme-aware colors
-    const particleColor = theme === 'dark' ? 0x3b82f6 : 0x1e40af; // blue-600 vs blue-700
-    const lineColor = theme === 'dark' ? 0xf59e0b : 0xd97706; // amber-500 vs amber-600
+    // Theme-aware colors: read CSS vars so accents control particle colors
+    let particleColor: any = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
+    let lineColor: any = theme === 'dark' ? 0xf59e0b : 0xd97706;
+    try {
+      const style = getComputedStyle(document.documentElement);
+      const a = (style.getPropertyValue('--accent-primary') || '').trim();
+      const b = (style.getPropertyValue('--accent-secondary') || '').trim();
+      if (a) particleColor = new THREE.Color(a);
+      if (b) lineColor = new THREE.Color(b);
+    } catch (e) {}
 
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 1500;
@@ -182,15 +182,7 @@ const NyantaraLanding = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Theme effect with enhanced colors
-  useEffect(() => {
-    try {
-      localStorage.setItem('nyantara-theme', theme);
-    } catch (e) { }
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  // ThemeProvider manages persistence and document attribute; toggleTheme available from context
 
   const features = [
     {
@@ -552,7 +544,7 @@ const NyantaraLanding = () => {
                 whileHover={{ scale: 1.05 }}
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                  <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
+                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-2xl font-bold text-accent-gradient">
                   Nyantara
@@ -752,7 +744,7 @@ const NyantaraLanding = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-xl overflow-hidden bg-transparent">
-                          <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
+                          <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" width={40} height={40} className="object-contain" />
                         </div>
                         <div>
                           <p className="font-semibold theme-text-primary">Application Status</p>
@@ -861,8 +853,8 @@ const NyantaraLanding = () => {
         >
           {/* Background Glows */}
           <div className="absolute inset-0 -z-10">
-            <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-blue-500/10 dark:bg-blue-400/10 blur-[100px] rounded-full animate-pulse" />
-            <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-amber-500/10 dark:bg-amber-400/10 blur-[100px] rounded-full animate-pulse delay-300" />
+            <div className="absolute top-1/3 left-1/4 w-72 h-72 blur-[100px] rounded-full animate-pulse" style={{ background: 'linear-gradient(135deg, var(--accent-primary, rgba(59,130,246,0.1)), transparent)' }} />
+            <div className="absolute bottom-1/3 right-1/4 w-72 h-72 blur-[100px] rounded-full animate-pulse delay-300" style={{ background: 'linear-gradient(135deg, var(--accent-secondary, rgba(245,158,11,0.08)), transparent)' }} />
           </div>
 
           {/* Header */}
@@ -972,8 +964,8 @@ const NyantaraLanding = () => {
         <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
           {/* Soft glowing background accents */}
           <div className="absolute inset-0 -z-10">
-            <div className="absolute top-1/4 left-1/3 w-80 h-80 bg-blue-500/20 dark:bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-amber-400/20 dark:bg-amber-500/20 blur-[120px] rounded-full animate-pulse delay-300" />
+            <div className="absolute top-1/4 left-1/3 w-80 h-80 blur-[120px] rounded-full animate-pulse" style={{ background: 'linear-gradient(135deg, var(--accent-primary, rgba(59,130,246,0.18)), transparent)' }} />
+            <div className="absolute bottom-1/4 right-1/3 w-80 h-80 blur-[120px] rounded-full animate-pulse delay-300" style={{ background: 'linear-gradient(135deg, var(--accent-secondary, rgba(245,158,11,0.14)), transparent)' }} />
           </div>
 
           <div className="max-w-7xl mx-auto">
@@ -1321,7 +1313,7 @@ const NyantaraLanding = () => {
               <div>
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                    <img src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" className="w-full h-full object-contain" />
+                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" width={40} height={40} className="object-contain" />
                   </div>
                   <span className="text-2xl font-bold text-accent-gradient">
                     Nyantara
