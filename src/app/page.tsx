@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useScroll, useSpring, AnimatePresence} from 'framer-motion';
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle,  ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi, Sun, Moon } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi, Sun, Moon } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,7 +12,7 @@ const NyantaraLanding = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  
+
   const [stats, setStats] = useState({
     beneficiaries: 0,
     disbursed: 0,
@@ -26,7 +26,7 @@ const NyantaraLanding = () => {
       try {
         const stored = localStorage.getItem('nyantara-theme');
         if (stored === 'light' || stored === 'dark') return stored;
-      } catch (e) {}
+      } catch (e) { }
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'dark';
@@ -38,10 +38,10 @@ const NyantaraLanding = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      canvas: canvasRef.current, 
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
       alpha: true,
-      antialias: true 
+      antialias: true
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -152,24 +152,24 @@ const NyantaraLanding = () => {
       const duration = 2500;
       const steps = 80;
       const interval = duration / steps;
-      
+
       let step = 0;
       const timer = setInterval(() => {
         step++;
         const progress = step / steps;
         const easeOut = 1 - Math.pow(1 - progress, 3);
-        
+
         setStats({
           beneficiaries: Math.floor(45000 * easeOut),
           disbursed: Math.floor(250 * easeOut),
           avgTime: Math.floor(72 * easeOut),
           satisfaction: Math.floor(94 * easeOut)
         });
-        
+
         if (step >= steps) clearInterval(timer);
       }, interval);
     };
-    
+
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         animateStats();
@@ -184,9 +184,9 @@ const NyantaraLanding = () => {
 
   // Theme effect with enhanced colors
   useEffect(() => {
-    try { 
-      localStorage.setItem('nyantara-theme', theme); 
-    } catch (e) {}
+    try {
+      localStorage.setItem('nyantara-theme', theme);
+    } catch (e) { }
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
@@ -285,7 +285,8 @@ const NyantaraLanding = () => {
     {
       step: "05",
       title: "Direct Transfer",
-      description: "Instant DBT to verified bank account via PFMS",
+      description: `Instant DBT to verified bank account via the     
+      PFMS`,
       icon: Wallet,
       darkColor: "bg-amber-500",
       lightColor: "bg-amber-400"
@@ -418,8 +419,8 @@ const NyantaraLanding = () => {
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 60 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.6, ease: "easeOut" as const }
     }
@@ -427,15 +428,15 @@ const NyantaraLanding = () => {
 
   const scaleIn = {
     hidden: { scale: 0.8, opacity: 0 },
-    visible: { 
-      scale: 1, 
+    visible: {
+      scale: 1,
       opacity: 1,
       transition: { duration: 0.5 }
     }
   };
 
   // Helper function to get theme-aware classes
-  const getThemeClass = (darkClass: string, lightClass: string) => 
+  const getThemeClass = (darkClass: string, lightClass: string) =>
     theme === 'dark' ? darkClass : lightClass;
 
   return (
@@ -498,18 +499,17 @@ const NyantaraLanding = () => {
       `}</style>
 
       {/* Three.js Canvas Background */}
-      <canvas 
-          ref={canvasRef} 
-          className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-          style={{ zIndex: 0, background: 'transparent' }}
-        />
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
+        style={{ zIndex: 0, background: 'transparent' }}
+      />
 
       {/* Enhanced Gradient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-        <motion.div 
-          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${
-            theme === 'dark' ? 'opacity-20' : 'opacity-30'
-          }`}
+        <motion.div
+          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-20' : 'opacity-30'
+            }`}
           animate={{
             x: [0, 100, 0],
             y: [0, 50, 0],
@@ -520,10 +520,9 @@ const NyantaraLanding = () => {
             ease: "easeInOut"
           }}
         />
-        <motion.div 
-          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${
-            theme === 'dark' ? 'opacity-20' : 'opacity-30'
-          }`}
+        <motion.div
+          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-20' : 'opacity-30'
+            }`}
           animate={{
             x: [0, -100, 0],
             y: [0, -50, 0],
@@ -539,17 +538,16 @@ const NyantaraLanding = () => {
       {/* Main Content */}
       <div className="relative z-10 theme-text-primary">
         {/* Enhanced Navigation */}
-        <motion.nav 
-          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg border-b theme-border-glass ${
-            isScrolled ? 'theme-bg-nav shadow-xl' : 'bg-transparent'
-          }`}
+        <motion.nav
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg border-b theme-border-glass ${isScrolled ? 'theme-bg-nav shadow-xl' : 'bg-transparent'
+            }`}
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
               >
@@ -663,10 +661,10 @@ const NyantaraLanding = () => {
                 className="text-left space-y-8"
               >
                 <motion.div variants={itemVariants}>
-                  <motion.span 
+                  <motion.span
                     className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
-                    animate={{ 
-                      boxShadow: theme === 'dark' 
+                    animate={{
+                      boxShadow: theme === 'dark'
                         ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 10px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
                         : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 10px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
                     }}
@@ -677,7 +675,7 @@ const NyantaraLanding = () => {
                   </motion.span>
                 </motion.div>
 
-                <motion.h1 
+                <motion.h1
                   variants={itemVariants}
                   className="text-5xl md:text-7xl font-bold leading-tight theme-text-primary"
                 >
@@ -689,15 +687,15 @@ const NyantaraLanding = () => {
                   Through Technology
                 </motion.h1>
 
-                <motion.p 
+                <motion.p
                   variants={itemVariants}
                   className="text-xl theme-text-secondary leading-relaxed"
                 >
-                  Revolutionary Direct Benefit Transfer system for PCR & PoA Acts. 
+                  Revolutionary Direct Benefit Transfer system for PCR & PoA Acts.
                   Ensuring swift, transparent, and dignified assistance to victims of caste-based discrimination.
                 </motion.p>
 
-                <motion.div 
+                <motion.div
                   variants={itemVariants}
                   className="flex flex-col sm:flex-row gap-4"
                 >
@@ -720,7 +718,7 @@ const NyantaraLanding = () => {
                   </motion.button>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   variants={itemVariants}
                   className="flex items-center space-x-8 pt-4"
                 >
@@ -775,7 +773,7 @@ const NyantaraLanding = () => {
                           key={i}
                           className={`bg-gradient-to-br ${item.color} p-4 rounded-xl text-white shadow-lg`}
                           whileHover={{ scale: 1.05, y: -2 }}
-                          animate={{ 
+                          animate={{
                             boxShadow: theme === 'dark'
                               ? ['0 0 20px rgba(59, 130, 246, 0.3)', '0 0 30px rgba(59, 130, 246, 0.5)', '0 0 20px rgba(59, 130, 246, 0.3)']
                               : ['0 0 20px rgba(30, 64, 175, 0.2)', '0 0 30px rgba(30, 64, 175, 0.3)', '0 0 20px rgba(30, 64, 175, 0.2)']
@@ -816,7 +814,7 @@ const NyantaraLanding = () => {
                   {/* Floating Icons */}
                   <motion.div
                     className="absolute -top-6 -right-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
-                    animate={{ 
+                    animate={{
                       y: [0, -10, 0],
                       rotate: [0, 5, 0]
                     }}
@@ -827,7 +825,7 @@ const NyantaraLanding = () => {
 
                   <motion.div
                     className="absolute -bottom-6 -left-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
-                    animate={{ 
+                    animate={{
                       y: [0, 10, 0],
                       rotate: [0, -5, 0]
                     }}
@@ -841,13 +839,13 @@ const NyantaraLanding = () => {
           </div>
 
           {/* Scroll Indicator */}
-          <motion.div 
+          <motion.div
             className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
             <div className="w-6 h-10 border-2 theme-border-glass rounded-full flex justify-center pt-2">
-              <motion.div 
+              <motion.div
                 className="w-1 h-2 rounded-full accent-gradient"
                 animate={{ y: [0, 12, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -857,106 +855,194 @@ const NyantaraLanding = () => {
         </section>
 
         {/* Enhanced Stats Section */}
-        <section id="stats-section" className="py-20 px-4 sm:px-6 lg:px-8 relative">
-          <div className="max-w-7xl mx-auto">
-            <motion.div 
-              className="grid grid-cols-2 lg:grid-cols-4 gap-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              variants={containerVariants}
-            >
-              {[
-                { label: 'Beneficiaries Served', value: stats.beneficiaries.toLocaleString(), suffix: '+', icon: Users, color: 'from-blue-500 to-blue-600' },
-                { label: 'Crores Disbursed', value: stats.disbursed, suffix: 'Cr+', icon: TrendingUp, color: 'from-green-500 to-green-600' },
-                { label: 'Avg. Processing Time', value: stats.avgTime, suffix: 'hrs', icon: Clock, color: 'from-amber-500 to-amber-600' },
-                { label: 'Satisfaction Rate', value: stats.satisfaction, suffix: '%', icon: Star, color: 'from-purple-500 to-purple-600' }
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="relative group"
-                >
-                  <div className="theme-bg-card backdrop-blur-xl rounded-2xl p-6 theme-border-card hover:theme-border-glass transition-all hover:shadow-xl h-full">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="text-4xl font-bold mb-2 theme-text-primary">
-                      {stat.value}
-                      <span className="text-2xl text-accent-gradient">{stat.suffix}</span>
-                    </div>
-                    <p className="theme-text-muted text-sm">{stat.label}</p>
-                  </div>
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+        <section
+          id="stats-section"
+          className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        >
+          {/* Background Glows */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-blue-500/10 dark:bg-blue-400/10 blur-[100px] rounded-full animate-pulse" />
+            <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-amber-500/10 dark:bg-amber-400/10 blur-[100px] rounded-full animate-pulse delay-300" />
           </div>
+
+          {/* Header */}
+          <div className="max-w-7xl mx-auto text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">
+              Impact in Numbers
+            </h2>
+            <p className="mt-2 text-sm sm:text-base theme-text-muted">
+              Real-time statistics showcasing transparency and efficiency.
+            </p>
+          </div>
+
+          {/* Stats Grid */}
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={containerVariants}
+          >
+            {[
+              {
+                label: 'Beneficiaries Served',
+                value: stats.beneficiaries.toLocaleString(),
+                suffix: '+',
+                icon: Users,
+                colorLight: 'from-blue-500 to-cyan-400',
+                colorDark: 'from-blue-400 to-indigo-500',
+              },
+              {
+                label: 'Crores Disbursed',
+                value: stats.disbursed,
+                suffix: 'Cr+',
+                icon: TrendingUp,
+                colorLight: 'from-green-500 to-emerald-400',
+                colorDark: 'from-emerald-400 to-teal-500',
+              },
+              {
+                label: 'Avg. Processing Time',
+                value: stats.avgTime,
+                suffix: 'hrs',
+                icon: Clock,
+                colorLight: 'from-amber-500 to-orange-400',
+                colorDark: 'from-amber-400 to-yellow-500',
+              },
+              {
+                label: 'Satisfaction Rate',
+                value: stats.satisfaction,
+                suffix: '%',
+                icon: Star,
+                colorLight: 'from-purple-500 to-pink-500',
+                colorDark: 'from-fuchsia-400 to-pink-500',
+              },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+                className="relative group"
+              >
+                <div
+                  className="theme-bg-card theme-border-card backdrop-blur-2xl rounded-2xl p-6 transition-all duration-300 hover:theme-border-glass hover:shadow-lg hover:shadow-[var(--accent-color)/40]"
+                  style={{
+                    ['--accent-color' as any]:
+                      stat.colorLight.includes('blue')
+                        ? '#3b82f6'
+                        : stat.colorLight.includes('amber')
+                          ? '#f59e0b'
+                          : stat.colorLight.includes('green')
+                            ? '#10b981'
+                            : '#8b5cf6',
+                  }}
+                >
+                  {/* Icon */}
+                  <div
+                    className={`
+              w-14 h-14 rounded-2xl flex items-center justify-center mb-5 shadow-md transition-transform
+              bg-gradient-to-br ${stat.colorLight} dark:${stat.colorDark}
+            `}
+                  >
+                    <stat.icon className="w-7 h-7 text-white" />
+                  </div>
+
+                  {/* Value */}
+                  <div className="text-4xl font-extrabold tracking-tight theme-text-primary">
+                    {stat.value}
+                    <span className="text-2xl font-semibold text-accent-gradient ml-1">
+                      {stat.suffix}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium theme-text-muted">
+                    {stat.label}
+                  </p>
+                </div>
+
+                {/* Hover Glow */}
+                <motion.div
+                  className={`absolute inset-0 bg-gradient-to-br ${stat.colorLight} dark:${stat.colorDark} opacity-0 group-hover:opacity-20 blur-2xl rounded-2xl transition duration-500 -z-10`}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
         </section>
 
         {/* Enhanced Features Section */}
-        <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+        <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          {/* Soft glowing background accents */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-1/4 left-1/3 w-80 h-80 bg-blue-500/20 dark:bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-amber-400/20 dark:bg-amber-500/20 blur-[120px] rounded-full animate-pulse delay-300" />
+          </div>
+
           <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.25 }}
               variants={fadeInUp}
-              className="text-center mb-16"
+              className="text-center mb-20"
             >
-              <motion.span 
-                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
+              <motion.span
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5 shadow-sm backdrop-blur-lg"
                 whileHover={{ scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 250 }}
               >
                 <Sparkles className="inline w-4 h-4 mr-2 text-accent-gradient" />
                 Powerful Features
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
+
+              <h2 className="text-4xl md:text-5xl font-extrabold mb-4 theme-text-primary tracking-tight">
                 Everything You Need for{' '}
-                <span className="text-accent-gradient">
-                  Seamless DBT
-                </span>
+                <span className="text-accent-gradient">Seamless DBT</span>
               </h2>
-              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
-                Comprehensive solution with cutting-edge technology ensuring justice reaches every victim
+              <p className="text-lg md:text-xl theme-text-secondary max-w-3xl mx-auto leading-relaxed">
+                A comprehensive system designed with precision and care — ensuring transparency,
+                speed, and impact at every stage.
               </p>
             </motion.div>
 
-            <motion.div 
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            {/* Features Grid */}
+            <motion.div
+              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
+              viewport={{ once: true, amount: 0.15 }}
               variants={containerVariants}
             >
               {features.map((feature, i) => (
                 <motion.div
                   key={i}
                   variants={itemVariants}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  transition={{ type: 'spring', stiffness: 250, damping: 18 }}
                   className="group relative"
-                  whileHover={{ y: -8 }}
                 >
-                  <div className="h-full theme-bg-card backdrop-blur-xl rounded-2xl p-8 theme-border-card hover:theme-border-glass transition-all shadow-lg hover:shadow-xl">
-                    <motion.div 
-                      className={`w-16 h-16 bg-gradient-to-br ${
-                        theme === 'dark' ? feature.darkColor : feature.lightColor
-                      } rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}
+                  <div className="relative h-full theme-bg-card theme-border-card backdrop-blur-2xl rounded-2xl p-8 transition-all duration-300 hover:theme-border-glass shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.25)]">
+
+                    {/* Icon */}
+                    <motion.div
+                      className={`w-16 h-16 bg-gradient-to-br ${theme === 'dark' ? feature.darkColor : feature.lightColor
+                        } rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}
                       whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
+                      transition={{ duration: 0.6, ease: 'easeInOut' }}
                     >
                       <feature.icon className="w-8 h-8 text-white" />
                     </motion.div>
-                    
-                    <h3 className="text-2xl font-bold mb-4 theme-text-primary group-hover:text-accent-gradient transition-colors">
+
+                    {/* Title */}
+                    <h3 className="text-2xl font-semibold mb-4 theme-text-primary group-hover:text-accent-gradient transition-colors">
                       {feature.title}
                     </h3>
-                    
+
+                    {/* Description */}
                     <p className="theme-text-secondary mb-6 leading-relaxed">
                       {feature.description}
                     </p>
 
+                    {/* Bulleted Feature Points */}
                     <div className="space-y-2">
                       {feature.features.map((item, j) => (
                         <motion.div
@@ -972,11 +1058,11 @@ const NyantaraLanding = () => {
                       ))}
                     </div>
                   </div>
-                  
+
+                  {/* Hover glow accent */}
                   <motion.div
-                    className={`absolute inset-0 bg-gradient-to-br ${
-                      theme === 'dark' ? feature.darkColor : feature.lightColor
-                    } rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-20 transition-opacity`}
+                    className={`absolute inset-0 bg-gradient-to-br ${theme === 'dark' ? feature.darkColor : feature.lightColor
+                      } rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-25 transition-opacity`}
                   />
                 </motion.div>
               ))}
@@ -984,77 +1070,108 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
+
         {/* Rest of the sections follow similar pattern with theme-aware classes */}
         {/* Process Section */}
-        <section id="process" className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto">
+        <section
+          id="process"
+          className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        >
+          {/* Subtle Background Gradient */}
+          <div
+            className="absolute inset-0 opacity-60 blur-3xl"
+            style={{
+              background:
+                theme === 'dark'
+                  ? 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.15), transparent 60%), radial-gradient(circle at 80% 80%, rgba(168,85,247,0.15), transparent 60%)'
+                  : 'radial-gradient(circle at 20% 20%, rgba(191,219,254,0.4), transparent 60%), radial-gradient(circle at 80% 80%, rgba(233,213,255,0.4), transparent 60%)',
+            }}
+          />
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            {/* Heading */}
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="text-center mb-16"
+              className="text-center mb-20"
             >
-              <motion.span 
-                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
+              <motion.span
+                className="inline-flex items-center px-5 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary backdrop-blur-md shadow-sm mb-5"
                 whileHover={{ scale: 1.05 }}
               >
                 <Activity className="inline w-4 h-4 mr-2 text-accent-gradient" />
                 Simple Process
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
+
+              <h2 className="text-4xl md:text-5xl font-extrabold mb-4 theme-text-primary">
                 From Application to{' '}
-                <span className="text-accent-gradient">
-                  Disbursement
-                </span>
+                <span className="text-accent-gradient">Disbursement</span>
               </h2>
-              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
-                Six streamlined steps ensuring swift and transparent benefit delivery
+              <p className="text-lg md:text-xl theme-text-secondary max-w-3xl mx-auto leading-relaxed">
+                Six streamlined steps ensuring a seamless, transparent, and rapid benefit delivery process.
               </p>
             </motion.div>
 
             <div className="relative">
-              {/* Connection Line */}
-              <div className={`hidden lg:block absolute top-1/2 left-0 right-0 h-1 transform -translate-y-1/2 opacity-30`} style={{
-                background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))`
-              }} />
+              {/* Animated Gradient Line */}
+              <div
+                className={`hidden lg:block absolute top-1/2 left-0 right-0 h-[2px] opacity-40`}
+                style={{
+                  background:
+                    'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary))',
+                  backgroundSize: '300% 300%',
+                  animation: 'moveGradient 6s ease-in-out infinite',
+                }}
+              />
 
-              <motion.div 
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative"
+              {/* Step Cards */}
+              <motion.div
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 relative"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.1 }}
                 variants={containerVariants}
               >
                 {processSteps.map((step, i) => (
-                  <motion.div
-                    key={i}
-                    variants={itemVariants}
-                    className="relative"
-                  >
-                    <motion.div 
-                      className="theme-bg-card backdrop-blur-xl rounded-2xl p-8 theme-border-card hover:theme-border-glass transition-all h-full shadow-lg hover:shadow-xl"
-                      whileHover={{ scale: 1.02, y: -5 }}
+                  <motion.div key={i} variants={itemVariants} className="relative">
+                    <motion.div
+                      className="theme-bg-card rounded-2xl p-8 theme-border-card backdrop-blur-xl transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-2 relative overflow-hidden"
                     >
-                      <div className="flex items-start space-x-4 mb-6">
-                        <motion.div 
-                          className={`${theme === 'dark' ? step.darkColor : step.lightColor} w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg`}
+                      {/* Glow overlay */}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                        }}
+                      />
+
+                      {/* Step Header */}
+                      <div className="flex items-start space-x-5 mb-6">
+                        <motion.div
+                          className={`${theme === 'dark' ? step.darkColor : step.lightColor
+                            } w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
                         >
                           <step.icon className="w-8 h-8 text-white" />
                         </motion.div>
-                        
-                        <div className="flex-1">
-                          <div className="text-4xl font-bold theme-text-muted mb-2">{step.step}</div>
+
+                        <div>
+                          <div className="text-4xl font-bold theme-text-muted mb-1">
+                            {step.step}
+                          </div>
+                          <div className="h-[3px] w-10 bg-accent-gradient rounded-full"></div>
                         </div>
                       </div>
-                      
-                      <h3 className="text-xl font-bold mb-3 theme-text-primary">
+
+                      {/* Step Title + Desc */}
+                      <h3 className="text-xl font-semibold mb-3 theme-text-primary">
                         {step.title}
                       </h3>
-                      
-                      <p className="theme-text-secondary leading-relaxed">
+                      <p className="theme-text-secondary leading-relaxed text-base">
                         {step.description}
                       </p>
                     </motion.div>
@@ -1077,38 +1194,63 @@ const NyantaraLanding = () => {
               </motion.div>
             </div>
           </div>
+
+
         </section>
 
-        {/* Enhanced Benefits Section */}
-        <section id="benefits" className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
+        <section
+          id="benefits"
+          className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden transition-colors duration-500"
+        >
+          {/* Background Layer */}
+          <div
+            className={`
+      absolute inset-0 transition-colors duration-700
+      ${theme === 'dark'
+                ? 'bg-gradient-to-b from-[#0A0F28] via-[#0A1432]/80 to-black'
+                : 'bg-gradient-to-b from-[#F9FBFF] via-[#F4F7FA] to-white'}
+    `}
+          />
+
+          {/* Ambient Glow */}
+          <div
+            className={`
+      absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[40%] blur-3xl pointer-events-none
+      ${theme === 'dark'
+                ? 'bg-[radial-gradient(ellipse_at_center,rgba(0,120,255,0.15),transparent_70%)]'
+                : 'bg-[radial-gradient(ellipse_at_center,rgba(255,200,100,0.15),transparent_70%)]'}
+    `}
+          />
+
+          <div className="relative max-w-7xl mx-auto">
+            {/* Header */}
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="text-center mb-16"
+              className="text-center mb-20"
             >
-              <motion.span 
-                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
-                whileHover={{ scale: 1.05 }}
+              <motion.span
+                className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4 backdrop-blur-md shadow-sm"
+                whileHover={{ scale: 1.08 }}
               >
                 <Target className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                Key Benefits
+                Our Promise
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
-                Why Choose{' '}
-                <span className="text-accent-gradient">
-                  Nyantara
-                </span>
+
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight theme-text-primary">
+                Why Choose <span className="text-accent-gradient">Nyantara</span>
               </h2>
-              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
-                Proven results delivering impact where it matters most
+
+              <p className="text-lg md:text-xl theme-text-secondary max-w-2xl mx-auto leading-relaxed">
+                Delivering measurable, meaningful impact with cutting-edge precision.
               </p>
             </motion.div>
 
-            <motion.div 
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6"
+            {/* Benefits Grid */}
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -1118,25 +1260,58 @@ const NyantaraLanding = () => {
                 <motion.div
                   key={i}
                   variants={itemVariants}
-                  className="group"
-                  whileHover={{ scale: 1.05, rotate: 2 }}
+                  whileHover={{
+                    y: -8,
+                    rotate: 1,
+                    transition: { type: 'spring', stiffness: 200 },
+                  }}
+                  className="group relative"
                 >
-                  <div className="theme-bg-card backdrop-blur-xl rounded-2xl p-6 theme-border-card hover:theme-border-glass transition-all text-center h-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl">
-                    <div className={`w-14 h-14 theme-bg-glass rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner`}>
-                      <benefit.icon className={`w-7 h-7 ${
-                        theme === 'dark' ? benefit.darkColor : benefit.lightColor
-                      }`} />
+                  {/* Benefit Card */}
+                  <div
+                    className={`
+    rounded-2xl p-6 flex flex-col items-center justify-center text-center h-full 
+    backdrop-blur-xl border transition-all duration-300 shadow-md hover:shadow-xl
+    ${theme === 'dark'
+                        ? 'bg-white/5 border-white/10 hover:border-accent-secondary/40'
+                        : 'bg-white/60 border-gray-200 hover:border-amber-300/60'}
+  `}
+                  >
+                    {/* Icon */}
+                    <div
+                      className={`
+      relative w-16 h-16 mb-5 flex items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110
+      ${theme === 'dark'
+                          ? 'bg-gradient-to-br from-blue-500 to-blue-300'
+                          : 'bg-gradient-to-br from-amber-400 to-orange-500'}
+    `}
+                    >
+                      <benefit.icon
+                        className="w-8 h-8 text-white drop-shadow-md"
+                      />
+                      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <div className="text-2xl font-bold mb-1 theme-text-primary group-hover:text-accent-gradient transition-colors">
+
+                    {/* Title */}
+                    <h3 className="text-lg md:text-xl font-bold theme-text-primary group-hover:text-accent-gradient transition-colors duration-300">
                       {benefit.title}
-                    </div>
-                    <p className="text-xs theme-text-muted">{benefit.desc}</p>
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm theme-text-muted mt-2 leading-snug max-w-[85%] mx-auto">
+                      {benefit.desc}
+                    </p>
+
+                    {/* Accent underline */}
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-accent-gradient group-hover:w-1/2 transition-all duration-500 rounded-full"></span>
                   </div>
+
                 </motion.div>
               ))}
             </motion.div>
           </div>
         </section>
+
 
         {/* Footer with enhanced theme */}
         <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t theme-border-glass">
@@ -1153,7 +1328,7 @@ const NyantaraLanding = () => {
                   </span>
                 </div>
                 <p className="theme-text-secondary mb-6 leading-relaxed">
-                  Empowering social justice through technology. Making Direct Benefit Transfer 
+                  Empowering social justice through technology. Making Direct Benefit Transfer
                   transparent, efficient, and accessible for all.
                 </p>
                 <div className="flex space-x-4">
