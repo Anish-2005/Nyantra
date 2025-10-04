@@ -48,3 +48,17 @@ body {
       -webkit-text-fill-color: transparent;
       animation: gradientMove 6s ease-in-out infinite;
     }
+
+    /* Light theme */
+[data-theme="light"] {
+  --text-primary: #1e40af; /* deep blue */
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --text-primary: #fbbf24; /* amber */
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}

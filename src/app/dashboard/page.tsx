@@ -4,10 +4,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import Sidebar from '@/components/Sidebar';
+import AnalyticsChart from '@/components/AnalyticsChart';
 import * as THREE from 'three';
-import { 
-  Users, TrendingUp, FileText, Shield, CheckCircle, Clock, 
-  AlertCircle, MapPin, Download, Filter, Search, BarChart3, 
+import {
+  Users, TrendingUp, FileText, Shield, CheckCircle, Clock,
+  AlertCircle, MapPin, Download, Filter, Search, BarChart3,
   PieChart, Activity, Bell, Settings, User, LogOut, Home,
   Database, Wallet, Send, MessageCircle, HelpCircle, Calendar,
   ArrowUpRight, ArrowDownRight, Eye, Edit, MoreVertical,
@@ -26,9 +27,16 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [isDesktop, setIsDesktop] = useState<boolean>(typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [isScrolled, setIsScrolled] = useState(false);
+  // Chart filters state
+  const [chartRange, setChartRange] = useState<number>(30);
+  const [showApplications, setShowApplications] = useState(true);
+  const [showApproved, setShowApproved] = useState(true);
+  const [showPending, setShowPending] = useState(true);
+  const [smoothing, setSmoothing] = useState(false);
+  const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
-  
+
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
@@ -54,6 +62,67 @@ const Dashboard = () => {
       else mq.removeListener(handler as any);
     };
   }, []);
+
+  // Generate mock time series based on range and toggles
+  const generateSeries = (days: number) => {
+    const base = Date.now();
+    return Array.from({ length: days }).map((_, i) => ({ x: base - (days - 1 - i) * 24 * 60 * 60 * 1000, y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18)) }));
+  };
+
+  const buildDataSets = () => {
+    const days = chartRange;
+    const apps = generateSeries(days);
+    const approved = apps.map(p => ({ x: p.x, y: Math.round(p.y * (0.6 + Math.random() * 0.2)) }));
+    const pending = apps.map((p, i) => ({ x: p.x, y: Math.max(0, Math.round(p.y - approved[i].y)) }));
+
+    const sets: any[] = [];
+    if (showApplications) sets.push({ id: 'applications', label: 'Applications', points: smoothing ? smooth(apps) : apps });
+    if (showApproved) sets.push({ id: 'approved', label: 'Approved', color: undefined, points: smoothing ? smooth(approved) : approved });
+    if (showPending) sets.push({ id: 'pending', label: 'Pending', color: undefined, points: smoothing ? smooth(pending) : pending });
+    return sets;
+  };
+
+  // simple moving average smoothing
+  const smooth = (arr: { x: any; y: number }[]) => {
+    const window = 3;
+    return arr.map((p, i) => {
+      const start = Math.max(0, i - window + 1);
+      const end = i;
+      const avg = Math.round(arr.slice(start, end + 1).reduce((s, v) => s + v.y, 0) / (end - start + 1));
+      return { x: p.x, y: avg };
+    });
+  };
+
+  // memoize datasets so we don't regenerate on every render unnecessarily
+  const dataSets = useMemo(() => buildDataSets(), [chartRange, showApplications, showApproved, showPending, smoothing]);
+
+  // CSV export for currently visible datasets
+  const exportCSV = () => {
+    if (!dataSets || dataSets.length === 0) return;
+    // Construct CSV: first column is timestamp, then each dataset column
+    const header = ['date', ...dataSets.map(ds => ds.label)];
+    // align by index (datasets are same length and x values)
+    const rows: string[][] = [];
+    const len = dataSets[0].points.length;
+    for (let i = 0; i < len; i++) {
+      const row: string[] = [];
+      const ts = new Date(dataSets[0].points[i].x).toISOString();
+      row.push(ts);
+      for (const ds of dataSets) {
+        row.push(String(ds.points[i]?.y ?? ''));
+      }
+      rows.push(row);
+    }
+
+    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Enhanced Three.js Background (same as landing page)
   useEffect(() => {
@@ -81,7 +150,7 @@ const Dashboard = () => {
       const b = (style.getPropertyValue('--accent-secondary') || '').trim();
       if (a) particleColor = new THREE.Color(a);
       if (b) lineColor = new THREE.Color(b);
-    } catch (e) {}
+    } catch (e) { }
 
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 1000;
@@ -312,21 +381,42 @@ const Dashboard = () => {
   ];
 
   const getStatusColor = (status: string) => {
+    if (theme === 'dark') {
+      switch (status) {
+        case 'approved': return 'text-green-300 bg-green-900/30';
+        case 'pending': return 'text-amber-300 bg-amber-900/30';
+        case 'in-review': return 'text-blue-300 bg-blue-900/30';
+        case 'rejected': return 'text-red-300 bg-red-900/30';
+        default: return 'text-gray-300 bg-gray-800';
+      }
+    }
+
+    // light theme
     switch (status) {
-      case 'approved': return 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending': return 'text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400';
-      case 'in-review': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'rejected': return 'text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400';
+      case 'approved': return 'text-green-700 bg-green-100';
+      case 'pending': return 'text-amber-700 bg-amber-100';
+      case 'in-review': return 'text-blue-700 bg-blue-100';
+      case 'rejected': return 'text-red-700 bg-red-100';
+      default: return 'text-gray-700 bg-gray-100';
     }
   };
 
   const getPriorityColor = (priority: string) => {
+    if (theme === 'dark') {
+      switch (priority) {
+        case 'high': return 'text-red-300 bg-red-900/30';
+        case 'medium': return 'text-amber-300 bg-amber-900/30';
+        case 'low': return 'text-green-300 bg-green-900/30';
+        default: return 'text-gray-300 bg-gray-800';
+      }
+    }
+
+    // light theme
     switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100 dark:bg-red-900/30';
-      case 'medium': return 'text-amber-600 bg-amber-100 dark:bg-amber-900/30';
-      case 'low': return 'text-green-600 bg-green-100 dark:bg-green-900/30';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800';
+      case 'high': return 'text-red-700 bg-red-100';
+      case 'medium': return 'text-amber-700 bg-amber-100';
+      case 'low': return 'text-green-700 bg-green-100';
+      default: return 'text-gray-700 bg-gray-100';
     }
   };
 
@@ -475,28 +565,32 @@ const Dashboard = () => {
       </div>
 
       {/* Main Dashboard Layout */}
-  {/* Use a wrapper that reserves left space equal to the sidebar width on desktop so content doesn't shift up when scrolling
+      {/* Use a wrapper that reserves left space equal to the sidebar width on desktop so content doesn't shift up when scrolling
       and expands left when the sidebar is closed. We apply an inline style computed from `sidebarOpen` to match the
       sidebar widths defined in `Sidebar.tsx`. */}
-  <div className="relative z-10 theme-text-primary flex min-h-screen flex-col lg:flex-row">
+      <div className="relative z-10 theme-text-primary flex min-h-screen flex-col lg:flex-row">
         {/* Sidebar component (fixed) */}
-        <Sidebar
-          items={navigationItems}
-          activeId={activeTab}
-          onChange={(id) => setActiveTab(id)}
-          open={sidebarOpen}
-          setOpen={setSidebarOpen}
-        />
+        <div className="fixed z-30 lg:static">
+          <Sidebar
+            items={navigationItems}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id)}
+            open={sidebarOpen}
+            setOpen={setSidebarOpen}
+          />
+        </div>
+
 
         {/* Main Content wrapper that matches the fixed sidebar width on desktop */}
-  {/* main content: on desktop reserve left margin equal to sidebar width when sidebar is open so page shifts right */}
-  <div
-    className="flex-1 flex flex-col overflow-hidden"
-    // Only add left margin on desktop when sidebar is open. Collapsed sidebar should take no layout space.
-    style={{ marginLeft: isDesktop && sidebarOpen ? '20rem' : undefined }}
-  >
+        {/* main content: on desktop reserve left margin equal to sidebar width when sidebar is open so page shifts right */}
+        <div
+          className="flex-1 flex flex-col overflow-hidden"
+          // Only add left margin on desktop when sidebar is open. Collapsed sidebar should take no layout space.
+          // Sidebar uses `w-64` (16rem) in `Sidebar.tsx`, so reserve 16rem when open to align content flush.
+          style={{ marginLeft: isDesktop && sidebarOpen ? '16rem' : undefined }}
+        >
           {/* Enhanced Header */}
-          <motion.header 
+          <motion.header
             className={`theme-bg-nav backdrop-blur-xl border-b theme-border-glass transition-all duration-300 ${isScrolled ? 'shadow-xl' : ''}`}
             initial={{ y: -100 }}
             animate={{ y: 0 }}
@@ -515,8 +609,8 @@ const Dashboard = () => {
                     {activeTab === 'overview' ? 'Dashboard Overview' : activeTab}
                   </h1>
                   <p className="text-sm theme-text-muted">
-                    {activeTab === 'overview' 
-                      ? 'Welcome back! Here\'s what\'s happening today.' 
+                    {activeTab === 'overview'
+                      ? 'Welcome back! Here\'s what\'s happening today.'
                       : `Manage ${activeTab} and track progress`}
                   </p>
                 </div>
@@ -679,16 +773,15 @@ const Dashboard = () => {
                           <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
                             <stat.icon className="w-6 h-6 text-white" />
                           </div>
-                          <div className={`flex items-center space-x-1 text-sm ${
-                            stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                          }`}>
+                          <div className={`flex items-center space-x-1 text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
+                            }`}>
                             {stat.trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                             <span>{stat.change}</span>
                           </div>
                         </div>
                         <h3 className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</h3>
                         <p className="text-sm theme-text-muted">{stat.title}</p>
-                        
+
                         {/* Hover glow */}
                         <motion.div
                           className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-xl transition-opacity duration-500 -z-10`}
@@ -697,202 +790,166 @@ const Dashboard = () => {
                     ))}
                   </motion.div>
 
-                  {/* Charts and Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-                    {/* Left Column - Applications Chart */}
-                    <div className="lg:col-span-2 space-y-6">
-                      {/* Applications Overview */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl"
-                      >
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-semibold theme-text-primary">Applications Overview</h3>
-                          <div className="flex items-center space-x-2">
-                            <motion.button 
-                              className="p-2 rounded-lg theme-bg-glass theme-border-glass border"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Filter className="w-4 h-4 theme-text-primary" />
-                            </motion.button>
-                            <motion.button 
-                              className="p-2 rounded-lg theme-bg-glass theme-border-glass border"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Download className="w-4 h-4 theme-text-primary" />
-                            </motion.button>
-                          </div>
-                        </div>
-                        
-                        {/* Enhanced Chart Placeholder */}
-                        <div className="h-56 sm:h-64 flex items-center justify-center theme-bg-glass rounded-xl relative overflow-hidden">
-                          <div className="text-center z-10">
-                            <BarChart3 className="w-12 h-12 theme-text-muted mx-auto mb-2" />
-                            <p className="theme-text-muted">Applications Analytics</p>
-                            <p className="text-sm theme-text-muted">Real-time chart visualization</p>
-                          </div>
-                          <motion.div
-                            className="absolute inset-0 accent-gradient opacity-5"
-                            animate={{
-                              scale: [1, 1.1, 1],
-                            }}
-                            transition={{
-                              duration: 4,
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }}
-                          />
-                        </div>
-                      </motion.div>
+                 {/* Charts and Main Content Grid */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+  {/* Left Column */}
+  <div className="lg:col-span-2 space-y-6">
+    {/* Applications Overview */}
+    <motion.div
+      variants={itemVariants}
+      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold theme-text-primary">Applications Overview</h3>
+        <div className="flex items-center space-x-2">
+          {[Filter, Download].map((Icon, idx) => (
+            <motion.button
+              key={idx}
+              className="p-2 rounded-lg theme-bg-glass theme-border-glass border"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Icon className="w-4 h-4 theme-text-primary" />
+            </motion.button>
+          ))}
+        </div>
+      </div>
 
-                      {/* Recent Applications */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl"
-                      >
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
-                          <motion.button 
-                            className="flex items-center space-x-2 px-4 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span>View All</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </motion.button>
-                        </div>
+      {/* Chart Container */}
+      <div className="h-80 sm:h-96 relative flex items-start justify-center theme-bg-glass rounded-xl overflow-hidden p-4">
+        <div className="absolute inset-0 accent-gradient opacity-5 pointer-events-none z-0" aria-hidden />
 
-                        <div className="space-y-4">
-                          {recentApplications.map((app) => (
-                            <motion.div
-                              key={app.id}
-                              className="flex items-center justify-between p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all"
-                              whileHover={{ x: 4 }}
-                            >
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold">
-                                  {app.avatar}
-                                </div>
-                                <div>
-                                  <p className="font-medium theme-text-primary">{app.name}</p>
-                                  <p className="text-sm theme-text-muted">{app.district} • {app.type}</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-semibold theme-text-primary">₹{app.amount.toLocaleString()}</p>
-                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                                  {app.status}
-                                </span>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    </div>
+        {/* Floating Filter Panel */}
+        <div className="absolute top-4 right-4 z-20 bg-[var(--glass-bg)] backdrop-blur-sm border theme-border-glass rounded-lg p-3 flex flex-wrap gap-2">
+          {/* Range */}
+          <div className="flex items-center space-x-2">
+            <label className="text-sm theme-text-muted">Range:</label>
+            <select
+              id="range"
+              className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass"
+              value={chartRange}
+              onChange={(e) => setChartRange(Number(e.target.value))}
+            >
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
+            </select>
+          </div>
 
-                    {/* Right Column - Additional Info */}
-                    <div className="space-y-6">
-                      {/* System Status */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl"
-                      >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-6">System Integrations</h3>
-                        
-                        <div className="space-y-4">
-                          {systemIntegrations.map((system, index) => (
-                            <motion.div
-                              key={system.name}
-                              className="flex items-center justify-between p-3 rounded-xl theme-bg-glass group"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${system.color} flex items-center justify-center shadow-lg`}>
-                                  <system.icon className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="theme-text-primary text-sm font-medium">{system.name}</span>
-                              </div>
-                              <div className={`w-3 h-3 rounded-full ${
-                                system.status === 'active' ? 'bg-green-500' :
-                                system.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-                              }`} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
+          {/* Type */}
+          <div className="flex items-center space-x-2">
+            <label className="text-sm theme-text-muted">Type:</label>
+            <select
+              id="chart-type"
+              className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass"
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value as any)}
+            >
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+              <option value="bar">Bar</option>
+              <option value="stacked">Stacked Bar</option>
+            </select>
+          </div>
 
-                      {/* Grievance Status */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl"
-                      >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-6">Grievance Status</h3>
-                        
-                        <div className="space-y-4">
-                          {grievanceData.map((grievance) => (
-                            <motion.div
-                              key={grievance.id}
-                              className="p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all"
-                              whileHover={{ x: 4 }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <p className="font-medium theme-text-primary text-sm">{grievance.subject}</p>
-                                <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(grievance.priority)}`}>
-                                  {grievance.priority}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs theme-text-muted">
-                                <span>{grievance.assignedTo}</span>
-                                <span>{grievance.date}</span>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
+          {/* Datasets */}
+          <div className="flex items-center space-x-2 flex-wrap">
+            {[
+              { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications },
+              { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved },
+              { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending }
+            ].map(ds => (
+              <label key={ds.id} className="inline-flex items-center space-x-2 text-sm">
+                <input type="checkbox" checked={ds.value} onChange={() => ds.setter(v => !v)} />
+                <span>{ds.label}</span>
+              </label>
+            ))}
+          </div>
 
-                        <motion.button
-                          className="w-full mt-4 p-3 rounded-xl theme-border-glass border theme-bg-glass theme-text-primary flex items-center justify-center space-x-2 group"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>New Grievance</span>
-                        </motion.button>
-                      </motion.div>
+          {/* Extra Controls */}
+          <div className="flex items-center space-x-2">
+            <label className="inline-flex items-center space-x-2 text-sm">
+              <input type="checkbox" checked={smoothing} onChange={() => setSmoothing(v => !v)} />
+              <span>Smoothing</span>
+            </label>
+            <button onClick={exportCSV} className="px-3 py-1 rounded-lg accent-gradient text-white ml-2 text-sm">
+              Download CSV
+            </button>
+          </div>
+        </div>
 
-                      {/* Quick Actions */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl"
-                      >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-6">Quick Actions</h3>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          {[
-                            { label: 'New App', icon: Plus, color: 'accent-gradient' },
-                            { label: 'Reports', icon: DownloadCloud, color: 'theme-bg-glass' },
-                            { label: 'Verify', icon: CheckCircle, color: 'theme-bg-glass' },
-                            { label: 'Disburse', icon: Send, color: 'theme-bg-glass' }
-                          ].map((action, index) => (
-                            <motion.button
-                              key={action.label}
-                              className={`p-4 rounded-xl flex flex-col items-center justify-center space-y-2 ${
-                                action.color === 'accent-gradient' 
-                                  ? 'accent-gradient text-white shadow-lg' 
-                                  : 'theme-bg-glass theme-text-primary theme-border-glass border'
-                              }`}
-                              whileHover={{ scale: 1.05, y: -2 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <action.icon className="w-5 h-5" />
-                              <span className="text-xs font-medium text-center">{action.label}</span>
-                            </motion.button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
+        <div className="w-full relative z-10 pt-8">
+          <div className="text-center mb-4 flex items-center justify-center space-x-2">
+            <BarChart3 className="w-10 h-10 theme-text-muted" />
+            <span className="theme-text-muted text-sm">Applications Analytics</span>
+          </div>
+          <div className="w-full max-w-4xl mx-auto">
+            <AnalyticsChart dataSets={dataSets} chartType={chartType} />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+
+    {/* Recent Applications */}
+    <motion.div
+      variants={itemVariants}
+      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
+        <motion.button
+          className="flex items-center space-x-2 px-4 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <span>View All</span>
+          <ChevronRight className="w-4 h-4" />
+        </motion.button>
+      </div>
+
+      <div className="space-y-4">
+        {recentApplications.map(app => (
+          <motion.div
+            key={app.id}
+            className="flex items-center justify-between p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all"
+            whileHover={{ x: 4 }}
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold">
+                {app.avatar}
+              </div>
+              <div>
+                <p className="font-medium theme-text-primary">{app.name}</p>
+                <p className="text-sm theme-text-muted">{app.district} • {app.type}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold theme-text-primary">₹{app.amount.toLocaleString()}</p>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                {app.status}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  </div>
+
+  {/* Right Column */}
+  <div className="space-y-6">
+    {["System Integrations", "Grievance Status", "Quick Actions"].map((section, idx) => (
+      <motion.div
+        key={idx}
+        variants={itemVariants}
+        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl shadow-sm"
+      >
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{section}</h3>
+        {/* Section-specific content goes here */}
+      </motion.div>
+    ))}
+  </div>
+</div>
+
                 </motion.div>
               )}
 

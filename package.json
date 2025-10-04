@@ -10,10 +10,14 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "chart.js": "^4.4.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-plugin-zoom": "^2.0.1",
     "framer-motion": "^12.23.22",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "react": "19.1.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "19.1.0",
     "three": "^0.180.0"
   },
