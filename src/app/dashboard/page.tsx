@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
+import Sidebar from '@/components/Sidebar';
 import * as THREE from 'three';
 import { 
   Users, TrendingUp, FileText, Shield, CheckCircle, Clock, 
@@ -21,7 +22,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // default sidebar closed on small screens
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
+  const [isDesktop, setIsDesktop] = useState<boolean>(typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [isScrolled, setIsScrolled] = useState(false);
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -30,6 +33,27 @@ const Dashboard = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+
+  // Sync sidebar with viewport size (collapse on small screens)
+  useEffect(() => {
+    // Use matchMedia to more efficiently track desktop vs mobile and keep sidebar behavior consistent
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
+      const matches = 'matches' in e ? e.matches : mq.matches;
+      setIsDesktop(matches);
+      // If switched to mobile, ensure sidebar is closed; if desktop, we can open it by default
+      if (!matches) setSidebarOpen(false);
+      else setSidebarOpen(true);
+    };
+    // initialize
+    handler(mq);
+    if (mq.addEventListener) mq.addEventListener('change', handler as any);
+    else mq.addListener(handler as any);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler as any);
+      else mq.removeListener(handler as any);
+    };
+  }, []);
 
   // Enhanced Three.js Background (same as landing page)
   useEffect(() => {
@@ -451,83 +475,38 @@ const Dashboard = () => {
       </div>
 
       {/* Main Dashboard Layout */}
-      <div className="relative z-10 theme-text-primary flex h-screen">
-        {/* Enhanced Sidebar */}
-        <motion.div 
-          initial={{ x: -300 }}
-          animate={{ x: sidebarOpen ? 0 : -300 }}
-          className="fixed lg:relative z-30 w-80 theme-bg-nav backdrop-blur-xl border-r theme-border-glass h-full flex flex-col"
-        >
-          {/* Logo */}
-          <div className="p-6 border-b theme-border-glass">
-            <motion.div
-              className="flex items-center space-x-3"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center">
-                  <HeartHandshake className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <span className="text-2xl font-bold text-accent-gradient">
-                  Nyantara
-                </span>
-                <p className="text-xs theme-text-muted">DBT Dashboard</p>
-              </div>
-            </motion.div>
-          </div>
+  {/* Use a wrapper that reserves left space equal to the sidebar width on desktop so content doesn't shift up when scrolling
+      and expands left when the sidebar is closed. We apply an inline style computed from `sidebarOpen` to match the
+      sidebar widths defined in `Sidebar.tsx`. */}
+  <div className="relative z-10 theme-text-primary flex min-h-screen flex-col lg:flex-row">
+        {/* Sidebar component (fixed) */}
+        <Sidebar
+          items={navigationItems}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id)}
+          open={sidebarOpen}
+          setOpen={setSidebarOpen}
+        />
 
-          {/* Navigation */}
-          <nav className="flex-1 p-6">
-            <ul className="space-y-2">
-              {navigationItems.map((item) => (
-                <li key={item.id}>
-                  <motion.button
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
-                      activeTab === item.id
-                        ? 'accent-gradient text-white shadow-lg'
-                        : 'theme-text-secondary hover:theme-bg-glass'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </motion.button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* User Profile */}
-          <div className="p-6 border-t theme-border-glass">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl accent-gradient flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium theme-text-primary truncate">District Officer</p>
-                <p className="text-xs theme-text-muted truncate">Patna Division</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Main Content wrapper that matches the fixed sidebar width on desktop */}
+  {/* main content: on desktop reserve left margin equal to sidebar width when sidebar is open so page shifts right */}
+  <div
+    className="flex-1 flex flex-col overflow-hidden"
+    // Only add left margin on desktop when sidebar is open. Collapsed sidebar should take no layout space.
+    style={{ marginLeft: isDesktop && sidebarOpen ? '20rem' : undefined }}
+  >
           {/* Enhanced Header */}
           <motion.header 
             className={`theme-bg-nav backdrop-blur-xl border-b theme-border-glass transition-all duration-300 ${isScrolled ? 'shadow-xl' : ''}`}
             initial={{ y: -100 }}
             animate={{ y: 0 }}
           >
-            <div className="flex items-center justify-between p-6">
+            <div className="flex items-center justify-between p-4 lg:p-6">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="lg:hidden p-2 rounded-xl theme-bg-glass theme-border-glass border"
+                  aria-label="Toggle sidebar"
                 >
                   <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -543,13 +522,14 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 lg:space-x-4">
                 {/* Theme Toggle */}
                 <motion.button
                   onClick={toggleTheme}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Toggle theme"
                 >
                   {theme === 'dark' ? (
                     <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} />
@@ -563,7 +543,7 @@ const Dashboard = () => {
                   <motion.button
                     ref={notifButtonRef}
                     onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass relative"
+                    className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass relative"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -595,7 +575,7 @@ const Dashboard = () => {
                   <motion.button
                     ref={profileButtonRef}
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-3 p-2 rounded-xl theme-bg-glass theme-border-glass border"
+                    className="flex items-center space-x-2 lg:space-x-3 p-1.5 lg:p-2 rounded-lg lg:rounded-xl theme-bg-glass theme-border-glass border"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -686,7 +666,7 @@ const Dashboard = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
                   >
                     {quickStats.map((stat, index) => (
                       <motion.div
@@ -718,13 +698,13 @@ const Dashboard = () => {
                   </motion.div>
 
                   {/* Charts and Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                     {/* Left Column - Applications Chart */}
                     <div className="lg:col-span-2 space-y-6">
                       {/* Applications Overview */}
                       <motion.div
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl"
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl"
                       >
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-lg font-semibold theme-text-primary">Applications Overview</h3>
@@ -747,7 +727,7 @@ const Dashboard = () => {
                         </div>
                         
                         {/* Enhanced Chart Placeholder */}
-                        <div className="h-64 flex items-center justify-center theme-bg-glass rounded-xl relative overflow-hidden">
+                        <div className="h-56 sm:h-64 flex items-center justify-center theme-bg-glass rounded-xl relative overflow-hidden">
                           <div className="text-center z-10">
                             <BarChart3 className="w-12 h-12 theme-text-muted mx-auto mb-2" />
                             <p className="theme-text-muted">Applications Analytics</p>
@@ -770,7 +750,7 @@ const Dashboard = () => {
                       {/* Recent Applications */}
                       <motion.div
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl"
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl"
                       >
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
