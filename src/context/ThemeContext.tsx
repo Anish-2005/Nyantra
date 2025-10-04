@@ -17,12 +17,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       const stored = localStorage.getItem('nyantara-theme');
       if (stored === 'light' || stored === 'dark') return stored as Theme;
-    } catch (e) {}
+    } catch {
+      /* ignore localStorage errors */
+    }
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
 
   useEffect(() => {
-    try { localStorage.setItem('nyantara-theme', theme); } catch (e) {}
+    try { localStorage.setItem('nyantara-theme', theme); } catch { /* ignore */ }
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 

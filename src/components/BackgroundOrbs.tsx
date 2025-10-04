@@ -89,12 +89,12 @@ export default function BackgroundOrbs() {
       const b = style.getPropertyValue('--accent-secondary').trim() || '';
       if (a && b) {
         // update ORBS colors in-place to use the theme accents (soft alpha)
-        ORBS.forEach((orb, i) => {
+        ORBS.forEach((orb) => {
           orb.colorA = `rgba(${hexToRgb(a)},0.14)`;
           orb.colorB = `rgba(${hexToRgb(b)},0.08)`;
         });
       }
-    } catch (e) {}
+  } catch {}
 
     window.addEventListener('pointermove', onMove);
     const id = requestAnimationFrame(frame);
@@ -107,10 +107,10 @@ export default function BackgroundOrbs() {
 
   return (
     <div ref={containerRef} aria-hidden style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {ORBS.map((orb, i) => (
+      {ORBS.map((orb, _i) => (
         <div
-          key={i}
-          data-orb-index={i}
+          key={_i}
+          data-orb-index={_i}
           style={{
             position: 'absolute',
             left: orb.left,
@@ -125,7 +125,7 @@ export default function BackgroundOrbs() {
             transition: 'transform 0.15s linear',
             zIndex: 1,
             pointerEvents: 'none',
-            animation: `float-${i} ${orb.duration}s ease-in-out ${orb.delay}s infinite`,
+            animation: `float-${_i} ${orb.duration}s ease-in-out ${orb.delay}s infinite`,
           }}
         />
       ))}

@@ -1,15 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTheme } from '../context/ThemeContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi, Sun, Moon } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, Smartphone, Globe, Clock, Eye, Upload, Send, Star, Target, Activity, CheckSquare, UserCheck, Wallet, Phone, Mail, MapPinned, BadgeCheck, Sparkles, Rocket, Sun, Moon } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
@@ -52,7 +52,7 @@ const NyantaraLanding = () => {
       const b = (style.getPropertyValue('--accent-secondary') || '').trim();
       if (a) particleColor = new THREE.Color(a);
       if (b) lineColor = new THREE.Color(b);
-    } catch (e) {}
+  } catch {}
 
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 1500;
@@ -302,90 +302,8 @@ const NyantaraLanding = () => {
     { icon: Eye, title: "100% Transparent", desc: "Full Visibility", darkColor: "text-pink-500", lightColor: "text-pink-600" }
   ];
 
-  const integrations = [
-    { name: "Aadhaar", icon: Fingerprint, status: "Active", darkColor: "bg-blue-500", lightColor: "bg-blue-400" },
-    { name: "eCourts", icon: FileText, status: "Active", darkColor: "bg-indigo-500", lightColor: "bg-indigo-400" },
-    { name: "CCTNS", icon: Database, status: "Active", darkColor: "bg-purple-500", lightColor: "bg-purple-400" },
-    { name: "PFMS", icon: Wallet, status: "Active", darkColor: "bg-green-500", lightColor: "bg-green-400" },
-    { name: "DigiLocker", icon: Package, status: "Active", darkColor: "bg-amber-500", lightColor: "bg-amber-400" },
-    { name: "State DBs", icon: Layers, status: "Active", darkColor: "bg-pink-500", lightColor: "bg-pink-400" }
-  ];
-
-  const testimonials = [
-    {
-      name: "Priya Sharma",
-      role: "Victim Support Officer",
-      location: "Maharashtra",
-      text: "Nyantara has revolutionized how we process claims. What used to take months now happens in days.",
-      rating: 5,
-      avatar: "PS"
-    },
-    {
-      name: "Rajesh Kumar",
-      role: "District Magistrate",
-      location: "Uttar Pradesh",
-      text: "The transparency and accountability this system provides is unprecedented. Every rupee is tracked.",
-      rating: 5,
-      avatar: "RK"
-    },
-    {
-      name: "Anita Devi",
-      role: "Beneficiary",
-      location: "Bihar",
-      text: "I received help within 15 days. The SMS updates kept me informed every step of the way.",
-      rating: 5,
-      avatar: "AD"
-    }
-  ];
-
-  const faqs = [
-    {
-      q: "How do I register as a beneficiary?",
-      a: "You can register through our web portal or mobile app using your Aadhaar number. The process takes less than 5 minutes and includes biometric verification for security."
-    },
-    {
-      q: "What documents are required?",
-      a: "You need Aadhaar card, FIR copy, bank account details, and caste certificate. eCourts integration allows automatic FIR fetching in most cases."
-    },
-    {
-      q: "How long does disbursement take?",
-      a: "Once approved, funds are transferred directly to your bank account within 48 hours through PFMS. You'll receive SMS confirmation immediately."
-    },
-    {
-      q: "Can I track my application status?",
-      a: "Yes! Real-time tracking is available through the portal, mobile app, SMS, and email. You'll receive updates at every stage of processing."
-    },
-    {
-      q: "What if my application is rejected?",
-      a: "You'll receive detailed reasons via email and SMS. You can file a grievance through our redressal portal, which is resolved within 7 working days."
-    },
-    {
-      q: "Is my data secure?",
-      a: "Absolutely. We use bank-grade encryption, comply with data protection regulations, and never share personal information without consent."
-    }
-  ];
-
-  // Deterministic random generator
-  const orbPositions = useMemo(() => {
-    const seeded = (seed: number) => {
-      let t = seed >>> 0;
-      return () => {
-        t += 0x6D2B79F5;
-        let r = Math.imul(t ^ (t >>> 15), t | 1);
-        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
-    };
-
-    const rand = seeded(123456789);
-    return Array.from({ length: 20 }).map(() => ({
-      left: `${rand() * 100}%`,
-      top: `${rand() * 100}%`,
-      duration: 3 + rand() * 2,
-      delay: rand() * 2,
-    }));
-  }, []);
-
+ 
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -417,19 +335,6 @@ const NyantaraLanding = () => {
       transition: { duration: 0.6, ease: "easeOut" as const }
     }
   };
-
-  const scaleIn = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: { duration: 0.5 }
-    }
-  };
-
-  // Helper function to get theme-aware classes
-  const getThemeClass = (darkClass: string, lightClass: string) =>
-    theme === 'dark' ? darkClass : lightClass;
 
   return (
     <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>

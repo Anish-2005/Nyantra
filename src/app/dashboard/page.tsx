@@ -5,17 +5,15 @@ import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import Sidebar from '@/components/Sidebar';
 import AnalyticsChart from '@/components/AnalyticsChart';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import {
-  Users, TrendingUp, FileText, Shield, CheckCircle, Clock,
-  AlertCircle, MapPin, Download, Filter, Search, BarChart3,
-  PieChart, Activity, Bell, Settings, User, LogOut, Home,
-  Database, Wallet, Send, MessageCircle, HelpCircle, Calendar,
-  ArrowUpRight, ArrowDownRight, Eye, Edit, MoreVertical,
-  ChevronRight, ChevronDown, Plus, DownloadCloud, UploadCloud,
-  BarChart, LineChart, Target, Award, HeartHandshake, Zap,
-  Sparkles, Rocket, Sun, Moon, Menu, X, ArrowRight,
-  BadgeCheck, Fingerprint, Package, Layers, Smartphone, Globe
+  Users, TrendingUp, FileText, Clock,
+  Download, Filter, BarChart3,
+  Bell, Settings, User, LogOut,
+  Wallet, Award, Rocket, Plus,
+  ChevronRight, ChevronDown, Sun, Moon,
+  ArrowUpRight, ArrowDownRight, ArrowRight,
+  Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, HelpCircle
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -23,9 +21,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // default sidebar closed on small screens
-  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
-  const [isDesktop, setIsDesktop] = useState<boolean>(typeof window !== 'undefined' && window.innerWidth >= 1024);
+  // default sidebar closed on small screens; initialize on client in useEffect to avoid server-side `window` access
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState(false);
   // Chart filters state
   const [chartRange, setChartRange] = useState<number>(30);
@@ -55,46 +53,47 @@ const Dashboard = () => {
     };
     // initialize
     handler(mq);
-    if (mq.addEventListener) mq.addEventListener('change', handler as any);
-    else mq.addListener(handler as any);
+    // add listeners using the correct typed handler
+    if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+    else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
     return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', handler as any);
-      else mq.removeListener(handler as any);
+      if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+      else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
     };
   }, []);
 
-  // Generate mock time series based on range and toggles
-  const generateSeries = (days: number) => {
-    const base = Date.now();
-    return Array.from({ length: days }).map((_, i) => ({ x: base - (days - 1 - i) * 24 * 60 * 60 * 1000, y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18)) }));
-  };
+  // Generate mock time series and datasets (memoized). Helpers are defined inside the memo to avoid hook-deps warnings.
+  type DataPoint = { x: number; y: number };
+  type DataSet = { id: string; label: string; color?: string; points: DataPoint[] };
 
-  const buildDataSets = () => {
+  const dataSets = useMemo<DataSet[]>(() => {
+    const generateSeries = (days: number): DataPoint[] => {
+      const base = Date.now();
+      return Array.from({ length: days }).map((_, i) => ({ x: base - (days - 1 - i) * 24 * 60 * 60 * 1000, y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18)) }));
+    };
+
+    const smooth = (arr: DataPoint[]) => {
+      const window = 3;
+      return arr.map((p, i) => {
+        const start = Math.max(0, i - window + 1);
+        const end = i;
+        const avg = Math.round(arr.slice(start, end + 1).reduce((s, v) => s + v.y, 0) / (end - start + 1));
+        return { x: p.x, y: avg };
+      });
+    };
+
     const days = chartRange;
     const apps = generateSeries(days);
     const approved = apps.map(p => ({ x: p.x, y: Math.round(p.y * (0.6 + Math.random() * 0.2)) }));
     const pending = apps.map((p, i) => ({ x: p.x, y: Math.max(0, Math.round(p.y - approved[i].y)) }));
 
-    const sets: any[] = [];
+    const sets: DataSet[] = [];
     if (showApplications) sets.push({ id: 'applications', label: 'Applications', points: smoothing ? smooth(apps) : apps });
     if (showApproved) sets.push({ id: 'approved', label: 'Approved', color: undefined, points: smoothing ? smooth(approved) : approved });
     if (showPending) sets.push({ id: 'pending', label: 'Pending', color: undefined, points: smoothing ? smooth(pending) : pending });
     return sets;
-  };
+  }, [chartRange, showApplications, showApproved, showPending, smoothing]);
 
-  // simple moving average smoothing
-  const smooth = (arr: { x: any; y: number }[]) => {
-    const window = 3;
-    return arr.map((p, i) => {
-      const start = Math.max(0, i - window + 1);
-      const end = i;
-      const avg = Math.round(arr.slice(start, end + 1).reduce((s, v) => s + v.y, 0) / (end - start + 1));
-      return { x: p.x, y: avg };
-    });
-  };
-
-  // memoize datasets so we don't regenerate on every render unnecessarily
-  const dataSets = useMemo(() => buildDataSets(), [chartRange, showApplications, showApproved, showPending, smoothing]);
 
   // CSV export for currently visible datasets
   const exportCSV = () => {
@@ -127,103 +126,110 @@ const Dashboard = () => {
   // Enhanced Three.js Background (same as landing page)
   useEffect(() => {
     if (!canvasRef.current) return;
+    let cancelled = false;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      alpha: true,
-      antialias: true
-    });
+    (async () => {
+      const THREE = await import('three');
+      if (cancelled) return;
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    camera.position.z = 5;
-    renderer.setClearColor(0x000000, 0);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current!,
+        alpha: true,
+        antialias: true
+      });
 
-    // Theme-aware colors
-    let particleColor: any = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-    let lineColor: any = theme === 'dark' ? 0xf59e0b : 0xd97706;
-    try {
-      const style = getComputedStyle(document.documentElement);
-      const a = (style.getPropertyValue('--accent-primary') || '').trim();
-      const b = (style.getPropertyValue('--accent-secondary') || '').trim();
-      if (a) particleColor = new THREE.Color(a);
-      if (b) lineColor = new THREE.Color(b);
-    } catch (e) { }
-
-    const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 1000;
-    const posArray = new Float32Array(particlesCount * 3);
-
-    for (let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 10;
-    }
-
-    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-    const particlesMaterial = new THREE.PointsMaterial({
-      size: theme === 'dark' ? 0.012 : 0.008,
-      color: particleColor,
-      transparent: true,
-      opacity: theme === 'dark' ? 0.6 : 0.4,
-      blending: THREE.AdditiveBlending
-    });
-
-    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-    scene.add(particlesMesh);
-
-    // Create connecting lines
-    const linesGeometry = new THREE.BufferGeometry();
-    const linesMaterial = new THREE.LineBasicMaterial({
-      color: lineColor,
-      transparent: true,
-      opacity: theme === 'dark' ? 0.15 : 0.1
-    });
-
-    const linesPositions = [];
-    for (let i = 0; i < 80; i++) {
-      const x1 = (Math.random() - 0.5) * 8;
-      const y1 = (Math.random() - 0.5) * 8;
-      const z1 = (Math.random() - 0.5) * 8;
-      const x2 = x1 + (Math.random() - 0.5) * 1.5;
-      const y2 = y1 + (Math.random() - 0.5) * 1.5;
-      const z2 = z1 + (Math.random() - 0.5) * 1.5;
-      linesPositions.push(x1, y1, z1, x2, y2, z2);
-    }
-
-    linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-    const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-    scene.add(linesMesh);
-
-    let animationId: number | null = null;
-    const animate = () => {
-      animationId = requestAnimationFrame(animate);
-      particlesMesh.rotation.y += 0.0003;
-      particlesMesh.rotation.x += 0.0001;
-      linesMesh.rotation.y -= 0.0002;
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-    };
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      camera.position.z = 5;
+      renderer.setClearColor(0x000000, 0);
 
-    window.addEventListener('resize', handleResize);
+      // Theme-aware colors
+      let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
+      let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
+      try {
+        const style = getComputedStyle(document.documentElement);
+        const a = (style.getPropertyValue('--accent-primary') || '').trim();
+        const b = (style.getPropertyValue('--accent-secondary') || '').trim();
+        if (a) particleColor = new THREE.Color(a);
+        if (b) lineColor = new THREE.Color(b);
+      } catch { }
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (animationId !== null) cancelAnimationFrame(animationId);
-      renderer.dispose();
-      particlesGeometry.dispose();
-      particlesMaterial.dispose();
-      linesGeometry.dispose();
-      linesMaterial.dispose();
-    };
+      const particlesGeometry = new THREE.BufferGeometry();
+      const particlesCount = 1000;
+      const posArray = new Float32Array(particlesCount * 3);
+
+      for (let i = 0; i < particlesCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 10;
+      }
+
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+      const particlesMaterial = new THREE.PointsMaterial({
+        size: theme === 'dark' ? 0.012 : 0.008,
+        color: particleColor,
+        transparent: true,
+        opacity: theme === 'dark' ? 0.6 : 0.4,
+        blending: THREE.AdditiveBlending
+      });
+
+      const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+      scene.add(particlesMesh);
+
+      // Create connecting lines
+      const linesGeometry = new THREE.BufferGeometry();
+      const linesMaterial = new THREE.LineBasicMaterial({
+        color: lineColor,
+        transparent: true,
+        opacity: theme === 'dark' ? 0.15 : 0.1
+      });
+
+      const linesPositions: number[] = [];
+      for (let i = 0; i < 80; i++) {
+        const x1 = (Math.random() - 0.5) * 8;
+        const y1 = (Math.random() - 0.5) * 8;
+        const z1 = (Math.random() - 0.5) * 8;
+        const x2 = x1 + (Math.random() - 0.5) * 1.5;
+        const y2 = y1 + (Math.random() - 0.5) * 1.5;
+        const z2 = z1 + (Math.random() - 0.5) * 1.5;
+        linesPositions.push(x1, y1, z1, x2, y2, z2);
+      }
+
+      linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
+      const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
+      scene.add(linesMesh);
+
+      let animationId: number | null = null;
+      const animate = () => {
+        animationId = requestAnimationFrame(animate);
+        particlesMesh.rotation.y += 0.0003;
+        particlesMesh.rotation.x += 0.0001;
+        linesMesh.rotation.y -= 0.0002;
+        renderer.render(scene, camera);
+      };
+
+      animate();
+
+      const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
+
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        cancelled = true;
+        window.removeEventListener('resize', handleResize);
+        if (animationId !== null) cancelAnimationFrame(animationId);
+        renderer.dispose();
+        particlesGeometry.dispose();
+        particlesMaterial.dispose();
+        linesGeometry.dispose();
+        linesMaterial.dispose();
+      };
+    })();
   }, [theme]);
 
   // Scroll detection
@@ -245,6 +251,7 @@ const Dashboard = () => {
   }, []);
 
   // Enhanced mock data
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dashboardStats = {
     totalApplications: 1247,
     pendingApplications: 48,
@@ -333,6 +340,7 @@ const Dashboard = () => {
     }
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const grievanceData = [
     {
       id: 'GRV-001',
@@ -360,6 +368,7 @@ const Dashboard = () => {
     }
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const systemIntegrations = [
     { name: 'Aadhaar', icon: Fingerprint, status: 'active', color: 'from-blue-500 to-blue-600' },
     { name: 'eCourts', icon: FileText, status: 'active', color: 'from-indigo-500 to-indigo-600' },
@@ -401,6 +410,7 @@ const Dashboard = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getPriorityColor = (priority: string) => {
     if (theme === 'dark') {
       switch (priority) {
@@ -452,6 +462,7 @@ const Dashboard = () => {
   };
 
   // Enhanced gradient orb positions
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const orbPositions = useMemo(() => {
     const seeded = (seed: number) => {
       let t = seed >>> 0;
@@ -610,7 +621,7 @@ const Dashboard = () => {
                   </h1>
                   <p className="text-sm theme-text-muted">
                     {activeTab === 'overview'
-                      ? 'Welcome back! Here\'s what\'s happening today.'
+                      ? 'Welcome back! Here&apos;s what&apos;s happening today.'
                       : `Manage ${activeTab} and track progress`}
                   </p>
                 </div>
@@ -740,9 +751,7 @@ const Dashboard = () => {
                         <h2 className="text-3xl font-bold theme-text-primary mb-2">
                           Welcome back, <span className="text-accent-gradient">Officer</span>
                         </h2>
-                        <p className="theme-text-secondary">
-                          Here's what's happening with your DBT applications today.
-                        </p>
+                        <p className="theme-text-secondary">{`Here's what's happening with your DBT applications today.`}</p>
                       </div>
                       <motion.button
                         className="px-6 py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 shadow-lg"
@@ -762,7 +771,7 @@ const Dashboard = () => {
                     animate="visible"
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
                   >
-                    {quickStats.map((stat, index) => (
+                    {quickStats.map((stat) => (
                       <motion.div
                         key={stat.title}
                         variants={itemVariants}
@@ -843,7 +852,7 @@ const Dashboard = () => {
               id="chart-type"
               className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass"
               value={chartType}
-              onChange={(e) => setChartType(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')}
             >
               <option value="line">Line</option>
               <option value="area">Area</option>

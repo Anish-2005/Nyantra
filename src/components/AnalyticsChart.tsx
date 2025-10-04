@@ -1,26 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useRef, useEffect } from 'react';
-import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend, Filler, TimeScale, BarElement, BarController } from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-import zoomPlugin from 'chartjs-plugin-zoom';
-import 'chartjs-adapter-date-fns';
+import React, { useRef, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
-
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend, Filler, TimeScale, BarElement, BarController, zoomPlugin);
 
 type DataPoint = { x: string | number | Date; y: number };
 
 export default function AnalyticsChart({
   dataSets,
-  refExport,
   chartType = 'line'
 }: {
   dataSets?: { id: string; label: string; color?: string; points: DataPoint[] }[];
-  refExport?: React.MutableRefObject<((csv?: string) => void) | null>;
   chartType?: 'line' | 'area' | 'bar' | 'stacked';
 }) {
+  // chartRef must match the forwarded ref signature from react-chartjs-2 which is mutable
   const chartRef = useRef<any>(null);
   const { theme } = useTheme();
+  const [componentsLoaded, setComponentsLoaded] = useState(false);
+  const [LineComp, setLineComp] = useState<any>(null);
+  const [BarComp, setBarComp] = useState<any>(null);
 
   // generate fallback mock data (daily points)
   const now = Date.now();
@@ -29,9 +26,42 @@ export default function AnalyticsChart({
     { id: 'applications', label: 'Applications', color: undefined, points: mock },
   ];
 
-  // Create gradient on mount
+  // Dynamically load chart.js + react-chartjs-2 on client to avoid SSR evaluation
   useEffect(() => {
-    const chart = chartRef.current?.chartInstance || chartRef.current?.chart;
+    let mounted = true;
+    (async () => {
+      const ChartJS = await import('chart.js');
+      const zoomPlugin = (await import('chartjs-plugin-zoom')).default;
+      await import('chartjs-adapter-date-fns');
+      const { Line: RLine, Bar: RBar } = await import('react-chartjs-2');
+
+      ChartJS.Chart.register(
+        ChartJS.LineElement,
+        ChartJS.PointElement,
+        ChartJS.LinearScale,
+        ChartJS.CategoryScale,
+        ChartJS.Title,
+        ChartJS.Tooltip,
+        ChartJS.Legend,
+        ChartJS.Filler,
+        ChartJS.TimeScale,
+        ChartJS.BarElement,
+        ChartJS.BarController,
+        zoomPlugin
+      );
+
+      if (!mounted) return;
+      setLineComp(() => RLine);
+      setBarComp(() => RBar);
+      setComponentsLoaded(true);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Create gradient after chart components mount and when theme changes
+  useEffect(() => {
+    if (!componentsLoaded) return;
+    const chart = chartRef.current?.chartInstance || chartRef.current?.chart || chartRef.current;
     if (!chart) return;
     const ctx = chart.ctx;
     const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
@@ -43,13 +73,11 @@ export default function AnalyticsChart({
       gradient.addColorStop(1, 'rgba(59,130,246,0.02)');
     }
     chart.data.datasets.forEach((ds: any, idx: number) => {
-      // apply gradient for first dataset only
       if (idx === 0) ds.backgroundColor = gradient;
-      // ensure border color exists
       ds.borderColor = ds.borderColor || (theme === 'dark' ? 'rgba(139,92,246,1)' : 'rgba(59,130,246,1)');
     });
     chart.update();
-  }, [theme]);
+  }, [theme, componentsLoaded]);
 
   // shape datasets depending on chartType
   const chartData: any = {
@@ -69,7 +97,7 @@ export default function AnalyticsChart({
       if (chartType === 'bar' || chartType === 'stacked') {
         return {
           ...base,
-          type: 'bar',
+          type: 'bar' as const,
           borderWidth: 1,
           backgroundColor: base.backgroundColor,
         };
@@ -104,7 +132,7 @@ export default function AnalyticsChart({
         ticks: { color: theme === 'dark' ? '#94a3b8' : '#475569' },
         grid: { color: theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.03)' }
       };
-      const y: any = {
+  const y: any = {
         beginAtZero: true,
         ticks: { color: theme === 'dark' ? '#94a3b8' : '#475569' },
         grid: { color: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)' }
@@ -115,12 +143,19 @@ export default function AnalyticsChart({
       return { x, y };
     })()
   };
+  if (!componentsLoaded || (!LineComp && !BarComp)) {
+    return <div style={{ height: 300 }} className="w-full flex items-center justify-center">Loading chart...</div>;
+  }
+
+  const LineC = LineComp;
+  const BarC = BarComp;
+
   return (
     <div style={{ height: 300 }} className="w-full">
       {chartType === 'bar' || chartType === 'stacked' ? (
-        <Bar ref={chartRef} data={chartData as any} options={options} />
+        <BarC ref={chartRef as any} data={chartData as any} options={options} />
       ) : (
-        <Line ref={chartRef} data={chartData as any} options={options} />
+        <LineC ref={chartRef as any} data={chartData as any} options={options} />
       )}
     </div>
   );

@@ -4,7 +4,6 @@ import "./globals.css";
 import ClientCursor from "../components/ClientCursor";
 import ClientBackgroundCursor from "../components/ClientBackgroundCursor";
 import { ThemeProvider } from '../context/ThemeContext';
-import ThemeToggle from '../components/ThemeToggle';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
