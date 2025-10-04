@@ -101,8 +101,8 @@ export default function Cursor() {
         aria-hidden
         className="pointer-events-none fixed z-[9999] w-9 h-9 rounded-full transform transition-transform duration-150 ease-out opacity-0"
         style={{
-          border: '2px solid rgba(245,158,11,0.9)',
-          boxShadow: '0 6px 24px rgba(245,158,11,0.14)',
+          border: `2px solid var(--accent-secondary, rgba(245,158,11,0.9))`,
+          boxShadow: `0 6px 24px rgba(0,0,0,0.06), 0 6px 24px var(--accent-secondary, rgba(245,158,11,0.14))`,
           mixBlendMode: 'screen',
         }}
       />
@@ -111,8 +111,8 @@ export default function Cursor() {
         aria-hidden
         className="pointer-events-none fixed z-[10000] w-2 h-2 rounded-full transform transition-transform duration-150 ease-out opacity-0"
         style={{
-          background: 'linear-gradient(180deg,#fff,#ffd28a)',
-          boxShadow: '0 6px 14px rgba(245,158,11,0.5)',
+          background: `linear-gradient(180deg, var(--accent-primary, #fff), rgba(255,255,255,0.9))`,
+          boxShadow: `0 6px 14px var(--accent-secondary, rgba(245,158,11,0.5))`,
         }}
       />
       <style jsx>{`

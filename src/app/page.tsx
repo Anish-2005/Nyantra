@@ -2,13 +2,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useScroll, useSpring, AnimatePresence} from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle,  ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle,  ArrowRight, FileText, Smartphone, Globe, Clock, MapPin, Heart, Eye, Upload, Send, Star, Target, Layers, Activity, CheckSquare, UserCheck, Wallet, HelpCircle, Phone, Mail, MapPinned, BadgeCheck, Fingerprint, Sparkles, Rocket, Package, Wifi, Sun, Moon } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  // store mouse position in a ref to avoid re-renders (was unused state)
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
@@ -21,7 +20,19 @@ const NyantaraLanding = () => {
     satisfaction: 0
   });
 
-  // Three.js Scene Setup
+  // Professional theme state with better initialization
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('nyantara-theme');
+        if (stored === 'light' || stored === 'dark') return stored;
+      } catch (e) {}
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'dark';
+  });
+
+  // Enhanced Three.js Scene with theme-aware colors
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -36,8 +47,13 @@ const NyantaraLanding = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     camera.position.z = 5;
+    // Ensure canvas is transparent so underlying CSS gradient shows through
+    renderer.setClearColor(0x000000, 0);
 
-    // Create particles
+    // Theme-aware colors
+    const particleColor = theme === 'dark' ? 0x3b82f6 : 0x1e40af; // blue-600 vs blue-700
+    const lineColor = theme === 'dark' ? 0xf59e0b : 0xd97706; // amber-500 vs amber-600
+
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 1500;
     const posArray = new Float32Array(particlesCount * 3);
@@ -49,10 +65,10 @@ const NyantaraLanding = () => {
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
     const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.015,
-      color: 0x3b82f6,
+      size: theme === 'dark' ? 0.015 : 0.012,
+      color: particleColor,
       transparent: true,
-      opacity: 0.8,
+      opacity: theme === 'dark' ? 0.8 : 0.6,
       blending: THREE.AdditiveBlending
     });
 
@@ -62,9 +78,9 @@ const NyantaraLanding = () => {
     // Create connecting lines
     const linesGeometry = new THREE.BufferGeometry();
     const linesMaterial = new THREE.LineBasicMaterial({
-      color: 0xf59e0b,
+      color: lineColor,
       transparent: true,
-      opacity: 0.2
+      opacity: theme === 'dark' ? 0.2 : 0.15
     });
 
     const linesPositions = [];
@@ -110,9 +126,9 @@ const NyantaraLanding = () => {
       linesGeometry.dispose();
       linesMaterial.dispose();
     };
-  }, []);
+  }, [theme]);
 
-  // Mouse tracking (store in ref to avoid causing re-renders)
+  // Mouse tracking
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mousePositionRef.current = { x: e.clientX, y: e.clientY };
@@ -166,12 +182,24 @@ const NyantaraLanding = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Theme effect with enhanced colors
+  useEffect(() => {
+    try { 
+      localStorage.setItem('nyantara-theme', theme); 
+    } catch (e) {}
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+
   const features = [
     {
       icon: Shield,
       title: "Secure Verification",
       description: "Multi-layer authentication with Aadhaar integration ensuring only genuine beneficiaries receive assistance",
       color: "from-blue-500 to-blue-600",
+      darkColor: "from-blue-500 to-blue-600",
+      lightColor: "from-blue-400 to-blue-500",
       features: ["Biometric Verification", "OTP Authentication", "Document Validation"]
     },
     {
@@ -179,6 +207,8 @@ const NyantaraLanding = () => {
       title: "Real-Time Tracking",
       description: "Monitor every stage from application to disbursement with live updates and transparent status tracking",
       color: "from-amber-500 to-amber-600",
+      darkColor: "from-amber-500 to-amber-600",
+      lightColor: "from-amber-400 to-amber-500",
       features: ["Live Status Updates", "SMS Notifications", "Email Alerts"]
     },
     {
@@ -186,6 +216,8 @@ const NyantaraLanding = () => {
       title: "Unified Database",
       description: "Seamless integration with eCourts, CCTNS, and national databases for comprehensive case management",
       color: "from-indigo-500 to-indigo-600",
+      darkColor: "from-indigo-500 to-indigo-600",
+      lightColor: "from-indigo-400 to-indigo-500",
       features: ["eCourts Integration", "CCTNS Sync", "DigiLocker Connect"]
     },
     {
@@ -193,6 +225,8 @@ const NyantaraLanding = () => {
       title: "Privacy Protection",
       description: "Bank-grade encryption and data privacy measures protecting sensitive victim information",
       color: "from-purple-500 to-purple-600",
+      darkColor: "from-purple-500 to-purple-600",
+      lightColor: "from-purple-400 to-purple-500",
       features: ["End-to-End Encryption", "GDPR Compliant", "Secure Data Storage"]
     },
     {
@@ -200,6 +234,8 @@ const NyantaraLanding = () => {
       title: "Analytics Dashboard",
       description: "Comprehensive insights with real-time analytics for better decision-making and accountability",
       color: "from-green-500 to-green-600",
+      darkColor: "from-green-500 to-green-600",
+      lightColor: "from-green-400 to-green-500",
       features: ["Custom Reports", "Trend Analysis", "Predictive Insights"]
     },
     {
@@ -207,6 +243,8 @@ const NyantaraLanding = () => {
       title: "Multi-Stakeholder Access",
       description: "Role-based access for victims, officials, and administrators with customized dashboards",
       color: "from-pink-500 to-pink-600",
+      darkColor: "from-pink-500 to-pink-600",
+      lightColor: "from-pink-400 to-pink-500",
       features: ["Role Management", "Custom Permissions", "Audit Trails"]
     }
   ];
@@ -217,61 +255,67 @@ const NyantaraLanding = () => {
       title: "Register & Verify",
       description: "Victim registers on portal with Aadhaar-based verification",
       icon: UserCheck,
-      color: "bg-blue-500"
+      darkColor: "bg-blue-500",
+      lightColor: "bg-blue-400"
     },
     {
       step: "02",
       title: "File FIR & Upload",
       description: "Auto-fetch FIR from CCTNS or manual upload with documents",
       icon: Upload,
-      color: "bg-indigo-500"
+      darkColor: "bg-indigo-500",
+      lightColor: "bg-indigo-400"
     },
     {
       step: "03",
       title: "Smart Assessment",
       description: "AI-powered validation and automatic eligibility check",
       icon: CheckSquare,
-      color: "bg-purple-500"
+      darkColor: "bg-purple-500",
+      lightColor: "bg-purple-400"
     },
     {
       step: "04",
       title: "Approval Workflow",
       description: "Multi-level approval with time-bound processing",
       icon: CheckCircle,
-      color: "bg-green-500"
+      darkColor: "bg-green-500",
+      lightColor: "bg-green-400"
     },
     {
       step: "05",
       title: "Direct Transfer",
       description: "Instant DBT to verified bank account via PFMS",
       icon: Wallet,
-      color: "bg-amber-500"
+      darkColor: "bg-amber-500",
+      lightColor: "bg-amber-400"
     },
     {
       step: "06",
       title: "Track & Feedback",
       description: "Real-time tracking and grievance redressal mechanism",
       icon: Activity,
-      color: "bg-pink-500"
+      darkColor: "bg-pink-500",
+      lightColor: "bg-pink-400"
     }
   ];
 
   const benefits = [
-    { icon: Clock, title: "72% Faster", desc: "Processing Time", color: "text-blue-500" },
-    { icon: Target, title: "99.5% Accuracy", desc: "In Verification", color: "text-amber-500" },
-    { icon: Shield, title: "Zero Leakage", desc: "Fraud Prevention", color: "text-green-500" },
-    { icon: Globe, title: "Pan-India", desc: "Coverage", color: "text-indigo-500" },
-    { icon: Smartphone, title: "Mobile First", desc: "Accessible Anywhere", color: "text-purple-500" },
-    { icon: Eye, title: "100% Transparent", desc: "Full Visibility", color: "text-pink-500" }
+    { icon: Clock, title: "72% Faster", desc: "Processing Time", darkColor: "text-blue-500", lightColor: "text-blue-600" },
+    { icon: Target, title: "99.5% Accuracy", desc: "In Verification", darkColor: "text-amber-500", lightColor: "text-amber-600" },
+    { icon: Shield, title: "Zero Leakage", desc: "Fraud Prevention", darkColor: "text-green-500", lightColor: "text-green-600" },
+    { icon: Globe, title: "Pan-India", desc: "Coverage", darkColor: "text-indigo-500", lightColor: "text-indigo-600" },
+    { icon: Smartphone, title: "Mobile First", desc: "Accessible Anywhere", darkColor: "text-purple-500", lightColor: "text-purple-600" },
+    { icon: Eye, title: "100% Transparent", desc: "Full Visibility", darkColor: "text-pink-500", lightColor: "text-pink-600" }
   ];
 
   const integrations = [
-    { name: "Aadhaar", icon: Fingerprint, status: "Active", color: "bg-blue-500" },
-    { name: "eCourts", icon: FileText, status: "Active", color: "bg-indigo-500" },
-    { name: "CCTNS", icon: Database, status: "Active", color: "bg-purple-500" },
-    { name: "PFMS", icon: Wallet, status: "Active", color: "bg-green-500" },
-    { name: "DigiLocker", icon: Package, status: "Active", color: "bg-amber-500" },
-    { name: "State DBs", icon: Layers, status: "Active", color: "bg-pink-500" }
+    { name: "Aadhaar", icon: Fingerprint, status: "Active", darkColor: "bg-blue-500", lightColor: "bg-blue-400" },
+    { name: "eCourts", icon: FileText, status: "Active", darkColor: "bg-indigo-500", lightColor: "bg-indigo-400" },
+    { name: "CCTNS", icon: Database, status: "Active", darkColor: "bg-purple-500", lightColor: "bg-purple-400" },
+    { name: "PFMS", icon: Wallet, status: "Active", darkColor: "bg-green-500", lightColor: "bg-green-400" },
+    { name: "DigiLocker", icon: Package, status: "Active", darkColor: "bg-amber-500", lightColor: "bg-amber-400" },
+    { name: "State DBs", icon: Layers, status: "Active", darkColor: "bg-pink-500", lightColor: "bg-pink-400" }
   ];
 
   const testimonials = [
@@ -328,9 +372,8 @@ const NyantaraLanding = () => {
     }
   ];
 
-  // Deterministic random generator (seeded) to avoid SSR/CSR mismatches from Math.random()
+  // Deterministic random generator
   const orbPositions = useMemo(() => {
-    // mulberry32-like seeded PRNG
     const seeded = (seed: number) => {
       let t = seed >>> 0;
       return () => {
@@ -391,19 +434,82 @@ const NyantaraLanding = () => {
     }
   };
 
+  // Helper function to get theme-aware classes
+  const getThemeClass = (darkClass: string, lightClass: string) => 
+    theme === 'dark' ? darkClass : lightClass;
+
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white overflow-hidden">
+    <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
+      {/* Enhanced Theme Variables */}
+      <style jsx global>{`
+        [data-theme="dark"] {
+          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
+                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
+                         linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+          --card-bg: rgba(15, 23, 42, 0.7);
+          --card-border: rgba(255, 255, 255, 0.08);
+          --nav-bg: rgba(15, 23, 42, 0.95);
+          --text-primary: #f1f5f9;
+          --text-secondary: #94a3b8;
+          --text-muted: #64748b;
+          /* New dark accent: teal -> violet */
+          --accent-primary: #06b6d4; /* teal-400 */
+          --accent-secondary: #8b5cf6; /* violet-500 */
+          --glass-bg: rgba(15, 23, 42, 0.6);
+          --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
+                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
+                         linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
+          --card-bg: rgba(255, 255, 255, 0.8);
+          --card-border: rgba(0, 0, 0, 0.06);
+          --nav-bg: rgba(255, 255, 255, 0.95);
+          --text-primary: #0f172a;
+          --text-secondary: #475569;
+          --text-muted: #64748b;
+          /* New light accent: rose -> orange */
+          --accent-primary: #fb7185; /* rose-400 */
+          --accent-secondary: #fb923c; /* orange-400 */
+          --glass-bg: rgba(255, 255, 255, 0.6);
+          --glass-border: rgba(0, 0, 0, 0.08);
+        }
+
+        .theme-text-primary { color: var(--text-primary) !important; }
+        .theme-text-secondary { color: var(--text-secondary) !important; }
+        .theme-text-muted { color: var(--text-muted) !important; }
+        .theme-bg-card { background: var(--card-bg) !important; }
+        .theme-border-card { border-color: var(--card-border) !important; }
+        .theme-bg-glass { background: var(--glass-bg) !important; }
+        .theme-border-glass { border-color: var(--glass-border) !important; }
+        .theme-bg-nav { background: var(--nav-bg) !important; }
+        
+        .accent-gradient {
+          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+        }
+        
+        .text-accent-gradient {
+          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      `}</style>
+
       {/* Three.js Canvas Background */}
       <canvas 
-        ref={canvasRef} 
-        className="fixed inset-0 w-full h-full pointer-events-none opacity-40"
-        style={{ zIndex: 0 }}
-      />
+          ref={canvasRef} 
+          className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
+          style={{ zIndex: 0, background: 'transparent' }}
+        />
 
-      {/* Gradient Orbs */}
+      {/* Enhanced Gradient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
         <motion.div 
-          className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-20 blur-3xl"
+          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl ${
+            theme === 'dark' ? 'bg-blue-600 opacity-20' : 'bg-blue-200 opacity-30'
+          }`}
           animate={{
             x: [0, 100, 0],
             y: [0, 50, 0],
@@ -415,7 +521,9 @@ const NyantaraLanding = () => {
           }}
         />
         <motion.div 
-          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-amber-500 rounded-full opacity-20 blur-3xl"
+          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl ${
+            theme === 'dark' ? 'bg-amber-500 opacity-20' : 'bg-amber-200 opacity-30'
+          }`}
           animate={{
             x: [0, -100, 0],
             y: [0, -50, 0],
@@ -429,11 +537,11 @@ const NyantaraLanding = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10">
-        {/* Navigation */}
+      <div className="relative z-10 theme-text-primary">
+        {/* Enhanced Navigation */}
         <motion.nav 
-          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-            isScrolled ? 'bg-slate-900/95 backdrop-blur-lg shadow-2xl' : 'bg-transparent'
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg border-b theme-border-glass ${
+            isScrolled ? 'theme-bg-nav shadow-xl' : 'bg-transparent'
           }`}
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -445,10 +553,10 @@ const NyantaraLanding = () => {
                 className="flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-amber-500 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold text-accent-gradient">
                   Nyantara
                 </span>
               </motion.div>
@@ -459,25 +567,40 @@ const NyantaraLanding = () => {
                   <motion.a
                     key={item}
                     href={`#${item.toLowerCase()}`}
-                    className="text-gray-300 hover:text-amber-400 transition-colors font-medium"
-                    whileHover={{ scale: 1.1, color: '#f59e0b' }}
+                    className="theme-text-secondary hover:text-accent-gradient transition-all font-medium px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     {item}
                   </motion.a>
                 ))}
                 <motion.button
-                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-amber-500/50 transition-all"
-                  whileHover={{ scale: 1.05 }}
+                  className="px-6 py-2.5 accent-gradient rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+                  whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   Get Started
+                </motion.button>
+
+                {/* Enhanced Theme Toggle */}
+                <motion.button
+                  onClick={toggleTheme}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="w-5 h-5 text-amber-400" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-blue-600" />
+                  )}
                 </motion.button>
               </div>
 
               {/* Mobile Menu Button */}
               <motion.button
-                className="md:hidden text-white"
+                className="md:hidden theme-text-primary"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 whileTap={{ scale: 0.9 }}
               >
@@ -486,41 +609,50 @@ const NyantaraLanding = () => {
             </div>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Enhanced Mobile Menu */}
           <AnimatePresence>
             {isMobileMenuOpen && (
               <motion.div
-                className="md:hidden bg-slate-900/98 backdrop-blur-lg"
+                className="md:hidden theme-bg-nav backdrop-blur-lg border-t theme-border-glass"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="px-4 py-6 space-y-4">
+                <div className="px-4 py-6 space-y-3">
                   {['Features', 'Process', 'Benefits', 'Integrations', 'FAQ'].map((item) => (
                     <motion.a
                       key={item}
                       href={`#${item.toLowerCase()}`}
-                      className="block text-gray-300 hover:text-amber-400 transition-colors font-medium"
+                      className="block theme-text-secondary hover:text-accent-gradient transition-all font-medium px-4 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
                       whileHover={{ x: 10 }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item}
                     </motion.a>
                   ))}
-                  <motion.button
-                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg font-semibold"
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Get Started
-                  </motion.button>
+                  <div className="pt-4 space-y-3">
+                    <motion.button
+                      className="w-full px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Get Started
+                    </motion.button>
+                    <button
+                      onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
+                      className="w-full px-6 py-3 rounded-xl theme-border-glass border theme-bg-glass flex items-center justify-center space-x-2 theme-text-primary"
+                    >
+                      {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-blue-600" />}
+                      <span className="font-medium">Toggle Theme</span>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.nav>
 
-        {/* Hero Section */}
+        {/* Enhanced Hero Section */}
         <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
           <div className="max-w-7xl mx-auto w-full">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -532,23 +664,25 @@ const NyantaraLanding = () => {
               >
                 <motion.div variants={itemVariants}>
                   <motion.span 
-                    className="inline-block px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm font-semibold mb-4"
+                    className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
                     animate={{ 
-                      boxShadow: ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 10px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
+                      boxShadow: theme === 'dark' 
+                        ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 10px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
+                        : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 10px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <Rocket className="inline w-4 h-4 mr-2" />
+                    <Rocket className="inline w-4 h-4 mr-2 text-accent-gradient" />
                     Smart DBT Solution for Social Justice
                   </motion.span>
                 </motion.div>
 
                 <motion.h1 
                   variants={itemVariants}
-                  className="text-5xl md:text-7xl font-bold leading-tight"
+                  className="text-5xl md:text-7xl font-bold leading-tight theme-text-primary"
                 >
                   Empowering{' '}
-                  <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
+                  <span className="text-accent-gradient">
                     Justice
                   </span>
                   <br />
@@ -557,7 +691,7 @@ const NyantaraLanding = () => {
 
                 <motion.p 
                   variants={itemVariants}
-                  className="text-xl text-gray-300 leading-relaxed"
+                  className="text-xl theme-text-secondary leading-relaxed"
                 >
                   Revolutionary Direct Benefit Transfer system for PCR & PoA Acts. 
                   Ensuring swift, transparent, and dignified assistance to victims of caste-based discrimination.
@@ -568,8 +702,8 @@ const NyantaraLanding = () => {
                   className="flex flex-col sm:flex-row gap-4"
                 >
                   <motion.button
-                    className="px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl font-semibold text-lg flex items-center justify-center space-x-2 shadow-lg shadow-amber-500/30"
-                    whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(245, 158, 11, 0.4)' }}
+                    className="px-8 py-4 accent-gradient rounded-xl font-semibold text-lg text-white flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all"
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span>Apply Now</span>
@@ -577,8 +711,8 @@ const NyantaraLanding = () => {
                   </motion.button>
 
                   <motion.button
-                    className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl font-semibold text-lg flex items-center justify-center space-x-2"
-                    whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                    className="px-8 py-4 theme-bg-glass theme-border-glass border rounded-xl font-semibold text-lg flex items-center justify-center space-x-2 theme-text-primary hover:shadow-lg transition-all"
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span>Watch Demo</span>
@@ -594,7 +728,7 @@ const NyantaraLanding = () => {
                     {[1, 2, 3, 4].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 border-2 border-slate-900 flex items-center justify-center text-sm font-bold"
+                        className="w-12 h-12 rounded-full accent-gradient border-2 theme-bg-card flex items-center justify-center text-sm font-bold text-white"
                         whileHover={{ scale: 1.2, zIndex: 10 }}
                       >
                         {i}K+
@@ -602,8 +736,8 @@ const NyantaraLanding = () => {
                     ))}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Trusted by</p>
-                    <p className="text-lg font-semibold text-amber-400">45,000+ Beneficiaries</p>
+                    <p className="text-sm theme-text-muted">Trusted by</p>
+                    <p className="text-lg font-semibold text-accent-gradient">45,000+ Beneficiaries</p>
                   </div>
                 </motion.div>
               </motion.div>
@@ -614,15 +748,15 @@ const NyantaraLanding = () => {
                 transition={{ duration: 1, delay: 0.5 }}
                 className="relative"
               >
-                <div className="relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl">
+                <div className="relative theme-bg-card backdrop-blur-xl rounded-3xl p-8 theme-border-card shadow-2xl">
                   {/* Dashboard Preview */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg" />
+                        <div className="w-10 h-10 accent-gradient rounded-xl" />
                         <div>
-                          <p className="font-semibold">Application Status</p>
-                          <p className="text-xs text-gray-400">Real-time tracking</p>
+                          <p className="font-semibold theme-text-primary">Application Status</p>
+                          <p className="text-xs theme-text-muted">Real-time tracking</p>
                         </div>
                       </div>
                       <CheckCircle className="w-8 h-8 text-green-400" />
@@ -637,10 +771,12 @@ const NyantaraLanding = () => {
                       ].map((item, i) => (
                         <motion.div
                           key={i}
-                          className={`bg-gradient-to-br ${item.color} p-4 rounded-xl`}
-                          whileHover={{ scale: 1.05 }}
+                          className={`bg-gradient-to-br ${item.color} p-4 rounded-xl text-white shadow-lg`}
+                          whileHover={{ scale: 1.05, y: -2 }}
                           animate={{ 
-                            boxShadow: ['0 0 20px rgba(59, 130, 246, 0.3)', '0 0 30px rgba(59, 130, 246, 0.5)', '0 0 20px rgba(59, 130, 246, 0.3)']
+                            boxShadow: theme === 'dark'
+                              ? ['0 0 20px rgba(59, 130, 246, 0.3)', '0 0 30px rgba(59, 130, 246, 0.5)', '0 0 20px rgba(59, 130, 246, 0.3)']
+                              : ['0 0 20px rgba(30, 64, 175, 0.2)', '0 0 30px rgba(30, 64, 175, 0.3)', '0 0 20px rgba(30, 64, 175, 0.2)']
                           }}
                           transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                         >
@@ -651,8 +787,8 @@ const NyantaraLanding = () => {
                       ))}
                     </div>
 
-                    <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-                      <p className="text-sm font-semibold text-gray-300">Recent Activities</p>
+                    <div className="theme-bg-glass rounded-xl p-4 space-y-3 theme-border-glass">
+                      <p className="text-sm font-semibold theme-text-secondary">Recent Activities</p>
                       {[
                         { text: 'Application Submitted', time: '2 mins ago', status: 'success' },
                         { text: 'Document Verified', time: '1 hour ago', status: 'success' },
@@ -667,9 +803,9 @@ const NyantaraLanding = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <div className={`w-2 h-2 rounded-full ${activity.status === 'success' ? 'bg-green-400' : 'bg-amber-400'}`} />
-                            <span className="text-gray-300">{activity.text}</span>
+                            <span className="theme-text-primary">{activity.text}</span>
                           </div>
-                          <span className="text-gray-500 text-xs">{activity.time}</span>
+                          <span className="theme-text-muted text-xs">{activity.time}</span>
                         </motion.div>
                       ))}
                     </div>
@@ -677,7 +813,7 @@ const NyantaraLanding = () => {
 
                   {/* Floating Icons */}
                   <motion.div
-                    className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg"
+                    className="absolute -top-6 -right-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
                     animate={{ 
                       y: [0, -10, 0],
                       rotate: [0, 5, 0]
@@ -688,7 +824,7 @@ const NyantaraLanding = () => {
                   </motion.div>
 
                   <motion.div
-                    className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg"
+                    className="absolute -bottom-6 -left-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
                     animate={{ 
                       y: [0, 10, 0],
                       rotate: [0, -5, 0]
@@ -708,9 +844,9 @@ const NyantaraLanding = () => {
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+            <div className="w-6 h-10 border-2 theme-border-glass rounded-full flex justify-center pt-2">
               <motion.div 
-                className="w-1 h-2 bg-white/60 rounded-full"
+                className="w-1 h-2 rounded-full accent-gradient"
                 animate={{ y: [0, 12, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
@@ -718,7 +854,7 @@ const NyantaraLanding = () => {
           </motion.div>
         </section>
 
-        {/* Stats Section */}
+        {/* Enhanced Stats Section */}
         <section id="stats-section" className="py-20 px-4 sm:px-6 lg:px-8 relative">
           <div className="max-w-7xl mx-auto">
             <motion.div 
@@ -739,15 +875,15 @@ const NyantaraLanding = () => {
                   variants={itemVariants}
                   className="relative group"
                 >
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all hover:shadow-2xl">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
+                  <div className="theme-bg-card backdrop-blur-xl rounded-2xl p-6 theme-border-card hover:theme-border-glass transition-all hover:shadow-xl h-full">
+                    <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
                       <stat.icon className="w-6 h-6 text-white" />
                     </div>
-                    <div className="text-4xl font-bold mb-2">
+                    <div className="text-4xl font-bold mb-2 theme-text-primary">
                       {stat.value}
-                      <span className="text-2xl text-amber-400">{stat.suffix}</span>
+                      <span className="text-2xl text-accent-gradient">{stat.suffix}</span>
                     </div>
-                    <p className="text-gray-400 text-sm">{stat.label}</p>
+                    <p className="theme-text-muted text-sm">{stat.label}</p>
                   </div>
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -758,7 +894,7 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Enhanced Features Section */}
         <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <motion.div
@@ -769,19 +905,19 @@ const NyantaraLanding = () => {
               className="text-center mb-16"
             >
               <motion.span 
-                className="inline-block px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-full text-amber-300 text-sm font-semibold mb-4"
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
                 whileHover={{ scale: 1.05 }}
               >
-                <Sparkles className="inline w-4 h-4 mr-2" />
+                <Sparkles className="inline w-4 h-4 mr-2 text-accent-gradient" />
                 Powerful Features
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
                 Everything You Need for{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
+                <span className="text-accent-gradient">
                   Seamless DBT
                 </span>
               </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
                 Comprehensive solution with cutting-edge technology ensuring justice reaches every victim
               </p>
             </motion.div>
@@ -798,22 +934,24 @@ const NyantaraLanding = () => {
                   key={i}
                   variants={itemVariants}
                   className="group relative"
-                  whileHover={{ y: -10 }}
+                  whileHover={{ y: -8 }}
                 >
-                  <div className="h-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all">
+                  <div className="h-full theme-bg-card backdrop-blur-xl rounded-2xl p-8 theme-border-card hover:theme-border-glass transition-all shadow-lg hover:shadow-xl">
                     <motion.div 
-                      className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
+                      className={`w-16 h-16 bg-gradient-to-br ${
+                        theme === 'dark' ? feature.darkColor : feature.lightColor
+                      } rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.6 }}
                     >
                       <feature.icon className="w-8 h-8 text-white" />
                     </motion.div>
                     
-                    <h3 className="text-2xl font-bold mb-4 group-hover:text-amber-400 transition-colors">
+                    <h3 className="text-2xl font-bold mb-4 theme-text-primary group-hover:text-accent-gradient transition-colors">
                       {feature.title}
                     </h3>
                     
-                    <p className="text-gray-400 mb-6 leading-relaxed">
+                    <p className="theme-text-secondary mb-6 leading-relaxed">
                       {feature.description}
                     </p>
 
@@ -821,7 +959,7 @@ const NyantaraLanding = () => {
                       {feature.features.map((item, j) => (
                         <motion.div
                           key={j}
-                          className="flex items-center space-x-2 text-sm text-gray-300"
+                          className="flex items-center space-x-2 text-sm theme-text-primary"
                           initial={{ x: -10, opacity: 0 }}
                           whileInView={{ x: 0, opacity: 1 }}
                           transition={{ delay: j * 0.1 }}
@@ -834,7 +972,9 @@ const NyantaraLanding = () => {
                   </div>
                   
                   <motion.div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.color} rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-30 transition-opacity`}
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      theme === 'dark' ? feature.darkColor : feature.lightColor
+                    } rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-20 transition-opacity`}
                   />
                 </motion.div>
               ))}
@@ -842,6 +982,7 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
+        {/* Rest of the sections follow similar pattern with theme-aware classes */}
         {/* Process Section */}
         <section id="process" className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
           <div className="max-w-7xl mx-auto">
@@ -853,26 +994,30 @@ const NyantaraLanding = () => {
               className="text-center mb-16"
             >
               <motion.span 
-                className="inline-block px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm font-semibold mb-4"
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
                 whileHover={{ scale: 1.05 }}
               >
-                <Activity className="inline w-4 h-4 mr-2" />
+                <Activity className="inline w-4 h-4 mr-2 text-accent-gradient" />
                 Simple Process
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
                 From Application to{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
+                <span className="text-accent-gradient">
                   Disbursement
                 </span>
               </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
                 Six streamlined steps ensuring swift and transparent benefit delivery
               </p>
             </motion.div>
 
             <div className="relative">
               {/* Connection Line */}
-              <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 transform -translate-y-1/2 opacity-30" />
+              <div className={`hidden lg:block absolute top-1/2 left-0 right-0 h-1 transform -translate-y-1/2 opacity-30 ${
+                theme === 'dark' 
+                  ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500'
+                  : 'bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400'
+              }`} />
 
               <motion.div 
                 className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative"
@@ -888,12 +1033,12 @@ const NyantaraLanding = () => {
                     className="relative"
                   >
                     <motion.div 
-                      className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all h-full"
-                      whileHover={{ scale: 1.05, y: -10 }}
+                      className="theme-bg-card backdrop-blur-xl rounded-2xl p-8 theme-border-card hover:theme-border-glass transition-all h-full shadow-lg hover:shadow-xl"
+                      whileHover={{ scale: 1.02, y: -5 }}
                     >
                       <div className="flex items-start space-x-4 mb-6">
                         <motion.div 
-                          className={`${step.color} w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0`}
+                          className={`${theme === 'dark' ? step.darkColor : step.lightColor} w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg`}
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
                         >
@@ -901,15 +1046,15 @@ const NyantaraLanding = () => {
                         </motion.div>
                         
                         <div className="flex-1">
-                          <div className="text-4xl font-bold text-white/20 mb-2">{step.step}</div>
+                          <div className="text-4xl font-bold theme-text-muted mb-2">{step.step}</div>
                         </div>
                       </div>
                       
-                      <h3 className="text-xl font-bold mb-3 text-white">
+                      <h3 className="text-xl font-bold mb-3 theme-text-primary">
                         {step.title}
                       </h3>
                       
-                      <p className="text-gray-400 leading-relaxed">
+                      <p className="theme-text-secondary leading-relaxed">
                         {step.description}
                       </p>
                     </motion.div>
@@ -922,7 +1067,7 @@ const NyantaraLanding = () => {
                         whileInView={{ scale: 1 }}
                         transition={{ delay: i * 0.1 }}
                       >
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 accent-gradient rounded-full flex items-center justify-center shadow-lg">
                           <ChevronRight className="w-5 h-5 text-white" />
                         </div>
                       </motion.div>
@@ -934,7 +1079,7 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
-        {/* Benefits Section */}
+        {/* Enhanced Benefits Section */}
         <section id="benefits" className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <motion.div
@@ -945,19 +1090,19 @@ const NyantaraLanding = () => {
               className="text-center mb-16"
             >
               <motion.span 
-                className="inline-block px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 text-sm font-semibold mb-4"
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
                 whileHover={{ scale: 1.05 }}
               >
-                <Target className="inline w-4 h-4 mr-2" />
+                <Target className="inline w-4 h-4 mr-2 text-accent-gradient" />
                 Key Benefits
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 theme-text-primary">
                 Why Choose{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
+                <span className="text-accent-gradient">
                   Nyantara
                 </span>
               </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              <p className="text-xl theme-text-secondary max-w-3xl mx-auto">
                 Proven results delivering impact where it matters most
               </p>
             </motion.div>
@@ -974,16 +1119,18 @@ const NyantaraLanding = () => {
                   key={i}
                   variants={itemVariants}
                   className="group"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileHover={{ scale: 1.05, rotate: 2 }}
                 >
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all text-center h-full flex flex-col items-center justify-center">
-                    <div className={`w-14 h-14 bg-slate-700/50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <benefit.icon className={`w-7 h-7 ${benefit.color}`} />
+                  <div className="theme-bg-card backdrop-blur-xl rounded-2xl p-6 theme-border-card hover:theme-border-glass transition-all text-center h-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl">
+                    <div className={`w-14 h-14 theme-bg-glass rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner`}>
+                      <benefit.icon className={`w-7 h-7 ${
+                        theme === 'dark' ? benefit.darkColor : benefit.lightColor
+                      }`} />
                     </div>
-                    <div className="text-2xl font-bold mb-1 group-hover:text-amber-400 transition-colors">
+                    <div className="text-2xl font-bold mb-1 theme-text-primary group-hover:text-accent-gradient transition-colors">
                       {benefit.title}
                     </div>
-                    <p className="text-xs text-gray-400">{benefit.desc}</p>
+                    <p className="text-xs theme-text-muted">{benefit.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -991,376 +1138,21 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
-        {/* Integrations Section */}
-        <section id="integrations" className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              className="text-center mb-16"
-            >
-              <motion.span 
-                className="inline-block px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm font-semibold mb-4"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Layers className="inline w-4 h-4 mr-2" />
-                Seamless Integrations
-              </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Connected with{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
-                  National Systems
-                </span>
-              </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                Real-time sync with government databases for accuracy and efficiency
-              </p>
-            </motion.div>
-
-            <motion.div 
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-              {integrations.map((integration, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="group relative"
-                  whileHover={{ y: -10 }}
-                >
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all text-center">
-                    <motion.div 
-                      className={`w-16 h-16 ${integration.color} rounded-xl flex items-center justify-center mx-auto mb-4`}
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      <integration.icon className="w-8 h-8 text-white" />
-                    </motion.div>
-                    
-                    <h3 className="font-bold mb-2 text-white">{integration.name}</h3>
-                    
-                    <div className="flex items-center justify-center space-x-1">
-                      <motion.div 
-                        className="w-2 h-2 bg-green-400 rounded-full"
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      <span className="text-xs text-green-400">{integration.status}</span>
-                    </div>
-                  </div>
-                  
-                  <motion.div
-                    className={`absolute inset-0 ${integration.color} rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-30 transition-opacity`}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Integration Flow Diagram */}
-            <motion.div 
-              className="mt-16 bg-gradient-to-br from-slate-800/30 to-slate-900/30 backdrop-blur-xl rounded-3xl p-8 border border-white/10"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-2xl font-bold mb-8 text-center">Data Flow Architecture</h3>
-              
-              <div className="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0 md:space-x-4">
-                {['User Portal', 'Nyantara Core', 'Verification Layer', 'PFMS Disbursement'].map((node, i) => (
-                  <React.Fragment key={i}>
-                    <motion.div
-                      className="flex-1 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl p-6 border border-blue-500/30 text-center min-w-[150px]"
-                      whileHover={{ scale: 1.05 }}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.2 }}
-                    >
-                      <Wifi className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-                      <p className="font-semibold text-sm">{node}</p>
-                    </motion.div>
-                    
-                    {i < 3 && (
-                      <motion.div
-                        className="hidden md:block"
-                        initial={{ scaleX: 0 }}
-                        whileInView={{ scaleX: 1 }}
-                        transition={{ delay: i * 0.2 + 0.1 }}
-                      >
-                        <ArrowRight className="w-6 h-6 text-amber-400" />
-                      </motion.div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              className="text-center mb-16"
-            >
-              <motion.span 
-                className="inline-block px-4 py-2 bg-pink-500/20 border border-pink-500/30 rounded-full text-pink-300 text-sm font-semibold mb-4"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Heart className="inline w-4 h-4 mr-2" />
-                Testimonials
-              </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Trusted by{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
-                  Thousands
-                </span>
-              </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                Real stories from people whose lives have been impacted
-              </p>
-            </motion.div>
-
-            <motion.div 
-              className="grid md:grid-cols-3 gap-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-              {testimonials.map((testimonial, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="group"
-                  whileHover={{ y: -10 }}
-                >
-                  <div className="h-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all">
-                    <div className="flex items-center space-x-4 mb-6">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xl font-bold">
-                        {testimonial.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white">{testimonial.name}</h4>
-                        <p className="text-sm text-gray-400">{testimonial.role}</p>
-                        <p className="text-xs text-gray-500 flex items-center mt-1">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {testimonial.location}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex mb-4">
-                      {[...Array(testimonial.rating)].map((_, j) => (
-                        <Star key={j} className="w-5 h-5 text-amber-400 fill-current" />
-                      ))}
-                    </div>
-                    
-                    <p className="text-gray-300 leading-relaxed italic">
-                      {`"${testimonial.text}"`}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              className="text-center mb-16"
-            >
-              <motion.span 
-                className="inline-block px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-sm font-semibold mb-4"
-                whileHover={{ scale: 1.05 }}
-              >
-                <HelpCircle className="inline w-4 h-4 mr-2" />
-                FAQ
-              </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Frequently Asked{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
-                  Questions
-                </span>
-              </h2>
-              <p className="text-xl text-gray-400">
-                Everything you need to know about Nyantara
-              </p>
-            </motion.div>
-
-            <motion.div 
-              className="space-y-4"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-              {faqs.map((faq, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
-                >
-                  <motion.button
-                    className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
-                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                    whileHover={{ x: 5 }}
-                  >
-                    <span className="font-semibold text-lg pr-4">{faq.q}</span>
-                    <motion.div
-                      animate={{ rotate: activeFaq === i ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ChevronRight className="w-6 h-6 text-amber-400" />
-                    </motion.div>
-                  </motion.button>
-                  
-                  <AnimatePresence>
-                    {activeFaq === i && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="px-8 pb-6 text-gray-400 leading-relaxed">
-                          {faq.a}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-5xl mx-auto">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={scaleIn}
-              className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-amber-600 rounded-3xl p-12 md:p-16 overflow-hidden"
-            >
-              {/* Animated Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                {orbPositions.map((orb, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-20 h-20 border-2 border-white rounded-full"
-                    style={{
-                      left: orb.left,
-                      top: orb.top,
-                      willChange: 'transform, opacity',
-                    }}
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      opacity: [0.3, 0.6, 0.3],
-                    }}
-                    transition={{
-                      duration: orb.duration,
-                      repeat: Infinity,
-                      delay: orb.delay,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="relative z-10 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                  className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                >
-                  <Rocket className="w-10 h-10 text-white" />
-                </motion.div>
-
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                  Ready to Make a Difference?
-                </h2>
-                
-                <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
-                  Join thousands of beneficiaries and officials using Nyantara for transparent, 
-                  efficient, and dignified delivery of social justice
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <motion.button
-                    className="px-10 py-4 bg-white text-blue-600 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 shadow-2xl"
-                    whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(255, 255, 255, 0.3)' }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span>Get Started Now</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
-
-                  <motion.button
-                    className="px-10 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-xl font-bold text-lg flex items-center justify-center space-x-2"
-                    whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span>Contact Support</span>
-                    <Phone className="w-5 h-5" />
-                  </motion.button>
-                </div>
-
-                <motion.div 
-                  className="mt-10 flex flex-wrap justify-center gap-8 text-sm"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5" />
-                    <span>Free for Beneficiaries</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5" />
-                    <span>24/7 Support</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5" />
-                    <span>Multilingual Interface</span>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        {/* Footer with enhanced theme */}
+        <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t theme-border-glass">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
               {/* Company Info */}
               <div>
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-amber-500 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg">
                     <Sparkles className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-amber-400 bg-clip-text text-transparent">
+                  <span className="text-2xl font-bold text-accent-gradient">
                     Nyantara
                   </span>
                 </div>
-                <p className="text-gray-400 mb-6 leading-relaxed">
+                <p className="theme-text-secondary mb-6 leading-relaxed">
                   Empowering social justice through technology. Making Direct Benefit Transfer 
                   transparent, efficient, and accessible for all.
                 </p>
@@ -1373,12 +1165,12 @@ const NyantaraLanding = () => {
                   ].map((social, i) => (
                     <motion.button
                       key={i}
-                      className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors"
-                      whileHover={{ scale: 1.1, backgroundColor: '#3b82f6' }}
+                      className="w-10 h-10 theme-bg-glass theme-border-glass border rounded-lg flex items-center justify-center hover:shadow-lg transition-all"
+                      whileHover={{ scale: 1.1, backgroundColor: 'var(--accent-primary)' }}
                       whileTap={{ scale: 0.9 }}
                       aria-label={social.label}
                     >
-                      <social.icon className="w-5 h-5" />
+                      <social.icon className="w-5 h-5 theme-text-primary" />
                     </motion.button>
                   ))}
                 </div>
@@ -1386,11 +1178,11 @@ const NyantaraLanding = () => {
 
               {/* Quick Links */}
               <div>
-                <h3 className="text-lg font-bold mb-6 text-white">Quick Links</h3>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary">Quick Links</h3>
                 <ul className="space-y-3">
                   {['About Us', 'How It Works', 'Success Stories', 'News & Updates', 'Careers', 'Contact'].map((link, i) => (
                     <motion.li key={i} whileHover={{ x: 5 }}>
-                      <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors flex items-center space-x-2">
+                      <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2">
                         <ChevronRight className="w-4 h-4" />
                         <span>{link}</span>
                       </a>
@@ -1399,82 +1191,47 @@ const NyantaraLanding = () => {
                 </ul>
               </div>
 
-              {/* Resources */}
+              {/* Enhanced Contact Info */}
               <div>
-                <h3 className="text-lg font-bold mb-6 text-white">Resources</h3>
-                <ul className="space-y-3">
-                  {['User Guide', 'Documentation', 'API Reference', 'Video Tutorials', 'FAQs', 'Support Center'].map((link, i) => (
-                    <motion.li key={i} whileHover={{ x: 5 }}>
-                      <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors flex items-center space-x-2">
-                        <ChevronRight className="w-4 h-4" />
-                        <span>{link}</span>
-                      </a>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Contact Info */}
-              <div>
-                <h3 className="text-lg font-bold mb-6 text-white">Get in Touch</h3>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary">Get in Touch</h3>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-5 h-5 text-blue-400" />
+                    <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-5 h-5 text-accent-gradient" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Helpline</p>
-                      <p className="text-gray-300 font-semibold">1800-XXX-XXXX</p>
-                      <p className="text-xs text-gray-500">Available 24/7</p>
+                      <p className="text-sm theme-text-muted mb-1">Helpline</p>
+                      <p className="theme-text-primary font-semibold">1800-XXX-XXXX</p>
+                      <p className="text-xs theme-text-muted">Available 24/7</p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-5 h-5 text-amber-400" />
+                    <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-5 h-5 text-accent-gradient" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Email</p>
-                      <p className="text-gray-300 font-semibold">support@nyantara.gov.in</p>
-                      <p className="text-xs text-gray-500">Response in 24 hours</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <MapPinned className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Address</p>
-                      <p className="text-gray-300 font-semibold text-sm">Ministry of Social Justice</p>
-                      <p className="text-xs text-gray-500">New Delhi, India</p>
+                      <p className="text-sm theme-text-muted mb-1">Email</p>
+                      <p className="theme-text-primary font-semibold">support@nyantara.gov.in</p>
+                      <p className="text-xs theme-text-muted">Response in 24 hours</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Newsletter Section */}
-            <motion.div 
-              className="bg-gradient-to-r from-blue-500/10 to-amber-500/10 rounded-2xl p-8 mb-12 border border-white/10"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold mb-2 text-white">Stay Updated</h3>
-                  <p className="text-gray-400">Subscribe to our newsletter for latest updates and announcements</p>
-                </div>
-                <div className="flex-1 max-w-md w-full">
+              {/* Newsletter */}
+              <div>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary">Stay Updated</h3>
+                <div className="space-y-4">
+                  <p className="theme-text-secondary text-sm">Subscribe to our newsletter for latest updates</p>
                   <div className="flex gap-3">
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="flex-1 px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 transition-colors"
+                      className="flex-1 px-4 py-3 theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
                     />
                     <motion.button
-                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg font-semibold flex items-center space-x-2"
+                      className="px-6 py-3 accent-gradient rounded-lg font-semibold flex items-center space-x-2 text-white shadow-lg"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -1484,12 +1241,12 @@ const NyantaraLanding = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Bottom Bar */}
-            <div className="border-t border-white/10 pt-8">
+            <div className="border-t theme-border-glass pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-gray-400 text-sm text-center md:text-left">
+                <div className="theme-text-secondary text-sm text-center md:text-left">
                   <p>© 2025 Nyantara. All rights reserved.</p>
                   <p className="text-xs mt-1">
                     Developed under Ministry of Social Justice & Empowerment, Government of India
@@ -1501,7 +1258,7 @@ const NyantaraLanding = () => {
                     <motion.a
                       key={i}
                       href="#"
-                      className="text-gray-400 hover:text-amber-400 transition-colors"
+                      className="theme-text-secondary hover:text-accent-gradient transition-colors"
                       whileHover={{ scale: 1.05 }}
                     >
                       {link}
@@ -1509,34 +1266,15 @@ const NyantaraLanding = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Government Badges */}
-              <div className="mt-8 flex flex-wrap justify-center gap-6 items-center">
-                {[
-                  { name: 'Digital India', color: 'from-orange-500 to-green-500' },
-                  { name: 'Make in India', color: 'from-blue-500 to-indigo-500' },
-                  { name: 'Data Secured', color: 'from-purple-500 to-pink-500' },
-                  { name: 'ISO Certified', color: 'from-amber-500 to-red-500' }
-                ].map((badge, i) => (
-                  <motion.div
-                    key={i}
-                    className={`px-4 py-2 bg-gradient-to-r ${badge.color} rounded-lg text-xs font-bold text-white flex items-center space-x-2`}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
-                    <BadgeCheck className="w-4 h-4" />
-                    <span>{badge.name}</span>
-                  </motion.div>
-                ))}
-              </div>
             </div>
           </div>
         </footer>
 
-        {/* Scroll to Top Button */}
+        {/* Enhanced Scroll to Top Button */}
         <AnimatePresence>
           {isScrolled && (
             <motion.button
-              className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center shadow-2xl shadow-amber-500/50 z-50"
+              className="fixed bottom-8 right-8 w-14 h-14 accent-gradient rounded-full flex items-center justify-center shadow-2xl z-50"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0 }}
@@ -1550,14 +1288,15 @@ const NyantaraLanding = () => {
           )}
         </AnimatePresence>
 
-     
-
-        {/* Progress Bar */}
+        {/* Enhanced Progress Bar */}
         <motion.div
-          className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 transform origin-left z-50"
+          className={`fixed top-0 left-0 right-0 h-1 transform origin-left z-50 ${
+            theme === 'dark' 
+              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500'
+              : 'bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400'
+          }`}
           style={{ scaleX: scaleProgress }}
         />
-
       </div>
     </div>
   );

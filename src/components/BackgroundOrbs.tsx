@@ -12,10 +12,11 @@ type Orb = {
 };
 
 const ORBS: Orb[] = [
-  { left: '10%', top: '10%', size: 420, colorA: 'rgba(59,130,246,0.18)', colorB: 'rgba(99,102,241,0.12)', duration: 18, delay: 0 },
-  { left: '80%', top: '5%', size: 340, colorA: 'rgba(245,158,11,0.16)', colorB: 'rgba(245,158,11,0.08)', duration: 20, delay: 2 },
-  { left: '60%', top: '70%', size: 480, colorA: 'rgba(139,92,246,0.12)', colorB: 'rgba(236,72,153,0.08)', duration: 22, delay: 1 },
-  { left: '15%', top: '70%', size: 300, colorA: 'rgba(6,182,212,0.10)', colorB: 'rgba(59,130,246,0.06)', duration: 24, delay: 3 },
+  // Fallbacks here are soft; actual colors will be derived from CSS variables when mounted
+  { left: '10%', top: '10%', size: 420, colorA: 'rgba(251,113,133,0.16)', colorB: 'rgba(251,146,60,0.10)', duration: 18, delay: 0 },
+  { left: '80%', top: '5%', size: 340, colorA: 'rgba(139,92,246,0.12)', colorB: 'rgba(139,92,246,0.06)', duration: 20, delay: 2 },
+  { left: '60%', top: '70%', size: 480, colorA: 'rgba(8,145,178,0.10)', colorB: 'rgba(139,92,246,0.06)', duration: 22, delay: 1 },
+  { left: '15%', top: '70%', size: 300, colorA: 'rgba(251,113,133,0.12)', colorB: 'rgba(251,146,60,0.06)', duration: 24, delay: 3 },
 ];
 
 export default function BackgroundOrbs() {
@@ -56,6 +57,44 @@ export default function BackgroundOrbs() {
 
       requestAnimationFrame(frame);
     }
+
+    // Try to read accent colors from CSS vars to create harmonious orb gradients
+    // helper to convert hex or rgb string to `r,g,b` numeric string
+    const hexToRgb = (input: string) => {
+      if (!input) return '255,255,255';
+      const s = input.replace(/\s/g, '');
+      // rgb(...) already
+      const rgbMatch = s.match(/rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)/i);
+      if (rgbMatch) return `${rgbMatch[1]},${rgbMatch[2]},${rgbMatch[3]}`;
+      // hex #rrggbb
+      const hex = s.replace('#', '');
+      if (hex.length === 3) {
+        const r = parseInt(hex[0] + hex[0], 16);
+        const g = parseInt(hex[1] + hex[1], 16);
+        const b = parseInt(hex[2] + hex[2], 16);
+        return `${r},${g},${b}`;
+      }
+      if (hex.length === 6) {
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        return `${r},${g},${b}`;
+      }
+      return '255,255,255';
+    };
+
+    try {
+      const style = getComputedStyle(document.documentElement);
+      const a = style.getPropertyValue('--accent-primary').trim() || '';
+      const b = style.getPropertyValue('--accent-secondary').trim() || '';
+      if (a && b) {
+        // update ORBS colors in-place to use the theme accents (soft alpha)
+        ORBS.forEach((orb, i) => {
+          orb.colorA = `rgba(${hexToRgb(a)},0.14)`;
+          orb.colorB = `rgba(${hexToRgb(b)},0.08)`;
+        });
+      }
+    } catch (e) {}
 
     window.addEventListener('pointermove', onMove);
     const id = requestAnimationFrame(frame);

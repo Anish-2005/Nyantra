@@ -20,7 +20,8 @@
 }
 
 body {
-  background: var(--background);
+  /* Use the theme gradient set on the root component when available, fall back to the solid --background */
+  background: var(--bg-gradient, var(--background));
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

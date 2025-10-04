@@ -51,7 +51,8 @@ export default function BackgroundCursor() {
         zIndex: 1,
         opacity: 0,
         filter: 'blur(48px)',
-        background: 'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.14), rgba(245,158,11,0.12) 30%, rgba(15,23,42,0) 60%)',
+        // Use CSS accent vars for theme harmony (falls back to soft defaults)
+        background: `radial-gradient(circle at 30% 30%, var(--accent-primary, rgba(59,130,246,0.14)) 0%, var(--accent-secondary, rgba(245,158,11,0.12)) 30%, rgba(15,23,42,0) 60%)`,
         mixBlendMode: 'screen',
       }}
     />
