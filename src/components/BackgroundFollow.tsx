@@ -54,7 +54,7 @@ export default function BackgroundFollow() {
 
     // cleanup
     setTimeout(() => {
-      try { container.removeChild(star); } catch (e) { /* ignore */ }
+      try { container.removeChild(star); } catch { /* ignore */ }
     }, 700);
   }
 
