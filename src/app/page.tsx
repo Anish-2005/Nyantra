@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useTheme } from '../context/ThemeContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, Smartphone, Globe, Clock, Eye, Upload, Send, Star, Target, Activity, CheckSquare, UserCheck, Wallet, Phone, Mail, MapPinned, BadgeCheck, Sparkles, Rocket, Sun, Moon } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, Smartphone, Globe, Clock, Eye, Upload, Send, Star, Target, Activity, CheckSquare, UserCheck, Wallet, Phone, Mail, MapPinned, BadgeCheck, Sparkles, Rocket, Sun, Moon, HelpCircle } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -334,6 +334,46 @@ const NyantaraLanding = () => {
       y: 0,
       transition: { duration: 0.6, ease: "easeOut" as const }
     }
+  };
+
+  // FAQ accordion item component
+  const FAQItem: React.FC<{ question: string; answer: string; index: number }> = ({ question, answer, index }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <div>
+        <button
+          onClick={() => setOpen((s) => !s)}
+          aria-expanded={open}
+          aria-controls={`faq-${index}`}
+          className="w-full flex items-center justify-between p-4 rounded-xl theme-bg-glass theme-border-glass border transition-all focus:outline-none focus:ring-2 focus:ring-accent-primary"
+        >
+          <div className="text-left">
+            <p className="font-semibold theme-text-primary">{question}</p>
+          </div>
+          <motion.div animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.25 }}>
+            <ChevronRight className="w-5 h-5 theme-text-secondary" />
+          </motion.div>
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              id={`faq-${index}`}
+              key={`faq-content-${index}`}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className="p-4 rounded-lg theme-bg-card theme-border-card theme-text-secondary">
+                <p className="text-sm leading-relaxed">{answer}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
   };
 
   return (
@@ -751,6 +791,7 @@ const NyantaraLanding = () => {
           </motion.div>
         </section>
 
+        
         {/* Enhanced Stats Section */}
         <section
           id="stats-section"
@@ -1119,6 +1160,8 @@ const NyantaraLanding = () => {
     `}
           />
 
+        
+
           <div className="relative max-w-7xl mx-auto">
             {/* Header */}
             <motion.div
@@ -1209,7 +1252,91 @@ const NyantaraLanding = () => {
           </div>
         </section>
 
+   
 
+        {/* Integrations Section */}
+        <section id="integrations" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-1/3 left-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-primary, rgba(59,130,246,0.12)), transparent)' }} />
+            <div className="absolute bottom-1/4 right-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-secondary, rgba(245,158,11,0.08)), transparent)' }} />
+          </div>
+
+          <div className="max-w-7xl mx-auto">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+              <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
+                <Database className="inline w-4 h-4 mr-2 text-accent-gradient" />
+                Trusted Integrations
+              </motion.span>
+
+              <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">Works Seamlessly With</h2>
+              <p className="mt-2 text-sm sm:text-base theme-text-muted max-w-2xl mx-auto">Connect to national and regional services with secure, auditable links — out of the box.</p>
+            </motion.div>
+
+            {/* Integrations Grid */}
+            <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
+              {[
+                { key: 'pfms', name: 'PFMS', logo: '/next.svg', desc: 'Payments & DBT', accent: 'from-amber-400 to-amber-500' },
+                { key: 'aadhaar', name: 'Aadhaar', logo: '/window.svg', desc: 'Identity Verification', accent: 'from-blue-400 to-indigo-500' },
+                { key: 'cctns', name: 'CCTNS', logo: '/vercel.svg', desc: 'Police Records', accent: 'from-indigo-400 to-purple-500' },
+                { key: 'ecourts', name: 'eCourts', logo: '/globe.svg', desc: 'Case Fetching', accent: 'from-green-400 to-teal-500' },
+                { key: 'digilocker', name: 'DigiLocker', logo: '/file.svg', desc: 'Document Store', accent: 'from-pink-400 to-rose-500' },
+                { key: 'sms', name: 'SMS Gateways', logo: '/next.svg', desc: 'Notifications', accent: 'from-yellow-400 to-amber-500' }
+              ].map((integration, i) => (
+                <motion.div key={integration.key} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
+                  <div className="w-full theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center space-y-3 hover:shadow-xl transition-all duration-300">
+                    <div className={`w-20 h-20 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br ${integration.accent}`}>
+                      {/* Use Image for logo if available, fallback to name */}
+                      <Image src={integration.logo} alt={`${integration.name} logo`} width={48} height={48} className="object-contain" />
+                    </div>
+                    <div>
+                      <p className="font-semibold theme-text-primary">{integration.name}</p>
+                      <p className="text-xs theme-text-muted">{integration.desc}</p>
+                    </div>
+                    <a href={`#`} aria-label={`Learn more about ${integration.name}`} className="mt-2 inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">
+                      Learn
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* CTA */}
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 text-center">
+              <p className="theme-text-secondary mb-4">Need a custom connector? We offer secure APIs, webhooks and enterprise onboarding.</p>
+              <motion.a href="#" className="inline-flex items-center px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg" whileHover={{ scale: 1.05 }} aria-label="Contact sales for integrations">
+                Contact Sales
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </motion.a>
+            </motion.div>
+          </div>
+        </section>
+
+{/* FAQ Section (placed between Benefits and Integrations) */}
+        <section id="faq" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
+              <HelpCircle className="inline w-4 h-4 mr-2 text-accent-gradient" />
+              Frequently Asked Questions
+            </motion.span>
+
+            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">Got Questions? We've got answers.</h2>
+            <p className="mt-2 text-sm sm:text-base theme-text-muted">Common queries about the program, security, and integrations — explained simply.</p>
+          </div>
+
+          <div className="max-w-5xl mx-auto">
+            {[
+              { q: 'How long does verification take?', a: 'Most cases complete within 48-72 hours after documents are uploaded and Aadhaar verification is successful.' },
+              { q: 'Is my data secure?', a: 'Yes. We use bank-grade encryption, role-based access controls, and audit trails to ensure privacy and integrity.' },
+              { q: 'Which documents are required?', a: 'Aadhaar or government ID, FIR (if applicable), bank account details for DBT, and supporting evidence.' },
+              { q: 'Can districts integrate their own SMS gateway?', a: 'Yes — we support multiple SMS gateway providers and can onboard a custom provider via our enterprise onboarding.' }
+            ].map((item, i) => (
+              <motion.div key={i} className="mb-4 rounded-2xl theme-bg-card theme-border-card p-4" initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+                <FAQItem question={item.q} answer={item.a} index={i} />
+              </motion.div>
+            ))}
+          </div>
+        </section>
         {/* Footer with enhanced theme */}
         <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t theme-border-glass">
           <div className="max-w-7xl mx-auto">
