@@ -485,6 +485,22 @@ const BeneficiariesPage = () => {
     return icons[status as keyof typeof icons] || Clock;
   };
 
+  // Deterministic formatting helpers to avoid SSR/client hydration mismatches
+  const formatNumber = (n?: number | null) => {
+    if (n == null || Number.isNaN(n)) return '0';
+    return new Intl.NumberFormat('en-IN').format(n);
+  };
+
+  const formatCurrency = (n?: number | null) => {
+    if (n == null || Number.isNaN(n)) return '₹0';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n as number);
+  };
+
+  const formatDate = (s?: string | null) => {
+    if (!s) return '—';
+    try { const d = new Date(s); return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d); } catch { return s; }
+  };
+
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
       {/* Three.js Canvas Background (theme-aware) */}
@@ -627,7 +643,7 @@ const BeneficiariesPage = () => {
             </div>
             <div>
               <p className="text-sm theme-text-muted">Total Relief Amount</p>
-              <p className="text-2xl font-bold theme-text-primary">₹{stats.totalAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold theme-text-primary">{formatCurrency(stats.totalAmount)}</p>
             </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -636,9 +652,9 @@ const BeneficiariesPage = () => {
               style={{ width: `${(stats.disbursedAmount / stats.totalAmount) * 100}%` }}
             ></div>
           </div>
-          <div className="flex justify-between text-xs theme-text-muted mt-2">
-            <span>Disbursed: ₹{stats.disbursedAmount.toLocaleString()}</span>
-            <span>Pending: ₹{stats.pendingAmount.toLocaleString()}</span>
+            <div className="flex justify-between text-xs theme-text-muted mt-2">
+            <span>Disbursed: {formatCurrency(stats.disbursedAmount)}</span>
+            <span>Pending: {formatCurrency(stats.pendingAmount)}</span>
           </div>
         </motion.div>
 
@@ -805,6 +821,7 @@ const BeneficiariesPage = () => {
       </motion.div>
 
       {/* Beneficiaries List */}
+    {/* Beneficiaries List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -812,189 +829,322 @@ const BeneficiariesPage = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="theme-bg-glass border-b theme-border-glass">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Aadhaar</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">District</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                  <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Verification</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedBeneficiaries.map((beneficiary, idx) => (
-                  <motion.tr
+          isMobile ? (
+            <div className="p-3 space-y-3">
+              {paginatedBeneficiaries.map((beneficiary, idx) => {
+                const StatusIcon = getStatusIcon(beneficiary.status);
+                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
+                
+                return (
+                  <motion.div
                     key={beneficiary.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    whileTap={{ scale: 0.995 }}
+                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
+                    onClick={() => setSelectedBeneficiary(beneficiary)}
                   >
-                    <td className="px-4 py-3 text-sm font-medium theme-text-primary">{beneficiary.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
                           {beneficiary.name.split(' ').map(n => n[0]).join('')}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium theme-text-primary">{beneficiary.name}</p>
-                          <p className="text-xs theme-text-muted">{beneficiary.category}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
+                          <p className="text-xs theme-text-muted truncate">{beneficiary.id}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
-                      {beneficiary.aadhaarNumber}
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3">
-                      <div>
-                        <p className="text-sm theme-text-primary">{beneficiary.district}</p>
-                        <p className="text-xs theme-text-muted">{beneficiary.state}</p>
-                      </div>
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
-                        {beneficiary.actType}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getCategoryColor(beneficiary.category)}`}>
+                        {beneficiary.category}
                       </span>
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold theme-text-primary">₹{beneficiary.reliefAmount.toLocaleString()}</p>
-                        <p className="text-xs theme-text-muted">
-                          Disbursed: ₹{beneficiary.disbursedAmount.toLocaleString()}
-                        </p>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Fingerprint className="w-3.5 h-3.5" />
+                          Aadhaar
+                        </span>
+                        <span className="theme-text-primary font-mono text-[10px]">{beneficiary.aadhaarNumber}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5" />
+                          Location
+                        </span>
+                        <span className="theme-text-primary font-medium">{beneficiary.district}, {beneficiary.state}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Scale className="w-3.5 h-3.5" />
+                          Act Type
+                        </span>
+                        <span className="theme-text-primary font-medium">{beneficiary.actType}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <DollarSign className="w-3.5 h-3.5" />
+                          Relief Amount
+                        </span>
+                        <span className="theme-text-primary font-bold">{formatCurrency(beneficiary.reliefAmount)}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Banknote className="w-3.5 h-3.5" />
+                          Disbursed
+                        </span>
+                        <span className="theme-text-primary font-medium">{formatCurrency(beneficiary.disbursedAmount)}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5" />
+                          Assigned Officer
+                        </span>
+                        <span className="theme-text-primary font-medium truncate max-w-[150px]">{beneficiary.assignedOfficer}</span>
+                      </div>
+                    </div>
+
+                    {/* Status Badges */}
+                    <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b theme-border-glass">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
-                        {(() => {
-                          const Icon = getStatusIcon(beneficiary.status);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {beneficiary.status.replace('-', ' ')}
+                        <StatusIcon className="w-3 h-3" />
+                        <span className="capitalize">{beneficiary.status.replace('-', ' ')}</span>
                       </span>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                        {(() => {
-                          const Icon = getVerificationIcon(beneficiary.verificationStatus);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {beneficiary.verificationStatus.replace('-', ' ')}
+                        <VerificationIcon className="w-3 h-3" />
+                        <span className="capitalize">{beneficiary.verificationStatus.replace('-', ' ')}</span>
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedBeneficiary(beneficiary)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiary(beneficiary); }}
+                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                        <span>More</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="theme-bg-glass border-b theme-border-glass">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Aadhaar</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">District</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Verification</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedBeneficiaries.map((beneficiary, idx) => (
+                    <motion.tr
+                      key={beneficiary.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{beneficiary.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                            {beneficiary.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium theme-text-primary">{beneficiary.name}</p>
+                            <p className="text-xs theme-text-muted">{beneficiary.category}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {beneficiary.aadhaarNumber}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <div>
+                          <p className="text-sm theme-text-primary">{beneficiary.district}</p>
+                          <p className="text-xs theme-text-muted">{beneficiary.state}</p>
+                        </div>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
+                          {beneficiary.actType}
+                        </span>
+                      </td>
+                      <td className="hidden lg:table-cell px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold theme-text-primary">{formatCurrency(beneficiary.reliefAmount)}</p>
+                          <p className="text-xs theme-text-muted">
+                            Disbursed: {formatCurrency(beneficiary.disbursedAmount)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
+                          {(() => {
+                            const Icon = getStatusIcon(beneficiary.status);
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {beneficiary.status.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                          {(() => {
+                            const Icon = getVerificationIcon(beneficiary.verificationStatus);
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {beneficiary.verificationStatus.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setSelectedBeneficiary(beneficiary)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {paginatedBeneficiaries.map((beneficiary, idx) => (
-              <motion.div
-                key={beneficiary.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05 }}
-                whileHover={{ y: -4 }}
-                className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
-                onClick={() => setSelectedBeneficiary(beneficiary)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                      {beneficiary.name.split(' ').map(n => n[0]).join('')}
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2 lg:grid-cols-3'} gap-4 p-4`}>
+            {paginatedBeneficiaries.map((beneficiary, idx) => {
+              const StatusIcon = getStatusIcon(beneficiary.status);
+              const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
+              
+              return (
+                <motion.div
+                  key={beneficiary.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  whileHover={isMobile ? {} : { y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
+                  onClick={() => setSelectedBeneficiary(beneficiary)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white font-bold flex-shrink-0">
+                        {beneficiary.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium theme-text-primary truncate">{beneficiary.name}</p>
+                        <p className="text-xs theme-text-muted truncate">{beneficiary.id}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium theme-text-primary">{beneficiary.name}</p>
-                      <p className="text-xs theme-text-muted">{beneficiary.id}</p>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(beneficiary.priority)}`}>
-                    {beneficiary.priority}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <Fingerprint className="w-4 h-4" />
-                    <span>{beneficiary.aadhaarNumber}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <MapPin className="w-4 h-4" />
-                    <span>{beneficiary.district}, {beneficiary.state}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <Scale className="w-4 h-4" />
-                    <span>{beneficiary.actType}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <DollarSign className="w-4 h-4" />
-                    <span className="font-semibold">₹{beneficiary.reliefAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                  <div className="flex gap-2">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
-                      {(() => {
-                        const Icon = getStatusIcon(beneficiary.status);
-                        return <Icon className="w-3 h-3" />;
-                      })()}
-                      {beneficiary.status.replace('-', ' ')}
-                    </span>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                      {(() => {
-                        const Icon = getVerificationIcon(beneficiary.verificationStatus);
-                        return <Icon className="w-3 h-3" />;
-                      })()}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(beneficiary.priority)}`}>
+                      {beneficiary.priority}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                      <Edit className="w-4 h-4" />
-                    </button>
+                  
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <Fingerprint className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{beneficiary.aadhaarNumber}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{beneficiary.district}, {beneficiary.state}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <Scale className="w-4 h-4 flex-shrink-0" />
+                      <span>{beneficiary.actType}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <DollarSign className="w-4 h-4 flex-shrink-0" />
+                      <span className="font-semibold">{formatCurrency(beneficiary.reliefAmount)}</span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                  
+                  <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        <span className="hidden sm:inline">{beneficiary.status.replace('-', ' ')}</span>
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                        <VerificationIcon className="w-3 h-3" />
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        className="p-1.5 rounded-lg hover:theme-bg-card"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBeneficiary(beneficiary);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button 
+                        className="p-1.5 rounded-lg hover:theme-bg-card"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
-
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
           <p className="text-sm theme-text-muted">
@@ -1178,19 +1328,19 @@ const BeneficiariesPage = () => {
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Incident Date</p>
-                      <p className="font-medium theme-text-primary">{new Date(selectedBeneficiary.incidentDate).toLocaleDateString()}</p>
+                      <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.incidentDate)}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Relief Amount</p>
-                      <p className="font-semibold text-lg theme-text-primary">₹{selectedBeneficiary.reliefAmount.toLocaleString()}</p>
+                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.reliefAmount)}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Disbursed Amount</p>
-                      <p className="font-semibold text-lg theme-text-primary">₹{selectedBeneficiary.disbursedAmount.toLocaleString()}</p>
+                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.disbursedAmount)}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Registration Date</p>
-                      <p className="font-medium theme-text-primary">{new Date(selectedBeneficiary.registrationDate).toLocaleDateString()}</p>
+                      <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.registrationDate)}</p>
                     </div>
                   </div>
                 </div>
