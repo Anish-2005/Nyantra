@@ -68,10 +68,18 @@ export default function NotificationDropdown({ anchorRef, isOpen, onClose, child
   const right = anchorRect ? window.innerWidth - anchorRect.right : 24;
   const top = anchorRect ? anchorRect.bottom + offsetY : 80;
 
+  // Choose a slightly stronger background to reduce transparency and improve legibility
+  const dropdownBg = getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '';
   const content = (
     <div
-      style={{ right: `${right}px`, top: `${top}px`, position: 'fixed', width: typeof width === 'number' ? `${width}px` : width }}
-      className="theme-bg-card theme-border-glass border rounded-2xl shadow-xl p-4 backdrop-blur-xl"
+      style={{
+        right: `${right}px`,
+        top: `${top}px`,
+        position: 'fixed',
+        width: typeof width === 'number' ? `${width}px` : width,
+        background: dropdownBg.trim() || undefined,
+      }}
+      className="theme-border-glass border rounded-2xl shadow-xl p-4 backdrop-blur-xl"
     >
       {children}
     </div>

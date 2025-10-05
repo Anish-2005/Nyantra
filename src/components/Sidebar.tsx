@@ -49,7 +49,7 @@ export default function Sidebar({
         initial={{ x: "-100%" }}
         animate={{ x: open ? "0%" : "-100%" }}
         transition={{ type: "spring", stiffness: 260, damping: 30 }}
-        className="fixed z-50 top-0 left-0 h-full w-64 theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-xl lg:hidden flex flex-col overflow-hidden pointer-events-auto"
+        className="fixed z-50 top-0 left-0 h-full w-[min(92vw,16rem)] max-w-[16rem] theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-xl lg:hidden flex flex-col overflow-hidden pointer-events-auto"
       >
         {/* Header */}
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
@@ -80,7 +80,7 @@ export default function Sidebar({
 
         {/* Nav */}
         <nav
-          className="flex-1 p-3 overflow-auto"
+          className="flex-1 p-3 overflow-auto min-w-0"
           role="navigation"
           aria-label="Dashboard navigation"
         >
@@ -93,14 +93,14 @@ export default function Sidebar({
                     onChange(item.id);
                     setOpen(false); // Close sidebar after selecting
                   }}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all ${
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all min-w-0 ${
                     activeId === item.id
                       ? "accent-gradient text-white shadow-lg"
                       : "theme-text-primary hover:theme-bg-glass theme-border-glass border border-transparent hover:border"
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium truncate">{item.label}</span>
                 </button>
               </li>
             ))}
@@ -128,7 +128,7 @@ export default function Sidebar({
       <motion.aside
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="hidden lg:flex lg:flex-col fixed top-0 left-0 h-full w-64 theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-md z-30"
+        className="hidden lg:flex lg:flex-col fixed top-0 left-0 h-full w-64 theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-md z-30 min-w-0"
       >
         {/* Header */}
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
@@ -150,21 +150,21 @@ export default function Sidebar({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 overflow-auto">
+        <nav className="flex-1 p-3 overflow-auto min-w-0">
           <ul className="space-y-2">
             {items.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => onChange(item.id)}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all ${
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all min-w-0 ${
                     activeId === item.id
                       ? "accent-gradient text-white shadow-lg"
                       : "theme-text-primary hover:theme-bg-glass theme-border-glass border border-transparent hover:border"
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium truncate">{item.label}</span>
                 </button>
               </li>
             ))}

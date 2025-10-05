@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { theme, toggleTheme } = useTheme();
+    // Slightly stronger dropdown backgrounds for better contrast
+    const dropdownSolidBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.99)' : 'rgba(255, 255, 255, 0.99)';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -206,6 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 transition={{ duration: 0.2 }}
                                                 className="absolute right-0 top-full mt-2 w-80 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
+                                                style={{ background: dropdownSolidBg }}
                                             >
                                                 <div className="p-3 border-b theme-border-glass">
                                                     <h3 className="font-semibold theme-text-primary">Notifications</h3>
@@ -250,6 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 transition={{ duration: 0.2 }}
                                                 className="absolute right-0 top-full mt-2 w-48 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-1 z-50"
+                                                style={{ background: dropdownSolidBg }}
                                             >
                                                 <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <User className="w-4 h-4" />
