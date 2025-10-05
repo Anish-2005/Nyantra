@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
-import Sidebar from '@/components/Sidebar';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
 import {
@@ -39,6 +39,8 @@ const Dashboard = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Sync sidebar with viewport size (collapse on small screens)
   useEffect(() => {
@@ -61,6 +63,12 @@ const Dashboard = () => {
       else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
     };
   }, []);
+
+  // Sync active tab with URL segment so the sidebar selection reflects the current route
+  useEffect(() => {
+    const seg = (pathname || '').split('/')[2] || 'overview';
+    setActiveTab(seg);
+  }, [pathname]);
 
   // Generate mock time series and datasets (memoized). Helpers are defined inside the memo to avoid hook-deps warnings.
   type DataPoint = { x: number; y: number };
@@ -389,6 +397,14 @@ const Dashboard = () => {
     { id: 'reports', label: 'Reports', icon: DownloadCloud }
   ];
 
+  // Handle sidebar selection: update active tab, navigate to route, and close mobile sidebar
+  const handleSidebarChange = (id: string) => {
+    setActiveTab(id);
+    if (id === 'overview') router.push('/dashboard');
+    else router.push(`/dashboard/${id}`);
+    setSidebarOpen(false);
+  };
+
   const getStatusColor = (status: string) => {
     if (theme === 'dark') {
       switch (status) {
@@ -579,27 +595,13 @@ const Dashboard = () => {
       {/* Use a wrapper that reserves left space equal to the sidebar width on desktop so content doesn't shift up when scrolling
       and expands left when the sidebar is closed. We apply an inline style computed from `sidebarOpen` to match the
       sidebar widths defined in `Sidebar.tsx`. */}
-      <div className="relative z-10 theme-text-primary flex min-h-screen flex-col lg:flex-row">
+  <div className="relative z-0 theme-text-primary flex min-h-screen flex-col lg:flex-row">
         {/* Sidebar component (fixed) */}
-        <div className="fixed z-30 lg:static">
-          <Sidebar
-            items={navigationItems}
-            activeId={activeTab}
-            onChange={(id) => setActiveTab(id)}
-            open={sidebarOpen}
-            setOpen={setSidebarOpen}
-          />
-        </div>
-
+        
 
         {/* Main Content wrapper that matches the fixed sidebar width on desktop */}
         {/* main content: on desktop reserve left margin equal to sidebar width when sidebar is open so page shifts right */}
-        <div
-          className="flex-1 flex flex-col overflow-hidden"
-          // Only add left margin on desktop when sidebar is open. Collapsed sidebar should take no layout space.
-          // Sidebar uses `w-64` (16rem) in `Sidebar.tsx`, so reserve 16rem when open to align content flush.
-          style={{ marginLeft: isDesktop && sidebarOpen ? '16rem' : undefined }}
-        >
+        <div className="flex flex-col flex-1 relative z-0 overflow-hidden ">
           {/* Enhanced Header */}
           <motion.header
             className={`theme-bg-nav backdrop-blur-xl border-b theme-border-glass transition-all duration-300 ${isScrolled ? 'shadow-xl' : ''}`}
@@ -621,7 +623,7 @@ const Dashboard = () => {
                   </h1>
                   <p className="text-sm theme-text-muted">
                     {activeTab === 'overview'
-                      ? 'Welcome back! Here&apos;s what&apos;s happening today.'
+                      ? `Welcome back! Here&apos;s what&apos;s happening today.`
                       : `Manage ${activeTab} and track progress`}
                   </p>
                 </div>
