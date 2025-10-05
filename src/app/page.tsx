@@ -435,6 +435,19 @@ const NyantaraLanding = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+        /* Smooth scrolling for anchor links and programmatic scrolls
+           scroll-padding-top accounts for the fixed header so sections aren't hidden behind it */
+        html {
+          scroll-behavior: smooth;
+          scroll-padding-top: 6rem; /* adjust if header height changes */
+        }
+
+        /* Respect users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          html {
+            scroll-behavior: auto;
+          }
+        }
       `}</style>
 
       {/* Three.js Canvas Background */}
