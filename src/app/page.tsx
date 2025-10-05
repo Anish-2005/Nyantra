@@ -656,6 +656,8 @@ const NyantaraLanding = () => {
                   className="flex flex-col sm:flex-row gap-4"
                 >
                   <motion.button
+                    onClick={() => router.push('/dashboard')}
+                    aria-label="Apply Now - go to dashboard"
                     className="px-8 py-4 accent-gradient rounded-xl font-semibold text-lg text-white flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
