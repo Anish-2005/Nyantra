@@ -37,8 +37,13 @@ export default function Sidebar({
     return () => window.removeEventListener("keydown", handler);
   }, [setOpen]);
 
+  // Show logo only after mount to prevent SSR mismatch
+  // Use same logo selection logic as root navbar
+  const logoSrc = theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png';
+
   return (
     <>
+      {/* Logo uses the same selection logic as the root navbar */}
       {/* -------------------- MOBILE SIDEBAR -------------------- */}
       <motion.div
         initial={{ x: "-100%" }}
@@ -49,15 +54,8 @@ export default function Sidebar({
         {/* Header */}
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center">
-              <div className="w-6 h-6 relative">
-                <Image
-                  src={theme === "dark" ? "/Logo-Dark.png" : "/Logo-Light.png"}
-                  alt="Nyantara"
-                  fill
-                  className="object-contain"
-                />
-              </div>
+            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
+              <Image src={logoSrc} alt="Nyantara" fill className="object-contain" />
             </div>
             <div>
               <div
@@ -135,14 +133,8 @@ export default function Sidebar({
         {/* Header */}
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center">
-              <Image
-                src={theme === "dark" ? "/Logo-Dark.png" : "/Logo-Light.png"}
-                alt="Nyantara"
-                width={24}
-                height={24}
-                className="w-6 h-6 object-contain"
-              />
+            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
+              <Image src={logoSrc} alt="Nyantara" width={30} height={30} className="w-6 h-6 object-contain" />
             </div>
             <div>
               <div
