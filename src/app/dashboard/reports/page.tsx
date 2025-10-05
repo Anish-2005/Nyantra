@@ -348,6 +348,27 @@ const ReportsPage = () => {
   });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Use deterministic formatting so server and client render identical strings
+  const formatDate = (s?: string | null) => {
+    if (!s) return '--';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+    } catch (e) {
+      return '--';
+    }
+  };
+
+  const formatDateTime = (s?: string | null) => {
+    if (!s) return '--';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    } catch (e) {
+      return '--';
+    }
+  };
+
   // Filter and sort reports
   const filteredReports = useMemo(() => {
     let filtered = [...mockReports];
@@ -1077,8 +1098,87 @@ const ReportsPage = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            {/* For small screens show a stacked card list instead of table */}
+            {isMobile ? (
+              <div className="p-4 space-y-3">
+                {paginatedReports.map((report, idx) => (
+                  <motion.div
+                    key={report.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="p-3 rounded-lg theme-bg-glass theme-border-glass border"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white flex-shrink-0">
+                          {(() => {
+                            const Icon = getCategoryIcon(report.category);
+                            return <Icon className="w-6 h-6" />;
+                          })()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium theme-text-primary truncate">{report.name}</p>
+                          <p className="text-xs theme-text-muted truncate">{report.id}</p>
+                          <p className="text-xs theme-text-muted mt-1 line-clamp-2">{report.description}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-xs theme-text-muted">
+                            <span className="flex items-center gap-1">
+                              <span className="font-medium theme-text-primary">Type:</span>
+                              <span className="capitalize">{report.type}</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="font-medium theme-text-primary">Category:</span>
+                              <span className="capitalize">{report.category}</span>
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs theme-text-muted">
+                            <span><strong className="theme-text-primary">Size:</strong> {formatFileSize(report.fileSize)}</span>
+                            <span><strong className="theme-text-primary">Generated:</strong> {formatDate(report.generatedDate)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2">
+                      {report.status === 'completed' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleDownload(report.id)}
+                          className="flex-1 px-4 py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="text-sm">Download</span>
+                        </motion.button>
+                      )}
+
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedReport(report)}
+                        className="flex-1 px-4 py-3 rounded-lg theme-bg-glass theme-border-glass border flex items-center justify-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span className="text-sm">View</span>
+                      </motion.button>
+
+                      {!report.isScheduled && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleScheduleReport(report.id)}
+                          className="px-3 py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-2"
+                        >
+                          <Clock className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
                 <thead className="theme-bg-glass border-b theme-border-glass">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Report Name</th>
@@ -1134,7 +1234,7 @@ const ReportsPage = () => {
                         </span>
                       </td>
                       <td className="hidden xl:table-cell px-4 py-3 text-sm theme-text-primary">
-                        {report.generatedDate ? new Date(report.generatedDate).toLocaleDateString() : '--'}
+                        {formatDate(report.generatedDate)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -1181,8 +1281,9 @@ const ReportsPage = () => {
                     </motion.tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
+                </table>
+              </div>
+            )}
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
@@ -1260,243 +1361,198 @@ const ReportsPage = () => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedReport(null)}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
-            >
-              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white">
-                    {(() => {
-                      const Icon = getCategoryIcon(selectedReport.category);
-                      return <Icon className="w-6 h-6" />;
-                    })()}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold theme-text-primary">{selectedReport.name}</h2>
-                    <p className="theme-text-muted">{selectedReport.id} • {selectedReport.category}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="border-b theme-border-glass">
-                <div className="flex overflow-x-auto">
-                  {['details', 'parameters', 'preview'].map((tab) => (
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
+              >
+                <div className={isMobile ? 'flex flex-col h-full' : 'relative'}>
+                  <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-4 sm:p-6 flex items-center justify-between gap-3 z-30">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white flex-shrink-0">
+                        {(() => {
+                          const Icon = getCategoryIcon(selectedReport.category);
+                          return <Icon className="w-6 h-6" />;
+                        })()}
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-bold theme-text-primary truncate">{selectedReport.name}</h2>
+                        <p className="theme-text-muted text-sm truncate">{selectedReport.id} • {selectedReport.category}</p>
+                      </div>
+                    </div>
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === tab
-                          ? 'border-blue-500 text-blue-600 theme-text-primary'
-                          : 'border-transparent theme-text-muted hover:theme-text-primary'
-                      }`}
+                      onClick={() => setSelectedReport(null)}
+                      className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0"
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      <X className="w-5 h-5" />
                     </button>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              <div className="p-6 space-y-6">
-                {activeTab === 'details' && (
-                  <>
-                    {/* Report Overview */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Overview</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg theme-bg-glass">
-                          <p className="text-sm theme-text-muted mb-2">Description</p>
-                          <p className="theme-text-primary leading-relaxed">{selectedReport.description}</p>
-                        </div>
-                        <div className="p-4 rounded-lg theme-bg-glass">
-                          <p className="text-sm theme-text-muted mb-2">Record Count</p>
-                          <p className="text-2xl font-bold theme-text-primary">
-                            {selectedReport.recordCount || '--'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Status and Metadata */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">Status</p>
-                        <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedReport.status)}`}>
-                          {(() => {
-                            const Icon = getStatusIcon(selectedReport.status);
-                            return <Icon className="w-4 h-4" />;
-                          })()}
-                          {selectedReport.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">File Format</p>
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const Icon = getFileFormatIcon(selectedReport.fileFormat);
-                            return <Icon className="w-4 h-4 theme-text-primary" />;
-                          })()}
-                          <p className="font-medium theme-text-primary">{selectedReport.fileFormat}</p>
-                        </div>
-                      </div>
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">File Size</p>
-                        <p className="font-medium theme-text-primary">{formatFileSize(selectedReport.fileSize)}</p>
-                      </div>
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">Download Count</p>
-                        <p className="font-medium theme-text-primary">{selectedReport.downloadCount}</p>
-                      </div>
-                    </div>
-
-                    {/* Generation Information */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Generation Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="p-4 rounded-lg theme-bg-glass">
-                          <p className="text-sm theme-text-muted mb-1">Generated Date</p>
-                          <p className="font-medium theme-text-primary">
-                            {selectedReport.generatedDate ? new Date(selectedReport.generatedDate).toLocaleString() : 'Not generated'}
-                          </p>
-                        </div>
-                        <div className="p-4 rounded-lg theme-bg-glass">
-                          <p className="text-sm theme-text-muted mb-1">Generated By</p>
-                          <p className="font-medium theme-text-primary">{selectedReport.generatedBy || 'System'}</p>
-                        </div>
-                        <div className="p-4 rounded-lg theme-bg-glass">
-                          <p className="text-sm theme-text-muted mb-1">Frequency</p>
-                          <p className="font-medium theme-text-primary capitalize">{selectedReport.frequency}</p>
-                        </div>
-                        {selectedReport.lastRun && (
-                          <div className="p-4 rounded-lg theme-bg-glass">
-                            <p className="text-sm theme-text-muted mb-1">Last Run</p>
-                            <p className="font-medium theme-text-primary">{new Date(selectedReport.lastRun).toLocaleString()}</p>
-                          </div>
-                        )}
-                        {selectedReport.nextRun && (
-                          <div className="p-4 rounded-lg theme-bg-glass">
-                            <p className="text-sm theme-text-muted mb-1">Next Run</p>
-                            <p className="font-medium theme-text-primary">{new Date(selectedReport.nextRun).toLocaleString()}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {activeTab === 'parameters' && (
-                  <div className="space-y-6">
-                    {/* Report Parameters */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Parameters</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(selectedReport.parameters).map(([key, value]) => (
-                          <div key={key} className="p-4 rounded-lg theme-bg-glass">
-                            <p className="text-sm theme-text-muted mb-1 capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </p>
-                            <p className="font-medium theme-text-primary">{value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Data Columns */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Included Data Columns</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {selectedReport.columns.map((column, idx) => (
-                          <div key={idx} className="flex items-center gap-2 p-2 rounded theme-bg-glass">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm theme-text-primary">{column}</span>
-                          </div>
-                        ))}
-                      </div>
+                  {/* Tabs */}
+                  <div className="border-b theme-border-glass sticky top-[64px] z-20 bg-transparent">
+                    <div className="flex overflow-x-auto">
+                      {['details', 'parameters', 'preview'].map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => setActiveTab(tab)}
+                          className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === tab
+                              ? 'border-blue-500 text-blue-600 theme-text-primary'
+                              : 'border-transparent theme-text-muted hover:theme-text-primary'
+                          }`}
+                        >
+                          {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
 
-                {activeTab === 'preview' && (
-                  <div className="text-center py-12">
-                    <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold theme-text-primary mb-2">Report Preview</h3>
-                    <p className="theme-text-muted mb-6">
-                      {selectedReport.status === 'completed' 
-                        ? 'Click download to view the full report'
-                        : 'Report preview will be available after generation'
-                      }
-                    </p>
-                    {selectedReport.status === 'completed' && (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDownload(selectedReport.id)}
-                        className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 mx-auto"
-                      >
-                        <Download className="w-5 h-5" />
-                        Download Full Report
-                      </motion.button>
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                    {activeTab === 'details' && (
+                      <>
+                        {/* Report Overview */}
+                        <div>
+                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Overview</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg theme-bg-glass">
+                              <p className="text-sm theme-text-muted mb-2">Description</p>
+                              <p className="theme-text-primary leading-relaxed">{selectedReport.description}</p>
+                            </div>
+                            <div className="p-4 rounded-lg theme-bg-glass">
+                              <p className="text-sm theme-text-muted mb-2">Record Count</p>
+                              <p className="text-2xl font-bold theme-text-primary">{selectedReport.recordCount || '--'}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status and Metadata */}
+                        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                            <p className="text-sm theme-text-muted mb-2">Status</p>
+                            <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedReport.status)}`}>
+                              {(() => {
+                                const Icon = getStatusIcon(selectedReport.status);
+                                return <Icon className="w-4 h-4" />;
+                              })()}
+                              {selectedReport.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                            <p className="text-sm theme-text-muted mb-2">File Format</p>
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const Icon = getFileFormatIcon(selectedReport.fileFormat);
+                                return <Icon className="w-4 h-4 theme-text-primary" />;
+                              })()}
+                              <p className="font-medium theme-text-primary">{selectedReport.fileFormat}</p>
+                            </div>
+                          </div>
+                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                            <p className="text-sm theme-text-muted mb-2">File Size</p>
+                            <p className="font-medium theme-text-primary">{formatFileSize(selectedReport.fileSize)}</p>
+                          </div>
+                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                            <p className="text-sm theme-text-muted mb-2">Download Count</p>
+                            <p className="font-medium theme-text-primary">{selectedReport.downloadCount}</p>
+                          </div>
+                        </div>
+
+                        {/* Generation Information */}
+                        <div>
+                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Generation Information</h3>
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="p-4 rounded-lg theme-bg-glass">
+                              <p className="text-sm theme-text-muted mb-1">Generated Date</p>
+                              <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.generatedDate)}</p>
+                            </div>
+                            <div className="p-4 rounded-lg theme-bg-glass">
+                              <p className="text-sm theme-text-muted mb-1">Generated By</p>
+                              <p className="font-medium theme-text-primary">{selectedReport.generatedBy || 'System'}</p>
+                            </div>
+                            <div className="p-4 rounded-lg theme-bg-glass">
+                              <p className="text-sm theme-text-muted mb-1">Frequency</p>
+                              <p className="font-medium theme-text-primary capitalize">{selectedReport.frequency}</p>
+                            </div>
+                            {selectedReport.lastRun && (
+                              <div className="p-4 rounded-lg theme-bg-glass">
+                                <p className="text-sm theme-text-muted mb-1">Last Run</p>
+                                <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.lastRun)}</p>
+                              </div>
+                            )}
+                            {selectedReport.nextRun && (
+                              <div className="p-4 rounded-lg theme-bg-glass">
+                                <p className="text-sm theme-text-muted mb-1">Next Run</p>
+                                <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.nextRun)}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {activeTab === 'parameters' && (
+                      <div className="space-y-6">
+                        {/* Report Parameters */}
+                        <div>
+                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Parameters</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {Object.entries(selectedReport.parameters).map(([key, value]) => (
+                              <div key={key} className="p-4 rounded-lg theme-bg-glass">
+                                <p className="text-sm theme-text-muted mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                <p className="font-medium theme-text-primary">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Data Columns */}
+                        <div>
+                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Included Data Columns</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {selectedReport.columns.map((column, idx) => (
+                              <div key={idx} className="flex items-center gap-2 p-2 rounded theme-bg-glass">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-sm theme-text-primary">{column}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'preview' && (
+                      <div className="text-center py-12">
+                        <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold theme-text-primary mb-2">Report Preview</h3>
+                        <p className="theme-text-muted mb-6">{selectedReport.status === 'completed' ? 'Click download to view the full report' : 'Report preview will be available after generation'}</p>
+                        {selectedReport.status === 'completed' && (
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownload(selectedReport.id)} className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 mx-auto">
+                            <Download className="w-5 h-5" />
+                            Download Full Report
+                          </motion.button>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-6 border-t theme-border-glass">
-                  {selectedReport.status === 'completed' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleDownload(selectedReport.id)}
-                      className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <Download className="w-5 h-5" />
-                      Download Report
-                    </motion.button>
-                  )}
-                  {!selectedReport.isScheduled && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleScheduleReport(selectedReport.id)}
-                      className="flex-1 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <Clock className="w-5 h-5" />
-                      Schedule Report
-                    </motion.button>
-                  )}
-                  {selectedReport.status !== 'completed' && selectedReport.status !== 'scheduled' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleGenerateNow(selectedReport.id)}
-                      className="flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <RefreshCw className="w-5 h-5" />
-                      Generate Now
-                    </motion.button>
-                  )}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
-                  >
-                    <Share2 className="w-5 h-5" />
-                    Share Report
-                  </motion.button>
+                  {/* Sticky Footer Actions (mobile-friendly) */}
+                  <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.6)] dark:bg-[rgba(15,23,42,0.85)] backdrop-blur-md border-t theme-border-glass p-4 sm:p-6 flex flex-col sm:flex-row gap-3">
+                    {selectedReport.status === 'completed' && (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleDownload(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"><Download className="w-5 h-5" />Download Report</motion.button>
+                    )}
+                    {!selectedReport.isScheduled && (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleScheduleReport(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-2"><Clock className="w-5 h-5" />Schedule Report</motion.button>
+                    )}
+                    {selectedReport.status !== 'completed' && selectedReport.status !== 'scheduled' && (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleGenerateNow(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"><RefreshCw className="w-5 h-5" />Generate Now</motion.button>
+                    )}
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"><Share2 className="w-5 h-5" />Share Report</motion.button>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
 
