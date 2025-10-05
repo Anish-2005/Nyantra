@@ -118,7 +118,7 @@ export default function Sidebar({
               try {
                 await signOutUser();
                 router.push('/login');
-              } catch (e) {
+              } catch {
                 // ignore - AuthContext should surface errors elsewhere
               }
             }}
@@ -200,7 +200,7 @@ export default function Sidebar({
               try {
                 await signOutUser();
                 router.push('/login');
-              } catch (e) {
+              } catch {
                 // ignore
               }
             }}

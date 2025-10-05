@@ -89,7 +89,7 @@ export default function AnalyticsChart({
       });
 
       chart.update();
-    } catch (e) {
+    } catch {
       // ignore gradient errors
     }
   }, [theme, componentsLoaded]);

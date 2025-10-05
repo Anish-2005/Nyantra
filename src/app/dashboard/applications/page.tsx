@@ -121,8 +121,8 @@ const ApplicationsPage = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [actTypeFilter, setActTypeFilter] = useState('all');
     const [priorityFilter, setPriorityFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('applicationDate');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [sortBy] = useState('applicationDate');
+    const [sortOrder] = useState<'asc' | 'desc'>('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [showFilters, setShowFilters] = useState(false);

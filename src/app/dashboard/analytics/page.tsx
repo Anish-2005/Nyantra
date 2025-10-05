@@ -70,10 +70,12 @@ const analyticsData = {
 const AnalyticsPage = () => {
   const { theme } = useTheme();
   const [timeRange, setTimeRange] = useState('year');
-  const [actTypeFilter, setActTypeFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [stateFilter, setStateFilter] = useState('all');
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  // Filters (reserved for future UI) - currently not used in the demo
+  // const [actTypeFilter] = useState('all');
+  // const [categoryFilter] = useState('all');
+  // const [stateFilter] = useState('all');
+  // Detect mobile - not used in analytics view
+  // const [, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Filter data based on selections
@@ -84,7 +86,7 @@ const AnalyticsPage = () => {
     // For now, we'll use the full dataset
 
     return data;
-  }, [timeRange, actTypeFilter, categoryFilter, stateFilter]);
+  }, [timeRange]);
 
   // Performance indicators
   const performanceIndicators = useMemo(() => {
@@ -127,9 +129,11 @@ const AnalyticsPage = () => {
   // Detect small screens and adjust UI defaults for better mobile UX
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 640px)');
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
-      const matches = 'matches' in e ? e.matches : mq.matches;
-      setIsMobile(matches);
+    const handler = (_e: MediaQueryListEvent | MediaQueryList) => {
+      // placeholder handler kept for possible future use
+      // const matches = 'matches' in e ? e.matches : mq.matches;
+      // setIsMobile(matches);
+      return;
     };
 
     handler(mq);

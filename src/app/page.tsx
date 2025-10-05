@@ -1300,7 +1300,7 @@ const NyantaraLanding = () => {
                 { key: 'ecourts', name: 'eCourts', logo: '/globe.svg', desc: 'Case Fetching', accent: 'from-green-400 to-teal-500' },
                 { key: 'digilocker', name: 'DigiLocker', logo: '/file.svg', desc: 'Document Store', accent: 'from-pink-400 to-rose-500' },
                 { key: 'sms', name: 'SMS Gateways', logo: '/next.svg', desc: 'Notifications', accent: 'from-yellow-400 to-amber-500' }
-              ].map((integration, i) => (
+              ].map((integration) => (
                 <motion.div key={integration.key} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
                   <div className="w-full theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center space-y-3 hover:shadow-xl transition-all duration-300">
                     <div className={`w-20 h-20 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br ${integration.accent}`}>

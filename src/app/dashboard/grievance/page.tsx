@@ -324,8 +324,8 @@ const GrievancePage = () => {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
   const [assignedToFilter, setAssignedToFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('createdDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy] = useState('createdDate');
+  const [sortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);

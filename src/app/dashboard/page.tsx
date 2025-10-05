@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence, useScroll, useSpring, Variants } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
@@ -18,12 +18,11 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   // Chart filters state
   const [chartRange, setChartRange] = useState<number>(30);
@@ -41,7 +40,6 @@ const Dashboard = () => {
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
   const pathname = usePathname();
-  const router = useRouter();
 
   // Sync sidebar with viewport size
   useEffect(() => {
@@ -81,14 +79,7 @@ const Dashboard = () => {
     setActiveTab(seg);
   }, [pathname]);
 
-  // Scroll detection
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Scroll detection: currently disabled in this component (kept for future use)
 
   // Mouse tracking
   useEffect(() => {
