@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useTheme } from '../context/ThemeContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
@@ -24,6 +25,7 @@ const NyantaraLanding = () => {
 
   // Use global theme from ThemeContext
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
 
   // Enhanced Three.js Scene with theme-aware colors
   useEffect(() => {
@@ -510,6 +512,8 @@ const NyantaraLanding = () => {
                   </motion.a>
                 ))}
                 <motion.button
+                  onClick={() => router.push('/dashboard')}
+                  aria-label="Get started - go to dashboard"
                   className="px-6 py-2.5 accent-gradient rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -568,6 +572,8 @@ const NyantaraLanding = () => {
                   ))}
                   <div className="pt-4 space-y-3">
                     <motion.button
+                      onClick={() => { router.push('/dashboard'); setIsMobileMenuOpen(false); }}
+                      aria-label="Get started - go to dashboard"
                       className="w-full px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg"
                       whileTap={{ scale: 0.95 }}
                     >

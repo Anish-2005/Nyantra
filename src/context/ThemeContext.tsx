@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useLayoutEffect, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -12,17 +12,32 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'dark';
+  // Use a stable initial theme to avoid SSR/client hydration mismatches.
+  // We'll default to 'dark' for the initial render (both server & first client render),
+  // then detect stored preference or system preference on mount and update.
+  const [theme, setThemeState] = useState<Theme>('dark');
+
+  // On mount, synchronously read stored preference or system preference and update theme
+  // before the browser paints to avoid hydration mismatches.
+  useLayoutEffect(() => {
     try {
       const stored = localStorage.getItem('nyantara-theme');
-      if (stored === 'light' || stored === 'dark') return stored as Theme;
+      if (stored === 'light' || stored === 'dark') {
+        setThemeState(stored as Theme);
+        document.documentElement.setAttribute('data-theme', stored as Theme);
+        return;
+      }
     } catch {
       /* ignore localStorage errors */
     }
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
 
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = prefersDark ? 'dark' : 'light';
+    setThemeState(initial);
+    document.documentElement.setAttribute('data-theme', initial);
+  }, []);
+
+  // Persist theme when it changes (non-blocking)
   useEffect(() => {
     try { localStorage.setItem('nyantara-theme', theme); } catch { /* ignore */ }
     document.documentElement.setAttribute('data-theme', theme);

@@ -113,6 +113,8 @@ export default function Sidebar({ items, activeId, onChange, open, setOpen }: Pr
                             <Image
                                 src={theme === "dark" ? "/Logo-Dark.png" : "/Logo-Light.png"}
                                 alt="Nyantara"
+                                width={24}
+                                height={24}
                                 className="w-6 h-6 object-contain"
                             />
                         </div>
