@@ -3,6 +3,8 @@ import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 type NavItem = {
@@ -27,6 +29,8 @@ export default function Sidebar({
   setOpen,
 }: Props) {
   const { theme } = useTheme();
+  const { signOutUser } = useAuth();
+  const router = useRouter();
 
   // Close on Escape
   useEffect(() => {
@@ -106,6 +110,24 @@ export default function Sidebar({
             ))}
           </ul>
         </nav>
+        {/* Footer - Logout */}
+        <div className="p-3 border-t theme-border-glass">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await signOutUser();
+                router.push('/login');
+              } catch (e) {
+                // ignore - AuthContext should surface errors elsewhere
+              }
+            }}
+            className="w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+            <span className="truncate text-center flex-1">SIGN OUT</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* -------------------- MOBILE OVERLAY (FIXED) -------------------- */}
@@ -170,6 +192,24 @@ export default function Sidebar({
             ))}
           </ul>
         </nav>
+        {/* Footer - Logout */}
+        <div className="p-3 border-t theme-border-glass">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await signOutUser();
+                router.push('/login');
+              } catch (e) {
+                // ignore
+              }
+            }}
+            className=" text-center w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+            <span className="truncate text-center flex-1">SIGN OUT</span>
+          </button>
+        </div>
       </motion.aside>
     </>
   );
