@@ -86,7 +86,9 @@ const AnalyticsPage = () => {
     // For now, we'll use the full dataset
 
     return data;
-  }, [timeRange]);
+    // timeRange isn't used inside this memo yet — leaving the dependency array empty
+    // to avoid unnecessary recomputations warned by react-hooks/exhaustive-deps.
+  }, []);
 
   // Performance indicators
   const performanceIndicators = useMemo(() => {
@@ -129,14 +131,14 @@ const AnalyticsPage = () => {
   // Detect small screens and adjust UI defaults for better mobile UX
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 640px)');
-    const handler = (_e: MediaQueryListEvent | MediaQueryList) => {
+    const handler = () => {
       // placeholder handler kept for possible future use
       // const matches = 'matches' in e ? e.matches : mq.matches;
       // setIsMobile(matches);
       return;
     };
 
-    handler(mq);
+  handler();
     if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
     else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
 

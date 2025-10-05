@@ -319,7 +319,7 @@ const ReportsPage = () => {
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedReport, setSelectedReport] = useState<typeof mockReports[0] | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<typeof reportTemplates[0] | null>(null);
+  const [, setSelectedTemplate] = useState<typeof reportTemplates[0] | null>(null);
   const [viewMode, setViewMode] = useState<'reports' | 'templates' | 'scheduled'>('reports');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('details');
