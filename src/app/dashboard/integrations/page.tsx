@@ -1020,7 +1020,7 @@ const IntegrationsPage = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Integrations List */}
+     {/* Integrations List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1028,101 +1028,217 @@ const IntegrationsPage = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         {viewMode === 'list' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="theme-bg-glass border-b theme-border-glass">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Integration</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Provider</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                  <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Health</th>
-                  <th className="hidden xl:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Last Sync</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedIntegrations.map((integration, idx) => (
-                  <motion.tr
+          isMobile ? (
+            <div className="p-3 space-y-3">
+              {paginatedIntegrations.map((integration, idx) => {
+                const CategoryIcon = getCategoryIcon(integration.category);
+                const HealthIcon = getHealthIcon(integration.health);
+                
+                return (
+                  <motion.div
                     key={integration.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    whileTap={{ scale: 0.995 }}
+                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
+                    onClick={() => setSelectedIntegration(integration)}
                   >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-                          {(() => {
-                            const Icon = getCategoryIcon(integration.category);
-                            return <Icon className="w-5 h-5" />;
-                          })()}
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white flex-shrink-0 shadow-md">
+                          <CategoryIcon className="w-6 h-6" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium theme-text-primary">{integration.name}</p>
-                          <p className="text-xs theme-text-muted">{integration.id}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{integration.name}</p>
+                          <p className="text-xs theme-text-muted truncate">{integration.id}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
-                      {integration.provider}
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass capitalize">
-                        {integration.category.replace('-', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(integration.status)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getStatusColor(integration.status)}`}>
                         {integration.status === 'active' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                        {integration.status}
                       </span>
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getHealthColor(integration.health)}`}>
-                        {(() => {
-                          const Icon = getHealthIcon(integration.health);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {integration.health}
-                      </span>
-                    </td>
-                    <td className="hidden xl:table-cell px-4 py-3 text-sm theme-text-primary">
-                      {integration.lastSync}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedIntegration(integration)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleTestConnection(integration.id)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
-                        >
-                          <Wifi className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSyncNow(integration.id)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500/20 hover:text-blue-400 transition-colors"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </motion.button>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Database className="w-3.5 h-3.5" />
+                          Provider
+                        </span>
+                        <span className="theme-text-primary font-medium">{integration.provider}</span>
                       </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <CategoryIcon className="w-3.5 h-3.5" />
+                          Category
+                        </span>
+                        <span className="theme-text-primary font-medium capitalize">{formatCategoryName(integration.category)}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <HealthIcon className="w-3.5 h-3.5" />
+                          Health
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${getHealthColor(integration.health)}`}>
+                          <HealthIcon className="w-3 h-3" />
+                          <span className="capitalize">{integration.health}</span>
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          Last Sync
+                        </span>
+                        <span className="theme-text-primary font-medium font-mono text-[10px]">{integration.lastSync}</span>
+                      </div>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-4 mb-3 text-xs theme-text-secondary pb-3 border-b theme-border-glass">
+                      <div className="flex items-center gap-1.5">
+                        <Network className="w-3.5 h-3.5" />
+                        <span>{integration.endpoints} EP</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span>{integration.successRate}%</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Timer className="w-3.5 h-3.5" />
+                        <span>{integration.responseTime}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleTestConnection(integration.id); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-green-500/10 active:scale-95 transition-all"
+                      >
+                        <Wifi className="w-3.5 h-3.5" />
+                        <span>Test</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSyncNow(integration.id); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Sync</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedIntegration(integration); }}
+                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="theme-bg-glass border-b theme-border-glass">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Integration</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Provider</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Health</th>
+                    <th className="hidden xl:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Last Sync</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedIntegrations.map((integration, idx) => (
+                    <motion.tr
+                      key={integration.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
+                            {(() => {
+                              const Icon = getCategoryIcon(integration.category);
+                              return <Icon className="w-5 h-5" />;
+                            })()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium theme-text-primary">{integration.name}</p>
+                            <p className="text-xs theme-text-muted">{integration.id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {integration.provider}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass capitalize">
+                          {integration.category.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(integration.status)}`}>
+                          {integration.status === 'active' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {integration.status}
+                        </span>
+                      </td>
+                      <td className="hidden lg:table-cell px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getHealthColor(integration.health)}`}>
+                          {(() => {
+                            const Icon = getHealthIcon(integration.health);
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {integration.health}
+                        </span>
+                      </td>
+                      <td className="hidden xl:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {integration.lastSync}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setSelectedIntegration(integration)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleTestConnection(integration.id)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
+                          >
+                            <Wifi className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleSyncNow(integration.id)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500/20 hover:text-blue-400 transition-colors"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {paginatedIntegrations.map((integration, idx) => (
