@@ -1070,7 +1070,7 @@ const GrievancePage = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Grievances List */}
+       {/* Grievances List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1078,105 +1078,218 @@ const GrievancePage = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="theme-bg-glass border-b theme-border-glass">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Grievance ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                  <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Assigned To</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Priority</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedGrievances.map((grievance, idx) => (
-                  <motion.tr
+          isMobile ? (
+            <div className="p-3 space-y-3">
+              {paginatedGrievances.map((grievance, idx) => {
+                const StatusIcon = getStatusIcon(grievance.status);
+                const CategoryIcon = getCategoryIcon(grievance.category);
+                
+                return (
+                  <motion.div
                     key={grievance.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    whileTap={{ scale: 0.995 }}
+                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
+                    onClick={() => setSelectedGrievance(grievance)}
                   >
-                    <td className="px-4 py-3 text-sm font-medium theme-text-primary">{grievance.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
                           {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium theme-text-primary">{grievance.beneficiaryName}</p>
-                          <p className="text-xs theme-text-muted">{grievance.district}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{grievance.beneficiaryName}</p>
+                          <p className="text-xs theme-text-muted truncate">{grievance.id}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const Icon = getCategoryIcon(grievance.category);
-                          return <Icon className="w-4 h-4 theme-text-muted" />;
-                        })()}
-                        <span className="text-sm theme-text-primary capitalize">
-                          {grievance.category.replace('-', ' ')}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(grievance.priority)}`}>
+                        {grievance.priority.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <CategoryIcon className="w-3.5 h-3.5" />
+                          Category
                         </span>
+                        <span className="theme-text-primary font-medium capitalize">{grievance.category.replace('-', ' ')}</span>
                       </div>
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
-                        {grievance.actType}
-                      </span>
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3 text-sm theme-text-primary">
-                      {grievance.assignedTo}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
-                        {(() => {
-                          const Icon = getStatusIcon(grievance.status);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {grievance.status.replace('-', ' ')}
-                      </span>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(grievance.priority)}`}>
-                        {grievance.priority}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedGrievance(grievance)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </motion.button>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Scale className="w-3.5 h-3.5" />
+                          Act Type
+                        </span>
+                        <span className="theme-text-primary font-medium">{grievance.actType}</span>
                       </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <UserCheck className="w-3.5 h-3.5" />
+                          Assigned To
+                        </span>
+                        <span className="theme-text-primary font-medium truncate max-w-[180px]">{grievance.assignedTo}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5" />
+                          Location
+                        </span>
+                        <span className="theme-text-primary font-medium">{grievance.district}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
+                          Created
+                        </span>
+                        <span className="theme-text-primary font-medium font-mono text-[10px]">{new Date(grievance.createdDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="mb-3 pb-3 border-b theme-border-glass">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        <span className="capitalize">{grievance.status.replace('-', ' ')}</span>
+                      </span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
+                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                        <span>More</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="theme-bg-glass border-b theme-border-glass">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Grievance ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Assigned To</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Priority</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedGrievances.map((grievance, idx) => (
+                    <motion.tr
+                      key={grievance.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{grievance.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                            {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium theme-text-primary">{grievance.beneficiaryName}</p>
+                            <p className="text-xs theme-text-muted">{grievance.district}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const Icon = getCategoryIcon(grievance.category);
+                            return <Icon className="w-4 h-4 theme-text-muted" />;
+                          })()}
+                          <span className="text-sm theme-text-primary capitalize">
+                            {grievance.category.replace('-', ' ')}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
+                          {grievance.actType}
+                        </span>
+                      </td>
+                      <td className="hidden lg:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {grievance.assignedTo}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
+                          {(() => {
+                            const Icon = getStatusIcon(grievance.status);
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {grievance.status.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(grievance.priority)}`}>
+                          {grievance.priority}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setSelectedGrievance(grievance)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {paginatedGrievances.map((grievance, idx) => (
