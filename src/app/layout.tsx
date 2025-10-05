@@ -4,6 +4,7 @@ import "./globals.css";
 import ClientCursor from "../components/ClientCursor";
 import ClientBackgroundCursor from "../components/ClientBackgroundCursor";
 import { ThemeProvider } from '../context/ThemeContext';
+import { AuthProvider } from '../context/AuthContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>
+  <ThemeProvider>
+  <AuthProvider>
         {/* Background cursor layer (above background canvases/orbs, below content) */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
           <ClientBackgroundCursor />
@@ -43,9 +45,10 @@ export default function RootLayout({
 
         {children}
 
-        {/* Foreground pointer cursor */}
-        <ClientCursor />
-        </ThemeProvider>
+  {/* Foreground pointer cursor */}
+  <ClientCursor />
+  </AuthProvider>
+  </ThemeProvider>
       </body>
     </html>
   );

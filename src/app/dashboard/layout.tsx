@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, LogOut, Sun, Moon, HelpCircle } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
 
@@ -27,6 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
     
     const router = useRouter();
+    const { user, loading } = useAuth();
+
+    useEffect(() => {
+        // If auth finished loading and there is no user, redirect to login
+        if (!loading && !user) router.push('/login');
+    }, [user, loading, router]);
     
     const handleSidebarChange = (id: string) => {
         setActiveTab(id);
