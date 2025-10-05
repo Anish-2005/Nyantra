@@ -335,7 +335,7 @@ const DisbursementsPage = () => {
     filtered.sort((a, b) => {
       let aVal = a[sortBy as keyof typeof a];
       let bVal = b[sortBy as keyof typeof b];
-      
+
       if (sortOrder === 'asc') {
         return aVal > bVal ? 1 : -1;
       } else {
@@ -358,7 +358,7 @@ const DisbursementsPage = () => {
     const totalAmount = mockDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
     const disbursedAmount = mockDisbursements.reduce((sum, d) => sum + d.disbursedAmount, 0);
     const pendingAmount = totalAmount - disbursedAmount;
-    
+
     return {
       total: mockDisbursements.length,
       completed: mockDisbursements.filter(d => d.status === 'completed').length,
@@ -566,6 +566,27 @@ const DisbursementsPage = () => {
     }).format(amount);
   };
 
+  // Deterministic date formatting to avoid SSR/client hydration mismatches
+  const formatDate = (s?: string | null) => {
+    if (!s) return '—';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    } catch {
+      return s;
+    }
+  };
+
+  const formatDateTime = (s?: string | null) => {
+    if (!s) return '—';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    } catch {
+      return s;
+    }
+  };
+
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
       {/* Three.js Canvas Background (theme-aware) */}
@@ -628,7 +649,7 @@ const DisbursementsPage = () => {
           background-clip: text;
         }
       `}</style>
-      
+
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -712,8 +733,8 @@ const DisbursementsPage = () => {
             </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" 
+            <div
+              className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
               style={{ width: `${(stats.disbursedAmount / stats.totalAmount) * 100}%` }}
             ></div>
           </div>
@@ -791,11 +812,11 @@ const DisbursementsPage = () => {
           {monthlyTrend.labels.map((month, index) => (
             <div key={month} className="flex flex-col items-center flex-1">
               <div className="flex items-end justify-center w-full h-20 gap-1 mb-2">
-                <div 
+                <div
                   className="w-3/4 bg-green-500 rounded-t transition-all duration-500"
                   style={{ height: `${(monthlyTrend.completed[index] / Math.max(...monthlyTrend.completed)) * 80}%` }}
                 ></div>
-                <div 
+                <div
                   className="w-1/4 bg-red-500 rounded-t transition-all duration-500"
                   style={{ height: `${(monthlyTrend.failed[index] / Math.max(...monthlyTrend.completed, ...monthlyTrend.failed, 1)) * 80}%` }}
                 ></div>
@@ -934,107 +955,261 @@ const DisbursementsPage = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="theme-bg-glass border-b theme-border-glass">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Disbursement ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Transaction ID</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                  <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Initiated Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedDisbursements.map((disbursement, idx) => (
-                  <motion.tr
+          isMobile ? (
+            <div className="p-3 space-y-3">
+              {paginatedDisbursements.map((disbursement, idx) => {
+                const StatusIcon = getStatusIcon(disbursement.status);
+
+                return (
+                  <motion.div
                     key={disbursement.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    whileTap={{ scale: 0.995 }}
+                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
+                    onClick={() => setSelectedDisbursement(disbursement)}
                   >
-                    <td className="px-4 py-3 text-sm font-medium theme-text-primary">{disbursement.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
                           {disbursement.beneficiaryName.split(' ').map(n => n[0]).join('')}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
-                          <p className="text-xs theme-text-muted">{disbursement.district}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{disbursement.beneficiaryName}</p>
+                          <p className="text-xs theme-text-muted truncate">{disbursement.id}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary font-mono">
-                      {disbursement.transactionId}
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
-                        {disbursement.actType}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(disbursement.priority)}`}>
+                        {disbursement.priority.toUpperCase()}
                       </span>
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
+                    </div>
+
+                    {/* Amount Display - Prominent */}
+                    <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs theme-text-muted mb-0.5">Relief Amount</p>
+                          <p className="text-lg font-bold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
+                        </div>
                         {disbursement.status === 'completed' && (
-                          <p className="text-xs theme-text-muted">
-                            Net: {formatCurrency(disbursement.netAmount)}
-                          </p>
+                          <div className="text-right">
+                            <p className="text-xs theme-text-muted mb-0.5">Net Amount</p>
+                            <p className="text-sm font-semibold text-green-400">{formatCurrency(disbursement.netAmount)}</p>
+                          </div>
                         )}
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
-                        {(() => {
-                          const Icon = getStatusIcon(disbursement.status);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {disbursement.status.replace('-', ' ')}
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <CreditCard className="w-3.5 h-3.5" />
+                          Transaction ID
+                        </span>
+                        <span className="theme-text-primary font-mono text-[10px]">{disbursement.transactionId}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Scale className="w-3.5 h-3.5" />
+                          Act Type
+                        </span>
+                        <span className="theme-text-primary font-medium">{disbursement.actType}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5" />
+                          Location
+                        </span>
+                        <span className="theme-text-primary font-medium">{disbursement.district}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="theme-text-muted flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
+                          Initiated Date
+                        </span>
+                        <span className="theme-text-primary font-medium font-mono text-[10px]">
+                          {formatDate(disbursement.initiatedDate)}
+                        </span>
+                      </div>
+
+                      {disbursement.utrNumber && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="theme-text-muted flex items-center gap-1.5">
+                            <Receipt className="w-3.5 h-3.5" />
+                            UTR Number
+                          </span>
+                          <span className="theme-text-primary font-mono text-[10px]">{disbursement.utrNumber}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status Badge with Retry Info */}
+                    <div className="mb-3 pb-3 border-b theme-border-glass">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        <span className="capitalize">{disbursement.status.replace('-', ' ')}</span>
                       </span>
                       {disbursement.retryCount > 0 && (
-                        <p className="text-xs theme-text-muted mt-1">Retries: {disbursement.retryCount}</p>
+                        <p className="text-xs theme-text-muted mt-2 flex items-center gap-1">
+                          <RotateCcw className="w-3 h-3" />
+                          Retries: {disbursement.retryCount}
+                        </p>
                       )}
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
-                      {new Date(disbursement.initiatedDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedDisbursement(disbursement)}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                      {disbursement.failureReason && (
+                        <p className="text-xs text-red-400 mt-2 flex items-start gap-1">
+                          <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-2">{disbursement.failureReason}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedDisbursement(disbursement); }}
+                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View</span>
+                      </button>
+                      {disbursement.status === 'failed' ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); }}
+                          className="px-3 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                         >
-                          <Eye className="w-4 h-4" />
-                        </motion.button>
-                        {disbursement.status === 'failed' && (
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Retry</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); }}
+                          className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Receipt</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                        <span>More</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="theme-bg-glass border-b theme-border-glass">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Disbursement ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Transaction ID</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Initiated Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedDisbursements.map((disbursement, idx) => (
+                    <motion.tr
+                      key={disbursement.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{disbursement.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                            {disbursement.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
+                            <p className="text-xs theme-text-muted">{disbursement.district}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary font-mono">
+                        {disbursement.transactionId}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
+                          {disbursement.actType}
+                        </span>
+                      </td>
+                      <td className="hidden lg:table-cell px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
+                          {disbursement.status === 'completed' && (
+                            <p className="text-xs theme-text-muted">
+                              Net: {formatCurrency(disbursement.netAmount)}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
+                          {(() => {
+                            const Icon = getStatusIcon(disbursement.status);
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {disbursement.status.replace('-', ' ')}
+                        </span>
+                        {disbursement.retryCount > 0 && (
+                          <p className="text-xs theme-text-muted mt-1">Retries: {disbursement.retryCount}</p>
+                        )}
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {formatDate(disbursement.initiatedDate)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
+                            onClick={() => setSelectedDisbursement(disbursement)}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
                           >
-                            <RotateCcw className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </motion.button>
-                        )}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {disbursement.status === 'failed' && (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {paginatedDisbursements.map((disbursement, idx) => (
@@ -1061,7 +1236,7 @@ const DisbursementsPage = () => {
                     {disbursement.priority}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <CreditCard className="w-4 h-4" />
@@ -1077,10 +1252,10 @@ const DisbursementsPage = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <Calendar className="w-4 h-4" />
-                    <span>{new Date(disbursement.initiatedDate).toLocaleDateString()}</span>
+                    <span>{formatDate(disbursement.initiatedDate)}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
                     {(() => {
@@ -1184,52 +1359,60 @@ const DisbursementsPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
+              className={`${isMobile
+                  ? 'theme-bg-card theme-border-glass border rounded-xl w-full h-full max-h-none overflow-y-auto'
+                  : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'
+                }`}
             >
-              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold theme-text-primary">{selectedDisbursement.id}</h2>
-                  <p className="theme-text-muted">Disbursement Details • {selectedDisbursement.actType}</p>
+              {/* --- MODIFIED HEADER --- */}
+              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-4 sm:p-6 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0"> {/* -> Allows text to truncate */}
+                  <h2 className="text-xl sm:text-2xl font-bold theme-text-primary truncate"> {/* -> Responsive text size and truncation */}
+                    {selectedDisbursement.id}
+                  </h2>
+                  <p className="theme-text-muted truncate"> {/* -> Truncation */}
+                    Disbursement Details • {selectedDisbursement.actType}
+                  </p>
                 </div>
                 <button
                   onClick={() => setSelectedDisbursement(null)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
+                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0" // -> Prevents button from shrinking
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-4 sm:p-6 space-y-6"> {/* -> Responsive padding */}
                 {/* Beneficiary Information */}
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">Beneficiary Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <User className="w-5 h-5 theme-text-muted" />
-                      <div>
+                      <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-xs theme-text-muted">Beneficiary Name</p>
-                        <p className="font-medium theme-text-primary">{selectedDisbursement.beneficiaryName}</p>
+                        <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p> {/* -> Handles long names */}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <Fingerprint className="w-5 h-5 theme-text-muted" />
-                      <div>
+                      <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-xs theme-text-muted">Aadhaar Number</p>
-                        <p className="font-medium theme-text-primary">{selectedDisbursement.aadhaarNumber}</p>
+                        <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p> {/* -> Handles long numbers */}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <Phone className="w-5 h-5 theme-text-muted" />
-                      <div>
+                      <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-xs theme-text-muted">Phone Number</p>
-                        <p className="font-medium theme-text-primary">{selectedDisbursement.phone}</p>
+                        <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <MapPin className="w-5 h-5 theme-text-muted" />
-                      <div>
+                      <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-xs theme-text-muted">Location</p>
-                        <p className="font-medium theme-text-primary">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
+                        <p className="font-medium theme-text-primary break-words">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
                       </div>
                     </div>
                   </div>
@@ -1241,11 +1424,11 @@ const DisbursementsPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Transaction ID</p>
-                      <p className="font-medium theme-text-primary font-mono">{selectedDisbursement.transactionId}</p>
+                      <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">UTR Number</p>
-                      <p className="font-medium theme-text-primary font-mono">
+                      <p className="font-medium theme-text-primary font-mono break-all">
                         {selectedDisbursement.utrNumber || 'Not Available'}
                       </p>
                     </div>
@@ -1274,11 +1457,11 @@ const DisbursementsPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">Bank Account Number</p>
-                      <p className="font-medium theme-text-primary">{selectedDisbursement.bankAccount}</p>
+                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p> {/* -> Handles long account numbers */}
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
                       <p className="text-xs theme-text-muted mb-1">IFSC Code</p>
-                      <p className="font-medium theme-text-primary">{selectedDisbursement.ifsc}</p>
+                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.ifsc}</p>
                     </div>
                   </div>
                 </div>
@@ -1310,18 +1493,18 @@ const DisbursementsPage = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="theme-text-primary">Initiated</span>
-                        <span className="theme-text-muted">{new Date(selectedDisbursement.initiatedDate).toLocaleDateString()}</span>
+                        <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
                       </div>
                       {selectedDisbursement.completedDate && (
                         <div className="flex justify-between text-sm">
                           <span className="theme-text-primary">Completed</span>
-                          <span className="theme-text-muted">{new Date(selectedDisbursement.completedDate).toLocaleDateString()}</span>
+                          <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
                         </div>
                       )}
                       {selectedDisbursement.disbursementDate && (
                         <div className="flex justify-between text-sm">
                           <span className="theme-text-primary">Disbursed</span>
-                          <span className="theme-text-muted">{new Date(selectedDisbursement.disbursementDate).toLocaleDateString()}</span>
+                          <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
                         </div>
                       )}
                     </div>
