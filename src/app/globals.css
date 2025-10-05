@@ -62,3 +62,14 @@ body {
 .theme-text-primary {
   color: var(--text-primary);
 }
+ html {
+          scroll-behavior: smooth;
+          scroll-padding-top: 6rem; /* adjust if header height changes */
+        }
+
+        /* Respect users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          html {
+            scroll-behavior: auto;
+          }
+        }
