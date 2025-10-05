@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring, Variants } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
@@ -11,9 +11,12 @@ import {
   Download, Filter, BarChart3,
   Bell, Settings, User, LogOut,
   Wallet, Award, Rocket, Plus,
-  ChevronRight, ChevronDown, Sun, Moon,
+  ChevronRight, ChevronDown, ChevronLeft, Menu, X,
   ArrowUpRight, ArrowDownRight, ArrowRight,
-  Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, HelpCircle
+  Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, HelpCircle,
+  Search, Calendar, CheckCircle, AlertCircle, Clock as ClockIcon,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -21,10 +24,11 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // default sidebar closed on small screens; initialize on client in useEffect to avoid server-side `window` access
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Chart filters state
   const [chartRange, setChartRange] = useState<number>(30);
   const [showApplications, setShowApplications] = useState(true);
@@ -32,8 +36,10 @@ const Dashboard = () => {
   const [showPending, setShowPending] = useState(true);
   const [smoothing, setSmoothing] = useState(false);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
+
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -42,42 +48,73 @@ const Dashboard = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Sync sidebar with viewport size (collapse on small screens)
+  // Sync sidebar with viewport size
   useEffect(() => {
-    // Use matchMedia to more efficiently track desktop vs mobile and keep sidebar behavior consistent
     const mq = window.matchMedia('(min-width: 1024px)');
     const handler = (e: MediaQueryListEvent | MediaQueryList) => {
       const matches = 'matches' in e ? e.matches : mq.matches;
       setIsDesktop(matches);
-      // If switched to mobile, ensure sidebar is closed; if desktop, we can open it by default
       if (!matches) setSidebarOpen(false);
       else setSidebarOpen(true);
     };
-    // initialize
+
     handler(mq);
-    // add listeners using the correct typed handler
     if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
     else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
+
     return () => {
       if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
       else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
     };
   }, []);
 
-  // Sync active tab with URL segment so the sidebar selection reflects the current route
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!isDesktop && sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sidebarOpen, isDesktop]);
+
+  // Sync active tab with URL
   useEffect(() => {
     const seg = (pathname || '').split('/')[2] || 'overview';
     setActiveTab(seg);
   }, [pathname]);
 
-  // Generate mock time series and datasets (memoized). Helpers are defined inside the memo to avoid hook-deps warnings.
+  // Scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Mouse tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Generate mock data
   type DataPoint = { x: number; y: number };
   type DataSet = { id: string; label: string; color?: string; points: DataPoint[] };
 
   const dataSets = useMemo<DataSet[]>(() => {
     const generateSeries = (days: number): DataPoint[] => {
       const base = Date.now();
-      return Array.from({ length: days }).map((_, i) => ({ x: base - (days - 1 - i) * 24 * 60 * 60 * 1000, y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18)) }));
+      return Array.from({ length: days }).map((_, i) => ({
+        x: base - (days - 1 - i) * 24 * 60 * 60 * 1000,
+        y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18))
+      }));
     };
 
     const smooth = (arr: DataPoint[]) => {
@@ -102,13 +139,10 @@ const Dashboard = () => {
     return sets;
   }, [chartRange, showApplications, showApproved, showPending, smoothing]);
 
-
-  // CSV export for currently visible datasets
+  // CSV export
   const exportCSV = () => {
     if (!dataSets || dataSets.length === 0) return;
-    // Construct CSV: first column is timestamp, then each dataset column
     const header = ['date', ...dataSets.map(ds => ds.label)];
-    // align by index (datasets are same length and x values)
     const rows: string[][] = [];
     const len = dataSets[0].points.length;
     for (let i = 0; i < len; i++) {
@@ -131,7 +165,7 @@ const Dashboard = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Enhanced Three.js Background (same as landing page)
+  // Enhanced Three.js Background
   useEffect(() => {
     if (!canvasRef.current) return;
     let cancelled = false;
@@ -165,7 +199,7 @@ const Dashboard = () => {
       } catch { }
 
       const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = 1000;
+      const particlesCount = window.innerWidth < 768 ? 500 : 1000; // Reduce particles on mobile
       const posArray = new Float32Array(particlesCount * 3);
 
       for (let i = 0; i < particlesCount * 3; i++) {
@@ -194,7 +228,8 @@ const Dashboard = () => {
       });
 
       const linesPositions: number[] = [];
-      for (let i = 0; i < 80; i++) {
+      const lineCount = window.innerWidth < 768 ? 40 : 80; // Reduce lines on mobile
+      for (let i = 0; i < lineCount; i++) {
         const x1 = (Math.random() - 0.5) * 8;
         const y1 = (Math.random() - 0.5) * 8;
         const z1 = (Math.random() - 0.5) * 8;
@@ -210,6 +245,7 @@ const Dashboard = () => {
 
       let animationId: number | null = null;
       const animate = () => {
+        if (cancelled) return;
         animationId = requestAnimationFrame(animate);
         particlesMesh.rotation.y += 0.0003;
         particlesMesh.rotation.x += 0.0001;
@@ -240,26 +276,7 @@ const Dashboard = () => {
     })();
   }, [theme]);
 
-  // Scroll detection
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Mouse tracking
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePositionRef.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  // Enhanced mock data
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Mock data
   const dashboardStats = {
     totalApplications: 1247,
     pendingApplications: 48,
@@ -348,7 +365,6 @@ const Dashboard = () => {
     }
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const grievanceData = [
     {
       id: 'GRV-001',
@@ -376,7 +392,6 @@ const Dashboard = () => {
     }
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const systemIntegrations = [
     { name: 'Aadhaar', icon: Fingerprint, status: 'active', color: 'from-blue-500 to-blue-600' },
     { name: 'eCourts', icon: FileText, status: 'active', color: 'from-indigo-500 to-indigo-600' },
@@ -397,12 +412,12 @@ const Dashboard = () => {
     { id: 'reports', label: 'Reports', icon: DownloadCloud }
   ];
 
-  // Handle sidebar selection: update active tab, navigate to route, and close mobile sidebar
+  // Handle sidebar selection
   const handleSidebarChange = (id: string) => {
     setActiveTab(id);
     if (id === 'overview') router.push('/dashboard');
     else router.push(`/dashboard/${id}`);
-    setSidebarOpen(false);
+    if (!isDesktop) setSidebarOpen(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -416,7 +431,6 @@ const Dashboard = () => {
       }
     }
 
-    // light theme
     switch (status) {
       case 'approved': return 'text-green-700 bg-green-100';
       case 'pending': return 'text-amber-700 bg-amber-100';
@@ -426,7 +440,6 @@ const Dashboard = () => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getPriorityColor = (priority: string) => {
     if (theme === 'dark') {
       switch (priority) {
@@ -437,12 +450,20 @@ const Dashboard = () => {
       }
     }
 
-    // light theme
     switch (priority) {
       case 'high': return 'text-red-700 bg-red-100';
       case 'medium': return 'text-amber-700 bg-amber-100';
       case 'low': return 'text-green-700 bg-green-100';
       default: return 'text-gray-700 bg-gray-100';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved': return <CheckCircle className="w-4 h-4" />;
+      case 'pending': return <ClockIcon className="w-4 h-4" />;
+      case 'in-review': return <AlertCircle className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
     }
   };
 
@@ -477,27 +498,10 @@ const Dashboard = () => {
     }
   };
 
-  // Enhanced gradient orb positions
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const orbPositions = useMemo(() => {
-    const seeded = (seed: number) => {
-      let t = seed >>> 0;
-      return () => {
-        t += 0x6D2B79F5;
-        let r = Math.imul(t ^ (t >>> 15), t | 1);
-        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
-    };
-
-    const rand = seeded(123456789);
-    return Array.from({ length: 12 }).map(() => ({
-      left: `${rand() * 100}%`,
-      top: `${rand() * 100}%`,
-      duration: 3 + rand() * 2,
-      delay: rand() * 2,
-    }));
-  }, []);
+  const sidebarVariants: Variants = {
+    open: { x: 0, transition: { type: "spring" as const, stiffness: 300, damping: 30 } },
+    closed: { x: "-100%", transition: { type: "spring" as const, stiffness: 300, damping: 30 } }
+  };
 
   return (
     <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
@@ -592,20 +596,26 @@ const Dashboard = () => {
       </div>
 
       {/* Main Dashboard Layout */}
-      {/* Use a wrapper that reserves left space equal to the sidebar width on desktop so content doesn't shift up when scrolling
-      and expands left when the sidebar is closed. We apply an inline style computed from `sidebarOpen` to match the
-      sidebar widths defined in `Sidebar.tsx`. */}
-  <div className="relative z-0 theme-text-primary flex min-h-screen flex-col lg:flex-row">
-        {/* Sidebar component (fixed) */}
+      <div className="relative z-10 theme-text-primary flex min-h-screen">
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 lg:hidden z-40"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
         
-
-        {/* Main Content wrapper that matches the fixed sidebar width on desktop */}
-        {/* main content: on desktop reserve left margin equal to sidebar width when sidebar is open so page shifts right */}
-        <div className="flex flex-col flex-1 relative z-0 overflow-hidden ">
-          
-
-          {/* Main Content Area */}
-          <main className="flex-1 overflow-auto p-6 pt-2">
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
                 <motion.div
@@ -620,29 +630,29 @@ const Dashboard = () => {
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
-                    className="theme-bg-card theme-border-glass border rounded-2xl p-8 backdrop-blur-xl relative overflow-hidden"
+                    className="theme-bg-card theme-border-glass border rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex-1">
                         <motion.span
-                          className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
+                          className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-3"
                           animate={{
                             boxShadow: theme === 'dark'
-                              ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 10px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
-                              : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 10px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
+                              ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 8px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
+                              : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 8px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
                           }}
                           transition={{ duration: 2, repeat: Infinity }}
                         >
-                          <Rocket className="inline w-4 h-4 mr-2 text-accent-gradient" />
+                          <Rocket className="inline w-3 h-3 sm:w-4 sm:h-4 mr-2 text-accent-gradient" />
                           Smart DBT Dashboard
                         </motion.span>
-                        <h2 className="text-3xl font-bold theme-text-primary mb-2">
+                        <h2 className="text-xl sm:text-3xl font-bold theme-text-primary mb-2">
                           Welcome back, <span className="text-accent-gradient">Officer</span>
                         </h2>
-                        <p className="theme-text-secondary">{`Here's what's happening with your DBT applications today.`}</p>
+                        <p className="theme-text-secondary text-sm sm:text-base">{`Here's what's happening with your DBT applications today.`}</p>
                       </div>
                       <motion.button
-                        className="px-6 py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 shadow-lg"
+                        className="px-4 py-2.5 sm:px-6 sm:py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -657,27 +667,26 @@ const Dashboard = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
                   >
                     {quickStats.map((stat) => (
                       <motion.div
                         key={stat.title}
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl group relative overflow-hidden"
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl group relative overflow-hidden"
                         whileHover={{ y: -4, scale: 1.02 }}
                       >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
-                            <stat.icon className="w-6 h-6 text-white" />
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
+                            <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                           </div>
-                          <div className={`flex items-center space-x-1 text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                            }`}>
-                            {stat.trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                          <div className={`flex items-center space-x-1 text-xs sm:text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                            {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" /> : <ArrowDownRight className="w-3 h-3 sm:w-4 sm:h-4" />}
                             <span>{stat.change}</span>
                           </div>
                         </div>
-                        <h3 className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</h3>
-                        <p className="text-sm theme-text-muted">{stat.title}</p>
+                        <h3 className="text-lg sm:text-2xl font-bold theme-text-primary mb-1">{stat.value}</h3>
+                        <p className="text-xs sm:text-sm theme-text-muted">{stat.title}</p>
 
                         {/* Hover glow */}
                         <motion.div
@@ -687,166 +696,247 @@ const Dashboard = () => {
                     ))}
                   </motion.div>
 
-                 {/* Charts and Main Content Grid */}
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-  {/* Left Column */}
-  <div className="lg:col-span-2 space-y-6">
-    {/* Applications Overview */}
-    <motion.div
-      variants={itemVariants}
-      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold theme-text-primary">Applications Overview</h3>
-        <div className="flex items-center space-x-2">
-          {[Filter, Download].map((Icon, idx) => (
-            <motion.button
-              key={idx}
-              className="p-2 rounded-lg theme-bg-glass theme-border-glass border"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Icon className="w-4 h-4 theme-text-primary" />
-            </motion.button>
-          ))}
-        </div>
-      </div>
+                  {/* Charts and Main Content Grid */}
+                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
+                    {/* Left Column - Charts and Applications */}
+                    <div className="xl:col-span-2 space-y-4 lg:space-y-6">
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-md flex flex-col gap-6"
+                      >
+                        
 
-      {/* Chart Container */}
-      <div className="h-80 sm:h-96 relative flex items-start justify-center theme-bg-glass rounded-xl overflow-hidden p-4">
-        <div className="absolute inset-0 accent-gradient opacity-5 pointer-events-none z-0" aria-hidden />
+                        {/* Chart Container */}
+                        <div className="relative w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+                          {/* Background Accent */}
+                          <div className="absolute inset-0 accent-gradient opacity-5 pointer-events-none z-0 rounded-xl" aria-hidden />
 
-        {/* Floating Filter Panel */}
-        <div className="absolute top-4 right-4 z-20 bg-[var(--glass-bg)] backdrop-blur-sm border theme-border-glass rounded-lg p-3 flex flex-wrap gap-2">
-          {/* Range */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm theme-text-muted">Range:</label>
-            <select
-              id="range"
-              className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass"
-              value={chartRange}
-              onChange={(e) => setChartRange(Number(e.target.value))}
-            >
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
-            </select>
-          </div>
+                          {/* Floating Filter Panel */}
+                          <div className="absolute top-4 mx-4 z-20 bg-[var(--glass-bg)] backdrop-blur-sm border theme-border-glass rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full sm:w-auto max-w-xs sm:max-w-none">
 
-          {/* Type */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm theme-text-muted">Type:</label>
-            <select
-              id="chart-type"
-              className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass"
-              value={chartType}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')}
-            >
-              <option value="line">Line</option>
-              <option value="area">Area</option>
-              <option value="bar">Bar</option>
-              <option value="stacked">Stacked Bar</option>
-            </select>
-          </div>
+                            {/* Range Selector */}
+                            <div className="flex items-center space-x-1">
+                              <label htmlFor="range" className="text-sm theme-text-muted">Range:</label>
+                              <select
+                                id="range"
+                                className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
+                                value={chartRange}
+                                onChange={(e) => setChartRange(Number(e.target.value))}
+                              >
+                                <option value={7}>Last 7 days</option>
+                                <option value={30}>Last 30 days</option>
+                                <option value={90}>Last 90 days</option>
+                              </select>
+                            </div>
 
-          {/* Datasets */}
-          <div className="flex items-center space-x-2 flex-wrap">
-            {[
-              { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications },
-              { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved },
-              { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending }
-            ].map(ds => (
-              <label key={ds.id} className="inline-flex items-center space-x-2 text-sm">
-                <input type="checkbox" checked={ds.value} onChange={() => ds.setter(v => !v)} />
-                <span>{ds.label}</span>
-              </label>
-            ))}
-          </div>
+                            {/* Chart Type */}
+                            <div className="flex items-center space-x-2">
+                              <label htmlFor="chart-type" className="text-sm theme-text-muted">Type:</label>
+                              <select
+                                id="chart-type"
+                                className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
+                                value={chartType}
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                  setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')
+                                }
+                              >
+                                <option value="line">Line</option>
+                                <option value="area">Area</option>
+                                <option value="bar">Bar</option>
+                                <option value="stacked">Stacked Bar</option>
+                              </select>
+                            </div>
 
-          {/* Extra Controls */}
-          <div className="flex items-center space-x-2">
-            <label className="inline-flex items-center space-x-2 text-sm">
-              <input type="checkbox" checked={smoothing} onChange={() => setSmoothing(v => !v)} />
-              <span>Smoothing</span>
-            </label>
-            <button onClick={exportCSV} className="px-3 py-1 rounded-lg accent-gradient text-white ml-2 text-sm">
-              Download CSV
-            </button>
-          </div>
-        </div>
+                            {/* Dataset Toggles */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {[
+                                { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications },
+                                { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved },
+                                { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending }
+                              ].map(ds => (
+                                <label key={ds.id} className="inline-flex items-center space-x-2 text-sm">
+                                  <input type="checkbox" checked={ds.value} onChange={() => ds.setter(v => !v)} />
+                                  <span>{ds.label}</span>
+                                </label>
+                              ))}
+                            </div>
 
-        <div className="w-full relative z-10 pt-8">
-          <div className="text-center mb-4 flex items-center justify-center space-x-2">
-            <BarChart3 className="w-10 h-10 theme-text-muted" />
-            <span className="theme-text-muted text-sm">Applications Analytics</span>
-          </div>
-          <div className="w-full max-w-4xl mx-auto">
-            <AnalyticsChart dataSets={dataSets} chartType={chartType} />
-          </div>
-        </div>
-      </div>
-    </motion.div>
+                            {/* Extra Controls */}
+                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                              <label className="inline-flex items-center space-x-2 text-sm">
+                                <input type="checkbox" checked={smoothing} onChange={() => setSmoothing(v => !v)} />
+                                <span>Smoothing</span>
+                              </label>
+                              <button
+                                onClick={exportCSV}
+                                className="px-3 py-1 rounded-lg accent-gradient text-white text-sm hover:opacity-90 transition"
+                              >
+                                Download CSV
+                              </button>
+                            </div>
+                          </div>
 
-    {/* Recent Applications */}
-    <motion.div
-      variants={itemVariants}
-      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
-        <motion.button
-          className="flex items-center space-x-2 px-4 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <span>View All</span>
-          <ChevronRight className="w-4 h-4" />
-        </motion.button>
-      </div>
+                          {/* Chart */}
+                          <div className="w-full relative z-10 flex flex-col items-center pt-8">
+                            <div className="flex items-center justify-center gap-2 mb-4 text-sm theme-text-muted">
+                              
+                              <span className='pb-20'></span>
+                            </div>
+                            <div className="w-full max-w-4xl">
+                              <AnalyticsChart dataSets={dataSets} chartType={chartType} />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
 
-      <div className="space-y-4">
-        {recentApplications.map(app => (
-          <motion.div
-            key={app.id}
-            className="flex items-center justify-between p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all"
-            whileHover={{ x: 4 }}
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold">
-                {app.avatar}
-              </div>
-              <div>
-                <p className="font-medium theme-text-primary">{app.name}</p>
-                <p className="text-sm theme-text-muted">{app.district} • {app.type}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold theme-text-primary">₹{app.amount.toLocaleString()}</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                {app.status}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  </div>
 
-  {/* Right Column */}
-  <div className="space-y-6">
-    {["System Integrations", "Grievance Status", "Quick Actions"].map((section, idx) => (
-      <motion.div
-        key={idx}
-        variants={itemVariants}
-        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl shadow-sm"
-      >
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{section}</h3>
-        {/* Section-specific content goes here */}
-      </motion.div>
-    ))}
-  </div>
-</div>
 
+                      {/* Recent Applications */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                      >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+                          <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
+                          <motion.button
+                            className="flex items-center space-x-2 px-3 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm w-full sm:w-auto justify-center sm:justify-start"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <span>View All</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+
+                        <div className="space-y-3">
+                          {recentApplications.map(app => (
+                            <motion.div
+                              key={app.id}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all gap-3"
+                              whileHover={{ x: 4 }}
+                            >
+                              <div className="flex items-center space-x-3 sm:space-x-4">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+                                  {app.avatar}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium theme-text-primary text-sm sm:text-base truncate">{app.name}</p>
+                                  <p className="text-xs sm:text-sm theme-text-muted truncate">{app.district} • {app.type}</p>
+                                  <div className="flex items-center space-x-2 mt-1 sm:hidden">
+                                    <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                                      {getStatusIcon(app.status)}
+                                      <span className="capitalize">{app.status}</span>
+                                    </span>
+                                    <p className="font-semibold theme-text-primary text-sm">₹{app.amount.toLocaleString()}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="hidden sm:flex sm:items-center sm:space-x-4 text-right">
+                                <p className="font-semibold theme-text-primary">₹{app.amount.toLocaleString()}</p>
+                                <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                                  {getStatusIcon(app.status)}
+                                  <span className="capitalize">{app.status}</span>
+                                </span>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    {/* Right Column - Side Panels */}
+                    <div className="space-y-4 lg:space-y-6">
+                      {/* System Integrations */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                      >
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">System Integrations</h3>
+                        <div className="space-y-3">
+                          {systemIntegrations.map((integration, index) => (
+                            <motion.div
+                              key={integration.name}
+                              className="flex items-center justify-between p-3 rounded-xl theme-bg-glass"
+                              whileHover={{ scale: 1.02 }}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className={`p-2 rounded-lg bg-gradient-to-br ${integration.color}`}>
+                                  <integration.icon className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="font-medium theme-text-primary text-sm">{integration.name}</span>
+                              </div>
+                              <div className={`w-2 h-2 rounded-full ${integration.status === 'active' ? 'bg-green-500' :
+                                  integration.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+                                }`} />
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+
+                      {/* Grievance Status */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                      >
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">Grievance Status</h3>
+                        <div className="space-y-3">
+                          {grievanceData.map((grievance, index) => (
+                            <motion.div
+                              key={grievance.id}
+                              className="p-3 rounded-xl theme-bg-glass border theme-border-glass"
+                              whileHover={{ scale: 1.02 }}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <p className="font-medium theme-text-primary text-sm flex-1 pr-2">{grievance.subject}</p>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(grievance.priority)}`}>
+                                  {grievance.priority}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs theme-text-muted">
+                                <span>{grievance.assignedTo}</span>
+                                <span>{grievance.date}</span>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+
+                      {/* Quick Actions */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                      >
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { label: 'New App', icon: Plus, color: 'from-blue-500 to-cyan-500' },
+                            { label: 'Reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
+                            { label: 'Analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
+                            { label: 'Settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
+                          ].map((action, index) => (
+                            <motion.button
+                              key={action.label}
+                              className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white flex flex-col items-center justify-center space-y-2 shadow-lg`}
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              whileTap={{ scale: 0.95 }}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <action.icon className="w-5 h-5" />
+                              <span className="text-xs font-medium">{action.label}</span>
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -857,21 +947,21 @@ const Dashboard = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-8 backdrop-blur-xl"
+                  className="theme-bg-card theme-border-glass border rounded-2xl p-6 sm:p-8 backdrop-blur-xl"
                 >
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-xl accent-gradient flex items-center justify-center">
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-xl accent-gradient flex items-center justify-center">
                       {(() => {
                         const Icon = navigationItems.find(item => item.id === activeTab)?.icon || FileText;
-                        return <Icon className="w-8 h-8 text-white" />;
+                        return <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />;
                       })()}
                     </div>
-                    <h3 className="text-xl font-semibold theme-text-primary mb-2 capitalize">{activeTab} Management</h3>
-                    <p className="theme-text-muted">
+                    <h3 className="text-lg sm:text-xl font-semibold theme-text-primary mb-2 capitalize">{activeTab} Management</h3>
+                    <p className="theme-text-muted text-sm sm:text-base mb-4">
                       {activeTab} management interface with detailed tables, forms, and analytics.
                     </p>
                     <motion.button
-                      className="mt-6 px-6 py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 mx-auto"
+                      className="px-4 py-2.5 sm:px-6 sm:py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 mx-auto text-sm sm:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -886,24 +976,20 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 lg:hidden z-20"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Enhanced Progress Bar */}
       <motion.div
         className={`fixed top-0 left-0 right-0 h-1 transform origin-left z-50`}
         style={{ scaleX: scaleProgress, background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))` }}
       />
+
+      {/* Notification Dropdown */}
+      <AnimatePresence>
+        {isNotificationOpen && (
+          <NotificationDropdown
+            {...({ isOpen: isNotificationOpen, onClose: () => setIsNotificationOpen(false), triggerRef: notifButtonRef } as any)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
