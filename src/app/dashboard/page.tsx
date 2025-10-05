@@ -8,26 +8,22 @@ import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
 import {
   Users, TrendingUp, FileText, Clock,
-  Download, Filter, BarChart3,
-  Bell, Settings, User, LogOut,
+   BarChart3,
+  Settings,
   Wallet, Award, Rocket, Plus,
-  ChevronRight, ChevronDown, ChevronLeft, Menu, X,
+  ChevronRight,
   ArrowUpRight, ArrowDownRight, ArrowRight,
-  Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, HelpCircle,
-  Search, Calendar, CheckCircle, AlertCircle, Clock as ClockIcon,
-  Sun,
-  Moon
+  Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, CheckCircle, AlertCircle, Clock as ClockIcon,
+  
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Chart filters state
   const [chartRange, setChartRange] = useState<number>(30);
@@ -38,7 +34,6 @@ const Dashboard = () => {
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
 
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
-  const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   const mousePositionRef = useRef({ x: 0, y: 0 });
@@ -276,16 +271,7 @@ const Dashboard = () => {
     })();
   }, [theme]);
 
-  // Mock data
-  const dashboardStats = {
-    totalApplications: 1247,
-    pendingApplications: 48,
-    approvedApplications: 987,
-    rejectedApplications: 212,
-    totalDisbursed: 45250000,
-    avgProcessingTime: 2.4,
-    satisfactionRate: 94.2
-  };
+  
 
   const recentApplications = [
     {
@@ -412,13 +398,6 @@ const Dashboard = () => {
     { id: 'reports', label: 'Reports', icon: DownloadCloud }
   ];
 
-  // Handle sidebar selection
-  const handleSidebarChange = (id: string) => {
-    setActiveTab(id);
-    if (id === 'overview') router.push('/dashboard');
-    else router.push(`/dashboard/${id}`);
-    if (!isDesktop) setSidebarOpen(false);
-  };
 
   const getStatusColor = (status: string) => {
     if (theme === 'dark') {
@@ -498,10 +477,6 @@ const Dashboard = () => {
     }
   };
 
-  const sidebarVariants: Variants = {
-    open: { x: 0, transition: { type: "spring" as const, stiffness: 300, damping: 30 } },
-    closed: { x: "-100%", transition: { type: "spring" as const, stiffness: 300, damping: 30 } }
-  };
 
   return (
     <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
@@ -986,7 +961,9 @@ const Dashboard = () => {
       <AnimatePresence>
         {isNotificationOpen && (
           <NotificationDropdown
-            {...({ isOpen: isNotificationOpen, onClose: () => setIsNotificationOpen(false), triggerRef: notifButtonRef } as any)}
+            isOpen={isNotificationOpen}
+            onClose={() => setIsNotificationOpen(false)}
+            triggerRef={notifButtonRef}
           />
         )}
       </AnimatePresence>

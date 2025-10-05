@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'development') {
     .filter(([, v]) => !v)
     .map(([k]) => k);
   if (missing.length) {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       `[firebase] missing NEXT_PUBLIC env vars: ${missing.join(', ')}. ` +
         'Copy .env.example to .env.local and fill in your Firebase config.'
@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'development') {
 let app;
 try {
   app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-} catch (e) {
+} catch {
   // fallback
   app = initializeApp(firebaseConfig);
 }

@@ -17,6 +17,17 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+// Helper to safely extract message from unknown error
+function messageFromUnknown(err: unknown): string | null {
+  if (!err) return null;
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const maybe = (err as Record<string, unknown>).message;
+    return typeof maybe === 'string' ? maybe : null;
+  }
+  return null;
+}
+
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -39,8 +50,8 @@ export default function LoginPage() {
       if (isRegister) await signUp(email, password);
       else await signIn(email, password);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err?.message || 'Authentication failed');
+    } catch (err: unknown) {
+      setError(messageFromUnknown(err) || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +63,8 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err?.message || 'Google sign-in failed');
+    } catch (err: unknown) {
+      setError(messageFromUnknown(err) || 'Google sign-in failed');
     } finally {
       setIsLoading(false);
     }
@@ -470,11 +481,11 @@ export default function LoginPage() {
                 variants={itemVariants}
               >
                 <button 
-                  onClick={() => setIsRegister(!isRegister)} 
-                  className="text-accent-gradient font-medium flex items-center gap-1 hover:gap-2 transition-all"
+                    onClick={() => setIsRegister(!isRegister)} 
+                    className="text-accent-gradient font-medium flex items-center gap-1 hover:gap-2 transition-all"
                   disabled={isLoading}
                 >
-                  {isRegister ? 'Have an account? Sign in' : "Don't have an account? Sign up"}
+                    {isRegister ? 'Have an account? Sign in' : 'Don\'t have an account? Sign up'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 {!isRegister && (

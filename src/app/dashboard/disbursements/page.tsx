@@ -4,15 +4,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode, CreditCard,
-  TrendingDown, Circle, CheckCircle, XCircle, PlayCircle,
-  PauseCircle, BarChart3, Target, RotateCcw
+  Search, Filter, Download, Plus, Eye, ChevronLeft, ChevronRight, X,
+  Clock, User, Phone, MapPin,
+  Calendar, DollarSign,
+   MoreVertical, TrendingUp, AlertTriangle,
+   Heart, Scale,
+  Banknote, Receipt, Fingerprint, CreditCard,
+   CheckCircle, XCircle, PlayCircle,
+  RotateCcw
 } from 'lucide-react';
 
 // Mock data for disbursements
@@ -333,8 +332,8 @@ const DisbursementsPage = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      let aVal = a[sortBy as keyof typeof a];
-      let bVal = b[sortBy as keyof typeof b];
+      const aVal = a[sortBy as keyof typeof a];
+      const bVal = b[sortBy as keyof typeof b];
 
       if (sortOrder === 'asc') {
         return aVal > bVal ? 1 : -1;
@@ -577,15 +576,7 @@ const DisbursementsPage = () => {
     }
   };
 
-  const formatDateTime = (s?: string | null) => {
-    if (!s) return '—';
-    try {
-      const d = new Date(s);
-      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
-    } catch {
-      return s;
-    }
-  };
+ 
 
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">

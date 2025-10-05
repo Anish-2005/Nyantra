@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, LogOut, Sun, Moon, HelpCircle } from "lucide-react";
+import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
@@ -30,6 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     
     const router = useRouter();
     const { user, loading } = useAuth();
+
+    // Compute a friendly display name from Firebase user
+    const displayName = user?.displayName ?? (user?.email ? user.email.split('@')[0] : 'Guest');
 
     useEffect(() => {
         // If auth finished loading and there is no user, redirect to login
@@ -246,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             <User className="w-4 h-4 text-white" />
                                         </div>
                                         <div className="hidden sm:block text-left">
-                                            <p className="text-sm font-medium theme-text-primary">John Doe</p>
+                                            <p className="text-sm font-medium theme-text-primary">{displayName}</p>
                                             <p className="text-xs theme-text-muted">Administrator</p>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
@@ -267,19 +270,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     <User className="w-4 h-4" />
                                                     Profile
                                                 </button>
+                                                 <div className="border-t theme-border-glass my-1"></div>
                                                 <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <Settings className="w-4 h-4" />
                                                     Settings
                                                 </button>
+                                                 <div className="border-t theme-border-glass my-1"></div>
                                                 <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <HelpCircle className="w-4 h-4" />
                                                     Help & Support
                                                 </button>
-                                                <div className="border-t theme-border-glass my-1"></div>
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:theme-bg-hover transition-colors">
-                                                    <LogOut className="w-4 h-4" />
-                                                    Sign Out
-                                                </button>
+                                               
+                                                
                                             </motion.div>
                                         )}
                                     </AnimatePresence>

@@ -71,27 +71,31 @@ export default function AnalyticsChart({
     const chart = chartRef.current?.chartInstance || chartRef.current?.chart || chartRef.current;
     if (!chart) return;
 
-    const ctx = chart.ctx;
-    const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
-    if (theme === "dark") {
-      gradient.addColorStop(0, "rgba(139,92,246,0.28)");
-      gradient.addColorStop(1, "rgba(139,92,246,0.02)");
-    } else {
-      gradient.addColorStop(0, "rgba(59,130,246,0.28)");
-      gradient.addColorStop(1, "rgba(59,130,246,0.02)");
+    try {
+      const ctx = chart.ctx as CanvasRenderingContext2D;
+      const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
+      if (theme === "dark") {
+        gradient.addColorStop(0, "rgba(139,92,246,0.28)");
+        gradient.addColorStop(1, "rgba(139,92,246,0.02)");
+      } else {
+        gradient.addColorStop(0, "rgba(59,130,246,0.28)");
+        gradient.addColorStop(1, "rgba(59,130,246,0.02)");
+      }
+
+      const datasets = (chart.data?.datasets ?? []) as any[];
+      datasets.forEach((ds, idx: number) => {
+        if (idx === 0) ds.backgroundColor = gradient;
+        ds.borderColor = ds.borderColor || (theme === "dark" ? "rgba(139,92,246,1)" : "rgba(59,130,246,1)");
+      });
+
+      chart.update();
+    } catch (e) {
+      // ignore gradient errors
     }
-
-    chart.data.datasets.forEach((ds: any, idx: number) => {
-      if (idx === 0) ds.backgroundColor = gradient;
-      ds.borderColor =
-        ds.borderColor || (theme === "dark" ? "rgba(139,92,246,1)" : "rgba(59,130,246,1)");
-    });
-
-    chart.update();
   }, [theme, componentsLoaded]);
 
   // Shape datasets depending on chartType
-  const chartData: any = {
+  const chartData = {
     datasets: sets.map((s, i) => {
       const base = {
         label: s.label,
@@ -114,7 +118,7 @@ export default function AnalyticsChart({
     }),
   };
 
-  const options: any = {
+  const options = {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: "nearest", axis: "x", intersect: false },
@@ -154,9 +158,9 @@ export default function AnalyticsChart({
   return (
     <div className="w-full h-64 sm:h-80 md:h-96 relative rounded-lg overflow-hidden shadow-sm">
       {chartType === "bar" || chartType === "stacked" ? (
-        <BarC ref={chartRef as any} data={chartData} options={options} />
+        <BarC ref={chartRef} data={chartData} options={options} />
       ) : (
-        <LineC ref={chartRef as any} data={chartData} options={options} />
+        <LineC ref={chartRef} data={chartData} options={options} />
       )}
     </div>
   );

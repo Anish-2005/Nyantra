@@ -4,24 +4,15 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode, CreditCard,
-  TrendingDown, Circle, CheckCircle, XCircle, PlayCircle,
-  PauseCircle, BarChart3, Target, RotateCcw, PieChart,
-  LineChart, BarChart, Activity, Users, Award as AwardIcon,
-  Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon,
-  MessageCircle, ThumbsUp, ThumbsDown, Flag, Star, Zap,
-  ArrowRight, ArrowUp, ArrowDown, Mail, PhoneCall, Video,
-  UserCheck, UserX, AlertOctagon, FileSearch, Timer,
-  Database, Server, Cloud, Wifi, WifiOff, Link, Unlink,
-  Cpu, HardDrive, Network, Shield as ShieldIcon,
-  Lock, Key, Globe, Smartphone, Monitor, Database as DatabaseIcon,
-  CloudRain, CloudSnow, CloudDrizzle, CloudLightning
+  Search, Filter, Download, Plus, Eye, Edit,
+   ChevronLeft, ChevronRight, X,
+  Clock, AlertCircle, FileText, DollarSign,
+  RefreshCw, TrendingUp,
+  Shield,Scale,
+  Banknote,Fingerprint,  CreditCard,
+  CheckCircle, XCircle, PieChart,
+   Users, Map as MapIcon, Timer,
+  Database, Server, Cloud, Wifi, WifiOff, Network, Shield as ShieldIcon,
 } from 'lucide-react';
 
 // Mock data for government integrations
@@ -427,8 +418,8 @@ const IntegrationsPage = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      let aVal = a[sortBy as keyof typeof a];
-      let bVal = b[sortBy as keyof typeof b];
+      const aVal = a[sortBy as keyof typeof a];
+      const bVal = b[sortBy as keyof typeof b];
       
       if (sortOrder === 'asc') {
         return aVal > bVal ? 1 : -1;

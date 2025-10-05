@@ -4,13 +4,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
+  Search, Filter, Download, Plus, Eye, Edit,
+  ChevronLeft, ChevronRight, X, Check,
   Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode
+  Calendar, DollarSign, MessageSquare, MoreVertical,
+  Shield, Award, Heart, Scale, BadgeCheck,
+  Banknote, Fingerprint
 } from 'lucide-react';
 
 // Mock data for beneficiaries
@@ -215,8 +214,8 @@ const BeneficiariesPage = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      let aVal = a[sortBy as keyof typeof a];
-      let bVal = b[sortBy as keyof typeof b];
+      const aVal = a[sortBy as keyof typeof a];
+      const bVal = b[sortBy as keyof typeof b];
       
       if (sortOrder === 'asc') {
         return aVal > bVal ? 1 : -1;
@@ -486,10 +485,7 @@ const BeneficiariesPage = () => {
   };
 
   // Deterministic formatting helpers to avoid SSR/client hydration mismatches
-  const formatNumber = (n?: number | null) => {
-    if (n == null || Number.isNaN(n)) return '0';
-    return new Intl.NumberFormat('en-IN').format(n);
-  };
+  
 
   const formatCurrency = (n?: number | null) => {
     if (n == null || Number.isNaN(n)) return '₹0';
@@ -1252,9 +1248,9 @@ const BeneficiariesPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <User className="w-5 h-5 theme-text-muted" />
+                        <User className="w-5 h-5 theme-text-muted" />
                       <div>
-                        <p className="text-xs theme-text-muted">Father's Name</p>
+                        <p className="text-xs theme-text-muted">Father&apos;s Name</p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.fatherName}</p>
                       </div>
                     </div>

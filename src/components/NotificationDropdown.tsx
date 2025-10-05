@@ -3,15 +3,17 @@ import React, { useEffect, useRef, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 type Props = {
-  anchorRef: React.RefObject<HTMLElement | null>;
+  anchorRef?: React.RefObject<HTMLElement | null>;
+  // Some callers use triggerRef naming; accept either
+  triggerRef?: React.RefObject<HTMLElement | null>;
   isOpen: boolean;
   onClose: () => void;
-  children: ReactNode;
+  children?: ReactNode;
   width?: number | string;
   offsetY?: number;
 };
 
-export default function NotificationDropdown({ anchorRef, isOpen, onClose, children, width = 320, offsetY = 12 }: Props) {
+export default function NotificationDropdown({ anchorRef, triggerRef, isOpen, onClose, children = null, width = 320, offsetY = 12 }: Props) {
   const portalRootRef = useRef<HTMLElement | null>(null);
   const elRef = useRef<HTMLDivElement | null>(null);
 
@@ -38,7 +40,8 @@ export default function NotificationDropdown({ anchorRef, isOpen, onClose, child
       const target = e.target as Node | null;
       if (!elRef.current) return;
       if (elRef.current.contains(target)) return;
-      if (anchorRef.current && anchorRef.current.contains(target)) return;
+      const ref = triggerRef ?? anchorRef;
+      if (ref && ref.current && ref.current.contains(target)) return;
       onClose();
     };
     const handleKey = (e: KeyboardEvent) => {
@@ -49,7 +52,7 @@ export default function NotificationDropdown({ anchorRef, isOpen, onClose, child
       if (elRef.current) elRef.current.dataset.r = String(Date.now());
     };
 
-    window.addEventListener('mousedown', handleClick);
+  window.addEventListener('mousedown', handleClick);
     window.addEventListener('resize', handleScrollOrResize);
     window.addEventListener('scroll', handleScrollOrResize, true);
     window.addEventListener('keydown', handleKey);
@@ -60,11 +63,12 @@ export default function NotificationDropdown({ anchorRef, isOpen, onClose, child
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('keydown', handleKey);
     };
-  }, [isOpen, anchorRef, onClose]);
+  }, [isOpen, anchorRef, triggerRef, onClose]);
 
   if (!isOpen || !elRef.current || !portalRootRef.current) return null;
 
-  const anchorRect = anchorRef.current?.getBoundingClientRect();
+  const ref = triggerRef ?? anchorRef;
+  const anchorRect = ref?.current?.getBoundingClientRect();
   const right = anchorRect ? window.innerWidth - anchorRect.right : 24;
   const top = anchorRect ? anchorRect.bottom + offsetY : 80;
 

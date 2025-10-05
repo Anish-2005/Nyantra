@@ -1,21 +1,9 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,} from 'framer-motion';
 import type * as THREE from 'three';
-import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode, CreditCard,
-  TrendingDown, Circle, CheckCircle, XCircle, PlayCircle,
-  PauseCircle, BarChart3, Target, RotateCcw, PieChart,
-  LineChart, BarChart, Activity, Users, Award as AwardIcon,
-  Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon
-} from 'lucide-react';
+import { Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users, Banknote, DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon, Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3 } from 'lucide-react';
 
 // Mock data for analytics
 const analyticsData = {
@@ -85,13 +73,12 @@ const AnalyticsPage = () => {
   const [actTypeFilter, setActTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [stateFilter, setStateFilter] = useState('all');
-  const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Filter data based on selections
   const filteredData = useMemo(() => {
-    let data = { ...analyticsData };
+    const data = { ...analyticsData } as const;
 
     // Time range filtering would be implemented here
     // For now, we'll use the full dataset

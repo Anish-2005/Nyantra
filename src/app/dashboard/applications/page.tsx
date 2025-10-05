@@ -4,11 +4,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-    Search, Filter, Download, Plus, Eye, Edit, Trash2,
-    ChevronDown, ChevronLeft, ChevronRight, X, Check,
+    Search, Filter, Download, Plus, Eye, Edit, ChevronLeft, ChevronRight, X, Check,
     Clock, AlertCircle, FileText, User, Phone, MapPin,
-    Calendar, DollarSign, Upload, Send, MessageSquare,
-    RefreshCw, MoreVertical, TrendingUp, AlertTriangle
+    DollarSign, MessageSquare, AlertTriangle
 } from 'lucide-react';
 
 // Mock data for applications
@@ -111,13 +109,7 @@ const ApplicationsPage = () => {
         } catch { return String(d); }
     };
 
-    const formatDateTime = (d?: string | Date) => {
-        if (!d) return '';
-        try {
-            const dt = typeof d === 'string' ? new Date(d) : d;
-            return new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(dt);
-        } catch { return String(d); }
-    };
+ 
 
     const formatCurrency = (n?: number) => {
         if (n == null) return '';
@@ -169,8 +161,8 @@ const ApplicationsPage = () => {
 
         // Sort
         filtered.sort((a, b) => {
-            let aVal = a[sortBy as keyof typeof a];
-            let bVal = b[sortBy as keyof typeof b];
+            const aVal = a[sortBy as keyof typeof a];
+            const bVal = b[sortBy as keyof typeof b];
 
             if (sortOrder === 'asc') {
                 return aVal > bVal ? 1 : -1;

@@ -4,28 +4,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode, CreditCard,
-  TrendingDown, Circle, CheckCircle, XCircle, PlayCircle,
-  PauseCircle, BarChart3, Target, RotateCcw, PieChart,
-  LineChart, BarChart, Activity, Users, Award as AwardIcon,
-  Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon,
-  MessageCircle, ThumbsUp, ThumbsDown, Flag, Star, Zap,
-  ArrowRight, ArrowUp, ArrowDown, Mail, PhoneCall, Video,
-  UserCheck, UserX, AlertOctagon, FileSearch, Timer,
-  Database, Server, Cloud, Wifi, WifiOff, Link, Unlink,
-  Cpu, HardDrive, Network, Shield as ShieldIcon,
-  Lock, Key, Globe, Smartphone, Monitor, Database as DatabaseIcon,
-  CloudRain, CloudSnow, CloudDrizzle, CloudLightning,
-  FileDown, FileUp, FilePlus, FileCheck, FileX,
-  Archive, BookOpen, Printer, Share2, Mail as MailIcon,
-  Zap as ZapIcon, Calendar as CalendarIcon2, Settings,
-  Bell, BellOff, RotateCw as RotateCwIcon
+  Search, Filter, Download, Eye, ChevronLeft, ChevronRight, X, Check,Clock, FileText, DollarSign,RefreshCw, TrendingUp,
+  Shield, CheckCircle, XCircle,
+  BarChart3,PieChart,
+  Database,
+  Cpu,FileDown, FilePlus, FileCheck, BookOpen, Printer, Share2,
+  Zap as ZapIcon, Calendar as CalendarIcon2,
 } from 'lucide-react';
 
 // Mock data for reports
@@ -354,7 +338,7 @@ const ReportsPage = () => {
     try {
       const d = new Date(s);
       return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-    } catch (e) {
+    } catch { 
       return '--';
     }
   };
@@ -364,7 +348,7 @@ const ReportsPage = () => {
     try {
       const d = new Date(s);
       return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
-    } catch (e) {
+    } catch {
       return '--';
     }
   };
@@ -411,8 +395,8 @@ const ReportsPage = () => {
 
     // Sort
         filtered.sort((a, b) => {
-          let aVal = a[sortBy as keyof typeof a];
-          let bVal = b[sortBy as keyof typeof b];
+          const aVal = a[sortBy as keyof typeof a];
+          const bVal = b[sortBy as keyof typeof b];
     
           const aNull = aVal === null || aVal === undefined;
           const bNull = bVal === null || bVal === undefined;
@@ -841,7 +825,7 @@ const ReportsPage = () => {
                 key={view.value}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode(view.value as any)}
+                onClick={() => setViewMode(view.value as 'reports' | 'templates' | 'scheduled')}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium ${
                   viewMode === view.value 
                     ? 'accent-gradient text-white' 

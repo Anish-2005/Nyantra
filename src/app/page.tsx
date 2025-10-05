@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from '../context/ThemeContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, Lock, TrendingUp, Database, CheckCircle, ArrowRight, Smartphone, Globe, Clock, Eye, Upload, Send, Star, Target, Activity, CheckSquare, UserCheck, Wallet, Phone, Mail, MapPinned, BadgeCheck, Sparkles, Rocket, Sun, Moon, HelpCircle } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, Mail, Phone, MapPinned, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Send, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
 
 const NyantaraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,9 +45,9 @@ const NyantaraLanding = () => {
     // Ensure canvas is transparent so underlying CSS gradient shows through
     renderer.setClearColor(0x000000, 0);
 
-    // Theme-aware colors: read CSS vars so accents control particle colors
-    let particleColor: any = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-    let lineColor: any = theme === 'dark' ? 0xf59e0b : 0xd97706;
+  // Theme-aware colors: read CSS vars so accents control particle colors
+  let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
+  let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
     try {
       const style = getComputedStyle(document.documentElement);
       const a = (style.getPropertyValue('--accent-primary') || '').trim();
@@ -986,7 +986,7 @@ const NyantaraLanding = () => {
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.6, ease: 'easeInOut' }}
                     >
-                      <feature.icon className="w-8 h-8 text-white" />
+                      {React.createElement(feature.icon as any, { className: 'w-8 h-8 text-white' })}
                     </motion.div>
 
                     {/* Title */}
@@ -1339,7 +1339,7 @@ const NyantaraLanding = () => {
               Frequently Asked Questions
             </motion.span>
 
-            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">Got Questions? We've got answers.</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">Got Questions? We&apos;ve got answers.</h2>
             <p className="mt-2 text-sm sm:text-base theme-text-muted">Common queries about the program, security, and integrations — explained simply.</p>
           </div>
 

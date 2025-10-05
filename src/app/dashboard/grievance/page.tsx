@@ -3,22 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
-import {
-  Search, Filter, Download, Plus, Eye, Edit, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, X, Check,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, Upload, Send, MessageSquare,
-  RefreshCw, MoreVertical, TrendingUp, AlertTriangle,
-  Shield, Award, Heart, Cross, Scale, BadgeCheck,
-  Banknote, Receipt, Fingerprint, QrCode, CreditCard,
-  TrendingDown, Circle, CheckCircle, XCircle, PlayCircle,
-  PauseCircle, BarChart3, Target, RotateCcw, PieChart,
-  LineChart, BarChart, Activity, Users, Award as AwardIcon,
-  Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon,
-  MessageCircle, ThumbsUp, ThumbsDown, Flag, Star, Zap,
-  ArrowRight, ArrowUp, ArrowDown, Mail, PhoneCall, Video,
-  UserCheck, UserX, AlertOctagon, FileSearch, Timer
-} from 'lucide-react';
+import { Search, Filter, Download, Plus, Eye, Edit, MoreVertical, TrendingUp, Clock, Star, PieChart, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, Send, PhoneCall, Video, MapPin, User, UserCheck, Scale, FileText, ChevronLeft, ChevronRight, X, Flag, Banknote, FileSearch, UserX, Zap, Timer, Calendar, Phone } from 'lucide-react';
 
 // Mock data for grievances
 const mockGrievances = [
@@ -392,7 +377,7 @@ const GrievancePage = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      const getVal = (obj: any, key: string) => {
+      const getVal = (obj: Record<string, unknown>, key: string) => {
         const val = obj[key as keyof typeof obj];
         if (val === null || val === undefined) return '';
         if (typeof val === 'string') {
@@ -401,7 +386,7 @@ const GrievancePage = () => {
           if (!Number.isNaN(ts)) return ts;
           return val.toLowerCase();
         }
-        return val;
+        return val as unknown as number | string;
       };
     
       const aVal = getVal(a, sortBy);
