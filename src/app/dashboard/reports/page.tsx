@@ -4,12 +4,21 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Eye, ChevronLeft, ChevronRight, X, Check,Clock, FileText, DollarSign,RefreshCw, TrendingUp,
+  Search, Filter, Download, Eye, ChevronLeft, ChevronRight, X, Check, Clock, FileText, DollarSign, RefreshCw, TrendingUp,
   Shield, CheckCircle, XCircle,
-  BarChart3,PieChart,
+  BarChart3, PieChart,
   Database,
-  Cpu,FileDown, FilePlus, FileCheck, BookOpen, Printer, Share2,
+  Cpu, FileDown, FilePlus, FileCheck, BookOpen, Printer, Share2,
   Zap as ZapIcon, Calendar as CalendarIcon2,
+  Sparkles,
+  Settings,
+  BarChart,
+  ArrowUpRight,
+  Activity,
+  LineChart,
+  MoreVertical,
+  Calendar,
+  Zap,
 } from 'lucide-react';
 
 // Mock data for reports
@@ -338,7 +347,7 @@ const ReportsPage = () => {
     try {
       const d = new Date(s);
       return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-    } catch { 
+    } catch {
       return '--';
     }
   };
@@ -394,37 +403,37 @@ const ReportsPage = () => {
     }
 
     // Sort
-        filtered.sort((a, b) => {
-          const aVal = a[sortBy as keyof typeof a];
-          const bVal = b[sortBy as keyof typeof b];
-    
-          const aNull = aVal === null || aVal === undefined;
-          const bNull = bVal === null || bVal === undefined;
-    
-          // Handle null/undefined consistently (place nulls last for ascending)
-          if (aNull && bNull) return 0;
-          if (aNull) return sortOrder === 'asc' ? 1 : -1;
-          if (bNull) return sortOrder === 'asc' ? -1 : 1;
-    
-          // If both are numbers, compare numerically
-          if (typeof aVal === 'number' && typeof bVal === 'number') {
-            return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-          }
-    
-          // If both can be parsed as valid dates, compare by timestamp
-          const aTime = Date.parse(String(aVal));
-          const bTime = Date.parse(String(bVal));
-          if (!isNaN(aTime) && !isNaN(bTime)) {
-            return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
-          }
-    
-          // Fallback to string comparison (numeric option helps compare numeric strings)
-          const aStr = String(aVal);
-          const bStr = String(bVal);
-          return sortOrder === 'asc'
-            ? aStr.localeCompare(bStr, undefined, { numeric: true })
-            : bStr.localeCompare(aStr, undefined, { numeric: true });
-        });
+    filtered.sort((a, b) => {
+      const aVal = a[sortBy as keyof typeof a];
+      const bVal = b[sortBy as keyof typeof b];
+
+      const aNull = aVal === null || aVal === undefined;
+      const bNull = bVal === null || bVal === undefined;
+
+      // Handle null/undefined consistently (place nulls last for ascending)
+      if (aNull && bNull) return 0;
+      if (aNull) return sortOrder === 'asc' ? 1 : -1;
+      if (bNull) return sortOrder === 'asc' ? -1 : 1;
+
+      // If both are numbers, compare numerically
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+      }
+
+      // If both can be parsed as valid dates, compare by timestamp
+      const aTime = Date.parse(String(aVal));
+      const bTime = Date.parse(String(bVal));
+      if (!isNaN(aTime) && !isNaN(bTime)) {
+        return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
+      }
+
+      // Fallback to string comparison (numeric option helps compare numeric strings)
+      const aStr = String(aVal);
+      const bStr = String(bVal);
+      return sortOrder === 'asc'
+        ? aStr.localeCompare(bStr, undefined, { numeric: true })
+        : bStr.localeCompare(aStr, undefined, { numeric: true });
+    });
 
     return filtered;
   }, [searchQuery, typeFilter, statusFilter, categoryFilter, frequencyFilter, viewMode, sortBy, sortOrder]);
@@ -445,7 +454,7 @@ const ReportsPage = () => {
     const failed = mockReports.filter(r => r.status === 'failed').length;
     const totalDownloads = mockReports.reduce((sum, r) => sum + r.downloadCount, 0);
     const avgFileSize = '2.8 MB'; // This would be calculated in a real app
-    
+
     return {
       total,
       completed,
@@ -679,21 +688,21 @@ const ReportsPage = () => {
   };
 
   return (
-    <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-      {/* Three.js Canvas Background (theme-aware) */}
+    <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">
+      {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
-        id="reports-three-canvas"
-        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-        style={{ zIndex: 0, background: 'transparent' }}
+        className="fixed inset-0 w-full h-full pointer-events-none -z-10"
       />
+
+      {/* Custom Theme Styles */}
       <style jsx global>{`
         [data-theme="dark"] {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
+          --card-bg: rgba(15, 23, 42, 0.8);
+          --card-border: rgba(255, 255, 255, 0.1);
           --nav-bg: rgba(15, 23, 42, 0.95);
           --text-primary: #f1f5f9;
           --text-secondary: #94a3b8;
@@ -708,15 +717,15 @@ const ReportsPage = () => {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
+          --card-bg: rgba(255, 255, 255, 0.9);
+          --card-border: rgba(0, 0, 0, 0.08);
           --nav-bg: rgba(255, 255, 255, 0.95);
           --text-primary: #0f172a;
           --text-secondary: #475569;
           --text-muted: #64748b;
           --accent-primary: #fb7185;
           --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.6);
+          --glass-bg: rgba(255, 255, 255, 0.7);
           --glass-border: rgba(0, 0, 0, 0.08);
         }
 
@@ -727,7 +736,6 @@ const ReportsPage = () => {
         .theme-border-card { border-color: var(--card-border) !important; }
         .theme-bg-glass { background: var(--glass-bg) !important; }
         .theme-border-glass { border-color: var(--glass-border) !important; }
-        .theme-bg-nav { background: var(--nav-bg) !important; }
         
         .accent-gradient {
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
@@ -739,909 +747,505 @@ const ReportsPage = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+
+        .glass-effect {
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+        }
       `}</style>
-      
-      {/* Header Section */}
+
+      {/* Header Section - Redesigned */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
       >
-        <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">Reports & Analytics</h1>
-          <p className="theme-text-secondary">Generate, schedule, and download comprehensive reports for DBT under PCR/PoA Acts</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
-            onClick={() => window.print()}
-          >
-            <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">Print</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
-          >
-            <FilePlus className="w-4 h-4" />
-            <span>New Report</span>
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Statistics Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
-      >
-        {[
-          { label: 'Total Reports', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText },
-          { label: 'Completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle },
-          { label: 'Scheduled', value: stats.scheduled, color: 'from-purple-500 to-pink-500', icon: Clock },
-          { label: 'Processing', value: stats.processing, color: 'from-blue-500 to-cyan-500', icon: RefreshCw },
-          { label: 'Failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle },
-          { label: 'Total Downloads', value: stats.totalDownloads, color: 'from-amber-500 to-orange-500', icon: Download },
-          { label: 'Avg File Size', value: stats.avgFileSize, color: 'from-teal-500 to-cyan-500', icon: Database },
-          { label: 'Templates', value: reportTemplates.length, color: 'from-indigo-500 to-purple-500', icon: BookOpen }
-        ].map((stat, idx) => (
-          <motion.div
-            key={idx}
-            whileHover={{ y: -4 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-          >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-              <stat.icon className="w-5 h-5 text-white" />
+        <div className="text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
+            <div className="w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center">
+              <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.label}</p>
-          </motion.div>
-        ))}
-      </motion.div>
+            <div>
+              <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Report Hub
+              </h1>
+              <p className="theme-text-secondary text-lg">Advanced Analytics & Reporting Platform</p>
+            </div>
+          </div>
+          <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
+            Generate, analyze, and schedule comprehensive reports for DBT under PCR/PoA Acts
+          </p>
+        </div>
 
-      {/* View Mode Toggle */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 theme-text-muted" />
-            <span className="text-sm font-medium theme-text-primary">Report Type</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: 'reports', label: 'Generated Reports', icon: FileDown },
-              { value: 'scheduled', label: 'Scheduled Reports', icon: Clock },
-              { value: 'templates', label: 'Report Templates', icon: BookOpen }
-            ].map((view) => (
-              <motion.button
-                key={view.value}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode(view.value as 'reports' | 'templates' | 'scheduled')}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium ${
-                  viewMode === view.value 
-                    ? 'accent-gradient text-white' 
-                    : 'theme-bg-glass theme-text-muted'
-                }`}
-              >
-                <view.icon className="w-4 h-4" />
-                {view.label}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Category Distribution */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Report Categories</h3>
-            <p className="text-sm theme-text-muted">Distribution by report type and purpose</p>
-          </div>
-          <PieChart className="w-5 h-5 theme-text-muted" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          {Object.entries(categoryStats).map(([category, count]) => {
-            const Icon = getCategoryIcon(category);
-            return (
-              <div key={category} className="text-center p-4 rounded-lg theme-bg-glass">
-                <Icon className="w-8 h-8 theme-text-primary mx-auto mb-2" />
-                <p className="text-lg font-bold theme-text-primary">{count}</p>
-                <p className="text-xs theme-text-muted capitalize">
-                  {category}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Quick Actions</h3>
-            <p className="text-sm theme-text-muted">Frequently used report operations</p>
-          </div>
-          <ZapIcon className="w-5 h-5 theme-text-muted" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Generate Disbursement Report', icon: FilePlus, action: () => console.log('Generate disbursement') },
-            { label: 'Schedule Weekly Summary', icon: CalendarIcon2, action: () => setShowScheduleModal(true) },
-            { label: 'Download All Completed', icon: Download, action: () => console.log('Download all') },
-            { label: 'View Report Templates', icon: BookOpen, action: () => setViewMode('templates') }
-          ].map((action, idx) => (
+        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3 w-full sm:w-auto">
+          <div className="w-full sm:w-auto flex gap-3">
             <motion.button
-              key={idx}
-              whileHover={{ y: -2 }}
-              onClick={action.action}
-              className="p-4 rounded-lg theme-bg-glass border theme-border-glass text-left hover:theme-border-card transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Print dashboard"
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl border flex items-center gap-3 glass-effect focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass text-white'}`}
             >
-              <action.icon className="w-8 h-8 theme-text-primary mb-2" />
-              <p className="font-medium theme-text-primary text-sm">{action.label}</p>
+              <Printer className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`} />
+              <span className="font-semibold text-sm">Print</span>
             </motion.button>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Filters and Search */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-      >
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-            <input
-              type="text"
-              placeholder="Search reports by name, ID, or description..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-            />
-          </div>
-
-          {/* Filter Toggle */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
-          >
-            <Filter className="w-4 h-4" />
-            <span>Filters</span>
-            {(typeFilter !== 'all' || statusFilter !== 'all' || categoryFilter !== 'all' || frequencyFilter !== 'all') && (
-              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            )}
-          </motion.button>
-        </div>
-
-        {/* Expanded Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Report Type</label>
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="disbursement">Disbursement</option>
-                    <option value="verification">Verification</option>
-                    <option value="grievance">Grievance</option>
-                    <option value="applications">Applications</option>
-                    <option value="demographic">Demographic</option>
-                    <option value="financial">Financial</option>
-                    <option value="system">System</option>
-                    <option value="performance">Performance</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="completed">Completed</option>
-                    <option value="processing">Processing</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="failed">Failed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Category</label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="financial">Financial</option>
-                    <option value="compliance">Compliance</option>
-                    <option value="performance">Performance</option>
-                    <option value="statistical">Statistical</option>
-                    <option value="analytical">Analytical</option>
-                    <option value="audit">Audit</option>
-                    <option value="technical">Technical</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Frequency</label>
-                  <select
-                    value={frequencyFilter}
-                    onChange={(e) => setFrequencyFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Frequencies</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                  </select>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <FilePlus className="w-5 h-5" />
+              <span className="font-semibold text-sm">New</span>
+            </motion.button>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Reports/Templates List */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.35 }}
-        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
-      >
-        {viewMode === 'templates' ? (
-          <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {reportTemplates.map((template, idx) => (
-                <motion.div
-                  key={template.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  whileHover={{ y: -4 }}
-                  className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
-                  onClick={() => setSelectedTemplate(template)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-                        <BookOpen className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium theme-text-primary">{template.name}</p>
-                        <p className="text-xs theme-text-muted">{template.id}</p>
-                      </div>
+      {/* Dashboard Grid - New Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Analytics Sidebar */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-3 xl:col-span-3 space-y-6 order-2 lg:order-1"
+        >
+          {/* Quick Stats */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Analytics</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Total Generated', value: '1,247', trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
+                { label: 'Avg Processing Time', value: '2.3s', trend: '-0.4s', icon: Zap, color: 'from-green-500 to-emerald-500' },
+                { label: 'Success Rate', value: '98.7%', trend: '+1.2%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+                { label: 'Active Schedules', value: '24', trend: '+3', icon: Clock, color: 'from-orange-500 to-red-500' }
+              ].map((stat, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                      <stat.icon className="w-5 h-5 text-white" />
                     </div>
-                    {template.popular && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                        Popular
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2 mb-3">
-                    <p className="text-sm theme-text-secondary line-clamp-2">{template.description}</p>
-                    <div className="flex items-center gap-2 text-sm theme-text-muted">
-                      <FileText className="w-4 h-4" />
-                      <span>Format: {template.defaultFormat}</span>
+                    <div>
+                      <p className="font-semibold theme-text-primary">{stat.value}</p>
+                      <p className="text-sm theme-text-muted">{stat.label}</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                    <span className="text-xs theme-text-muted capitalize">
-                      {template.type} • {template.category}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                        <FilePlus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
+                  <span className="text-sm font-semibold text-green-400">{stat.trend}</span>
+                </div>
               ))}
             </div>
           </div>
-        ) : (
-          <>
-            {/* For small screens show a stacked card list instead of table */}
-            {isMobile ? (
-              <div className="p-4 space-y-3">
-                {paginatedReports.map((report, idx) => (
-                  <motion.div
-                    key={report.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className="p-3 rounded-lg theme-bg-glass theme-border-glass border"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white flex-shrink-0">
-                          {(() => {
-                            const Icon = getCategoryIcon(report.category);
-                            return <Icon className="w-6 h-6" />;
-                          })()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium theme-text-primary truncate">{report.name}</p>
-                          <p className="text-xs theme-text-muted truncate">{report.id}</p>
-                          <p className="text-xs theme-text-muted mt-1 line-clamp-2">{report.description}</p>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-xs theme-text-muted">
-                            <span className="flex items-center gap-1">
-                              <span className="font-medium theme-text-primary">Type:</span>
-                              <span className="capitalize">{report.type}</span>
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="font-medium theme-text-primary">Category:</span>
-                              <span className="capitalize">{report.category}</span>
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs theme-text-muted">
-                            <span><strong className="theme-text-primary">Size:</strong> {formatFileSize(report.fileSize)}</span>
-                            <span><strong className="theme-text-primary">Generated:</strong> {formatDate(report.generatedDate)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="mt-3 flex items-center gap-2">
-                      {report.status === 'completed' && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleDownload(report.id)}
-                          className="flex-1 px-4 py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 flex items-center justify-center gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          <span className="text-sm">Download</span>
-                        </motion.button>
-                      )}
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedReport(report)}
-                        className="flex-1 px-4 py-3 rounded-lg theme-bg-glass theme-border-glass border flex items-center justify-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm">View</span>
-                      </motion.button>
-
-                      {!report.isScheduled && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleScheduleReport(report.id)}
-                          className="px-3 py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-2"
-                        >
-                          <Clock className="w-4 h-4" />
-                        </motion.button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                <thead className="theme-bg-glass border-b theme-border-glass">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Report Name</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Type</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">File Size</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                    <th className="hidden xl:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Generated</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedReports.map((report, idx) => (
-                    <motion.tr
-                      key={report.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-                            {(() => {
-                              const Icon = getCategoryIcon(report.category);
-                              return <Icon className="w-5 h-5" />;
-                            })()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium theme-text-primary">{report.name}</p>
-                            <p className="text-xs theme-text-muted">{report.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass capitalize">
-                          {report.type}
-                        </span>
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary capitalize">
-                        {report.category}
-                      </td>
-                      <td className="hidden lg:table-cell px-4 py-3 text-sm theme-text-primary">
-                        {formatFileSize(report.fileSize)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(report.status)}`}>
-                          {(() => {
-                            const Icon = getStatusIcon(report.status);
-                            return <Icon className="w-3 h-3" />;
-                          })()}
-                          {report.status}
-                        </span>
-                      </td>
-                      <td className="hidden xl:table-cell px-4 py-3 text-sm theme-text-primary">
-                        {formatDate(report.generatedDate)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {report.status === 'completed' && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleDownload(report.id)}
-                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
-                            >
-                              <Download className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setSelectedReport(report)}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </motion.button>
-                          {!report.isScheduled && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleScheduleReport(report.id)}
-                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-purple-500/20 hover:text-purple-400 transition-colors"
-                            >
-                              <Clock className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                          {report.status !== 'completed' && report.status !== 'scheduled' && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleGenerateNow(report.id)}
-                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500/20 hover:text-blue-400 transition-colors"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
-              <p className="text-sm theme-text-muted">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredReports.length)} of {filteredReports.length}
-              </p>
-              <div className="flex items-center gap-2">
-                {isMobile ? (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p: number) => p - 1)}
-                      className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                    >
-                      Prev
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage((p: number) => p + 1)}
-                      className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                    >
-                      Next
-                    </motion.button>
-                  </>
-                ) : (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p: number) => p - 1)}
-                      className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </motion.button>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                      <motion.button
-                        key={i}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border'}`}
-                      >
-                        {i + 1}
-                      </motion.button>
-                    ))}
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage((p: number) => p + 1)}
-                      className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </motion.button>
-                  </>
-                )}
-              </div>
+          {/* Quick Actions */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              {[
+                { label: 'Generate Disbursement', icon: FilePlus, color: 'bg-blue-500/20 text-blue-400' },
+                { label: 'Schedule Weekly', icon: Calendar, color: 'bg-purple-500/20 text-purple-400' },
+                { label: 'Download All', icon: Download, color: 'bg-green-500/20 text-green-400' },
+                { label: 'View Templates', icon: BookOpen, color: 'bg-orange-500/20 text-orange-400' }
+              ].map((action, idx) => (
+                <motion.button
+                  key={idx}
+                  whileHover={{ x: 4 }}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl ${action.color} transition-colors`}
+                >
+                  <action.icon className="w-5 h-5" />
+                  <span className="font-medium text-sm">{action.label}</span>
+                </motion.button>
+              ))}
             </div>
-          </>
-        )}
-      </motion.div>
+          </div>
 
-      {/* Report Detail Modal */}
+          {/* Report Categories */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Categories</h3>
+            <div className="space-y-3">
+              {[
+                { name: 'Financial', count: 45, color: 'bg-green-500' },
+                { name: 'Compliance', count: 32, color: 'bg-blue-500' },
+                { name: 'Performance', count: 28, color: 'bg-purple-500' },
+                { name: 'Statistical', count: 19, color: 'bg-orange-500' },
+                { name: 'Technical', count: 15, color: 'bg-red-500' }
+              ].map((category, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
+                    <span className="text-sm theme-text-primary">{category.name}</span>
+                  </div>
+                  <span className="text-sm theme-text-muted">{category.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Content Area */}
+        {/* Main Content Area */}
+<motion.div
+  initial={{ opacity: 0, x: 20 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ delay: 0.3 }}
+  className="lg:col-span-9 xl:col-span-9 space-y-6 order-1 lg:order-2"
+>
+  {/* View Controls - Improved */}
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 theme-bg-card theme-border-glass border rounded-2xl glass-effect">
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+        <FileText className="w-4 h-4 text-white" />
+      </div>
+      <div>
+        <h2 className="text-lg sm:text-xl font-bold theme-text-primary">Recent Reports</h2>
+        <p className="text-sm theme-text-muted">{filteredReports.length} reports found</p>
+      </div>
+    </div>
+    
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      {/* Search */}
+      <div className="relative flex-1 sm:w-48 lg:w-56">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
+        <input
+          type="text"
+          placeholder="Search reports..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
+        />
+      </div>
+
+      {/* View Toggle */}
+      <div className="flex items-center gap-1 theme-bg-glass rounded-xl p-1">
+        {[
+          { mode: 'reports', label: 'Reports', icon: FileText },
+          { mode: 'templates', label: 'Templates', icon: BookOpen },
+          { mode: 'scheduled', label: 'Scheduled', icon: Clock }
+        ].map(({ mode, label, icon: Icon }) => (
+          <motion.button
+            key={mode}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setViewMode(mode as any)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+              viewMode === mode 
+                ? 'accent-gradient text-white shadow-sm' 
+                : 'theme-text-muted hover:theme-text-primary'
+            }`}
+          >
+            <Icon className="w-3 h-3" />
+            <span className="hidden sm:inline">{label}</span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+          {/* Reports Grid */}
+          {/* Reports Grid - Fixed Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+            {paginatedReports.map((report, idx) => (
+              <motion.div
+                key={report.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.03 }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
+                onClick={() => setSelectedReport(report)}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                      {(() => {
+                        const Icon = getCategoryIcon(report.category) || FileText;
+                        return <Icon className="w-5 h-5 sm:w-6 sm:h-6" />;
+                      })()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold theme-text-primary text-sm sm:text-base group-hover:text-blue-400 transition-colors truncate">
+                        {report.name}
+                      </h3>
+                      <p className="theme-text-muted text-xs truncate">{report.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
+                    <span className={`px-2 py-1 ${getStatusColor(report.status)} text-xs font-bold rounded-full whitespace-nowrap`}>
+                      {report.status?.charAt(0).toUpperCase() + report.status?.slice(1)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="theme-text-secondary text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed">
+                  {report.description}
+                </p>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
+                    <p className="text-sm font-bold theme-text-primary">{report.recordCount ?? '--'}</p>
+                    <p className="theme-text-muted text-xs">Records</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      {(() => {
+                        const FormatIcon = getFileFormatIcon(report.fileFormat || 'PDF');
+                        return <FormatIcon className="w-3 h-3 theme-text-muted" />;
+                      })()}
+                      <p className="text-sm font-bold theme-text-primary">{formatFileSize(report.fileSize)}</p>
+                    </div>
+                    <p className="theme-text-muted text-xs">Size</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
+                    <p className="text-sm font-bold theme-text-primary">{report.downloadCount}</p>
+                    <p className="theme-text-muted text-xs">Downloads</p>
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="flex items-center justify-between text-xs theme-text-muted mb-3">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDate(report.generatedDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span className="capitalize">{report.frequency}</span>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${report.status === 'completed' ? 'bg-green-500' :
+                        report.status === 'processing' ? 'bg-blue-500' :
+                          report.status === 'scheduled' ? 'bg-purple-500' : 'bg-gray-400'
+                      }`}></div>
+                    <span className="text-xs theme-text-muted">
+                      {report.status === 'completed' ? 'Ready' :
+                        report.status === 'processing' ? 'Processing' :
+                          report.status === 'scheduled' ? 'Scheduled' : 'Failed'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => { e.stopPropagation(); handleDownload(report.id); }}
+                      className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors"
+                      disabled={report.status !== 'completed'}
+                    >
+                      <Download className={`w-3.5 h-3.5 ${report.status === 'completed' ? 'theme-text-primary' : 'theme-text-muted'}`} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}
+                      className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5 theme-text-primary" />
+                    </motion.button>
+                    {!report.isScheduled && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => { e.stopPropagation(); handleScheduleReport(report.id); }}
+                        className="p-1.5 rounded-lg theme-bg-glass hover:bg-purple-500/20 transition-colors"
+                      >
+                        <Clock className="w-3.5 h-3.5 theme-text-primary" />
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Analytics Overview */}
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+    {/* Performance Chart */}
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Performance Metrics</h3>
+        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
+      </div>
+      <div className="space-y-3">
+        {[
+          { label: 'Success Rate', value: 98, color: 'bg-green-500', icon: CheckCircle },
+          { label: 'Processing Speed', value: 85, color: 'bg-blue-500', icon: Zap },
+          { label: 'User Satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
+        ].map((metric, idx) => (
+          <div key={idx} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
+                <span className="text-sm theme-text-primary">{metric.label}</span>
+              </div>
+              <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full ${metric.color} transition-all duration-1000`}
+                style={{ width: `${metric.value}%` }}
+              ></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+
+    {/* Recent Activity */}
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Recent Activity</h3>
+        <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
+      </div>
+      <div className="space-y-3">
+        {[
+          { action: 'Monthly Report Generated', user: 'System', time: '2 min ago', status: 'success' },
+          { action: 'Weekly Schedule Created', user: 'Admin', time: '5 min ago', status: 'info' },
+          { action: 'Export Completed', user: 'Officer Sharma', time: '10 min ago', status: 'success' },
+          { action: 'Processing Failed', user: 'System', time: '15 min ago', status: 'error' }
+        ].map((activity, idx) => (
+          <div key={idx} className="flex items-center gap-3 p-2 rounded-lg theme-bg-glass">
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              activity.status === 'success' ? 'bg-green-500' :
+              activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
+              <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
+            </div>
+            <ArrowUpRight className="w-3 h-3 theme-text-muted flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  </div>
+        </motion.div>
+      </div>
+
+      {/* Enhanced Report Detail Modal */}
       <AnimatePresence>
         {selectedReport && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
             onClick={() => setSelectedReport(null)}
-          >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
-              >
-                <div className={isMobile ? 'flex flex-col h-full' : 'relative'}>
-                  <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-4 sm:p-6 flex items-center justify-between gap-3 z-30">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white flex-shrink-0">
-                        {(() => {
-                          const Icon = getCategoryIcon(selectedReport.category);
-                          return <Icon className="w-6 h-6" />;
-                        })()}
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-xl sm:text-2xl font-bold theme-text-primary truncate">{selectedReport.name}</h2>
-                        <p className="theme-text-muted text-sm truncate">{selectedReport.id} • {selectedReport.category}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedReport(null)}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Tabs */}
-                  <div className="border-b theme-border-glass sticky top-[64px] z-20 bg-transparent">
-                    <div className="flex overflow-x-auto">
-                      {['details', 'parameters', 'preview'].map((tab) => (
-                        <button
-                          key={tab}
-                          onClick={() => setActiveTab(tab)}
-                          className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                            activeTab === tab
-                              ? 'border-blue-500 text-blue-600 theme-text-primary'
-                              : 'border-transparent theme-text-muted hover:theme-text-primary'
-                          }`}
-                        >
-                          {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                    {activeTab === 'details' && (
-                      <>
-                        {/* Report Overview */}
-                        <div>
-                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Overview</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg theme-bg-glass">
-                              <p className="text-sm theme-text-muted mb-2">Description</p>
-                              <p className="theme-text-primary leading-relaxed">{selectedReport.description}</p>
-                            </div>
-                            <div className="p-4 rounded-lg theme-bg-glass">
-                              <p className="text-sm theme-text-muted mb-2">Record Count</p>
-                              <p className="text-2xl font-bold theme-text-primary">{selectedReport.recordCount || '--'}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Status and Metadata */}
-                        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                            <p className="text-sm theme-text-muted mb-2">Status</p>
-                            <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedReport.status)}`}>
-                              {(() => {
-                                const Icon = getStatusIcon(selectedReport.status);
-                                return <Icon className="w-4 h-4" />;
-                              })()}
-                              {selectedReport.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                            <p className="text-sm theme-text-muted mb-2">File Format</p>
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const Icon = getFileFormatIcon(selectedReport.fileFormat);
-                                return <Icon className="w-4 h-4 theme-text-primary" />;
-                              })()}
-                              <p className="font-medium theme-text-primary">{selectedReport.fileFormat}</p>
-                            </div>
-                          </div>
-                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                            <p className="text-sm theme-text-muted mb-2">File Size</p>
-                            <p className="font-medium theme-text-primary">{formatFileSize(selectedReport.fileSize)}</p>
-                          </div>
-                          <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                            <p className="text-sm theme-text-muted mb-2">Download Count</p>
-                            <p className="font-medium theme-text-primary">{selectedReport.downloadCount}</p>
-                          </div>
-                        </div>
-
-                        {/* Generation Information */}
-                        <div>
-                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Generation Information</h3>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <div className="p-4 rounded-lg theme-bg-glass">
-                              <p className="text-sm theme-text-muted mb-1">Generated Date</p>
-                              <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.generatedDate)}</p>
-                            </div>
-                            <div className="p-4 rounded-lg theme-bg-glass">
-                              <p className="text-sm theme-text-muted mb-1">Generated By</p>
-                              <p className="font-medium theme-text-primary">{selectedReport.generatedBy || 'System'}</p>
-                            </div>
-                            <div className="p-4 rounded-lg theme-bg-glass">
-                              <p className="text-sm theme-text-muted mb-1">Frequency</p>
-                              <p className="font-medium theme-text-primary capitalize">{selectedReport.frequency}</p>
-                            </div>
-                            {selectedReport.lastRun && (
-                              <div className="p-4 rounded-lg theme-bg-glass">
-                                <p className="text-sm theme-text-muted mb-1">Last Run</p>
-                                <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.lastRun)}</p>
-                              </div>
-                            )}
-                            {selectedReport.nextRun && (
-                              <div className="p-4 rounded-lg theme-bg-glass">
-                                <p className="text-sm theme-text-muted mb-1">Next Run</p>
-                                <p className="font-medium theme-text-primary">{formatDateTime(selectedReport.nextRun)}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {activeTab === 'parameters' && (
-                      <div className="space-y-6">
-                        {/* Report Parameters */}
-                        <div>
-                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Parameters</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {Object.entries(selectedReport.parameters).map(([key, value]) => (
-                              <div key={key} className="p-4 rounded-lg theme-bg-glass">
-                                <p className="text-sm theme-text-muted mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                                <p className="font-medium theme-text-primary">{value}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Data Columns */}
-                        <div>
-                          <h3 className="text-lg font-semibold theme-text-primary mb-4">Included Data Columns</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {selectedReport.columns.map((column, idx) => (
-                              <div key={idx} className="flex items-center gap-2 p-2 rounded theme-bg-glass">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-sm theme-text-primary">{column}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === 'preview' && (
-                      <div className="text-center py-12">
-                        <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold theme-text-primary mb-2">Report Preview</h3>
-                        <p className="theme-text-muted mb-6">{selectedReport.status === 'completed' ? 'Click download to view the full report' : 'Report preview will be available after generation'}</p>
-                        {selectedReport.status === 'completed' && (
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownload(selectedReport.id)} className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 mx-auto">
-                            <Download className="w-5 h-5" />
-                            Download Full Report
-                          </motion.button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Sticky Footer Actions (mobile-friendly) */}
-                  <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.6)] dark:bg-[rgba(15,23,42,0.85)] backdrop-blur-md border-t theme-border-glass p-4 sm:p-6 flex flex-col sm:flex-row gap-3">
-                    {selectedReport.status === 'completed' && (
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleDownload(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"><Download className="w-5 h-5" />Download Report</motion.button>
-                    )}
-                    {!selectedReport.isScheduled && (
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleScheduleReport(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-2"><Clock className="w-5 h-5" />Schedule Report</motion.button>
-                    )}
-                    {selectedReport.status !== 'completed' && selectedReport.status !== 'scheduled' && (
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleGenerateNow(selectedReport.id)} className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"><RefreshCw className="w-5 h-5" />Generate Now</motion.button>
-                    )}
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"><Share2 className="w-5 h-5" />Share Report</motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Schedule Report Modal */}
-      <AnimatePresence>
-        {showScheduleModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowScheduleModal(false)}
+            aria-modal="true"
+            role="dialog"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.98, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="theme-bg-card theme-border-glass border rounded-2xl max-w-md w-full p-6"
+              className="theme-bg-card theme-border-glass border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold theme-text-primary">Schedule Report</h3>
-                <button
-                  onClick={() => setShowScheduleModal(false)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Frequency</label>
-                  <select
-                    value={newSchedule.frequency}
-                    onChange={(e) => setNewSchedule({...newSchedule, frequency: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Format</label>
-                  <select
-                    value={newSchedule.format}
-                    onChange={(e) => setNewSchedule({...newSchedule, format: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="PDF">PDF</option>
-                    <option value="Excel">Excel</option>
-                    <option value="CSV">CSV</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Time</label>
-                  <input
-                    type="time"
-                    value={newSchedule.time}
-                    onChange={(e) => setNewSchedule({...newSchedule, time: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Recipients (Email)</label>
-                  <input
-                    type="text"
-                    placeholder="Enter email addresses separated by commas"
-                    value={newSchedule.recipients}
-                    onChange={(e) => setNewSchedule({...newSchedule, recipients: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 pt-4">
-                  <input type="checkbox" id="sendNotification" className="rounded theme-bg-glass" />
-                  <label htmlFor="sendNotification" className="text-sm theme-text-muted">
-                    Send email notification when report is generated
-                  </label>
+              {/* Enhanced Header */}
+              <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-4 sm:p-8">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                      <BarChart3 className="w-8 h-8" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">{selectedReport.name}</h2>
+                        <span className={`px-3 py-2 text-sm font-bold rounded-full ${getStatusColor(selectedReport.status)}`}>{selectedReport.status?.toUpperCase()}</span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <p className="theme-text-muted text-sm sm:text-lg">{selectedReport.id}</p>
+                        <span className="text-sm theme-text-muted">•</span>
+                        <p className="theme-text-muted">{selectedReport.category} • {selectedReport.frequency}</p>
+                        <span className="text-sm theme-text-muted">•</span>
+                        <p className="theme-text-muted">Generated: {formatDateTime(selectedReport.generatedDate)}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedReport(null)} className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors" aria-label="Close report details">
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowScheduleModal(false)}
-                  className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold"
-                >
-                  Cancel
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCreateSchedule}
-                  className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  Create Schedule
-                </motion.button>
+              {/* Enhanced Tabs */}
+              <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
+                <div className="flex overflow-x-auto px-8">
+                  {[
+                    { id: 'overview', label: 'Overview', icon: Eye },
+                    { id: 'analytics', label: 'Analytics', icon: BarChart },
+                    { id: 'parameters', label: 'Parameters', icon: Settings },
+                    { id: 'preview', label: 'Preview', icon: FileText },
+                    { id: 'sharing', label: 'Sharing', icon: Share2 }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      className={`flex items-center gap-3 px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
+                          ? 'border-blue-500 text-blue-600 theme-text-primary'
+                          : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
+                        }`}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-8 space-y-8 max-h-[calc(95vh-200px)] overflow-y-auto">
+                {/* Content would go here based on active tab */}
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold theme-text-primary mb-2">Report Details</h3>
+                  <p className="theme-text-muted text-lg">Select a tab to view different aspects of this report</p>
+                </div>
+              </div>
+
+              {/* Enhanced Action Buttons */}
+              <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Report
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-purple-500/30 transition-colors"
+                  >
+                    <Clock className="w-5 h-5" />
+                    Schedule
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Share
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Analyze
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
