@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle } from "lucide-react";
+import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
@@ -13,6 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Slightly stronger dropdown backgrounds for better contrast
     const dropdownSolidBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.99)' : 'rgba(255, 255, 255, 0.99)';
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -46,8 +47,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setSidebarOpen(false);
     };
 
+    const toggleSidebarCollapse = () => {
+        setSidebarCollapsed(!sidebarCollapsed);
+    };
+
     return (
-        <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
+        <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-all duration-300" style={{ background: 'var(--bg-gradient)' }}>
             {/* Enhanced Theme Variables */}
             <style jsx global>{`
                 [data-theme="dark"] {
@@ -145,15 +150,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onChange={handleSidebarChange}
                     open={sidebarOpen}
                     setOpen={setSidebarOpen}
+                    collapsed={sidebarCollapsed}
+                    onToggleCollapse={toggleSidebarCollapse}
                 />
 
                 {/* Main Content */}
-                <div className="flex flex-col flex-1 lg:ml-64">
+                <div className={`flex flex-col flex-1 transition-all duration-300 ${
+                    sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+                }`}>
                     {/* Enhanced Header */}
                     <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm">
                         <div className="flex items-center justify-between px-4 py-3 lg:px-6">
                             {/* Left Section - Mobile Menu & Branding */}
                             <div className="flex items-center gap-4 flex-1">
+                                {/* Desktop sidebar toggle */}
+                                <motion.button
+                                    onClick={toggleSidebarCollapse}
+                                    className="hidden lg:flex p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                                >
+                                    <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${
+                                        sidebarCollapsed ? '' : 'rotate-180'
+                                    }`} />
+                                </motion.button>
+
                                 {/* Mobile menu toggle */}
                                 <button
                                     onClick={() => setSidebarOpen(true)}
@@ -280,8 +302,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     <HelpCircle className="w-4 h-4" />
                                                     Help & Support
                                                 </button>
-                                               
-                                                
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
