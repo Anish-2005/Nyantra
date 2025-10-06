@@ -339,7 +339,7 @@ export default function LoginPage() {
                 >
                   <Image 
                     src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} 
-                    alt="Nyantara" 
+                    alt="Nyantra" 
                     width={48} 
                     height={48} 
                     className="object-contain"

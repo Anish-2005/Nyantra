@@ -8,7 +8,7 @@ import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, Mail, Phone, MapPinned, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Send, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
 
-const NyantaraLanding = () => {
+const NyantraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mousePositionRef = useRef({ x: 0, y: 0 });
@@ -504,10 +504,10 @@ const NyantaraLanding = () => {
                 whileHover={{ scale: 1.05 }}
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantara logo" width={40} height={40} className="object-contain" />
+                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt="Nyantra logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-2xl font-bold text-accent-gradient">
-                  Nyantara
+                  Nyantra
                 </span>
               </motion.div>
 
@@ -1201,7 +1201,7 @@ const NyantaraLanding = () => {
               </motion.span>
 
               <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight theme-text-primary">
-                Why Choose <span className="text-accent-gradient">Nyantara</span>
+                Why Choose <span className="text-accent-gradient">Nyantra</span>
               </h2>
 
               <p className="text-lg md:text-xl theme-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1432,7 +1432,7 @@ const NyantaraLanding = () => {
                     </div>
                     <div>
                       <p className="text-sm theme-text-muted mb-1">Email</p>
-                      <p className="theme-text-primary font-semibold">support@nyantara.gov.in</p>
+                      <p className="theme-text-primary font-semibold">support@nyantra.gov.in</p>
                       <p className="text-xs theme-text-muted">Response in 24 hours</p>
                     </div>
                   </div>
@@ -1467,7 +1467,7 @@ const NyantaraLanding = () => {
             <div className="border-t theme-border-glass pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="theme-text-secondary text-sm text-center md:text-left">
-                  <p>© 2025 Nyantara. All rights reserved.</p>
+                  <p>© 2025 Nyantra. All rights reserved.</p>
                   <p className="text-xs mt-1">
                     Developed under Ministry of Social Justice & Empowerment, Government of India
                   </p>
@@ -1518,4 +1518,4 @@ const NyantaraLanding = () => {
   );
 };
 
-export default NyantaraLanding;
+export default NyantraLanding;

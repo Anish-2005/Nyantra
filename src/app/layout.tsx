@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nyantara - DBT Portal for Social Justice",
+  title: "Nyantra - DBT Portal for Social Justice",
   description: "Empowering Justice Through Technology",
   icons: {
     icon: '/favicon.ico',

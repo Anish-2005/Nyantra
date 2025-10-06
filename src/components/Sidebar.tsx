@@ -59,7 +59,7 @@ export default function Sidebar({
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt="Nyantara" fill className="object-contain" />
+              <Image src={logoSrc} alt="Nyantra" fill className="object-contain" />
             </div>
             <div>
               <div
@@ -67,7 +67,7 @@ export default function Sidebar({
                   theme === "dark" ? "text-white" : "theme-text-primary"
                 }`}
               >
-                Nyantara
+                Nyantra
               </div>
               <div className="text-xs theme-text-muted">DBT Dashboard</div>
             </div>
@@ -156,7 +156,7 @@ export default function Sidebar({
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt="Nyantara" width={30} height={30} className="w-6 h-6 object-contain" />
+              <Image src={logoSrc} alt="Nyantra" width={30} height={30} className="w-6 h-6 object-contain" />
             </div>
             <div>
               <div
@@ -164,7 +164,7 @@ export default function Sidebar({
                   theme === "dark" ? "text-white" : "theme-text-primary"
                 }`}
               >
-                Nyantara
+                Nyantra
               </div>
               <div className="text-xs theme-text-muted">DBT Dashboard</div>
             </div>

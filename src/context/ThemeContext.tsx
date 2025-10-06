@@ -21,7 +21,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // before the browser paints to avoid hydration mismatches.
   useLayoutEffect(() => {
     try {
-      const stored = localStorage.getItem('nyantara-theme');
+      // Read new key first, fall back to legacy key for compatibility
+      const stored = localStorage.getItem('nyantra-theme') ?? localStorage.getItem('nyantara-theme');
       if (stored === 'light' || stored === 'dark') {
         setThemeState(stored as Theme);
         document.documentElement.setAttribute('data-theme', stored as Theme);
@@ -39,7 +40,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Persist theme when it changes (non-blocking)
   useEffect(() => {
-    try { localStorage.setItem('nyantara-theme', theme); } catch { /* ignore */ }
+  try { localStorage.setItem('nyantra-theme', theme); } catch { /* ignore */ }
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
