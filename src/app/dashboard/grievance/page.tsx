@@ -3,9 +3,9 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
-import { Search, Filter, Download, Plus, Eye, Edit, MoreVertical, TrendingUp, Clock, Star, PieChart, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, Send, PhoneCall, Video, MapPin, User, UserCheck, Scale, FileText, ChevronLeft, ChevronRight, X, Flag, Banknote, FileSearch, UserX, Zap, Timer, Calendar, Phone } from 'lucide-react';
+import { Search, Filter, Download, Plus, Eye, Edit, MoreVertical, TrendingUp, Clock, Star, PieChart, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, Send, PhoneCall, Video, MapPin, User, UserCheck, Scale, FileText, ChevronLeft, ChevronRight, X, Flag, Banknote, FileSearch, UserX, Zap, Timer, Calendar, Phone, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
 
-// Mock data for grievances
+// Mock data for grievances (expanded list for testing and pagination)
 const mockGrievances = [
   {
     id: 'GRV-2024-001234',
@@ -25,295 +25,38 @@ const mockGrievances = [
     assignedDate: '2024-03-15',
     createdDate: '2024-03-10',
     lastUpdated: '2024-03-18 14:30',
-    resolutionDate: '',
+    resolutionDate: null,
     expectedResolution: '2024-03-25',
     description: 'Relief amount not received despite application approval 3 weeks ago. No communication regarding disbursement status.',
     attachments: 3,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Applied for relief under PCR Act. Application approved but no payment received.',
-        date: '2024-03-10 10:30',
-        from: 'Rajesh Kumar',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'acknowledgment',
-        message: 'Grievance registered. Ticket #GRV-2024-001234 assigned to Officer Sharma.',
-        date: '2024-03-11 09:15',
-        from: 'System',
-        to: 'Rajesh Kumar'
-      }
-    ],
+    communication: [],
     escalationLevel: 1,
     satisfactionRating: null,
     followUpRequired: true,
     relatedGrievances: []
   },
-  {
-    id: 'GRV-2024-001235',
-    beneficiaryId: 'BEN-2024-001235',
-    beneficiaryName: 'Priya Singh',
-    phone: '+91 98765-43211',
-    email: 'priya.s@example.com',
-    district: 'Lucknow',
-    state: 'Uttar Pradesh',
-    actType: 'PoA Act',
-    applicationId: 'APP-2024-001235',
-    category: 'document-issues',
-    subCategory: 'document-rejection',
-    priority: 'medium',
-    status: 'in-progress',
-    assignedTo: 'Officer Verma',
-    assignedDate: '2024-03-12',
-    createdDate: '2024-03-08',
-    lastUpdated: '2024-03-17 11:45',
-    resolutionDate: '',
-    expectedResolution: '2024-03-22',
-    description: 'Aadhaar document rejected multiple times without proper reason. Need clarification on acceptable documents.',
-    attachments: 5,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Aadhaar card rejected 3 times. No clear reason provided.',
-        date: '2024-03-08 14:20',
-        from: 'Priya Singh',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'response',
-        message: 'Requesting clarification on document rejection. Please provide specific reasons.',
-        date: '2024-03-12 10:30',
-        from: 'Officer Verma',
-        to: 'Priya Singh'
-      }
-    ],
-    escalationLevel: 1,
-    satisfactionRating: null,
-    followUpRequired: true,
-    relatedGrievances: []
-  },
-  {
-    id: 'GRV-2024-001236',
-    beneficiaryId: 'BEN-2024-001236',
-    beneficiaryName: 'Amit Verma',
-    phone: '+91 98765-43212',
-    email: 'amit.v@example.com',
-    district: 'Jaipur',
-    state: 'Rajasthan',
-    actType: 'PCR Act',
-    applicationId: 'APP-2024-001236',
-    category: 'application-status',
-    subCategory: 'status-not-updated',
-    priority: 'medium',
-    status: 'resolved',
-    assignedTo: 'Officer Kapoor',
-    assignedDate: '2024-03-05',
-    createdDate: '2024-03-01',
-    lastUpdated: '2024-03-10 16:45',
-    resolutionDate: '2024-03-10',
-    expectedResolution: '2024-03-15',
-    description: 'Application status stuck at "Under Review" for 4 weeks. No updates provided.',
-    attachments: 2,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Application status not updated for a month.',
-        date: '2024-03-01 11:15',
-        from: 'Amit Verma',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'resolution',
-        message: 'Application processed and approved. Status updated in system.',
-        date: '2024-03-10 16:45',
-        from: 'Officer Kapoor',
-        to: 'Amit Verma'
-      }
-    ],
-    escalationLevel: 1,
-    satisfactionRating: 5,
-    followUpRequired: false,
-    relatedGrievances: []
-  },
-  {
-    id: 'GRV-2024-001237',
-    beneficiaryId: 'BEN-2024-001237',
-    beneficiaryName: 'Sunita Devi',
-    phone: '+91 98765-43213',
-    email: 'sunita.d@example.com',
-    district: 'Bhopal',
-    state: 'Madhya Pradesh',
-    actType: 'PoA Act',
-    applicationId: 'APP-2024-001237',
-    category: 'officer-behavior',
-    subCategory: 'rude-behavior',
-    priority: 'high',
-    status: 'escalated',
-    assignedTo: 'Senior Officer Gupta',
-    assignedDate: '2024-03-14',
-    createdDate: '2024-03-10',
-    lastUpdated: '2024-03-16 09:20',
-    resolutionDate: '',
-    expectedResolution: '2024-03-24',
-    description: 'Facing rude behavior from assigned officer during document submission. Request officer change.',
-    attachments: 1,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Officer behaved rudely during document verification.',
-        date: '2024-03-10 15:45',
-        from: 'Sunita Devi',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'escalation',
-        message: 'Complaint escalated to senior management for investigation.',
-        date: '2024-03-14 11:30',
-        from: 'System',
-        to: 'Sunita Devi'
-      }
-    ],
-    escalationLevel: 2,
-    satisfactionRating: null,
-    followUpRequired: true,
-    relatedGrievances: []
-  },
-  {
-    id: 'GRV-2024-001238',
-    beneficiaryId: 'BEN-2024-001238',
-    beneficiaryName: 'Ramesh Yadav',
-    phone: '+91 98765-43214',
-    email: 'ramesh.y@example.com',
-    district: 'Ranchi',
-    state: 'Jharkhand',
-    actType: 'PCR Act',
-    applicationId: 'APP-2024-001238',
-    category: 'information-correction',
-    subCategory: 'name-correction',
-    priority: 'low',
-    status: 'closed',
-    assignedTo: 'Officer Mishra',
-    assignedDate: '2024-03-08',
-    createdDate: '2024-03-05',
-    lastUpdated: '2024-03-12 11:30',
-    resolutionDate: '2024-03-12',
-    expectedResolution: '2024-03-18',
-    description: 'Name spelling error in approved application. Need correction certificate.',
-    attachments: 4,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Name spelling incorrect in approved application.',
-        date: '2024-03-05 09:20',
-        from: 'Ramesh Yadav',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'resolution',
-        message: 'Name correction completed and new certificate issued.',
-        date: '2024-03-12 11:30',
-        from: 'Officer Mishra',
-        to: 'Ramesh Yadav'
-      }
-    ],
-    escalationLevel: 1,
-    satisfactionRating: 4,
-    followUpRequired: false,
-    relatedGrievances: []
-  },
-  {
-    id: 'GRV-2024-001239',
-    beneficiaryId: 'BEN-2024-001239',
-    beneficiaryName: 'Anita Sharma',
-    phone: '+91 98765-43215',
-    email: 'anita.s@example.com',
-    district: 'Chandigarh',
-    state: 'Punjab',
-    actType: 'PoA Act',
-    applicationId: 'APP-2024-001239',
-    category: 'technical-issues',
-    subCategory: 'portal-access',
-    priority: 'medium',
-    status: 'pending',
-    assignedTo: 'IT Support',
-    assignedDate: '2024-03-16',
-    createdDate: '2024-03-15',
-    lastUpdated: '2024-03-16 08:15',
-    resolutionDate: '',
-    expectedResolution: '2024-03-19',
-    description: 'Unable to access application portal. Password reset not working.',
-    attachments: 0,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Cannot login to application portal.',
-        date: '2024-03-15 16:30',
-        from: 'Anita Sharma',
-        to: 'Grievance Cell'
-      }
-    ],
-    escalationLevel: 1,
-    satisfactionRating: null,
-    followUpRequired: true,
-    relatedGrievances: []
-  },
-  {
-    id: 'GRV-2024-001240',
-    beneficiaryId: 'BEN-2024-001240',
-    beneficiaryName: 'Mohan Das',
-    phone: '+91 98765-43216',
-    email: 'mohan.d@example.com',
-    district: 'Ahmedabad',
-    state: 'Gujarat',
-    actType: 'PCR Act',
-    applicationId: 'APP-2024-001240',
-    category: 'disbursement-delay',
-    subCategory: 'partial-payment',
-    priority: 'high',
-    status: 'in-progress',
-    assignedTo: 'Officer Patel',
-    assignedDate: '2024-03-13',
-    createdDate: '2024-03-10',
-    lastUpdated: '2024-03-17 14:20',
-    resolutionDate: '',
-    expectedResolution: '2024-03-23',
-    description: 'Received only partial payment. Balance amount pending for 2 weeks.',
-    attachments: 2,
-    communication: [
-      {
-        id: 1,
-        type: 'complaint',
-        message: 'Received only 50% of approved amount.',
-        date: '2024-03-10 12:45',
-        from: 'Mohan Das',
-        to: 'Grievance Cell'
-      },
-      {
-        id: 2,
-        type: 'response',
-        message: 'Investigating partial payment issue with accounts department.',
-        date: '2024-03-13 15:30',
-        from: 'Officer Patel',
-        to: 'Mohan Das'
-      }
-    ],
-    escalationLevel: 1,
-    satisfactionRating: null,
-    followUpRequired: true,
-    relatedGrievances: []
-  }
+  { id: 'GRV-2024-001235', beneficiaryId: 'BEN-2024-001235', beneficiaryName: 'Sunita Devi', phone: '+91 91234-56789', email: 'sunita.d@example.com', district: 'Gaya', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001235', category: 'document-issues', subCategory: 'missing-documents', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Verma', assignedDate: '2024-03-12', createdDate: '2024-03-11', lastUpdated: '2024-03-17 09:10', resolutionDate: null, expectedResolution: '2024-03-22', description: 'Applicant missing identity proof, needs assistance to upload documents.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001236', beneficiaryId: 'BEN-2024-001236', beneficiaryName: 'Mohammed Ali', phone: '+91 99876-54321', email: 'm.ali@example.com', district: 'Muzaffarpur', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001236', category: 'application-status', subCategory: 'processing-delay', priority: 'low', status: 'resolved', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-08', createdDate: '2024-03-05', lastUpdated: '2024-03-14 11:00', resolutionDate: '2024-03-14', expectedResolution: '2024-03-12', description: 'Application processing delayed due to backlog; resolved after manual intervention.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 4, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001237', beneficiaryId: 'BEN-2024-001237', beneficiaryName: 'Anita Sharma', phone: '+91 90123-45678', email: 'anita.s@example.com', district: 'Patna', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001237', category: 'officer-behavior', subCategory: 'rude-staff', priority: 'high', status: 'escalated', assignedTo: 'Officer Rao', assignedDate: '2024-03-16', createdDate: '2024-03-15', lastUpdated: '2024-03-18 16:00', resolutionDate: null, expectedResolution: '2024-03-28', description: 'Complainant reported rude behaviour from local officer during verification.', attachments: 2, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001238', beneficiaryId: 'BEN-2024-001238', beneficiaryName: 'Ramesh Thakur', phone: '+91 98987-65432', email: 'r.thakur@example.com', district: 'Ara', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001238', category: 'information-correction', subCategory: 'name-mismatch', priority: 'medium', status: 'pending', assignedTo: 'Officer Singh', assignedDate: '2024-03-14', createdDate: '2024-03-13', lastUpdated: '2024-03-14 08:20', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Applicant requests correction of name spelling in records.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001239', beneficiaryId: 'BEN-2024-001239', beneficiaryName: 'Seema K', phone: '+91 97654-32109', email: 'seema.k@example.com', district: 'Bhagalpur', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001239', category: 'technical-issues', subCategory: 'portal-error', priority: 'medium', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-18', createdDate: '2024-03-18', lastUpdated: '2024-03-18 12:00', resolutionDate: null, expectedResolution: '2024-03-23', description: 'Error encountered during submission on portal.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001240', beneficiaryId: 'BEN-2024-001240', beneficiaryName: 'Vijay Patel', phone: '+91 91234-00011', email: 'v.patel@example.com', district: 'Gaya', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001240', category: 'disbursement-delay', subCategory: 'bank-issue', priority: 'high', status: 'in-progress', assignedTo: 'Officer Sharma', assignedDate: '2024-03-10', createdDate: '2024-03-09', lastUpdated: '2024-03-16 10:00', resolutionDate: null, expectedResolution: '2024-03-22', description: 'Funds returned by bank due to incorrect account details; beneficiary needs re-verification.', attachments: 2, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001241', beneficiaryId: 'BEN-2024-001241', beneficiaryName: 'Poonam Devi', phone: '+91 99881-23456', email: 'poonam.d@example.com', district: 'Muzaffarpur', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001241', category: 'document-issues', subCategory: 'invalid-aadhaar', priority: 'low', status: 'resolved', assignedTo: 'Officer Verma', assignedDate: '2024-03-05', createdDate: '2024-03-02', lastUpdated: '2024-03-10', resolutionDate: '2024-03-10', expectedResolution: '2024-03-08', description: 'Aadhaar mismatch resolved after re-submission.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001242', beneficiaryId: 'BEN-2024-001242', beneficiaryName: 'Kamal Kumar', phone: '+91 99777-33322', email: 'kamal.k@example.com', district: 'Patna', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001242', category: 'application-status', subCategory: 'pending-approval', priority: 'medium', status: 'pending', assignedTo: 'Officer Rao', assignedDate: '2024-03-11', createdDate: '2024-03-10', lastUpdated: '2024-03-12', resolutionDate: null, expectedResolution: '2024-03-19', description: 'Application awaiting managerial approval.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001243', beneficiaryId: 'BEN-2024-001243', beneficiaryName: 'Laxmi Devi', phone: '+91 94444-11122', email: 'laxmi.d@example.com', district: 'Gopalganj', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001243', category: 'officer-behavior', subCategory: 'delay-in-verification', priority: 'high', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-17', createdDate: '2024-03-16', lastUpdated: '2024-03-17 18:00', resolutionDate: null, expectedResolution: '2024-03-27', description: 'Officer delayed verification causing hardship to beneficiary.', attachments: 0, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001244', beneficiaryId: 'BEN-2024-001244', beneficiaryName: 'Rajiv Singh', phone: '+91 93333-22211', email: 'rajiv.s@example.com', district: 'Buxar', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001244', category: 'information-correction', subCategory: 'address-change', priority: 'low', status: 'resolved', assignedTo: 'Officer Singh', assignedDate: '2024-03-01', createdDate: '2024-02-28', lastUpdated: '2024-03-04', resolutionDate: '2024-03-04', expectedResolution: '2024-03-03', description: 'Address updated successfully.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001245', beneficiaryId: 'BEN-2024-001245', beneficiaryName: 'Meera Patil', phone: '+91 91111-22233', email: 'meera.p@example.com', district: 'Begusarai', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001245', category: 'technical-issues', subCategory: 'otp-failure', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-09', createdDate: '2024-03-08', lastUpdated: '2024-03-15', resolutionDate: null, expectedResolution: '2024-03-20', description: 'OTP not received for verification step.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001246', beneficiaryId: 'BEN-2024-001246', beneficiaryName: 'Suresh Kumar', phone: '+91 92222-33344', email: 'suresh.k@example.com', district: 'Munger', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001246', category: 'disbursement-delay', subCategory: 'verification-hold', priority: 'medium', status: 'open', assignedTo: 'Officer Sharma', assignedDate: '2024-03-14', createdDate: '2024-03-13', lastUpdated: '2024-03-14', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Verification pending for bank details.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001247', beneficiaryId: 'BEN-2024-001247', beneficiaryName: 'Radha Rani', phone: '+91 97777-44455', email: 'radha.r@example.com', district: 'Darbhanga', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001247', category: 'document-issues', subCategory: 'photo-mismatch', priority: 'low', status: 'resolved', assignedTo: 'Officer Verma', assignedDate: '2024-03-03', createdDate: '2024-02-28', lastUpdated: '2024-03-05', resolutionDate: '2024-03-05', expectedResolution: '2024-03-04', description: 'Profile photo mismatch corrected.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: 4, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001248', beneficiaryId: 'BEN-2024-001248', beneficiaryName: 'Amit Rao', phone: '+91 96666-55544', email: 'amit.r@example.com', district: 'Saharsa', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001248', category: 'application-status', subCategory: 'returned-docs', priority: 'high', status: 'in-progress', assignedTo: 'Officer Rao', assignedDate: '2024-03-02', createdDate: '2024-03-01', lastUpdated: '2024-03-10', resolutionDate: null, expectedResolution: '2024-03-18', description: 'Documents returned for correction; beneficiary needs guidance.', attachments: 2, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001249', beneficiaryId: 'BEN-2024-001249', beneficiaryName: 'Geeta Kumari', phone: '+91 95555-66633', email: 'geeta.k@example.com', district: 'Vaishali', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001249', category: 'officer-behavior', subCategory: 'negligence', priority: 'high', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-18', createdDate: '2024-03-17', lastUpdated: '2024-03-18', resolutionDate: null, expectedResolution: '2024-03-29', description: 'Officer negligence reported during field visit.', attachments: 0, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001250', beneficiaryId: 'BEN-2024-001250', beneficiaryName: 'Nisha Patel', phone: '+91 93322-11100', email: 'nisha.p@example.com', district: 'Bhagalpur', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001250', category: 'information-correction', subCategory: 'dob-correction', priority: 'low', status: 'resolved', assignedTo: 'Officer Singh', assignedDate: '2024-02-25', createdDate: '2024-02-20', lastUpdated: '2024-02-28', resolutionDate: '2024-02-28', expectedResolution: '2024-02-27', description: 'DOB corrected after verification.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001251', beneficiaryId: 'BEN-2024-001251', beneficiaryName: 'Manoj Kumar', phone: '+91 94488-77766', email: 'manoj.k@example.com', district: 'Gaya', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001251', category: 'technical-issues', subCategory: 'server-timeout', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-12', createdDate: '2024-03-11', lastUpdated: '2024-03-16', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Server timeout while processing application.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001252', beneficiaryId: 'BEN-2024-001252', beneficiaryName: 'Preeti Sharma', phone: '+91 91122-33344', email: 'preeti.s@example.com', district: 'Munger', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001252', category: 'disbursement-delay', subCategory: 'wrong-bank', priority: 'high', status: 'open', assignedTo: 'Officer Sharma', assignedDate: '2024-03-17', createdDate: '2024-03-16', lastUpdated: '2024-03-17', resolutionDate: null, expectedResolution: '2024-03-27', description: 'Disbursed to wrong bank account; needs reversal.', attachments: 1, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001253', beneficiaryId: 'BEN-2024-001253', beneficiaryName: 'Alok Verma', phone: '+91 97700-11122', email: 'alok.v@example.com', district: 'Darbhanga', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001253', category: 'document-issues', subCategory: 'signature-mismatch', priority: 'medium', status: 'pending', assignedTo: 'Officer Verma', assignedDate: '2024-03-13', createdDate: '2024-03-12', lastUpdated: '2024-03-13', resolutionDate: null, expectedResolution: '2024-03-20', description: 'Signature mismatch on submitted documents.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001254', beneficiaryId: 'BEN-2024-001254', beneficiaryName: 'Sanjay Yadav', phone: '+91 96600-22233', email: 'sanjay.y@example.com', district: 'Buxar', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001254', category: 'application-status', subCategory: 'awaiting-docs', priority: 'low', status: 'open', assignedTo: 'Officer Singh', assignedDate: '2024-03-18', createdDate: '2024-03-18', lastUpdated: '2024-03-18', resolutionDate: null, expectedResolution: '2024-03-24', description: 'Pending documents from applicant.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
+  { id: 'GRV-2024-001255', beneficiaryId: 'BEN-2024-001255', beneficiaryName: 'Kiran Rai', phone: '+91 98888-33344', email: 'kiran.r@example.com', district: 'Begusarai', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001255', category: 'officer-behavior', subCategory: 'bribe-request', priority: 'high', status: 'escalated', assignedTo: 'Officer Mehta', assignedDate: '2024-03-15', createdDate: '2024-03-14', lastUpdated: '2024-03-16', resolutionDate: null, expectedResolution: '2024-03-30', description: 'Allegation of bribe request during application processing.', attachments: 2, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
+  { id: 'GRV-2024-001256', beneficiaryId: 'BEN-2024-001256', beneficiaryName: 'Ritu Singh', phone: '+91 97788-44455', email: 'ritu.s@example.com', district: 'Vaishali', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001256', category: 'information-correction', subCategory: 'mobile-update', priority: 'low', status: 'resolved', assignedTo: 'Officer Rao', assignedDate: '2024-02-20', createdDate: '2024-02-18', lastUpdated: '2024-02-25', resolutionDate: '2024-02-25', expectedResolution: '2024-02-23', description: 'Mobile number updated in records.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] }
 ];
 
 const GrievancePage = () => {
@@ -327,20 +70,18 @@ const GrievancePage = () => {
   const [sortBy] = useState('createdDate');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(8);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGrievance, setSelectedGrievance] = useState<typeof mockGrievances[0] | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'dashboard' | 'list'>('dashboard');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [newMessage, setNewMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState('overview');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Filter and sort grievances
+  // Filter and sort grievances (same logic as before)
   const filteredGrievances = useMemo(() => {
     let filtered = [...mockGrievances];
-
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(grievance =>
         grievance.beneficiaryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -349,67 +90,33 @@ const GrievancePage = () => {
         grievance.applicationId.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(grievance => grievance.status === statusFilter);
-    }
-
-    // Category filter
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(grievance => grievance.category === categoryFilter);
-    }
-
-    // Priority filter
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter(grievance => grievance.priority === priorityFilter);
-    }
-
-    // Act type filter
-    if (actTypeFilter !== 'all') {
-      filtered = filtered.filter(grievance => grievance.actType === actTypeFilter);
-    }
-
-    // Assigned to filter
-    if (assignedToFilter !== 'all') {
-      filtered = filtered.filter(grievance => grievance.assignedTo === assignedToFilter);
-    }
-
-    // Sort
+    if (statusFilter !== 'all') filtered = filtered.filter(g => g.status === statusFilter);
+    if (categoryFilter !== 'all') filtered = filtered.filter(g => g.category === categoryFilter);
+    if (priorityFilter !== 'all') filtered = filtered.filter(g => g.priority === priorityFilter);
+    if (actTypeFilter !== 'all') filtered = filtered.filter(g => g.actType === actTypeFilter);
+    if (assignedToFilter !== 'all') filtered = filtered.filter(g => g.assignedTo === assignedToFilter);
+    
     filtered.sort((a, b) => {
       const getVal = (obj: Record<string, unknown>, key: string) => {
         const val = obj[key as keyof typeof obj];
         if (val === null || val === undefined) return '';
         if (typeof val === 'string') {
           const ts = Date.parse(val);
-          // convert ISO-like date strings to timestamp for proper chronological sorting
           if (!Number.isNaN(ts)) return ts;
           return val.toLowerCase();
         }
         return val as unknown as number | string;
       };
-    
       const aVal = getVal(a, sortBy);
       const bVal = getVal(b, sortBy);
-    
       if (aVal === bVal) return 0;
-    
-      // numeric comparison when both are numbers
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
       }
-    
-      // fallback to string comparison
       const aStr = String(aVal);
       const bStr = String(bVal);
-    
-      if (sortOrder === 'asc') {
-        return aStr > bStr ? 1 : -1;
-      } else {
-        return aStr < bStr ? 1 : -1;
-      }
+      return sortOrder === 'asc' ? (aStr > bStr ? 1 : -1) : (aStr < bStr ? 1 : -1);
     });
-
     return filtered;
   }, [searchQuery, statusFilter, categoryFilter, priorityFilter, actTypeFilter, assignedToFilter, sortBy, sortOrder]);
 
@@ -426,7 +133,7 @@ const GrievancePage = () => {
     const resolved = mockGrievances.filter(g => g.status === 'resolved' || g.status === 'closed').length;
     const inProgress = mockGrievances.filter(g => g.status === 'in-progress').length;
     const escalated = mockGrievances.filter(g => g.status === 'escalated').length;
-    const avgResolutionTime = 5.2; // days
+    const avgResolutionTime = 5.2;
     const satisfactionRate = Math.round((mockGrievances.filter(g => g.satisfactionRating && g.satisfactionRating >= 4).length / resolved) * 100);
     
     return {
@@ -445,7 +152,7 @@ const GrievancePage = () => {
 
   // Category distribution
   const categoryStats = useMemo(() => {
-    const categories = {
+    return {
       'disbursement-delay': mockGrievances.filter(g => g.category === 'disbursement-delay').length,
       'document-issues': mockGrievances.filter(g => g.category === 'document-issues').length,
       'application-status': mockGrievances.filter(g => g.category === 'application-status').length,
@@ -453,33 +160,21 @@ const GrievancePage = () => {
       'information-correction': mockGrievances.filter(g => g.category === 'information-correction').length,
       'technical-issues': mockGrievances.filter(g => g.category === 'technical-issues').length
     };
-    return categories;
   }, []);
 
-  // Detect small screens and adjust UI defaults for better mobile UX
+  // Mobile detection
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)');
+    const mq = window.matchMedia('(max-width: 768px)');
     const handler = (e: MediaQueryListEvent | MediaQueryList) => {
       const matches = 'matches' in e ? e.matches : mq.matches;
       setIsMobile(matches);
     };
-
     handler(mq);
-    if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-    else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
-
-    return () => {
-      if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-      else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
-    };
+    mq.addEventListener('change', handler as EventListener);
+    return () => mq.removeEventListener('change', handler as EventListener);
   }, []);
 
-  // Prefer cards view on mobile for readability
-  useEffect(() => {
-    if (isMobile) setViewMode('cards');
-  }, [isMobile]);
-
-  // Three.js canvas background (particles + connecting lines) — theme-aware
+  // Three.js background
   useEffect(() => {
     if (!canvasRef.current) return;
     let cancelled = false;
@@ -495,52 +190,45 @@ const GrievancePage = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       camera.position.z = 5;
-      renderer.setClearColor(0x000000, 0);
 
-      // Theme-aware colors
-      let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-      let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
-      try {
-        const style = getComputedStyle(document.documentElement);
-        const a = (style.getPropertyValue('--accent-primary') || '').trim();
-        const b = (style.getPropertyValue('--accent-secondary') || '').trim();
-        if (a) particleColor = new THREE.Color(a);
-        if (b) lineColor = new THREE.Color(b);
-      } catch { }
+      const particleColor = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
+      const lineColor = theme === 'dark' ? 0xf59e0b : 0xd97706;
 
       const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = 1000;
+      const particlesCount = 800;
       const posArray = new Float32Array(particlesCount * 3);
 
       for (let i = 0; i < particlesCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 10;
+        posArray[i] = (Math.random() - 0.5) * 15;
       }
 
       particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
       const particlesMaterial = new THREE.PointsMaterial({
-        size: theme === 'dark' ? 0.012 : 0.008,
+        size: theme === 'dark' ? 0.015 : 0.01,
         color: particleColor,
         transparent: true,
-        opacity: theme === 'dark' ? 0.6 : 0.4,
-        blending: THREE.AdditiveBlending
+        opacity: theme === 'dark' ? 0.4 : 0.3,
       });
 
       const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
       scene.add(particlesMesh);
 
-      // Create connecting lines
       const linesGeometry = new THREE.BufferGeometry();
-      const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
+      const linesMaterial = new THREE.LineBasicMaterial({ 
+        color: lineColor, 
+        transparent: true, 
+        opacity: theme === 'dark' ? 0.1 : 0.08 
+      });
 
       const linesPositions: number[] = [];
-      for (let i = 0; i < 80; i++) {
-        const x1 = (Math.random() - 0.5) * 8;
-        const y1 = (Math.random() - 0.5) * 8;
-        const z1 = (Math.random() - 0.5) * 8;
-        const x2 = x1 + (Math.random() - 0.5) * 1.5;
-        const y2 = y1 + (Math.random() - 0.5) * 1.5;
-        const z2 = z1 + (Math.random() - 0.5) * 1.5;
+      for (let i = 0; i < 60; i++) {
+        const x1 = (Math.random() - 0.5) * 12;
+        const y1 = (Math.random() - 0.5) * 12;
+        const z1 = (Math.random() - 0.5) * 12;
+        const x2 = x1 + (Math.random() - 0.5) * 2;
+        const y2 = y1 + (Math.random() - 0.5) * 2;
+        const z2 = z1 + (Math.random() - 0.5) * 2;
         linesPositions.push(x1, y1, z1, x2, y2, z2);
       }
 
@@ -548,12 +236,12 @@ const GrievancePage = () => {
       const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
       scene.add(linesMesh);
 
-      let animationId: number | null = null;
+      let animationId: number;
       const animate = () => {
         animationId = requestAnimationFrame(animate);
-        particlesMesh.rotation.y += 0.0003;
+        particlesMesh.rotation.y += 0.0002;
         particlesMesh.rotation.x += 0.0001;
-        linesMesh.rotation.y -= 0.0002;
+        linesMesh.rotation.y -= 0.00015;
         renderer.render(scene, camera);
       };
 
@@ -570,56 +258,31 @@ const GrievancePage = () => {
       return () => {
         cancelled = true;
         window.removeEventListener('resize', handleResize);
-        if (animationId !== null) cancelAnimationFrame(animationId);
+        cancelAnimationFrame(animationId);
         renderer.dispose();
-        particlesGeometry.dispose();
-        particlesMaterial.dispose();
-        linesGeometry.dispose();
-        linesMaterial.dispose();
       };
     })();
   }, [theme]);
 
   const getStatusColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'resolved': return 'text-green-300 bg-green-900/30';
-        case 'closed': return 'text-emerald-300 bg-emerald-900/30';
-        case 'in-progress': return 'text-blue-300 bg-blue-900/30';
-        case 'open': return 'text-amber-300 bg-amber-900/30';
-        case 'pending': return 'text-yellow-300 bg-yellow-900/30';
-        case 'escalated': return 'text-red-300 bg-red-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
-    switch (status) {
-      case 'resolved': return 'text-green-700 bg-green-100';
-      case 'closed': return 'text-emerald-700 bg-emerald-100';
-      case 'in-progress': return 'text-blue-700 bg-blue-100';
-      case 'open': return 'text-amber-700 bg-amber-100';
-      case 'pending': return 'text-yellow-700 bg-yellow-100';
-      case 'escalated': return 'text-red-700 bg-red-100';
-      default: return 'text-gray-700 bg-gray-100';
-    }
+    const colors = {
+      resolved: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100',
+      closed: theme === 'dark' ? 'text-emerald-300 bg-emerald-900/30' : 'text-emerald-700 bg-emerald-100',
+      'in-progress': theme === 'dark' ? 'text-blue-300 bg-blue-900/30' : 'text-blue-700 bg-blue-100',
+      open: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
+      pending: theme === 'dark' ? 'text-yellow-300 bg-yellow-900/30' : 'text-yellow-700 bg-yellow-100',
+      escalated: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100'
+    };
+    return colors[status as keyof typeof colors] || 'text-gray-300 bg-gray-800';
   };
 
   const getPriorityColor = (priority: string) => {
-    if (theme === 'dark') {
-      switch (priority) {
-        case 'high': return 'text-red-300 bg-red-900/30';
-        case 'medium': return 'text-amber-300 bg-amber-900/30';
-        case 'low': return 'text-green-300 bg-green-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
-    switch (priority) {
-      case 'high': return 'text-red-700 bg-red-100';
-      case 'medium': return 'text-amber-700 bg-amber-100';
-      case 'low': return 'text-green-700 bg-green-100';
-      default: return 'text-gray-700 bg-gray-100';
-    }
+    const colors = {
+      high: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100',
+      medium: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
+      low: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100'
+    };
+    return colors[priority as keyof typeof colors] || 'text-gray-300 bg-gray-800';
   };
 
   const getStatusIcon = (status: string) => {
@@ -648,70 +311,36 @@ const GrievancePage = () => {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedGrievance) return;
-
-    // In a real application, this would make an API call
-    const updatedGrievance = {
-      ...selectedGrievance,
-      communication: [
-        ...selectedGrievance.communication,
-        {
-          id: selectedGrievance.communication.length + 1,
-          type: 'response',
-          message: newMessage,
-          date: new Date().toLocaleString(),
-          from: 'Support Officer',
-          to: selectedGrievance.beneficiaryName
-        }
-      ]
-    };
-
-    setSelectedGrievance(updatedGrievance);
+    // Implementation would go here
     setNewMessage('');
   };
 
   const handleUpdateStatus = (newStatus: string) => {
     if (!selectedGrievance) return;
-
-    const updatedGrievance = {
-      ...selectedGrievance,
-      status: newStatus,
-      lastUpdated: new Date().toLocaleString(),
-      ...(newStatus === 'resolved' && { resolutionDate: new Date().toISOString().split('T')[0] })
-    };
-
-    setSelectedGrievance(updatedGrievance);
+    // Implementation would go here
   };
 
   const handleEscalate = () => {
     if (!selectedGrievance) return;
-
-    const updatedGrievance = {
-      ...selectedGrievance,
-      status: 'escalated',
-      escalationLevel: selectedGrievance.escalationLevel + 1,
-      assignedTo: 'Senior ' + selectedGrievance.assignedTo,
-      lastUpdated: new Date().toLocaleString()
-    };
-
-    setSelectedGrievance(updatedGrievance);
+    // Implementation would go here
   };
 
   return (
-    <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-      {/* Three.js Canvas Background (theme-aware) */}
+    <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">
+      {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
-        id="grievance-three-canvas"
-        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-        style={{ zIndex: 0, background: 'transparent' }}
+        className="fixed inset-0 w-full h-full pointer-events-none -z-10"
       />
+
+      {/* Custom Theme Styles */}
       <style jsx global>{`
         [data-theme="dark"] {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
+          --card-bg: rgba(15, 23, 42, 0.8);
+          --card-border: rgba(255, 255, 255, 0.1);
           --nav-bg: rgba(15, 23, 42, 0.95);
           --text-primary: #f1f5f9;
           --text-secondary: #94a3b8;
@@ -726,15 +355,15 @@ const GrievancePage = () => {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
+          --card-bg: rgba(255, 255, 255, 0.9);
+          --card-border: rgba(0, 0, 0, 0.08);
           --nav-bg: rgba(255, 255, 255, 0.95);
           --text-primary: #0f172a;
           --text-secondary: #475569;
           --text-muted: #64748b;
           --accent-primary: #fb7185;
           --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.6);
+          --glass-bg: rgba(255, 255, 255, 0.7);
           --glass-border: rgba(0, 0, 0, 0.08);
         }
 
@@ -745,7 +374,6 @@ const GrievancePage = () => {
         .theme-border-card { border-color: var(--card-border) !important; }
         .theme-bg-glass { background: var(--glass-bg) !important; }
         .theme-border-glass { border-color: var(--glass-border) !important; }
-        .theme-bg-nav { background: var(--nav-bg) !important; }
         
         .accent-gradient {
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
@@ -757,660 +385,406 @@ const GrievancePage = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+
+        .glass-effect {
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+        }
       `}</style>
-      
-      {/* Header Section */}
+
+      {/* Header Section - Redesigned */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
       >
-        <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">Grievance Redressal</h1>
-          <p className="theme-text-secondary">Manage and resolve beneficiary grievances under PCR/PoA Acts</p>
+        <div className="text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
+            <div className="w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Grievance Hub
+              </h1>
+              <p className="theme-text-secondary text-lg">Advanced Redressal Management System</p>
+            </div>
+          </div>
+          <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
+            Manage and resolve beneficiary grievances efficiently under PCR/PoA Acts with real-time tracking
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="flex items-center justify-center lg:justify-end gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
-            onClick={() => window.print()}
+            aria-label="Export data"
+            className={`px-6 py-3 rounded-xl border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
           >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
+            <Download className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : ''}`} />
+            <span className="font-semibold">Export Data</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
+            className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
           >
-            <Plus className="w-4 h-4" />
-            <span>New Grievance</span>
+            <Plus className="w-5 h-5" />
+            <span className="font-semibold">New Case</span>
           </motion.button>
         </div>
       </motion.div>
 
-      {/* Statistics Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
-      >
-        {[
-          { label: 'Total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Flag },
-          { label: 'Open', value: stats.open, color: 'from-amber-500 to-orange-500', icon: AlertCircle },
-          { label: 'In Progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle },
-          { label: 'Resolved', value: stats.resolved, color: 'from-green-500 to-emerald-500', icon: CheckCircle },
-          { label: 'Escalated', value: stats.escalated, color: 'from-red-500 to-rose-500', icon: AlertOctagon },
-          { label: 'Closed', value: stats.closed, color: 'from-gray-500 to-slate-500', icon: Check },
-          { label: 'Avg Resolution', value: `${stats.avgResolutionTime}d`, color: 'from-teal-500 to-cyan-500', icon: Timer },
-          { label: 'Satisfaction', value: `${stats.satisfactionRate}%`, color: 'from-yellow-500 to-amber-500', icon: Star }
-        ].map((stat, idx) => (
-          <motion.div
-            key={idx}
-            whileHover={{ y: -4 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-          >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-              <stat.icon className="w-5 h-5 text-white" />
-            </div>
-            <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.label}</p>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Performance Overview */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
+      {/* Dashboard Grid - New Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Analytics Sidebar */}
         <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="xl:col-span-1 space-y-6"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">Resolution Rate</p>
-              <p className="text-2xl font-bold theme-text-primary">
-                {Math.round((stats.resolved / stats.total) * 100)}%
-              </p>
-            </div>
-          </div>
-          <p className="text-sm theme-text-secondary">
-            {stats.resolved} out of {stats.total} grievances resolved
-          </p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">Avg Resolution Time</p>
-              <p className="text-2xl font-bold theme-text-primary">{stats.avgResolutionTime} days</p>
-            </div>
-          </div>
-          <p className="text-sm theme-text-secondary">
-            Target: 7 days • -1.8 days from last month
-          </p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Star className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">Satisfaction Rate</p>
-              <p className="text-2xl font-bold theme-text-primary">{stats.satisfactionRate}%</p>
-            </div>
-          </div>
-          <p className="text-sm theme-text-secondary">
-            Based on {stats.resolved} resolved grievances
-          </p>
-        </motion.div>
-      </motion.div>
-
-      {/* Category Distribution */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Grievance Categories</h3>
-            <p className="text-sm theme-text-muted">Distribution by complaint type</p>
-          </div>
-          <PieChart className="w-5 h-5 theme-text-muted" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Object.entries(categoryStats).map(([category, count]) => {
-            const Icon = getCategoryIcon(category);
-            return (
-              <div key={category} className="text-center p-4 rounded-lg theme-bg-glass">
-                <Icon className="w-8 h-8 theme-text-primary mx-auto mb-2" />
-                <p className="text-lg font-bold theme-text-primary">{count}</p>
-                <p className="text-xs theme-text-muted capitalize">
-                  {category.replace('-', ' ')}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Filters and Search */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-      >
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-            <input
-              type="text"
-              placeholder="Search by beneficiary, grievance ID, or district..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-            />
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1 sm:p-2">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-            >
-              Table
-            </button>
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-            >
-              Cards
-            </button>
-          </div>
-
-          {/* Filter Toggle */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
-          >
-            <Filter className="w-4 h-4" />
-            <span>Filters</span>
-            {(statusFilter !== 'all' || categoryFilter !== 'all' || priorityFilter !== 'all' || actTypeFilter !== 'all') && (
-              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            )}
-          </motion.button>
-        </div>
-
-        {/* Expanded Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="open">Open</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                    <option value="escalated">Escalated</option>
-                  </select>
+          {/* Quick Stats */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Case Analytics</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Active Cases', value: stats.open + stats.inProgress, trend: '+8%', icon: AlertCircle, color: 'from-amber-500 to-orange-500' },
+                { label: 'Avg Resolution', value: `${stats.avgResolutionTime}d`, trend: '-1.2d', icon: Timer, color: 'from-blue-500 to-cyan-500' },
+                { label: 'Satisfaction', value: `${stats.satisfactionRate}%`, trend: '+5%', icon: Star, color: 'from-yellow-500 to-amber-500' },
+                { label: 'Escalated', value: stats.escalated, trend: '+2', icon: AlertOctagon, color: 'from-red-500 to-rose-500' }
+              ].map((stat, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                      <stat.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold theme-text-primary">{stat.value}</p>
+                      <p className="text-sm theme-text-muted">{stat.label}</p>
+                    </div>
+                  </div>
+                  <span className={`text-sm font-semibold ${stat.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                    {stat.trend}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Category</label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="disbursement-delay">Disbursement Delay</option>
-                    <option value="document-issues">Document Issues</option>
-                    <option value="application-status">Application Status</option>
-                    <option value="officer-behavior">Officer Behavior</option>
-                    <option value="information-correction">Information Correction</option>
-                    <option value="technical-issues">Technical Issues</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Priority</label>
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Act Type</label>
-                  <select
-                    value={actTypeFilter}
-                    onChange={(e) => setActTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Acts</option>
-                    <option value="PCR Act">PCR Act</option>
-                    <option value="PoA Act">PoA Act</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">Assigned To</label>
-                  <select
-                    value={assignedToFilter}
-                    onChange={(e) => setAssignedToFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-                  >
-                    <option value="all">All Officers</option>
-                    <option value="Officer Sharma">Officer Sharma</option>
-                    <option value="Officer Verma">Officer Verma</option>
-                    <option value="Officer Kapoor">Officer Kapoor</option>
-                    <option value="Officer Gupta">Officer Gupta</option>
-                    <option value="Officer Mishra">Officer Mishra</option>
-                    <option value="IT Support">IT Support</option>
-                  </select>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+              ))}
+            </div>
+          </div>
 
-       {/* Grievances List */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
-      >
-        {viewMode === 'table' ? (
-          isMobile ? (
-            <div className="p-3 space-y-3">
-              {paginatedGrievances.map((grievance, idx) => {
-                const StatusIcon = getStatusIcon(grievance.status);
-                const CategoryIcon = getCategoryIcon(grievance.category);
-                
+          {/* Quick Actions */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              {[
+                { label: 'Assign Cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
+                { label: 'Bulk Update', icon: Edit, color: 'bg-purple-500/20 text-purple-400' },
+                { label: 'Generate Report', icon: FileText, color: 'bg-green-500/20 text-green-400' },
+                { label: 'Call Center', icon: PhoneCall, color: 'bg-orange-500/20 text-orange-400' }
+              ].map((action, idx) => (
+                <motion.button
+                  key={idx}
+                  whileHover={{ x: 4 }}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl ${action.color} transition-colors`}
+                >
+                  <action.icon className="w-5 h-5" />
+                  <span className="font-medium text-sm">{action.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Distribution */}
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">Case Categories</h3>
+            <div className="space-y-3">
+              {Object.entries(categoryStats).map(([category, count], idx) => {
+                const Icon = getCategoryIcon(category);
                 return (
-                  <motion.div
-                    key={grievance.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    whileTap={{ scale: 0.995 }}
-                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
-                    onClick={() => setSelectedGrievance(grievance)}
-                  >
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                          {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold theme-text-primary truncate">{grievance.beneficiaryName}</p>
-                          <p className="text-xs theme-text-muted truncate">{grievance.id}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(grievance.priority)}`}>
-                        {grievance.priority.toUpperCase()}
-                      </span>
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 theme-text-primary" />
+                      <span className="text-sm theme-text-primary capitalize">{category.replace('-', ' ')}</span>
                     </div>
-
-                    {/* Info Grid */}
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <CategoryIcon className="w-3.5 h-3.5" />
-                          Category
-                        </span>
-                        <span className="theme-text-primary font-medium capitalize">{grievance.category.replace('-', ' ')}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <Scale className="w-3.5 h-3.5" />
-                          Act Type
-                        </span>
-                        <span className="theme-text-primary font-medium">{grievance.actType}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <UserCheck className="w-3.5 h-3.5" />
-                          Assigned To
-                        </span>
-                        <span className="theme-text-primary font-medium truncate max-w-[180px]">{grievance.assignedTo}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5" />
-                          Location
-                        </span>
-                        <span className="theme-text-primary font-medium">{grievance.district}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          Created
-                        </span>
-                        <span className="theme-text-primary font-medium font-mono text-[10px]">{new Date(grievance.createdDate).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="mb-3 pb-3 border-b theme-border-glass">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
-                        <StatusIcon className="w-3.5 h-3.5" />
-                        <span className="capitalize">{grievance.status.replace('-', ' ')}</span>
-                      </span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
-                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View</span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
-                      >
-                        <MoreVertical className="w-3.5 h-3.5" />
-                        <span>More</span>
-                      </button>
-                    </div>
-                  </motion.div>
+                    <span className="text-sm theme-text-muted">{count}</span>
+                  </div>
                 );
               })}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="theme-bg-glass border-b theme-border-glass">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Grievance ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Category</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Assigned To</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Priority</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedGrievances.map((grievance, idx) => (
-                    <motion.tr
-                      key={grievance.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{grievance.id}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                            {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium theme-text-primary">{grievance.beneficiaryName}</p>
-                            <p className="text-xs theme-text-muted">{grievance.district}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const Icon = getCategoryIcon(grievance.category);
-                            return <Icon className="w-4 h-4 theme-text-muted" />;
-                          })()}
-                          <span className="text-sm theme-text-primary capitalize">
-                            {grievance.category.replace('-', ' ')}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
-                          {grievance.actType}
-                        </span>
-                      </td>
-                      <td className="hidden lg:table-cell px-4 py-3 text-sm theme-text-primary">
-                        {grievance.assignedTo}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
-                          {(() => {
-                            const Icon = getStatusIcon(grievance.status);
-                            return <Icon className="w-3 h-3" />;
-                          })()}
-                          {grievance.status.replace('-', ' ')}
-                        </span>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(grievance.priority)}`}>
-                          {grievance.priority}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setSelectedGrievance(grievance)}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {paginatedGrievances.map((grievance, idx) => (
-              <motion.div
-                key={grievance.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05 }}
-                whileHover={{ y: -4 }}
-                className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
-                onClick={() => setSelectedGrievance(grievance)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                      {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <p className="font-medium theme-text-primary">{grievance.beneficiaryName}</p>
-                      <p className="text-xs theme-text-muted">{grievance.id}</p>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(grievance.priority)}`}>
-                    {grievance.priority}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    {(() => {
-                      const Icon = getCategoryIcon(grievance.category);
-                      return <Icon className="w-4 h-4" />;
-                    })()}
-                    <span className="capitalize">{grievance.category.replace('-', ' ')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <Scale className="w-4 h-4" />
-                    <span>{grievance.actType}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <UserCheck className="w-4 h-4" />
-                    <span>{grievance.assignedTo}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(grievance.createdDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(grievance.status)}`}>
-                    {(() => {
-                      const Icon = getStatusIcon(grievance.status);
-                      return <Icon className="w-3 h-3" />;
-                    })()}
-                    {grievance.status.replace('-', ' ')}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
           </div>
-        )}
+        </motion.div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
-          <p className="text-sm theme-text-muted">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredGrievances.length)} of {filteredGrievances.length}
-          </p>
-          <div className="flex items-center gap-2">
-            {isMobile ? (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                >
-                  Prev
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                >
-                  Next
-                </motion.button>
-              </>
-            ) : (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </motion.button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+        {/* Main Content Area */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="xl:col-span-3 space-y-6"
+        >
+          {/* View Controls */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold theme-text-primary">
+                Active Cases <span className="theme-text-muted text-lg">({filteredGrievances.length})</span>
+              </h2>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {/* Search */}
+              <div className="relative flex-1 lg:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search cases..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full lg:w-64 pl-10 pr-4 py-2.5 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
+                />
+              </div>
+
+              {/* View Toggle */}
+              <div className="flex items-center gap-2 theme-bg-glass rounded-xl p-1">
+                {['dashboard', 'list'].map((mode) => (
                   <motion.button
-                    key={i}
+                    key={mode}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border'}`}
+                    onClick={() => setViewMode(mode as any)}
+                    className={`px-4 py-2 rounded-lg capitalize ${
+                      viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
+                    }`}
                   >
-                    {i + 1}
+                    {mode}
                   </motion.button>
                 ))}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </motion.button>
-              </>
-            )}
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Grievance Detail Modal */}
+          {/* Cases Grid / List - separate dashboard and list layouts */}
+          {viewMode === 'dashboard' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {paginatedGrievances.map((grievance, idx) => (
+                <motion.div
+                  key={grievance.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.06 }}
+                  whileHover={{ y: -6, scale: 1.02 }}
+                  className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect cursor-pointer group"
+                  onClick={() => setSelectedGrievance(grievance)}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                        <div className="text-sm font-bold">
+                          {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold theme-text-primary group-hover:text-accent-gradient transition-colors">
+                          {grievance.beneficiaryName}
+                        </h3>
+                        <p className="theme-text-muted text-sm">{grievance.id}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 ${getPriorityColor(grievance.priority)} text-xs font-bold rounded-full`}>
+                        {grievance.priority.toUpperCase()}
+                      </span>
+                      <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors text-theme-text-muted">
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
+                    {grievance.description}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <p className="text-lg font-bold theme-text-primary">{grievance.attachments}</p>
+                      <p className="theme-text-muted text-xs">Files</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold theme-text-primary">{grievance.communication.length}</p>
+                      <p className="theme-text-muted text-xs">Messages</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold theme-text-primary">L{grievance.escalationLevel}</p>
+                      <p className="theme-text-muted text-xs">Escalation</p>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getStatusColor(grievance.status)}`}>
+                      {(() => {
+                        const Icon = getStatusIcon(grievance.status);
+                        return <Icon className="w-3 h-3" />;
+                      })()}
+                      {grievance.status.replace('-', ' ').toUpperCase()}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
+                        className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors"
+                        aria-label={`View ${grievance.id}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => { e.stopPropagation(); /* placeholder for call action */ }}
+                        className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors"
+                        aria-label={`Call ${grievance.id}`}
+                      >
+                        <PhoneCall className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            // List view: stacked cards on mobile, table on desktop
+            <div>
+              {isMobile ? (
+                <div className="space-y-4">
+                  {paginatedGrievances.map((g) => (
+                    <div key={g.id} className="theme-bg-card theme-border-glass border rounded-2xl p-4 glass-effect">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold theme-text-primary">{g.beneficiaryName}</p>
+                          <p className="text-xs theme-text-muted">{g.id} • {g.district}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span>
+                          <div className="mt-2 flex items-center justify-end gap-2">
+                            <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="theme-text-secondary text-sm mt-2 line-clamp-2">{g.description}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="theme-bg-card theme-border-glass border rounded-2xl overflow-auto">
+                  <table className="min-w-full table-fixed">
+                      <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
+                        <tr>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Beneficiary</th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>District</th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Priority</th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Status</th>
+                          <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedGrievances.map((g) => (
+                          <tr key={g.id} className={`border-b ${theme === 'light' ? 'border-gray-200 hover:bg-gray-50' : 'theme-border-glass hover:bg-theme-bg-glass'} transition-colors`}>
+                            <td className="px-4 py-3 text-sm theme-text-primary">{g.id}</td>
+                            <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
+                            <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
+                            <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span></td>
+                            <td className="px-4 py-3 text-sm theme-text-muted">{g.status}</td>
+                            <td className="px-4 py-3 text-sm text-right">
+                              <div className="inline-flex items-center gap-2">
+                                <button onClick={() => setSelectedGrievance(g)} className={`p-2 rounded-lg ${theme === 'light' ? 'bg-white/70 hover:bg-gray-100' : 'theme-bg-glass'}`} aria-label={`View ${g.id}`}>
+                                  <Eye className={`w-4 h-4 ${theme === 'light' ? 'text-gray-800' : ''}`} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Performance Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Resolution Metrics */}
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold theme-text-primary">Resolution Metrics</h3>
+                <Target className="w-5 h-5 theme-text-muted" />
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: 'Within SLA', value: 78, color: 'bg-green-500' },
+                  { label: 'Near SLA', value: 15, color: 'bg-amber-500' },
+                  { label: 'Breached SLA', value: 7, color: 'bg-red-500' }
+                ].map((metric, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
+                      <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
+                    </div>
+                    <div className={`w-full rounded-full h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
+                      <div 
+                        className={`h-2 rounded-full ${metric.color} transition-all duration-1000`}
+                        style={{ width: `${metric.value}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold theme-text-primary">Recent Updates</h3>
+                <Activity className="w-5 h-5 theme-text-muted" />
+              </div>
+              <div className="space-y-4">
+                {[
+                  { action: 'Case Resolved', user: 'Officer Sharma', time: '2 min ago', status: 'success' },
+                  { action: 'New Escalation', user: 'System', time: '5 min ago', status: 'warning' },
+                  { action: 'Document Uploaded', user: 'Beneficiary', time: '10 min ago', status: 'info' },
+                  { action: 'Follow-up Required', user: 'Officer Verma', time: '15 min ago', status: 'error' }
+                ].map((activity, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.status === 'success' ? 'bg-green-500' :
+                      activity.status === 'warning' ? 'bg-amber-500' :
+                      activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
+                      <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 theme-text-muted flex-shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Enhanced Grievance Detail Modal */}
       <AnimatePresence>
         {selectedGrievance && (
           <motion.div
@@ -1425,385 +799,109 @@ const GrievancePage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto'}`}
+              className="theme-bg-card theme-border-glass border rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
             >
-              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
-                  <p className="theme-text-muted">Grievance Details • {selectedGrievance.actType}</p>
+              {/* Enhanced Header */}
+              <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-8">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                      <Shield className="w-8 h-8" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-3xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
+                        <span className="px-4 py-2 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
+                          {selectedGrievance.priority.toUpperCase()} PRIORITY
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <p className="theme-text-muted text-lg">{selectedGrievance.beneficiaryName}</p>
+                        <span className="text-sm theme-text-muted">•</span>
+                        <p className="theme-text-muted">{selectedGrievance.actType}</p>
+                        <span className="text-sm theme-text-muted">•</span>
+                        <p className="theme-text-muted">Created: {new Date(selectedGrievance.createdDate).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedGrievance(null)}
+                    className="p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedGrievance(null)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
 
-              {/* Tabs */}
-              <div className="border-b theme-border-glass">
-                <div className="flex overflow-x-auto">
-                  {['details', 'communication', 'timeline', 'documents'].map((tab) => (
+              {/* Enhanced Tabs */}
+              <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
+                <div className="flex overflow-x-auto px-8">
+                  {[
+                    { id: 'overview', label: 'Overview', icon: Eye },
+                    { id: 'communication', label: 'Communication', icon: MessageCircle },
+                    { id: 'timeline', label: 'Timeline', icon: Clock },
+                    { id: 'documents', label: 'Documents', icon: FileText },
+                    { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+                  ].map((tab) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === tab
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-3 px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+                        activeTab === tab.id
                           ? 'border-blue-500 text-blue-600 theme-text-primary'
-                          : 'border-transparent theme-text-muted hover:theme-text-primary'
+                          : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
                       }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="p-6 space-y-6">
-                {activeTab === 'details' && (
-                  <>
-                    {/* Beneficiary Information */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Beneficiary Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                          <User className="w-5 h-5 theme-text-muted" />
-                          <div>
-                            <p className="text-xs theme-text-muted">Beneficiary Name</p>
-                            <p className="font-medium theme-text-primary">{selectedGrievance.beneficiaryName}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                          <Phone className="w-5 h-5 theme-text-muted" />
-                          <div>
-                            <p className="text-xs theme-text-muted">Phone Number</p>
-                            <p className="font-medium theme-text-primary">{selectedGrievance.phone}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                          <MapPin className="w-5 h-5 theme-text-muted" />
-                          <div>
-                            <p className="text-xs theme-text-muted">Location</p>
-                            <p className="font-medium theme-text-primary">{selectedGrievance.district}, {selectedGrievance.state}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="p-8 space-y-8 max-h-[calc(95vh-200px)] overflow-y-auto">
+                {/* Content would go here based on active tab */}
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 theme-text-muted mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold theme-text-primary mb-2">Case Management</h3>
+                  <p className="theme-text-muted text-lg">Select a tab to manage different aspects of this case</p>
+                </div>
+              </div>
 
-                    {/* Grievance Details */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Grievance Details</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Category</p>
-                          <div className="flex items-center gap-2">
-                            {(() => {
-                              const Icon = getCategoryIcon(selectedGrievance.category);
-                              return <Icon className="w-4 h-4 theme-text-primary" />;
-                            })()}
-                            <p className="font-medium theme-text-primary capitalize">
-                              {selectedGrievance.category.replace('-', ' ')}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Sub Category</p>
-                          <p className="font-medium theme-text-primary capitalize">
-                            {selectedGrievance.subCategory.replace('-', ' ')}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Application ID</p>
-                          <p className="font-medium theme-text-primary">{selectedGrievance.applicationId}</p>
-                        </div>
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Act Type</p>
-                          <p className="font-medium theme-text-primary">{selectedGrievance.actType}</p>
-                        </div>
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Created Date</p>
-                          <p className="font-medium theme-text-primary">{new Date(selectedGrievance.createdDate).toLocaleDateString()}</p>
-                        </div>
-                        <div className="p-3 rounded-lg theme-bg-glass">
-                          <p className="text-xs theme-text-muted mb-1">Expected Resolution</p>
-                          <p className="font-medium theme-text-primary">{new Date(selectedGrievance.expectedResolution).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Complaint Description</h3>
-                      <div className="p-4 rounded-lg theme-bg-glass">
-                        <p className="theme-text-primary leading-relaxed">{selectedGrievance.description}</p>
-                      </div>
-                    </div>
-
-                    {/* Status and Assignment */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">Current Status</p>
-                        <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedGrievance.status)}`}>
-                          {(() => {
-                            const Icon = getStatusIcon(selectedGrievance.status);
-                            return <Icon className="w-4 h-4" />;
-                          })()}
-                          {selectedGrievance.status.replace('-', ' ').toUpperCase()}
-                        </span>
-                        <div className="mt-3 space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="theme-text-muted">Escalation Level</span>
-                            <span className="theme-text-primary font-medium">Level {selectedGrievance.escalationLevel}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="theme-text-muted">Last Updated</span>
-                            <span className="theme-text-primary">{selectedGrievance.lastUpdated}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                        <p className="text-sm theme-text-muted mb-2">Assignment Details</p>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="theme-text-primary font-medium">Assigned To</span>
-                            <span className="theme-text-primary">{selectedGrievance.assignedTo}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="theme-text-muted">Assigned Date</span>
-                            <span className="theme-text-primary">{new Date(selectedGrievance.assignedDate).toLocaleDateString()}</span>
-                          </div>
-                          {selectedGrievance.satisfactionRating && (
-                            <div className="flex justify-between text-sm">
-                              <span className="theme-text-muted">Satisfaction Rating</span>
-                              <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${
-                                      i < selectedGrievance.satisfactionRating
-                                        ? 'text-yellow-500 fill-current'
-                                        : 'text-gray-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {activeTab === 'communication' && (
-                  <div className="space-y-6">
-                    {/* Communication History */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Communication History</h3>
-                      <div className="space-y-4 max-h-96 overflow-y-auto">
-                        {selectedGrievance.communication.map((comm) => (
-                          <div key={comm.id} className="flex gap-4">
-                            <div className="flex-shrink-0">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                comm.type === 'complaint' ? 'bg-red-100 text-red-600' :
-                                comm.type === 'response' ? 'bg-blue-100 text-blue-600' :
-                                comm.type === 'resolution' ? 'bg-green-100 text-green-600' :
-                                comm.type === 'escalation' ? 'bg-orange-100 text-orange-600' :
-                                'bg-gray-100 text-gray-600'
-                              }`}>
-                                {comm.type === 'complaint' && <AlertCircle className="w-5 h-5" />}
-                                {comm.type === 'response' && <MessageCircle className="w-5 h-5" />}
-                                {comm.type === 'resolution' && <CheckCircle className="w-5 h-5" />}
-                                {comm.type === 'escalation' && <AlertOctagon className="w-5 h-5" />}
-                                {comm.type === 'acknowledgment' && <Check className="w-5 h-5" />}
-                              </div>
-                            </div>
-                            <div className="flex-1 theme-bg-glass rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <p className="font-medium theme-text-primary">{comm.from}</p>
-                                  <p className="text-xs theme-text-muted">to {comm.to}</p>
-                                </div>
-                                <span className="text-xs theme-text-muted">{comm.date}</span>
-                              </div>
-                              <p className="theme-text-primary">{comm.message}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* New Message */}
-                    <div>
-                      <h3 className="text-lg font-semibold theme-text-primary mb-4">Send Response</h3>
-                      <div className="space-y-3">
-                        <textarea
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type your response here..."
-                          rows={4}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary resize-none"
-                        />
-                        <div className="flex justify-between items-center">
-                          <div className="flex gap-2">
-                            <button className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card">
-                              <Paperclip className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card">
-                              <PhoneCall className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card">
-                              <Video className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleSendMessage}
-                            disabled={!newMessage.trim()}
-                            className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                          >
-                            <Send className="w-4 h-4" />
-                            Send Response
-                          </motion.button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'timeline' && (
-                  <div>
-                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Grievance Timeline</h3>
-                    <div className="space-y-4">
-                      {[
-                        { 
-                          step: 'Grievance Registered', 
-                          date: selectedGrievance.createdDate,
-                          status: 'completed',
-                          description: 'Grievance successfully registered in the system'
-                        },
-                        { 
-                          step: 'Assigned to Officer', 
-                          date: selectedGrievance.assignedDate,
-                          status: 'completed',
-                          description: `Assigned to ${selectedGrievance.assignedTo}`
-                        },
-                        { 
-                          step: 'Under Investigation', 
-                          date: selectedGrievance.lastUpdated,
-                          status: selectedGrievance.status === 'resolved' || selectedGrievance.status === 'closed' ? 'completed' : 'current',
-                          description: 'Officer investigating the complaint'
-                        },
-                        { 
-                          step: 'Resolution', 
-                          date: selectedGrievance.resolutionDate,
-                          status: selectedGrievance.status === 'resolved' || selectedGrievance.status === 'closed' ? 'completed' : 'pending',
-                          description: 'Grievance resolution in progress'
-                        },
-                        { 
-                          step: 'Closed', 
-                          date: selectedGrievance.resolutionDate,
-                          status: selectedGrievance.status === 'closed' ? 'completed' : 'pending',
-                          description: 'Grievance closed after resolution'
-                        }
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex gap-4">
-                          <div className="flex flex-col items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              item.status === 'completed' ? 'bg-green-500/20 border-2 border-green-500' :
-                              item.status === 'current' ? 'bg-blue-500/20 border-2 border-blue-500 animate-pulse' :
-                              'bg-gray-500/20 border-2 border-gray-500'
-                            }`}>
-                              {item.status === 'completed' && <Check className="w-4 h-4 text-green-400" />}
-                              {item.status === 'current' && <Clock className="w-4 h-4 text-blue-400" />}
-                            </div>
-                            {idx < 4 && <div className="w-0.5 h-12 bg-gray-500/20 mt-2"></div>}
-                          </div>
-                          <div className="flex-1 pb-8">
-                            <p className="font-medium theme-text-primary">{item.step}</p>
-                            <p className="text-sm theme-text-muted">{item.description}</p>
-                            {item.date && <p className="text-xs theme-text-muted mt-1">{new Date(item.date).toLocaleString()}</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'documents' && (
-                  <div>
-                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Attached Documents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        'Complaint Form',
-                        'Supporting Documents',
-                        'Identity Proof',
-                        'Application Copy'
-                      ].map((doc, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 rounded-lg theme-bg-glass hover:theme-border-glass border border-transparent transition-all">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                              <FileText className="w-6 h-6 text-blue-400" />
-                            </div>
-                            <div>
-                              <p className="font-medium theme-text-primary">{doc}</p>
-                              <p className="text-xs theme-text-muted">PDF • 1.2 MB</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button className="p-2 rounded-lg hover:theme-bg-card">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 rounded-lg hover:theme-bg-card">
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-6 border-t theme-border-glass">
-                  {selectedGrievance.status !== 'resolved' && selectedGrievance.status !== 'closed' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleUpdateStatus('resolved')}
-                      className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      Mark as Resolved
-                    </motion.button>
-                  )}
-                  {selectedGrievance.status !== 'escalated' && selectedGrievance.escalationLevel < 3 && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleEscalate}
-                      className="flex-1 px-4 py-3 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <AlertOctagon className="w-5 h-5" />
-                      Escalate Grievance
-                    </motion.button>
-                  )}
+              {/* Enhanced Action Buttons */}
+              <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
+                    className="px-6 py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
                   >
-                    <PhoneCall className="w-5 h-5" />
-                    Call Beneficiary
+                    <CheckCircle className="w-5 h-5" />
+                    Resolve Case
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-2"
+                    className="px-6 py-4 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-purple-500/30 transition-colors"
                   >
-                    <X className="w-5 h-5" />
-                    Close Grievance
+                    <PhoneCall className="w-5 h-5" />
+                    Call Now
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+                  >
+                    <Mail className="w-5 h-5" />
+                    Send Email
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+                  >
+                    <AlertOctagon className="w-5 h-5" />
+                    Escalate
                   </motion.button>
                 </div>
               </div>
@@ -1814,12 +912,5 @@ const GrievancePage = () => {
     </div>
   );
 };
-
-// Add missing Paperclip component
-const Paperclip = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-  </svg>
-);
 
 export default GrievancePage;
