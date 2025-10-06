@@ -13,7 +13,13 @@ import {
   CheckCircle, XCircle, PieChart,
   Users, Map as MapIcon, Timer,
   Database, Server, Cloud, Wifi, WifiOff, Network, Shield as ShieldIcon,
-  Activity, Zap, Cpu, Globe
+  Activity, Zap, Cpu, Globe,
+  ExternalLink,
+  Code,
+  Calendar,
+  Gauge,
+  Lock,
+  Key
 } from 'lucide-react';
 
 // Real government platform logos (using SVG components)
@@ -436,6 +442,7 @@ const mockIntegrations = [
     ]
   }
 ];
+
 const IntegrationsPage = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
@@ -710,7 +717,7 @@ const IntegrationsPage = () => {
   };
 
   return (
-    <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">
+  <div data-theme={theme} className="min-h-screen p-3 sm:p-4 lg:p-6 space-y-6 relative overflow-hidden">
       {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
@@ -784,34 +791,34 @@ const IntegrationsPage = () => {
       >
         <div className="text-center lg:text-left">
           <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center">
-              <Globe className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient flex items-center justify-center">
+              <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 GovConnect
               </h1>
-              <p className="theme-text-secondary text-lg">Unified Government Integration Platform</p>
+              <p className="theme-text-secondary text-sm sm:text-base">Unified Government Integration Platform</p>
             </div>
           </div>
-          <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
+          <p className="theme-text-muted max-w-full sm:max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base">
             Secure, real-time integration with government systems for DBT under PCR/PoA Acts
           </p>
         </div>
         
-        <div className="flex items-center justify-center lg:justify-end gap-3">
+  <div className="flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-6 py-3 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-3 glass-effect"
-          >
-            <Download className="w-5 h-5" />
-            <span className="font-semibold">Export Report</span>
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Export report"
+              className={`w-full sm:w-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl border glass-effect focus:outline-none focus:ring-2 focus:ring-offset-2 ${theme === 'light' ? 'theme-bg-glass theme-border-glass text-black focus:ring-black/40' : 'theme-bg-glass theme-border-glass theme-text-primary focus:ring-white/20'}`}>
+              <Download className={`w-5 h-5 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+              <span className={`font-semibold ${theme === 'light' ? 'text-black' : 'theme-text-primary'}`}>Export Report</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
+            className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-xl text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
             <span className="font-semibold">New Integration</span>
@@ -824,7 +831,7 @@ const IntegrationsPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
       >
         {[
           { label: 'Active Services', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500' },
@@ -835,7 +842,7 @@ const IntegrationsPage = () => {
           <motion.div
             key={idx}
             whileHover={{ y: -4, scale: 1.02 }}
-            className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect cursor-pointer"
+            className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -851,26 +858,26 @@ const IntegrationsPage = () => {
       </motion.div>
 
       {/* Main Content Area - New Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
         {/* Sidebar Filters - New Design */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="xl:col-span-1 space-y-6"
+          className="xl:col-span-1 space-y-4 sm:space-y-6"
         >
           {/* Search Box */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">Search & Filter</h3>
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
                 <input
                   type="text"
                   placeholder="Search integrations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -881,7 +888,7 @@ const IntegrationsPage = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
@@ -894,7 +901,7 @@ const IntegrationsPage = () => {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
                     <option value="all">All Categories</option>
                     <option value="identity-verification">Identity</option>
@@ -909,7 +916,7 @@ const IntegrationsPage = () => {
                   <select
                     value={healthFilter}
                     onChange={(e) => setHealthFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
                     <option value="all">All Health</option>
                     <option value="excellent">Excellent</option>
@@ -922,7 +929,7 @@ const IntegrationsPage = () => {
           </div>
 
           {/* Category Overview */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">Categories</h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count]) => {
@@ -931,7 +938,7 @@ const IntegrationsPage = () => {
                   <motion.div
                     key={category}
                     whileHover={{ x: 4 }}
-                    className="flex items-center justify-between p-3 rounded-xl theme-bg-glass cursor-pointer"
+                    className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl theme-bg-glass cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-5 h-5 theme-text-primary" />
@@ -957,21 +964,21 @@ const IntegrationsPage = () => {
           className="xl:col-span-3 space-y-6"
         >
           {/* View Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold theme-text-primary">
                 Government Integrations <span className="theme-text-muted text-lg">({filteredIntegrations.length})</span>
               </h2>
             </div>
             
-            <div className="flex items-center gap-2 theme-bg-glass rounded-xl p-1">
+            <div className="flex items-center gap-1 sm:gap-2 theme-bg-glass rounded-xl p-1">
               {['grid', 'list', 'compact'].map((mode) => (
                 <motion.button
                   key={mode}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode(mode as any)}
-                  className={`px-4 py-2 rounded-lg capitalize ${
+                  className={`px-3 sm:px-4 py-2 rounded-lg capitalize ${
                     viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
                   }`}
                 >
@@ -982,7 +989,7 @@ const IntegrationsPage = () => {
           </div>
 
           {/* Integrations Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
             {paginatedIntegrations.map((integration, idx) => (
               <motion.div
                 key={integration.id}
@@ -990,13 +997,13 @@ const IntegrationsPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect cursor-pointer group"
+                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer group"
                 onClick={() => setSelectedIntegration(integration)}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
                       {getPlatformLogo(integration.provider)}
                     </div>
                     <div>
@@ -1013,12 +1020,12 @@ const IntegrationsPage = () => {
                 </div>
 
                 {/* Description */}
-                <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
+                  <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
                   {integration.description}
                 </p>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
                     <p className="theme-text-muted text-xs">Success</p>
@@ -1034,7 +1041,7 @@ const IntegrationsPage = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
+                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getHealthColor(integration.health)}`}>
                     {(() => {
                       const Icon = getHealthIcon(integration.health);
@@ -1050,7 +1057,7 @@ const IntegrationsPage = () => {
                         e.stopPropagation();
                         handleTestConnection(integration.id);
                       }}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors"
+                      className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors touch-manipulation"
                     >
                       <Wifi className="w-4 h-4" />
                     </motion.button>
@@ -1061,7 +1068,7 @@ const IntegrationsPage = () => {
                         e.stopPropagation();
                         handleSyncNow(integration.id);
                       }}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors"
+                      className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors touch-manipulation"
                     >
                       <RefreshCw className="w-4 h-4" />
                     </motion.button>
@@ -1072,7 +1079,7 @@ const IntegrationsPage = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-6 border-t theme-border-glass">
+          <div className="flex items-center justify-between pt-4 sm:pt-6 border-t theme-border-glass flex-wrap gap-3">
             <p className="theme-text-muted text-sm">
               Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredIntegrations.length)} of {filteredIntegrations.length} integrations
             </p>
@@ -1082,9 +1089,9 @@ const IntegrationsPage = () => {
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(p => p - 1)}
-                className="p-2 rounded-lg theme-bg-glass theme-border-glass border disabled:opacity-50"
+                className={`p-2 rounded-lg disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white/60 text-black border-gray-200 focus:ring-black/30' : 'theme-bg-glass theme-border-glass border focus:ring-white/20'}`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className={`w-5 h-5 ${theme === 'light' ? 'text-black' : ''}`} />
               </motion.button>
               
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
@@ -1093,11 +1100,7 @@ const IntegrationsPage = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-2 rounded-lg ${
-                    currentPage === i + 1 
-                      ? 'accent-gradient text-white' 
-                      : 'theme-bg-glass theme-border-glass border'
-                  }`}
+                  className={`px-2 sm:px-3 py-2 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : (theme === 'light' ? 'bg-white/60 text-black border-gray-200' : 'theme-bg-glass theme-border-glass border')}`}
                 >
                   {i + 1}
                 </motion.button>
@@ -1108,9 +1111,9 @@ const IntegrationsPage = () => {
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(p => p + 1)}
-                className="p-2 rounded-lg theme-bg-glass theme-border-glass border disabled:opacity-50"
+                className={`p-2 rounded-lg disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white/60 text-black border-gray-200 focus:ring-black/30' : 'theme-bg-glass theme-border-glass border focus:ring-white/20'}`}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className={`w-5 h-5 ${theme === 'light' ? 'text-black' : ''}`} />
               </motion.button>
             </div>
           </div>
@@ -1118,28 +1121,519 @@ const IntegrationsPage = () => {
       </div>
 
       {/* Integration Detail Modal - Enhanced */}
-      <AnimatePresence>
-        {selectedIntegration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedIntegration(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="theme-bg-card theme-border-glass border rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-effect"
+     {/* Integration Detail Modal - Enhanced */}
+<AnimatePresence>
+  {selectedIntegration && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      onClick={() => setSelectedIntegration(null)}
+    >
+      <motion.div
+        initial={{ scale: 0.98, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.98, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="theme-bg-card theme-border-glass border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-4xl sm:max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
+      >
+        {/* Enhanced Header */}
+        <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-4 sm:p-8">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3 sm:gap-4 flex-1">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                {getPlatformLogo(selectedIntegration.provider)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">{selectedIntegration.name}</h2>
+                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${getStatusColor(selectedIntegration.status)}`}>
+                    {selectedIntegration.status === 'active' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                    {selectedIntegration.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <p className="theme-text-muted text-lg">{selectedIntegration.provider}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <p className="theme-text-muted font-mono">{selectedIntegration.id}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold border ${getHealthColor(selectedIntegration.health)}`}>
+                    {(() => {
+                      const Icon = getHealthIcon(selectedIntegration.health);
+                      return <Icon className="w-4 h-4" />;
+                    })()}
+                    {selectedIntegration.health.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedIntegration(null)}
+              className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors"
+              aria-label="Close"
             >
-              {/* Modal content remains the same as your original but with enhanced styling */}
-              {/* ... */}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Enhanced Tabs */}
+        <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
+          <div className="flex overflow-x-auto px-4 sm:px-8">
+            {[
+              { id: 'overview', label: 'Overview', icon: Eye },
+              { id: 'configuration', label: 'Configuration', icon: Cpu },
+              { id: 'performance', label: 'Performance', icon: Activity },
+              { id: 'security', label: 'Security', icon: Shield },
+              { id: 'logs', label: 'Activity Logs', icon: FileText },
+              { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600 theme-text-primary'
+                    : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-8 space-y-8 max-h-[calc(95vh-160px)] overflow-y-auto">
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Overview Header */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <h3 className="text-2xl font-bold theme-text-primary mb-4">Integration Overview</h3>
+                  <p className="theme-text-primary text-lg leading-relaxed">{selectedIntegration.description}</p>
+                </div>
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-4">
+                    <FileText className="w-6 h-6 theme-text-primary" />
+                    <h4 className="text-lg font-semibold theme-text-primary">Documentation</h4>
+                  </div>
+                  <a 
+                    href={selectedIntegration.documentation} 
+                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="font-semibold">View API Documentation</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Key Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: 'Success Rate', value: `${selectedIntegration.successRate}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                  { label: 'Response Time', value: selectedIntegration.responseTime, icon: Zap, color: 'from-blue-500 to-cyan-500' },
+                  { label: 'API Endpoints', value: selectedIntegration.endpoints, icon: Network, color: 'from-purple-500 to-pink-500' },
+                  { label: 'API Version', value: selectedIntegration.apiVersion, icon: Code, color: 'from-orange-500 to-red-500' }
+                ].map((metric, idx) => (
+                  <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}>
+                      <metric.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold theme-text-primary mb-1">{metric.value}</p>
+                    <p className="text-sm theme-text-muted">{metric.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Sync Information */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Clock className="w-5 h-5 theme-text-primary" />
+                    <h4 className="font-semibold theme-text-primary">Last Sync</h4>
+                  </div>
+                  <p className="text-lg theme-text-primary font-mono">{selectedIntegration.lastSync}</p>
+                </div>
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-3">
+                    <RefreshCw className="w-5 h-5 theme-text-primary" />
+                    <h4 className="font-semibold theme-text-primary">Next Sync</h4>
+                  </div>
+                  <p className="text-lg theme-text-primary font-mono">{selectedIntegration.nextSync}</p>
+                </div>
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Timer className="w-5 h-5 theme-text-primary" />
+                    <h4 className="font-semibold theme-text-primary">Frequency</h4>
+                  </div>
+                  <p className="text-lg theme-text-primary font-semibold capitalize">{selectedIntegration.syncFrequency}</p>
+                </div>
+              </div>
+
+              {/* Usage Statistics */}
+              <div>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">Usage Statistics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { label: 'Monthly Requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
+                    { label: 'Daily Average', value: selectedIntegration.usage.daily.toLocaleString(), icon: Activity },
+                    { label: 'Error Count', value: selectedIntegration.usage.errors, icon: AlertCircle }
+                  ].map((stat, idx) => (
+                    <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
+                      <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
+                      <p className="text-3xl font-bold theme-text-primary mb-2">{stat.value}</p>
+                      <p className="text-sm theme-text-muted">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'configuration' && (
+            <div className="space-y-8">
+              {/* API Configuration */}
+              <div>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">API Configuration</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { label: 'Authentication Type', value: selectedIntegration.config.authType, icon: Shield },
+                    { label: 'Rate Limit', value: selectedIntegration.config.rateLimit, icon: Gauge },
+                    { label: 'Timeout', value: selectedIntegration.config.timeout, icon: Clock },
+                    { label: 'API Version', value: selectedIntegration.apiVersion, icon: Code }
+                  ].map((config, idx) => (
+                    <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                      <div className="flex items-center gap-3 mb-3">
+                        <config.icon className="w-5 h-5 theme-text-primary" />
+                        <h4 className="font-semibold theme-text-primary">{config.label}</h4>
+                      </div>
+                      <p className="text-lg theme-text-primary font-semibold">{config.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Security Information */}
+              <div>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">Security & Compliance</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Shield className="w-6 h-6 theme-text-primary" />
+                      <h4 className="text-lg font-semibold theme-text-primary">Security</h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm theme-text-muted mb-1">Certification</p>
+                        <p className="theme-text-primary font-semibold">{selectedIntegration.security}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm theme-text-muted mb-1">Encryption</p>
+                        <p className="theme-text-primary font-semibold">{selectedIntegration.dataEncryption}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Scale className="w-6 h-6 theme-text-primary" />
+                      <h4 className="text-lg font-semibold theme-text-primary">Compliance</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIntegration.compliance.map((comp, idx) => (
+                        <span key={idx} className="px-3 py-2 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg">
+                          {comp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* API Key */}
+              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <div className="flex items-center gap-3 mb-4">
+                  <Key className="w-6 h-6 theme-text-primary" />
+                  <h4 className="text-lg font-semibold theme-text-primary">API Credentials</h4>
+                </div>
+                <div className="flex items-center gap-4">
+                  <code className="flex-1 px-4 py-3 theme-bg-card rounded-xl theme-text-primary font-mono text-lg">
+                    {selectedIntegration.apiKey}
+                  </code>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-3 rounded-xl theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'performance' && (
+            <div className="space-y-8">
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: 'Success Rate', value: `${selectedIntegration.successRate}%`, trend: '+2.1%', icon: TrendingUp, color: 'text-green-400' },
+                  { label: 'Avg Response Time', value: selectedIntegration.responseTime, trend: '-0.3s', icon: Zap, color: 'text-blue-400' },
+                  { label: 'Uptime (30d)', value: '99.95%', trend: '+0.05%', icon: Activity, color: 'text-emerald-400' },
+                  { label: 'Error Rate', value: `${(100 - selectedIntegration.successRate).toFixed(1)}%`, trend: '-0.8%', icon: AlertCircle, color: 'text-amber-400' }
+                ].map((metric, idx) => (
+                  <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center justify-between mb-4">
+                      <metric.icon className={`w-8 h-8 ${metric.color}`} />
+                      <span className="text-sm font-semibold text-green-400">{metric.trend}</span>
+                    </div>
+                    <p className="text-3xl font-bold theme-text-primary mb-2">{metric.value}</p>
+                    <p className="text-sm theme-text-muted">{metric.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Response Time Distribution */}
+              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <h4 className="text-lg font-semibold theme-text-primary mb-4">Response Time Distribution</h4>
+                <div className="space-y-3">
+                  {[
+                    { range: '< 1s', percentage: 65, color: 'bg-green-400' },
+                    { range: '1-2s', percentage: 25, color: 'bg-blue-400' },
+                    { range: '2-3s', percentage: 7, color: 'bg-amber-400' },
+                    { range: '> 3s', percentage: 3, color: 'bg-red-400' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-4">
+                      <span className="w-16 text-sm theme-text-muted">{item.range}</span>
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full ${item.color} transition-all duration-1000`}
+                          style={{ width: `${item.percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="w-12 text-sm font-semibold theme-text-primary">{item.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-8">
+              {/* Security Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Shield className="w-6 h-6 theme-text-primary" />
+                    <h4 className="text-lg font-semibold theme-text-primary">Security Status</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="theme-text-muted">Encryption</span>
+                      <span className="flex items-center gap-2 text-green-400">
+                        <CheckCircle className="w-4 h-4" />
+                        Active
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="theme-text-muted">Certificate</span>
+                      <span className="flex items-center gap-2 text-green-400">
+                        <CheckCircle className="w-4 h-4" />
+                        Valid
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="theme-text-muted">Audit Logging</span>
+                      <span className="flex items-center gap-2 text-green-400">
+                        <CheckCircle className="w-4 h-4" />
+                        Enabled
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Scale className="w-6 h-6 theme-text-primary" />
+                    <h4 className="text-lg font-semibold theme-text-primary">Compliance</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedIntegration.compliance.map((comp, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-3 rounded-lg theme-bg-card">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-sm theme-text-primary">{comp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Security Features */}
+              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <h4 className="text-lg font-semibold theme-text-primary mb-4">Security Features</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { feature: 'TLS 1.3 Encryption', status: 'Enabled', icon: Lock },
+                    { feature: 'API Rate Limiting', status: 'Active', icon: Gauge },
+                    { feature: 'IP Whitelisting', status: 'Configured', icon: Globe }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl theme-bg-card text-center">
+                      <item.icon className="w-8 h-8 theme-text-primary mx-auto mb-2" />
+                      <p className="font-semibold theme-text-primary mb-1">{item.feature}</p>
+                      <p className="text-sm text-green-400">{item.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'logs' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold theme-text-primary">Recent Activity Logs</h3>
+                <div className="flex items-center gap-2">
+                  <select className="px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary">
+                    <option>All Activities</option>
+                    <option>Errors Only</option>
+                    <option>Success Only</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {selectedIntegration.logs.map((log, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="flex items-center gap-4 p-4 rounded-2xl theme-bg-glass border theme-border-glass hover:theme-bg-card transition-colors"
+                  >
+                    <div className={`w-3 h-3 rounded-full ${
+                      log.status === 'success' ? 'bg-green-400' :
+                      log.status === 'error' ? 'bg-red-400' :
+                      'bg-amber-400'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="theme-text-primary font-medium truncate">{log.message}</p>
+                      <p className="text-sm theme-text-muted">{log.timestamp}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      log.status === 'success' ? 'bg-green-400/20 text-green-400' :
+                      log.status === 'error' ? 'bg-red-400/20 text-red-400' :
+                      'bg-amber-400/20 text-amber-400'
+                    }`}>
+                      {log.status.toUpperCase()}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-8">
+              {/* Analytics Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: 'Total API Calls', value: '2.4M', icon: Database },
+                  { label: 'Avg Daily Usage', value: '8.2K', icon: Activity },
+                  { label: 'Peak Concurrent', value: '142', icon: TrendingUp },
+                  { label: 'Data Processed', value: '4.7GB', icon: Server }
+                ].map((stat, idx) => (
+                  <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
+                    <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
+                    <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
+                    <p className="text-sm theme-text-muted">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Usage Trends */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <h4 className="text-lg font-semibold theme-text-primary mb-4">Usage Trends (30d)</h4>
+                  <div className="space-y-4">
+                    {[
+                      { period: 'Last 7 days', trend: '+12%', color: 'text-green-400' },
+                      { period: 'Last 30 days', trend: '+8%', color: 'text-blue-400' },
+                      { period: 'Last 90 days', trend: '+15%', color: 'text-emerald-400' }
+                    ].map((trend, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span className="theme-text-muted">{trend.period}</span>
+                        <span className={`font-semibold ${trend.color}`}>{trend.trend}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <h4 className="text-lg font-semibold theme-text-primary mb-4">Performance Score</h4>
+                  <div className="flex items-center justify-center">
+                    <div className="relative w-32 h-32">
+                      <div className="w-full h-full rounded-full border-8 border-blue-500/20 flex items-center justify-center">
+                        <span className="text-3xl font-bold theme-text-primary">94%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Enhanced Action Buttons */}
+        <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-4 sm:p-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
+              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
+            >
+              <Wifi className="w-5 h-5" />
+              <span className="hidden sm:inline">Test Connection</span>
+              <span className="inline sm:hidden">Test</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
+              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span className="hidden sm:inline">Sync Now</span>
+              <span className="inline sm:hidden">Sync</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+            >
+              <Edit className="w-5 h-5" />
+              <span className="hidden sm:inline">Edit Config</span>
+              <span className="inline sm:hidden">Edit</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-red-500/30 transition-colors"
+            >
+              <X className="w-5 h-5" />
+              <span className="hidden sm:inline">Disable</span>
+              <span className="inline sm:hidden">Off</span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 };
