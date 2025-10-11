@@ -23,7 +23,8 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
     { id: 'applications', label: 'My Applications', icon: FileText },
     { id: 'beneficiaries', label: 'Beneficiaries', icon: Users },
     { id: 'disbursements', label: 'Payments', icon: Wallet },
-    { id: 'grievance', label: 'Grievances', icon: MessageCircle }
+    { id: 'grievance', label: 'Grievances', icon: MessageCircle },
+    { id: 'feedback', label: 'Feedback', icon: HelpCircle }
   ];
 
   const router = useRouter();
