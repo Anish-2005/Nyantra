@@ -86,23 +86,33 @@ export default function ApplicationsPage() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative">
-                    <select 
-                      value={filter} 
-                      onChange={e => setFilter(e.target.value as unknown as 'all' | 'recent' | 'amount')} 
-                      className="w-full sm:w-auto px-4 py-2.5 rounded-lg border theme-border-glass theme-bg-input theme-text-primary appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="all">All Applications</option>
-                      <option value="recent">Last 30 Days</option>
-                      <option value="amount">With Amount</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 theme-text-muted">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  
+                <div className="flex flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 w-full sm:w-auto gap-1 overflow-x-auto sm:overflow-x-visible">
+  {['all', 'recent', 'amount'].map(option => {
+    const isActive = filter === option;
+    const label =
+      option === 'all' ? 'All Applications' :
+      option === 'recent' ? 'Last 30 Days' : 'With Amount';
+
+    return (
+      <button
+        key={option}
+        onClick={() => setFilter(option as 'all' | 'recent' | 'amount')}
+        aria-pressed={isActive}
+        role="tab"
+        className={`
+          flex-1 min-w-[8rem] sm:min-w-0 text-sm sm:text-sm font-medium rounded-full transition-colors duration-300
+          px-3 sm:px-4 py-2 sm:py-2
+          ${isActive 
+            ? 'accent-gradient text-white shadow-md' 
+            : 'bg-transparent theme-text-primary hover:theme-bg-glass'}
+        `}
+      >
+        {label}
+      </button>
+    );
+  })}
+</div>
+
                   <button 
                     onClick={clearAll}
                     disabled={items.length === 0}

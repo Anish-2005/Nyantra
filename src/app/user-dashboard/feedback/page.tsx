@@ -189,14 +189,19 @@ export default function FeedbackPage() {
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       Type *
                     </label>
-                    <select 
-                      value={type} 
-                      onChange={e => setType(e.target.value as 'feedback' | 'grievance')} 
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="feedback">General Feedback</option>
-                      <option value="grievance">Grievance</option>
-                    </select>
+                    <div className="relative">
+                      <select 
+                        value={type} 
+                        onChange={e => setType(e.target.value as 'feedback' | 'grievance')} 
+                        className="w-full px-4 py-3 pr-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      >
+                        <option value="feedback">General Feedback</option>
+                        <option value="grievance">Grievance</option>
+                      </select>
+                      <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                   
                   {type === 'grievance' && (
@@ -204,15 +209,20 @@ export default function FeedbackPage() {
                       <label className="text-sm font-medium theme-text-muted block mb-2">
                         Priority
                       </label>
-                      <select 
-                        value={priority}
-                        onChange={e => setPriority(e.target.value as Feedback['priority'])}
-                        className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
+                      <div className="relative">
+                        <select 
+                          value={priority}
+                          onChange={e => setPriority(e.target.value as Feedback['priority'])}
+                          className="w-full px-4 py-3 pr-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                        <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -293,26 +303,36 @@ export default function FeedbackPage() {
                   </div>
                   
                   <div className="flex gap-2">
-                    <select 
-                      value={typeFilter}
-                      onChange={e => setTypeFilter(e.target.value as any)}
-                      className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="feedback">Feedback</option>
-                      <option value="grievance">Grievance</option>
-                    </select>
+                    <div className="relative">
+                      <select 
+                        value={typeFilter}
+                        onChange={e => setTypeFilter(e.target.value as any)}
+                        className="px-4 py-2 pr-8 rounded-lg border theme-border-glass theme-bg-input theme-text-primary appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="grievance">Grievance</option>
+                      </select>
+                      <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                     
-                    <select 
-                      value={filter}
-                      onChange={e => setFilter(e.target.value as any)}
-                      className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="open">Open</option>
-                      <option value="in-review">In Review</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
+                    <div className="relative">
+                      <select 
+                        value={filter}
+                        onChange={e => setFilter(e.target.value as any)}
+                        className="px-4 py-2 pr-8 rounded-lg border theme-border-glass theme-bg-input theme-text-primary appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="open">Open</option>
+                        <option value="in-review">In Review</option>
+                        <option value="resolved">Resolved</option>
+                      </select>
+                      <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>

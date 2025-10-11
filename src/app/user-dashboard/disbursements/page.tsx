@@ -171,29 +171,65 @@ export default function DisbursementsPage() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <select 
-                    value={timeRange}
-                    onChange={e => setTimeRange(e.target.value as any)}
-                    className="px-4 py-2.5 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Time</option>
-                    <option value="week">Last 7 Days</option>
-                    <option value="month">Last 30 Days</option>
-                    <option value="quarter">Last 90 Days</option>
-                  </select>
-                  
-                  <select 
-                    value={filter}
-                    onChange={e => setFilter(e.target.value as any)}
-                    className="px-4 py-2.5 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="paid">Paid</option>
-                    <option value="failed">Failed</option>
-                  </select>
-                </div>
+  {/* Time Range Toggle */}
+  <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:items-center">
+    {(['all', 'week', 'month', 'quarter'] as const).map(option => {
+      const isActive = timeRange === option;
+      const label =
+        option === 'all' ? 'All Time' :
+        option === 'week' ? 'Last 7 Days' :
+        option === 'month' ? 'Last 30 Days' :
+        'Last 90 Days';
+
+      return (
+        <button
+          key={option}
+          onClick={() => setTimeRange(option)}
+          role="tab"
+          aria-pressed={isActive}
+          className={`
+            inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-colors duration-200
+            px-3 sm:px-4 py-2 sm:py-1.5
+            ${isActive 
+              ? 'accent-gradient text-white shadow-md' 
+              : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:border sm:border-transparent sm:hover:border-gray-200 dark:sm:hover:border-gray-700'}
+          `}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+
+  {/* Status Filter Toggle */}
+  <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:items-center">
+    {(['all', 'pending', 'processing', 'paid', 'failed'] as const).map(option => {
+      const isActive = filter === option;
+      const label =
+        option === 'all' ? 'All Status' :
+        option.charAt(0).toUpperCase() + option.slice(1);
+
+      return (
+        <button
+          key={option}
+          onClick={() => setFilter(option)}
+          role="tab"
+          aria-pressed={isActive}
+          className={`
+            inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-colors duration-200
+            px-3 sm:px-4 py-2 sm:py-1.5
+            ${isActive 
+              ? 'accent-gradient text-white shadow-md' 
+              : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:border sm:border-transparent sm:hover:border-gray-200 dark:sm:hover:border-gray-700'}
+          `}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+</div>
+
               </div>
 
               {/* Transactions List */}

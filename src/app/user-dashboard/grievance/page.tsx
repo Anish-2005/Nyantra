@@ -158,32 +158,51 @@ export default function GrievancePage() {
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       Category
                     </label>
-                    <select 
-                      value={category}
-                      onChange={e => setCategory(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="general">General</option>
-                      <option value="application">Application</option>
-                      <option value="payment">Payment</option>
-                      <option value="technical">Technical</option>
-                      <option value="other">Other</option>
-                    </select>
+                   <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
+  {['general', 'application', 'payment', 'technical', 'other'].map(option => {
+    const isActive = category === option;
+    const label =
+      option.charAt(0).toUpperCase() + option.slice(1); // Capitalize first letter
+
+    return (
+      <button
+        key={option}
+        onClick={() => setCategory(option)}
+        role="tab"
+        aria-pressed={isActive}
+    className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
+      >
+        {label}
+      </button>
+    );
+  })}
+</div>
+
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       Priority
                     </label>
-                    <select 
-                      value={priority}
-                      onChange={e => setPriority(e.target.value as Grv['priority'])}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
+                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
+  {['low', 'medium', 'high'].map(option => {
+    const isActive = priority === option;
+    const label = option.charAt(0).toUpperCase() + option.slice(1); // Capitalize first letter
+
+    return (
+      <button
+        key={option}
+        onClick={() => setPriority(option as Grv['priority'])}
+        role="tab"
+        aria-pressed={isActive}
+    className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
+      >
+        {label}
+      </button>
+    );
+  })}
+</div>
+
                   </div>
                 </div>
 
@@ -239,7 +258,7 @@ export default function GrievancePage() {
                   Your Grievances ({filteredList.length})
                 </h3>
                 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
                   <div className="relative flex-1 sm:flex-none sm:w-64">
                     <input
                       value={searchTerm}
@@ -252,16 +271,31 @@ export default function GrievancePage() {
                     </svg>
                   </div>
                   
-                  <select 
-                    value={filter}
-                    onChange={e => setFilter(e.target.value as any)}
-                    className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
+                  <div className="relative w-full sm:w-auto">
+                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:w-auto sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-end">
+  {['all', 'open', 'in-progress', 'resolved'].map(option => {
+    const isActive = filter === option;
+    const label =
+      option === 'all' ? 'All Status' :
+      option === 'in-progress' ? 'In Progress' :
+      option.charAt(0).toUpperCase() + option.slice(1);
+
+    return (
+      <button
+        key={option}
+        onClick={() => setFilter(option as any)}
+        role="tab"
+        aria-pressed={isActive}
+    className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
+      >
+        {label}
+      </button>
+    );
+  })}
+</div>
+
+                    
+                  </div>
                 </div>
               </div>
 

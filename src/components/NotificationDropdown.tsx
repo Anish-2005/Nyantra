@@ -73,7 +73,17 @@ export default function NotificationDropdown({ anchorRef, triggerRef, isOpen, on
   const top = anchorRect ? anchorRect.bottom + offsetY : 80;
 
   // Choose a slightly stronger background to reduce transparency and improve legibility
-  const dropdownBg = getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '';
+  const styleRoot = getComputedStyle(document.documentElement);
+  const dropdownBgVar = styleRoot.getPropertyValue('--card-bg')?.trim();
+  const borderVar = styleRoot.getPropertyValue('--card-border')?.trim();
+  const textVar = styleRoot.getPropertyValue('--text-primary')?.trim();
+
+  // Fallbacks when CSS vars are missing or too transparent
+  const isDark = (document.documentElement.getAttribute('data-theme') || '').trim() === 'dark';
+  const bgFallback = isDark ? 'rgba(15, 23, 42, 0.98)' : 'rgba(255,255,255,0.98)';
+  const borderFallback = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textFallback = isDark ? '#f1f5f9' : '#0f172a';
+
   const content = (
     <div
       style={{
@@ -81,9 +91,13 @@ export default function NotificationDropdown({ anchorRef, triggerRef, isOpen, on
         top: `${top}px`,
         position: 'fixed',
         width: typeof width === 'number' ? `${width}px` : width,
-        background: dropdownBg.trim() || undefined,
+        background: dropdownBgVar || bgFallback,
+        border: `1px solid ${borderVar || borderFallback}`,
+        color: textVar || textFallback,
+        WebkitBackdropFilter: 'blur(8px)',
+        backdropFilter: 'blur(8px)'
       }}
-      className="theme-border-glass border rounded-2xl shadow-xl p-4 backdrop-blur-xl"
+      className="rounded-2xl shadow-xl p-4"
     >
       {children}
     </div>
