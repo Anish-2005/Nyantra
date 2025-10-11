@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import type * as THREE from 'three';
 import { Search, Filter, Download, Plus, Eye, Edit, MoreVertical, TrendingUp, Clock, Star, PieChart, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, Send, PhoneCall, Video, MapPin, User, UserCheck, Scale, FileText, ChevronLeft, ChevronRight, X, Flag, Banknote, FileSearch, UserX, Zap, Timer, Calendar, Phone, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
 
 // Mock data for grievances (expanded list for testing and pagination)

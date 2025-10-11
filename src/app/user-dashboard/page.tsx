@@ -23,7 +23,7 @@ type Submission = {
 const STORAGE_KEY = 'nyantra_user_applications_v1';
 
 export default function UserDashboard() {
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   // Redirect logic kept minimal: only redirect unauthenticated users to login
@@ -129,7 +129,7 @@ export default function UserDashboard() {
       setBankAccount('');
       setIfsc('');
       setFiles([]);
-    } catch (err) {
+    } catch{
       setError('Failed to save application locally.');
     } finally {
       setSubmitting(false);
@@ -340,7 +340,7 @@ export default function UserDashboard() {
                         <input 
                           type="number" 
                           min={0} 
-                          value={amountRequested as any} 
+                          value={amountRequested as string | number} 
                           onChange={e => setAmountRequested(e.target.value === '' ? '' : Number(e.target.value))} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
                           placeholder="Amount in INR" 

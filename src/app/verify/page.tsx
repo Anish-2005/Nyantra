@@ -11,7 +11,6 @@ import {
   Shield,
   Rocket,
   ArrowRight,
-  CheckCircle,
   FileCheck,
   Lock,
   UserCheck
@@ -75,7 +74,7 @@ export default function VerifyPage() {
         const ref = doc(db, 'users', user.uid);
         await updateDoc(ref, { verified: true });
       }
-    } catch (e) {
+    } catch {
       // ignore; verification state may not persist in some environments
     }
     

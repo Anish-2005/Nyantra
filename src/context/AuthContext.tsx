@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc, getDoc, serverTimestamp, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, setDoc,serverTimestamp, onSnapshot, Unsubscribe } from 'firebase/firestore';
 
 type Profile = { role?: 'officer' | 'user'; verified?: boolean } | null;
 
