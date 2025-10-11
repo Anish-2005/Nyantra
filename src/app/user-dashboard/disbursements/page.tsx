@@ -186,7 +186,7 @@ export default function DisbursementsPage() {
           key={option}
           onClick={() => setTimeRange(option)}
           role="tab"
-          aria-pressed={isActive}
+          aria-selected={isActive}
           className={`
             inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-colors duration-200
             px-3 sm:px-4 py-2 sm:py-1.5
@@ -214,7 +214,7 @@ export default function DisbursementsPage() {
           key={option}
           onClick={() => setFilter(option)}
           role="tab"
-          aria-pressed={isActive}
+          aria-selected={isActive}
           className={`
             inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-colors duration-200
             px-3 sm:px-4 py-2 sm:py-1.5

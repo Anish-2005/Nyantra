@@ -4,8 +4,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Download, Eye, X, FileText, DollarSign, RefreshCw, TrendingUp,
-  Shield, CheckCircle, XCircle,
+  Search, Download, Eye, X, FileText, DollarSign, TrendingUp,
+  Shield, CheckCircle,
   BarChart3, PieChart,
   Database,
   Cpu, FilePlus, FileCheck, BookOpen, Printer, Share2,
@@ -429,46 +429,10 @@ const ReportsPage = () => {
   }, [searchQuery, typeFilter, statusFilter, categoryFilter, frequencyFilter, viewMode, sortBy, sortOrder]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
   const paginatedReports = filteredReports.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // Statistics
-  const stats = useMemo(() => {
-    const total = mockReports.length;
-    const completed = mockReports.filter(r => r.status === 'completed').length;
-    const scheduled = mockReports.filter(r => r.isScheduled).length;
-    const processing = mockReports.filter(r => r.status === 'processing').length;
-    const failed = mockReports.filter(r => r.status === 'failed').length;
-    const totalDownloads = mockReports.reduce((sum, r) => sum + r.downloadCount, 0);
-    const avgFileSize = '2.8 MB'; // This would be calculated in a real app
-
-    return {
-      total,
-      completed,
-      scheduled,
-      processing,
-      failed,
-      totalDownloads,
-      avgFileSize
-    };
-  }, []);
-
-  // Category distribution
-  const categoryStats = useMemo(() => {
-    const categories = {
-      'financial': mockReports.filter(r => r.category === 'financial').length,
-      'compliance': mockReports.filter(r => r.category === 'compliance').length,
-      'performance': mockReports.filter(r => r.category === 'performance').length,
-      'statistical': mockReports.filter(r => r.category === 'statistical').length,
-      'analytical': mockReports.filter(r => r.category === 'analytical').length,
-      'audit': mockReports.filter(r => r.category === 'audit').length,
-      'technical': mockReports.filter(r => r.category === 'technical').length
-    };
-    return categories;
-  }, []);
 
   // small-screen detection removed (isMobile not used)
 
@@ -593,15 +557,7 @@ const ReportsPage = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'completed': CheckCircle,
-      'processing': RefreshCw,
-      'scheduled': Clock,
-      'failed': XCircle
-    };
-    return icons[status as keyof typeof icons] || FileText;
-  };
+  // getStatusIcon removed (not used)
 
   const getCategoryIcon = (category: string) => {
     const icons = {

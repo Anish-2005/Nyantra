@@ -454,7 +454,6 @@ const IntegrationsPage = () => {
   const [itemsPerPage] = useState(8);
   const [selectedIntegration, setSelectedIntegration] = useState<typeof mockIntegrations[0] | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
-  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('overview');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -547,19 +546,7 @@ const IntegrationsPage = () => {
     return categories;
   }, []);
 
-  // Mobile detection
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
-      const matches = 'matches' in e ? e.matches : mq.matches;
-      setIsMobile(matches);
-      if (matches) setViewMode('compact');
-    };
-
-    handler(mq);
-    mq.addEventListener('change', handler as EventListener);
-    return () => mq.removeEventListener('change', handler as EventListener);
-  }, []);
+  // mobile detection removed (isMobile unused) — viewMode can be toggled manually
 
   // Three.js background
   useEffect(() => {

@@ -153,10 +153,7 @@ export default function FeedbackPage() {
   const inReviewCount = list.filter(f => f.status === 'in-review').length;
   const resolvedCount = list.filter(f => f.status === 'resolved').length;
   const grievanceCount = list.filter(f => f.type === 'grievance').length;
-  const feedbackCount = list.filter(f => f.type === 'feedback').length;
-
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
-  const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+  
 
   return (
     <div className="min-h-screen p-4 md:p-6 theme-bg-primary">

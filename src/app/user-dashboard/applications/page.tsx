@@ -97,7 +97,7 @@ export default function ApplicationsPage() {
       <button
         key={option}
         onClick={() => setFilter(option as 'all' | 'recent' | 'amount')}
-        aria-pressed={isActive}
+        aria-selected={isActive}
         role="tab"
         className={`
           flex-1 min-w-[8rem] sm:min-w-0 text-sm sm:text-sm font-medium rounded-full transition-colors duration-300

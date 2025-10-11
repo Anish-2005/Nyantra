@@ -169,7 +169,7 @@ export default function GrievancePage() {
         key={option}
         onClick={() => setCategory(option)}
         role="tab"
-        aria-pressed={isActive}
+        aria-selected={isActive}
     className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
       >
         {label}
@@ -194,7 +194,7 @@ export default function GrievancePage() {
         key={option}
         onClick={() => setPriority(option as Grv['priority'])}
         role="tab"
-        aria-pressed={isActive}
+        aria-selected={isActive}
     className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
       >
         {label}
@@ -285,7 +285,7 @@ export default function GrievancePage() {
         key={option}
         onClick={() => setFilter(option as 'all' | 'open' | 'in-progress' | 'resolved')}
         role="tab"
-        aria-pressed={isActive}
+        aria-selected={isActive}
     className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isActive ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'}`}
       >
         {label}
