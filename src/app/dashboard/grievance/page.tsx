@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Download, Plus, Eye, Edit, MoreVertical, TrendingUp, Clock, Star, PieChart, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, Send, PhoneCall, Video, MapPin, User, UserCheck, Scale, FileText, ChevronLeft, ChevronRight, X, Flag, Banknote, FileSearch, UserX, Zap, Timer, Calendar, Phone, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
+import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
 
 // Mock data for grievances (expanded list for testing and pagination)
 const mockGrievances = [
@@ -61,20 +61,18 @@ const mockGrievances = [
 const GrievancePage = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [actTypeFilter, setActTypeFilter] = useState('all');
-  const [assignedToFilter, setAssignedToFilter] = useState('all');
+  const [statusFilter] = useState('all');
+  const [categoryFilter] = useState('all');
+  const [priorityFilter] = useState('all');
+  const [actTypeFilter] = useState('all');
+  const [assignedToFilter] = useState('all');
   const [sortBy] = useState('createdDate');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedGrievance, setSelectedGrievance] = useState<typeof mockGrievances[0] | null>(null);
   const [viewMode, setViewMode] = useState<'dashboard' | 'list'>('dashboard');
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [newMessage, setNewMessage] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -120,7 +118,6 @@ const GrievancePage = () => {
   }, [searchQuery, statusFilter, categoryFilter, priorityFilter, actTypeFilter, assignedToFilter, sortBy, sortOrder]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredGrievances.length / itemsPerPage);
   const paginatedGrievances = filteredGrievances.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -308,21 +305,10 @@ const GrievancePage = () => {
     return icons[category as keyof typeof icons] || AlertCircle;
   };
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedGrievance) return;
-    // Implementation would go here
-    setNewMessage('');
-  };
 
-  const handleUpdateStatus = (newStatus: string) => {
-    if (!selectedGrievance) return;
-    // Implementation would go here
-  };
+ 
 
-  const handleEscalate = () => {
-    if (!selectedGrievance) return;
-    // Implementation would go here
-  };
+ 
 
   return (
     <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">

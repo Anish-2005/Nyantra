@@ -4,20 +4,19 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Eye, ChevronLeft, ChevronRight, X, Check, Clock, FileText, DollarSign, RefreshCw, TrendingUp,
+  Search, Download, Eye, X, FileText, DollarSign, RefreshCw, TrendingUp,
   Shield, CheckCircle, XCircle,
   BarChart3, PieChart,
   Database,
-  Cpu, FileDown, FilePlus, FileCheck, BookOpen, Printer, Share2,
-  Zap as ZapIcon, Calendar as CalendarIcon2,
+  Cpu, FilePlus, FileCheck, BookOpen, Printer, Share2,
+  
   Sparkles,
   Settings,
   BarChart,
   ArrowUpRight,
   Activity,
-  LineChart,
-  MoreVertical,
   Calendar,
+  Clock,
   Zap,
 } from 'lucide-react';
 
@@ -318,27 +317,18 @@ const reportTemplates = [
 const ReportsPage = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [frequencyFilter, setFrequencyFilter] = useState('all');
+  const [typeFilter] = useState('all');
+  const [statusFilter] = useState('all');
+  const [categoryFilter] = useState('all');
+  const [frequencyFilter] = useState('all');
   const [sortBy] = useState('generatedDate');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedReport, setSelectedReport] = useState<typeof mockReports[0] | null>(null);
-  const [, setSelectedTemplate] = useState<typeof reportTemplates[0] | null>(null);
   const [viewMode, setViewMode] = useState<'reports' | 'templates' | 'scheduled'>('reports');
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState('details');
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [newSchedule, setNewSchedule] = useState({
-    frequency: 'weekly',
-    format: 'PDF',
-    recipients: '',
-    time: '08:00'
-  });
+  const [activeTab] = useState('details');
+  // Note: removed unused isMobile/showScheduleModal/newSchedule state variables
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Use deterministic formatting so server and client render identical strings
@@ -480,23 +470,7 @@ const ReportsPage = () => {
     return categories;
   }, []);
 
-  // Detect small screens and adjust UI defaults for better mobile UX
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)');
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
-      const matches = 'matches' in e ? e.matches : mq.matches;
-      setIsMobile(matches);
-    };
-
-    handler(mq);
-    if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-    else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
-
-    return () => {
-      if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-      else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
-    };
-  }, []);
+  // small-screen detection removed (isMobile not used)
 
   // Three.js canvas background (particles + connecting lines) — theme-aware
   useEffect(() => {
@@ -661,26 +635,7 @@ const ReportsPage = () => {
     const report = mockReports.find(r => r.id === reportId);
     if (report) {
       setSelectedReport(report);
-      setShowScheduleModal(true);
     }
-  };
-
-  const handleGenerateNow = (reportId: string) => {
-    // In a real application, this would trigger report generation
-    console.log(`Generating report: ${reportId}`);
-    // Show generation progress
-  };
-
-  const handleCreateSchedule = () => {
-    // In a real application, this would create the schedule
-    console.log('Creating schedule:', newSchedule);
-    setShowScheduleModal(false);
-    setNewSchedule({
-      frequency: 'weekly',
-      format: 'PDF',
-      recipients: '',
-      time: '08:00'
-    });
   };
 
   const formatFileSize = (size: string | null) => {
@@ -896,11 +851,11 @@ const ReportsPage = () => {
       </div>
       <div>
         <h2 className="text-lg sm:text-xl font-bold theme-text-primary">Recent Reports</h2>
-        <p className="text-sm theme-text-muted">{filteredReports.length} reports found</p>
+  <p className="text-sm theme-text-muted">{viewMode === 'templates' ? `${reportTemplates.length} templates` : `${filteredReports.length} reports found`}</p>
       </div>
     </div>
     
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       {/* Search */}
       <div className="relative flex-1 sm:w-48 lg:w-56">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
@@ -938,7 +893,6 @@ const ReportsPage = () => {
       </div>
     </div>
   </div>
-
           {/* Reports Grid */}
           {/* Reports Grid - Fixed Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">

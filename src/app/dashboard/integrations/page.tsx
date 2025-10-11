@@ -2,17 +2,16 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, Edit,
+  Search,Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X,
   Clock, AlertCircle, FileText, DollarSign,
   RefreshCw, TrendingUp,
   Shield, Scale,
   Banknote, Fingerprint, CreditCard,
-  CheckCircle, XCircle, PieChart,
+  CheckCircle, XCircle,
   Users, Map as MapIcon, Timer,
-  Database, Server, Cloud, Wifi, WifiOff, Network, Shield as ShieldIcon,
+  Database, Server, Cloud, Wifi, Network,
   Activity, Zap, Cpu, Globe,
   ExternalLink,
   Code,
@@ -453,7 +452,6 @@ const IntegrationsPage = () => {
   const [sortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<typeof mockIntegrations[0] | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
   const [isMobile, setIsMobile] = useState<boolean>(false);

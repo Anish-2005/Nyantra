@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import UserSidebar from '@/components/UserSidebar';
-import { Home, FileText, MessageCircle, Users, Wallet, BarChart3, Database, DownloadCloud, Menu, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from 'lucide-react';
+import { Home, FileText, MessageCircle, Users, Wallet, Menu, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import type * as THREE from 'three';
 import { useAuth } from '@/context/AuthContext';
