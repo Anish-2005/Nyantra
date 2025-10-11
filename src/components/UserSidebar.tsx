@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 type NavItem = {
   id: string;
@@ -23,6 +25,8 @@ type Props = {
 
 export default function UserSidebar({ items, activeId, onChange, open, setOpen, collapsed = false, onToggleCollapse }: Props) {
   const { theme } = useTheme();
+  const { signOutUser } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -67,7 +71,21 @@ export default function UserSidebar({ items, activeId, onChange, open, setOpen, 
         </nav>
 
         <div className="p-3 border-t theme-border-glass">
-          <button type="button" className="w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass">Sign Out</button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await signOutUser();
+                router.push('/login');
+              } catch {
+                // ignore
+              }
+            }}
+            className="w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+            <span className="truncate text-center flex-1">SIGN OUT</span>
+          </button>
         </div>
       </motion.div>
 
@@ -119,7 +137,22 @@ export default function UserSidebar({ items, activeId, onChange, open, setOpen, 
         )}
 
         <div className={`p-3 border-t theme-border-glass ${collapsed ? 'flex justify-center' : ''}`}>
-          <button type="button" className={`flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass ${collapsed ? 'w-10 h-10' : 'w-full'}`} title={collapsed ? 'Sign Out' : undefined}>Sign Out</button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await signOutUser();
+                router.push('/login');
+              } catch {
+                // ignore
+              }
+            }}
+            className={`flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass ${collapsed ? 'w-10 h-10' : 'w-full'}`}
+            title={collapsed ? 'Sign Out' : undefined}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+            {!collapsed && <span className="truncate text-center flex-1">SIGN OUT</span>}
+          </button>
         </div>
       </motion.aside>
     </>
