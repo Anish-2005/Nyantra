@@ -55,7 +55,7 @@ export default function LoginPage() {
         const mod = await import('firebase/firestore');
         const { doc, getDoc } = mod;
         const current = fb.auth.currentUser;
-        let p: any = null;
+  let p: Record<string, unknown> | null = null;
         if (current) {
           const snap = await getDoc(doc(fb.db, 'users', current.uid));
           p = snap.exists() ? snap.data() : null;
@@ -88,7 +88,7 @@ export default function LoginPage() {
         const mod = await import('firebase/firestore');
         const { doc, getDoc } = mod;
         const current = fb.auth.currentUser;
-        let p: any = null;
+  let p: Record<string, unknown> | null = null;
         if (current) {
           const snap = await getDoc(doc(fb.db, 'users', current.uid));
           p = snap.exists() ? snap.data() : null;

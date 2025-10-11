@@ -4,9 +4,11 @@ import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndP
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp, onSnapshot, Unsubscribe } from 'firebase/firestore';
 
+type Profile = { role?: 'officer' | 'user'; verified?: boolean } | null;
+
 type AuthContextValue = {
   user: User | null;
-  profile: { role?: 'officer' | 'user'; verified?: boolean } | null | undefined;
+  profile: Profile | undefined;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -41,8 +43,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const ref = doc(db, 'users', u.uid);
           // subscribe to profile changes
           profileUnsub = onSnapshot(ref, (snap) => {
-            if (snap.exists()) setProfile(snap.data() as any);
-            else setProfile(null);
+            if (snap.exists()) {
+              const data = snap.data() as Record<string, unknown> | null;
+              // narrow profile to expected shape where possible
+              const shaped: Profile = (data && typeof data === 'object') ? (() => {
+                const roleVal = ('role' in data) ? data['role'] : undefined;
+                const verifiedVal = ('verified' in data) ? data['verified'] : undefined;
+
+                const role = (typeof roleVal === 'string' && (roleVal === 'officer' || roleVal === 'user')) ? roleVal : undefined;
+                const verified = typeof verifiedVal === 'boolean' ? verifiedVal : undefined;
+
+                return { role, verified };
+              })() : null;
+              setProfile(shaped);
+            } else setProfile(null);
             setLoading(false);
           }, (err) => {
             try { console.error('[auth] profile onSnapshot error', err); } catch {}

@@ -924,7 +924,7 @@ const ReportsPage = () => {
             key={mode}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setViewMode(mode as any)}
+            onClick={() => setViewMode(mode as 'reports' | 'templates' | 'scheduled')}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
               viewMode === mode 
                 ? 'accent-gradient text-white shadow-sm' 

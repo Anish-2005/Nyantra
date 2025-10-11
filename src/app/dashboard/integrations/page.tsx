@@ -977,7 +977,7 @@ const IntegrationsPage = () => {
                   key={mode}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode(mode as any)}
+                  onClick={() => setViewMode(mode as 'grid' | 'list' | 'compact')}
                   className={`px-3 sm:px-4 py-2 rounded-lg capitalize ${
                     viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
                   }`}

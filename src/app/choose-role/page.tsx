@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { 
   Sun, 
@@ -43,10 +43,11 @@ export default function ChooseRolePage() {
       await setDoc(ref, { role, verified: role === 'officer' ? true : false, createdAt: serverTimestamp() }, { merge: true });
       if (role === 'officer') router.push('/dashboard');
       else router.push('/verify');
-    } catch (e: any) {
-      // Surface firebase permission errors clearly
-      try { console.error('[choose-role] failed to update profile', e); } catch {}
-      if (e?.code === 'permission-denied') {
+    } catch (err: unknown) {
+      // Surface firebase permission errors clearly without using `any`
+      try { console.error('[choose-role] failed to update profile', err); } catch {}
+      const code = typeof err === 'object' && err !== null && 'code' in err ? (err as Record<string, unknown>).code : undefined;
+      if (code === 'permission-denied') {
         alert('Permission denied: your Firestore rules prevent updating your profile. Check security rules or sign-in state.');
       }
       // stay on choose-role so user can retry
@@ -218,7 +219,7 @@ export default function ChooseRolePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    Select how you'll use the platform
+                    Select how you&apos;ll use the platform
                   </motion.p>
                 </div>
               </div>
@@ -252,7 +253,7 @@ export default function ChooseRolePage() {
                       <User className="w-6 h-6 text-accent-gradient" />
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="font-semibold theme-text-primary">I'm a User</h3>
+                      <h3 className="font-semibold theme-text-primary">I&apos;m a User</h3>
                       <p className="text-sm theme-text-muted mt-1">
                         Access benefits and services as a beneficiary
                       </p>
@@ -274,7 +275,7 @@ export default function ChooseRolePage() {
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="font-semibold">I'm an Officer</h3>
+                      <h3 className="font-semibold">I&apos;m an Officer</h3>
                       <p className="text-sm text-white/80 mt-1">
                         Manage and oversee platform operations
                       </p>
