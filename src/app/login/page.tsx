@@ -29,7 +29,7 @@ function messageFromUnknown(err: unknown): string | null {
 }
 
 export default function LoginPage() {
-  const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, profile, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
@@ -47,9 +47,29 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      if (isRegister) await signUp(email, password);
+  if (isRegister) await signUp(email, password);
       else await signIn(email, password);
-      router.push('/dashboard');
+      // fetch profile immediately and route (avoids waiting for AuthContext refresh)
+      try {
+        const fb = await import('@/lib/firebase');
+        const mod = await import('firebase/firestore');
+        const { doc, getDoc } = mod;
+        const current = fb.auth.currentUser;
+        let p: any = null;
+        if (current) {
+          const snap = await getDoc(doc(fb.db, 'users', current.uid));
+          p = snap.exists() ? snap.data() : null;
+        }
+        if (p === null) router.push('/choose-role');
+        else if (p?.role === 'officer') router.push('/dashboard');
+        else if (p?.role === 'user') {
+          if (p.verified) router.push('/user-dashboard');
+          else router.push('/verify');
+        } else router.push('/choose-role');
+      } catch (e) {
+        try { console.error('[login] post-signin profile read failed, routing to /choose-role', e); } catch {}
+        router.push('/choose-role');
+      }
     } catch (err: unknown) {
       setError(messageFromUnknown(err) || 'Authentication failed');
     } finally {
@@ -62,7 +82,32 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      // fetch profile immediately and route
+      try {
+        const fb = await import('@/lib/firebase');
+        const mod = await import('firebase/firestore');
+        const { doc, getDoc } = mod;
+        const current = fb.auth.currentUser;
+        let p: any = null;
+        if (current) {
+          const snap = await getDoc(doc(fb.db, 'users', current.uid));
+          p = snap.exists() ? snap.data() : null;
+        }
+        // treat null profile as "choose role" — same behavior as email/password sign-in
+        if (p === null) {
+          // small console trace for local debugging
+          try { console.debug('[login] google sign-in: no profile, routing to /choose-role'); } catch {};
+          router.push('/choose-role');
+        } else if (p?.role === 'officer') router.push('/dashboard');
+        else if (p?.role === 'user') {
+          if (p.verified) router.push('/user-dashboard');
+          else router.push('/verify');
+        } else router.push('/choose-role');
+      } catch (e) {
+        // fallback to choose-role rather than forcing dashboard
+        try { console.error('[login] google sign-in: error reading profile, falling back to /choose-role', e); } catch {};
+        router.push('/choose-role');
+      }
     } catch (err: unknown) {
       setError(messageFromUnknown(err) || 'Google sign-in failed');
     } finally {
@@ -71,12 +116,32 @@ export default function LoginPage() {
   };
 
   // Redirect to dashboard when user is authenticated (do this in effect to avoid updates during render)
+  // Redirect when auth + profile state is available
   useEffect(() => {
-    if (!loading && user) {
-      // client-side navigation
-      router.push('/dashboard');
+    if (loading) return;
+    if (!user) return;
+    // wait until profile is loaded (undefined means not loaded yet)
+    if (profile === undefined) return;
+
+    if (profile === null) {
+      // no profile document yet — ask user to choose role
+      router.push('/choose-role');
+      return;
     }
-  }, [user, loading, router]);
+
+    if (profile?.role === 'officer') router.push('/dashboard');
+    else if (profile?.role === 'user') {
+      if (profile.verified) router.push('/user-dashboard');
+      else router.push('/verify');
+    } else if (profile && !profile.role) {
+      // profile exists but role not chosen yet
+      router.push('/choose-role');
+    } else {
+      // fallback: if profile shape is unexpected, send to choose-role so user can self-correct
+      try { console.warn('[login] unexpected profile shape, routing to /choose-role', profile); } catch {}
+      router.push('/choose-role');
+    }
+  }, [user, profile, loading, router]);
 
   // Three.js Background Effect (same as dashboard)
   useEffect(() => {
@@ -163,7 +228,12 @@ export default function LoginPage() {
         particlesMesh.rotation.y += 0.0003;
         particlesMesh.rotation.x += 0.0001;
         linesMesh.rotation.y -= 0.0002;
-        renderer.render(scene, camera);
+        try {
+          renderer.render(scene, camera);
+        } catch (e) {
+          // suppress WebGL uniform/program-related errors which can occur
+          try { console.warn('[three] render error suppressed', e); } catch {}
+        }
       };
 
       animate();
@@ -427,6 +497,8 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </motion.div>
+
+                {/* role selection removed: users choose role after first login */}
 
                 <motion.button
                   type="submit"

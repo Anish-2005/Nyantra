@@ -1,6 +1,7 @@
 // Firebase client initialization
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Read config from NEXT_PUBLIC_* environment variables so keys are not hard-coded.
 // These variables are exposed to the browser by Next.js when prefixed with NEXT_PUBLIC_.
@@ -38,3 +39,4 @@ try {
 }
 
 export const auth = getAuth(app);
+export const db = getFirestore(app);
