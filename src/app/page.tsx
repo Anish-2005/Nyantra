@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, Mail, Phone, MapPinned, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Send, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
@@ -26,6 +27,7 @@ const NyantraLanding = () => {
   // Use global theme from ThemeContext
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const { user, profile, loading } = useAuth();
 
   // Enhanced Three.js Scene with theme-aware colors
   useEffect(() => {
@@ -147,6 +149,30 @@ const NyantraLanding = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Navigation helper: navigate according to authenticated user's role
+  const navigateByRole = async () => {
+    // wait briefly for auth loading to settle (max ~3s)
+    const waitFor = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    const start = Date.now();
+    while (loading && Date.now() - start < 3000) {
+      // poll every 100ms while auth initializes
+      // eslint-disable-next-line no-await-in-loop
+      await waitFor(100);
+    }
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    const role = profile?.role;
+    if (role === 'officer') return router.push('/dashboard');
+    if (role === 'user') return router.push('/user-dashboard');
+
+    // logged in but no role selected yet
+    return router.push('/choose-role');
+  };
 
   // Animated stats counter
   useEffect(() => {
@@ -525,8 +551,8 @@ const NyantraLanding = () => {
                   </motion.a>
                 ))}
                 <motion.button
-                  onClick={() => router.push('/dashboard')}
-                  aria-label="Get started - go to dashboard"
+                  onClick={() => navigateByRole()}
+                  aria-label="Get started - continue"
                   className="px-6 py-2.5 accent-gradient rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -585,8 +611,8 @@ const NyantraLanding = () => {
                   ))}
                   <div className="pt-4 space-y-3">
                     <motion.button
-                      onClick={() => { router.push('/dashboard'); setIsMobileMenuOpen(false); }}
-                      aria-label="Get started - go to dashboard"
+                      onClick={() => { navigateByRole(); setIsMobileMenuOpen(false); }}
+                      aria-label="Get started - continue"
                       className="w-full px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg"
                       whileTap={{ scale: 0.95 }}
                     >
@@ -656,8 +682,8 @@ const NyantraLanding = () => {
                   className="flex flex-col sm:flex-row gap-4"
                 >
                   <motion.button
-                    onClick={() => router.push('/dashboard')}
-                    aria-label="Apply Now - go to dashboard"
+                    onClick={() => navigateByRole()}
+                    aria-label="Apply Now - continue"
                     className="px-8 py-4 accent-gradient rounded-xl font-semibold text-lg text-white flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
