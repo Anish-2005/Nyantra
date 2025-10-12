@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { useLocale } from '@/context/LocaleContext';
 type Grv = { 
   id: string; 
   subject: string; 
@@ -23,6 +23,7 @@ export default function GrievancePage() {
   const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'resolved'>('all');
   const [selectedGrv, setSelectedGrv] = useState<Grv | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useLocale();
 
   useEffect(() => {
     try { 
@@ -150,7 +151,7 @@ export default function GrievancePage() {
               animate={{ opacity: 1, y: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h2 className="text-xl font-semibold theme-text-primary mb-4">File New Grievance</h2>
+              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')} </h2>
               
               <form onSubmit={submitGrievance} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -213,7 +214,7 @@ export default function GrievancePage() {
                   <input 
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
-                    placeholder="Brief description of your grievance"
+                    placeholder={t('extracted.brief_description_of_your_grievance')}
                     className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     required
                   />
@@ -226,7 +227,7 @@ export default function GrievancePage() {
                   <textarea 
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    placeholder="Please provide detailed information about your grievance..."
+                    placeholder={t('extracted.please_provide_detailed_information_about_your_grievance')}
                     rows={4}
                     className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
                     required
@@ -263,7 +264,7 @@ export default function GrievancePage() {
                     <input
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      placeholder="Search grievances..."
+                      placeholder={t('extracted.search_grievances')}
                       className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                     <svg className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,7 +387,7 @@ export default function GrievancePage() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setStatus(grievance.id, 'in-progress'); }}
                                   className="p-2 rounded-lg theme-bg-card theme-text-muted hover:theme-border-primary transition-all hover:scale-110"
-                                  title="Mark in progress"
+                                  title={t('extracted.mark_in_progress')}
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -395,7 +396,7 @@ export default function GrievancePage() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setStatus(grievance.id, 'resolved'); }}
                                   className="p-2 rounded-lg theme-bg-card text-green-600 hover:theme-border-primary transition-all hover:scale-110"
-                                  title="Resolve"
+                                  title={t('extracted.resolve')}
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -406,7 +407,7 @@ export default function GrievancePage() {
                             <button
                               onClick={(e) => { e.stopPropagation(); deleteGrievance(grievance.id); }}
                               className="p-2 rounded-lg theme-bg-card text-red-600 hover:theme-border-primary transition-all hover:scale-110"
-                              title="Delete"
+                              title={t('extracted.delete')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -430,23 +431,23 @@ export default function GrievancePage() {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">Grievance Summary</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.grievance_summary')} </h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">Total</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold text-amber-600 mb-1">{openCount}</div>
-                  <div className="text-xs theme-text-muted">Urgent</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.urgent')} </div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">Open</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.open_1')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{openCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -459,7 +460,7 @@ export default function GrievancePage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">In Progress</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.in_progress')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{inProgressCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -472,7 +473,7 @@ export default function GrievancePage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">Resolved</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.resolved')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{resolvedCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -495,7 +496,7 @@ export default function GrievancePage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">Grievance Details</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.grievance_details')} </h4>
                     <button
                       onClick={() => setSelectedGrv(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -508,12 +509,12 @@ export default function GrievancePage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Subject</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')} </div>
                       <div className="font-medium theme-text-primary">{selectedGrv.subject}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Description</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')} </div>
                       <div className="theme-text-primary text-sm leading-relaxed">
                         {selectedGrv.description}
                       </div>
@@ -521,7 +522,7 @@ export default function GrievancePage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Status</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedGrv.status)}`}>
                           {getStatusIcon(selectedGrv.status)}
                           {selectedGrv.status}
@@ -529,7 +530,7 @@ export default function GrievancePage() {
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Priority</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')} </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedGrv.priority)}`}>
                           {selectedGrv.priority}
                         </span>
@@ -538,7 +539,7 @@ export default function GrievancePage() {
 
                     {selectedGrv.category && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Category</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.category_1')} </div>
                         <div className="font-medium theme-text-primary capitalize">
                           {selectedGrv.category}
                         </div>
@@ -546,7 +547,7 @@ export default function GrievancePage() {
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">Grievance ID</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.grievance_id')} </div>
                       <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
                         {selectedGrv.id}
                       </div>

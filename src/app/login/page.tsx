@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocale } from '@/context/LocaleContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -31,6 +32,7 @@ function messageFromUnknown(err: unknown): string | null {
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle, user, profile, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLocale();
   const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -409,7 +411,7 @@ export default function LoginPage() {
                 >
                   <Image 
                     src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} 
-                    alt="Nyantra" 
+                    alt={t('extracted.nyantra')} 
                     width={48} 
                     height={48} 
                     className="object-contain"
@@ -472,7 +474,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
+                    placeholder={t('extracted.email_address')}
                     className="w-full px-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-accent-primary transition-all"
                     disabled={isLoading}
                   />
@@ -484,7 +486,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
+                    placeholder={t('extracted.password')}
                     className="w-full px-4 py-3 pr-10 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-accent-primary transition-all"
                     disabled={isLoading}
                   />
@@ -543,7 +545,7 @@ export default function LoginPage() {
                       <path d="M272 107.7c38.9 0 73.9 13.4 101.5 39.6l76-76C407.6 24 345.7 0 272 0 168 0 74.5 58.4 29.7 158.3l90.3 70.4C141.4 155.5 201.3 107.7 272 107.7z" fill="#EA4335"/>
                     </svg>
                   </span>
-                  <span className="theme-text-primary">Continue with Google</span>
+                  <span className="theme-text-primary">{t('extracted.continue_with_google')} </span>
                 </button>
               </div>
 

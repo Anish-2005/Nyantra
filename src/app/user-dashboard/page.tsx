@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocale } from '@/context/LocaleContext';
 
 type Submission = {
   id: string;
@@ -49,6 +50,7 @@ export default function UserDashboard() {
   const [success, setSuccess] = useState<Submission | null>(null);
   const [recent, setRecent] = useState<Submission[]>([]);
   const [activeTab, setActiveTab] = useState<'form' | 'recent'>('form');
+  const { t } = useLocale();
 
   useEffect(() => {
     try {
@@ -229,7 +231,7 @@ export default function UserDashboard() {
                           value={name} 
                           onChange={e => setName(e.target.value)} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Applicant name" 
+                          placeholder={t('extracted.applicant_name_1')} 
                           disabled={anonymous} 
                         />
                       </div>
@@ -263,7 +265,7 @@ export default function UserDashboard() {
                           value={phone} 
                           onChange={e => setPhone(e.target.value)} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Mobile number" 
+                          placeholder={t('extracted.mobile_number')} 
                         />
                       </div>
                       <div>
@@ -275,7 +277,7 @@ export default function UserDashboard() {
                           onChange={e => setAadhaar(e.target.value.replace(/\D/g, ''))} 
                           maxLength={12} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="12-digit Aadhaar" 
+                          placeholder={t('extracted.12digit_aadhaar')} 
                         />
                       </div>
                     </div>
@@ -296,7 +298,7 @@ export default function UserDashboard() {
                         value={firNumber} 
                         onChange={e => setFirNumber(e.target.value)} 
                         className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                        placeholder="FIR or case number" 
+                        placeholder={t('extracted.fir_or_case_number')} 
                       />
                     </div>
 
@@ -309,7 +311,7 @@ export default function UserDashboard() {
                           value={policeStation} 
                           onChange={e => setPoliceStation(e.target.value)} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Police station" 
+                          placeholder={t('extracted.police_station_1')} 
                         />
                       </div>
                       <div>
@@ -320,7 +322,7 @@ export default function UserDashboard() {
                           value={courtCaseId} 
                           onChange={e => setCourtCaseId(e.target.value)} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Case ID" 
+                          placeholder={t('extracted.case_id')} 
                         />
                       </div>
                     </div>
@@ -343,7 +345,7 @@ export default function UserDashboard() {
                           value={amountRequested as string | number} 
                           onChange={e => setAmountRequested(e.target.value === '' ? '' : Number(e.target.value))} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Amount in INR" 
+                          placeholder={t('extracted.amount_in_inr')} 
                         />
                       </div>
                       <div>
@@ -354,7 +356,7 @@ export default function UserDashboard() {
                           value={bankAccount} 
                           onChange={e => setBankAccount(e.target.value.replace(/\D/g, ''))} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="Account number" 
+                          placeholder={t('extracted.account_number')} 
                         />
                       </div>
                     </div>
@@ -368,7 +370,7 @@ export default function UserDashboard() {
                           value={ifsc} 
                           onChange={e => setIfsc(e.target.value.toUpperCase())} 
                           className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder="AAAA0000000" 
+                          placeholder={t('extracted.aaaa0000000')} 
                           maxLength={11} 
                         />
                       </div>
@@ -478,7 +480,7 @@ export default function UserDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <p className="theme-text-muted mb-2">No submissions yet</p>
+                    <p className="theme-text-muted mb-2">{t('extracted.no_submissions_yet')} </p>
                     <p className="text-sm theme-text-muted mb-4">
                       Your applications will appear here once submitted
                     </p>
@@ -568,7 +570,7 @@ export default function UserDashboard() {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-semibold theme-text-primary">Application Submitted</h4>
+                  <h4 className="font-semibold theme-text-primary">{t('extracted.application_submitted')} </h4>
                   <p className="text-sm theme-text-muted">ID: {success.id}</p>
                 </div>
               </div>

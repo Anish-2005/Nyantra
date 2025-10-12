@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
@@ -260,6 +261,7 @@ const mockDisbursements = [
 
 const DisbursementsPage = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
@@ -648,8 +650,8 @@ const DisbursementsPage = () => {
         className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">Disbursements Management</h1>
-          <p className="theme-text-secondary">Track and manage DBT payments under PCR/PoA Acts</p>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.disbursements_management')} </h1>
+          <p className="theme-text-secondary">{t('extracted.track_and_manage_dbt_payments_under_pcrpoa_acts')} </p>
         </div>
         <div className="flex items-center gap-3">
           <motion.button
@@ -659,7 +661,7 @@ const DisbursementsPage = () => {
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t('extracted.export')} </span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -667,7 +669,7 @@ const DisbursementsPage = () => {
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
           >
             <Plus className="w-4 h-4" />
-            <span>New Disbursement</span>
+            <span>{t('extracted.new_disbursement')} </span>
           </motion.button>
         </div>
       </motion.div>
@@ -719,7 +721,7 @@ const DisbursementsPage = () => {
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm theme-text-muted">Total Disbursed</p>
+              <p className="text-sm theme-text-muted">{t('extracted.total_disbursed')} </p>
               <p className="text-2xl font-bold theme-text-primary">{formatCurrency(stats.disbursedAmount)}</p>
             </div>
           </div>
@@ -744,7 +746,7 @@ const DisbursementsPage = () => {
               <Scale className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm theme-text-muted">PCR Act Disbursements</p>
+              <p className="text-sm theme-text-muted">{t('extracted.pcr_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
                 {mockDisbursements.filter(d => d.actType === 'PCR Act').length}
               </p>
@@ -764,7 +766,7 @@ const DisbursementsPage = () => {
               <Heart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm theme-text-muted">PoA Act Disbursements</p>
+              <p className="text-sm theme-text-muted">{t('extracted.poa_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
                 {mockDisbursements.filter(d => d.actType === 'PoA Act').length}
               </p>
@@ -785,17 +787,17 @@ const DisbursementsPage = () => {
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Disbursement Trend</h3>
-            <p className="text-sm theme-text-muted">Monthly disbursement performance</p>
+            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.disbursement_trend')} </h3>
+            <p className="text-sm theme-text-muted">{t('extracted.monthly_disbursement_performance')} </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-xs theme-text-muted">Completed</span>
+              <span className="text-xs theme-text-muted">{t('extracted.completed')} </span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-xs theme-text-muted">Failed</span>
+              <span className="text-xs theme-text-muted">{t('extracted.failed')} </span>
             </div>
           </div>
         </div>
@@ -831,7 +833,7 @@ const DisbursementsPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
             <input
               type="text"
-              placeholder="Search by beneficiary, transaction ID, or district..."
+              placeholder={t('extracted.search_by_beneficiary_transaction_id_or_district')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
@@ -862,7 +864,7 @@ const DisbursementsPage = () => {
             className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
           >
             <Filter className="w-4 h-4" />
-            <span>Filters</span>
+            <span>{t('extracted.filters')} </span>
             {(statusFilter !== 'all' || actTypeFilter !== 'all' || dateFilter !== 'all' || priorityFilter !== 'all') && (
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
             )}
@@ -880,55 +882,55 @@ const DisbursementsPage = () => {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t theme-border-glass">
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Status</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.status')} </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                   >
-                    <option value="all">All Statuses</option>
-                    <option value="completed">Completed</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="failed">Failed</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="all">{t('extracted.all_statuses')} </option>
+                    <option value="completed">{t('extracted.completed')} </option>
+                    <option value="pending">{t('extracted.pending')} </option>
+                    <option value="in-progress">{t('extracted.in_progress')} </option>
+                    <option value="failed">{t('extracted.failed')} </option>
+                    <option value="cancelled">{t('extracted.cancelled')} </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Act Type</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.act_type')} </label>
                   <select
                     value={actTypeFilter}
                     onChange={(e) => setActTypeFilter(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                   >
-                    <option value="all">All Acts</option>
-                    <option value="PCR Act">PCR Act</option>
-                    <option value="PoA Act">PoA Act</option>
+                    <option value="all">{t('extracted.all_acts')} </option>
+                    <option value="PCR Act">{t('extracted.pcr_act')} </option>
+                    <option value="PoA Act">{t('extracted.poa_act')} </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Time Period</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.time_period')} </label>
                   <select
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                   >
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
+                    <option value="all">{t('extracted.all_time')} </option>
+                    <option value="today">{t('extracted.today')} </option>
+                    <option value="week">{t('extracted.this_week')} </option>
+                    <option value="month">{t('extracted.this_month')} </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Priority</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.priority')} </label>
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                   >
-                    <option value="all">All Priorities</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
+                    <option value="all">{t('extracted.all_priorities')} </option>
+                    <option value="high">{t('extracted.high')} </option>
+                    <option value="medium">{t('extracted.medium')} </option>
                     <option value="low">Low</option>
                   </select>
                 </div>
@@ -981,12 +983,12 @@ const DisbursementsPage = () => {
                     <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs theme-text-muted mb-0.5">Relief Amount</p>
+                          <p className="text-xs theme-text-muted mb-0.5">{t('extracted.relief_amount')} </p>
                           <p className="text-lg font-bold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
                         </div>
                         {disbursement.status === 'completed' && (
                           <div className="text-right">
-                            <p className="text-xs theme-text-muted mb-0.5">Net Amount</p>
+                            <p className="text-xs theme-text-muted mb-0.5">{t('extracted.net_amount')} </p>
                             <p className="text-sm font-semibold text-green-400">{formatCurrency(disbursement.netAmount)}</p>
                           </div>
                         )}
@@ -1067,7 +1069,7 @@ const DisbursementsPage = () => {
                         className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        <span>View</span>
+                        <span>{t('extracted.view')} </span>
                       </button>
                       {disbursement.status === 'failed' ? (
                         <button
@@ -1075,7 +1077,7 @@ const DisbursementsPage = () => {
                           className="px-3 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Retry</span>
+                          <span>{t('extracted.retry')} </span>
                         </button>
                       ) : (
                         <button
@@ -1083,7 +1085,7 @@ const DisbursementsPage = () => {
                           className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span>Receipt</span>
+                          <span>{t('extracted.receipt')} </span>
                         </button>
                       )}
                       <button
@@ -1091,7 +1093,7 @@ const DisbursementsPage = () => {
                         className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
-                        <span>More</span>
+                        <span>{t('extracted.more')} </span>
                       </button>
                     </div>
                   </motion.div>
@@ -1103,14 +1105,14 @@ const DisbursementsPage = () => {
               <table className="w-full">
                 <thead className="theme-bg-glass border-b theme-border-glass">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Disbursement ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Beneficiary</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Transaction ID</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Initiated Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.disbursement_id')} </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.transaction_id')} </th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.initiated_date')} </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1376,33 +1378,33 @@ const DisbursementsPage = () => {
               <div className="p-4 sm:p-6 space-y-6"> {/* -> Responsive padding */}
                 {/* Beneficiary Information */}
                 <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">Beneficiary Information</h3>
+                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_information')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                       <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">Beneficiary Name</p>
+                        <p className="text-xs theme-text-muted">{t('extracted.beneficiary_name')} </p>
                         <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p> {/* -> Handles long names */}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                       <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">Aadhaar Number</p>
+                        <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
                         <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p> {/* -> Handles long numbers */}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                       <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">Phone Number</p>
+                        <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
                         <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                       <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">Location</p>
+                        <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
                         <p className="font-medium theme-text-primary break-words">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
                       </div>
                     </div>
@@ -1411,32 +1413,32 @@ const DisbursementsPage = () => {
 
                 {/* Transaction Details */}
                 <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">Transaction Details</h3>
+                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.transaction_details_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Transaction ID</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
                       <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">UTR Number</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
                       <p className="font-medium theme-text-primary font-mono break-all">
                         {selectedDisbursement.utrNumber || 'Not Available'}
                       </p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Payment Method</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
                       <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Relief Amount</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Transaction Fee</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_fee')} </p>
                       <p className="font-medium theme-text-primary">{formatCurrency(selectedDisbursement.transactionFee)}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Net Amount</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.net_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.netAmount)}</p>
                     </div>
                   </div>
@@ -1444,14 +1446,14 @@ const DisbursementsPage = () => {
 
                 {/* Bank Details */}
                 <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">Bank Account Details</h3>
+                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.bank_account_details')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Bank Account Number</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p> {/* -> Handles long account numbers */}
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">IFSC Code</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.ifsc}</p>
                     </div>
                   </div>
@@ -1460,7 +1462,7 @@ const DisbursementsPage = () => {
                 {/* Timeline and Status */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">Disbursement Status</p>
+                    <p className="text-sm theme-text-muted mb-2">{t('extracted.disbursement_status')} </p>
                     <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
                       {(() => {
                         const Icon = getStatusIcon(selectedDisbursement.status);
@@ -1470,31 +1472,31 @@ const DisbursementsPage = () => {
                     </span>
                     {selectedDisbursement.failureReason && (
                       <p className="text-sm theme-text-muted mt-2">
-                        <strong>Failure Reason:</strong> {selectedDisbursement.failureReason}
+                        <strong>{t('extracted.failure_reason')} </strong> {selectedDisbursement.failureReason}
                       </p>
                     )}
                     {selectedDisbursement.retryCount > 0 && (
                       <p className="text-sm theme-text-muted mt-1">
-                        <strong>Retry Attempts:</strong> {selectedDisbursement.retryCount}
+                        <strong>{t('extracted.retry_attempts')} </strong> {selectedDisbursement.retryCount}
                       </p>
                     )}
                   </div>
                   <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">Timeline</p>
+                    <p className="text-sm theme-text-muted mb-2">{t('extracted.timeline_1')} </p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="theme-text-primary">Initiated</span>
+                        <span className="theme-text-primary">{t('extracted.initiated')} </span>
                         <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
                       </div>
                       {selectedDisbursement.completedDate && (
                         <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">Completed</span>
+                          <span className="theme-text-primary">{t('extracted.completed')} </span>
                           <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
                         </div>
                       )}
                       {selectedDisbursement.disbursementDate && (
                         <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">Disbursed</span>
+                          <span className="theme-text-primary">{t('extracted.disbursed')} </span>
                           <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
                         </div>
                       )}
@@ -1504,14 +1506,14 @@ const DisbursementsPage = () => {
 
                 {/* Officer Information */}
                 <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">Officer Information</h3>
+                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.officer_information_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Initiated By</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.initiated_by')} </p>
                       <p className="font-medium theme-text-primary">{selectedDisbursement.initiatedBy}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass">
-                      <p className="text-xs theme-text-muted mb-1">Verified By</p>
+                      <p className="text-xs theme-text-muted mb-1">{t('extracted.verified_by')} </p>
                       <p className="font-medium theme-text-primary">
                         {selectedDisbursement.verifiedBy || 'Pending Verification'}
                       </p>

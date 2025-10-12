@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { useLocale } from '@/context/LocaleContext';
 type Submission = {
   id: string;
   name?: string;
@@ -19,6 +19,7 @@ export default function ApplicationsPage() {
   const [filter, setFilter] = useState<'all' | 'recent' | 'amount'>('all');
   const [selected, setSelected] = useState<Submission | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { t } = useLocale();
 
   useEffect(() => {
     try {
@@ -79,7 +80,7 @@ export default function ApplicationsPage() {
               {/* Header with Filters */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary">Application History</h2>
+                  <h2 className="text-xl font-semibold theme-text-primary">{t('extracted.application_history')} </h2>
                   <p className="theme-text-muted mt-1 text-sm">
                     {filtered.length} of {items.length} application{items.length !== 1 ? 's' : ''}
                   </p>
@@ -140,7 +141,7 @@ export default function ApplicationsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <p className="theme-text-muted mb-2">No applications found</p>
+                      <p className="theme-text-muted mb-2">{t('extracted.no_applications_found')} </p>
                       <p className="text-sm theme-text-muted">
                         {items.length === 0 
                           ? "You haven't submitted any applications yet." 
@@ -222,29 +223,29 @@ export default function ApplicationsPage() {
           <div className="space-y-6">
             {/* Summary Card */}
             <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6">
-              <h3 className="font-semibold theme-text-primary mb-4">Summary</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')} </h3>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{items.length}</div>
-                  <div className="text-xs theme-text-muted">Total</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{recentCount}</div>
-                  <div className="text-xs theme-text-muted">Last 30 days</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.last_30_days')} </div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">Total Amount Requested</div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.total_amount_requested')} </div>
                   <div className="font-semibold theme-text-primary text-lg">
                     ₹{totalAmount.toLocaleString()}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">Most Recent</div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')} </div>
                   <div className="font-medium theme-text-primary text-sm mb-1 truncate">
                     {items[0]?.id ?? '—'}
                   </div>
@@ -265,7 +266,7 @@ export default function ApplicationsPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">Application Details</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.application_details')} </h4>
                     <button
                       onClick={() => setSelected(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -278,7 +279,7 @@ export default function ApplicationsPage() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">Application ID</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.application_id')} </span>
                       <div className="flex items-center gap-2">
                         <code className="text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
                           {selected.id}
@@ -286,7 +287,7 @@ export default function ApplicationsPage() {
                         <button
                           onClick={() => copyToClipboard(selected.id)}
                           className="p-1 rounded theme-text-muted hover:theme-bg-glass transition-colors"
-                          title="Copy ID"
+                          title={t('extracted.copy_id')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -296,33 +297,33 @@ export default function ApplicationsPage() {
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">FIR Number</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.fir_number')} </span>
                       <span className="text-sm font-medium theme-text-primary">{selected.firNumber}</span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">Applicant Name</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.applicant_name')} </span>
                       <span className="text-sm font-medium theme-text-primary">
                         {selected.name ?? (selected.anonymous ? 'Anonymous' : 'Not provided')}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">Amount</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.amount')} </span>
                       <span className="text-sm font-medium theme-text-primary">
                         {selected.amountRequested ? `₹${selected.amountRequested.toLocaleString()}` : 'Not specified'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">Files</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.files')} </span>
                       <span className="text-sm font-medium theme-text-primary">
                         {selected.files?.length ?? 0}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-sm theme-text-muted">Submitted</span>
+                      <span className="text-sm theme-text-muted">{t('extracted.submitted')} </span>
                       <span className="text-sm theme-text-primary">
                         {new Date(selected.createdAt).toLocaleString()}
                       </span>
@@ -371,7 +372,7 @@ export default function ApplicationsPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-medium theme-text-primary">Copied to clipboard!</p>
+                      <p className="text-sm font-medium theme-text-primary">{t('extracted.copied_to_clipboard')} </p>
                     </div>
                   </div>
                 </motion.div>

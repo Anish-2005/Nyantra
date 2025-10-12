@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { useLocale } from '@/context/LocaleContext';
 type Beneficiary = { 
   id: string; 
   name: string; 
@@ -22,6 +22,7 @@ export default function BeneficiariesPage() {
   const [selected, setSelected] = useState<Beneficiary | null>(null);
   const [editing, setEditing] = useState<Beneficiary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useLocale();
 
   useEffect(() => {
     try { 
@@ -130,7 +131,7 @@ export default function BeneficiariesPage() {
                         ? setEditing({...editing, name: e.target.value})
                         : setName(e.target.value)
                       }
-                      placeholder="Enter full name"
+                      placeholder={t('extracted.enter_full_name')}
                       className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       required
                     />
@@ -146,7 +147,7 @@ export default function BeneficiariesPage() {
                         ? setEditing({...editing, relation: e.target.value})
                         : setRelation(e.target.value)
                       }
-                      placeholder="e.g., Spouse, Child, Parent"
+                      placeholder={t('extracted.eg_spouse_child_parent')}
                       className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -178,7 +179,7 @@ export default function BeneficiariesPage() {
                         ? setEditing({...editing, notes: e.target.value})
                         : setNotes(e.target.value)
                       }
-                      placeholder="Additional information"
+                      placeholder={t('extracted.additional_information')}
                       className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -224,7 +225,7 @@ export default function BeneficiariesPage() {
                   <input
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    placeholder="Search beneficiaries..."
+                    placeholder={t('extracted.search_beneficiaries')}
                     className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                   <svg className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,7 +328,7 @@ export default function BeneficiariesPage() {
                                   ? 'bg-white/20 text-white hover:bg-white/30' 
                                   : 'theme-bg-glass theme-text-muted hover:theme-border-primary'
                               }`}
-                              title="Edit beneficiary"
+                              title={t('extracted.edit_beneficiary')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -341,7 +342,7 @@ export default function BeneficiariesPage() {
                                   ? 'bg-white/20 text-white hover:bg-red-400' 
                                   : 'theme-bg-glass theme-text-muted hover:text-red-600'
                               }`}
-                              title="Remove beneficiary"
+                              title={t('extracted.remove_beneficiary')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -366,23 +367,23 @@ export default function BeneficiariesPage() {
               transition={{ delay: 0.2 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">Summary</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')} </h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">Total</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">
                     {new Set(list.map(b => b.relation)).size}
                   </div>
-                  <div className="text-xs theme-text-muted">Relations</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.relation')} s</div>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <div className="text-xs theme-text-muted mb-1">Most Recent</div>
+                <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')} </div>
                 <div className="font-medium theme-text-primary text-sm truncate">
                   {list[0]?.name || '—'}
                 </div>
@@ -402,7 +403,7 @@ export default function BeneficiariesPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">Beneficiary Details</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.beneficiary_details')} </h4>
                     <button
                       onClick={() => setSelected(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -415,20 +416,20 @@ export default function BeneficiariesPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Full Name</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.full_name')} </div>
                       <div className="font-medium theme-text-primary">{selected.name}</div>
                     </div>
 
                     {selected.relation && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Relation</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.relation')} </div>
                         <div className="font-medium theme-text-primary">{selected.relation}</div>
                       </div>
                     )}
 
                     {selected.dob && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Date of Birth</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.date_of_birth')} </div>
                         <div className="font-medium theme-text-primary">
                           {new Date(selected.dob).toLocaleDateString()}
                         </div>
@@ -437,7 +438,7 @@ export default function BeneficiariesPage() {
 
                     {selected.notes && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Notes</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.notes')} </div>
                         <div className="theme-text-primary text-sm leading-relaxed">
                           {selected.notes}
                         </div>
@@ -445,7 +446,7 @@ export default function BeneficiariesPage() {
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">Beneficiary ID</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary_id')} </div>
                       <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
                         {selected.id}
                       </div>

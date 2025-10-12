@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
@@ -316,6 +317,7 @@ const reportTemplates = [
 
 const ReportsPage = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter] = useState('all');
   const [statusFilter] = useState('all');
@@ -680,7 +682,7 @@ const ReportsPage = () => {
               <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Report Hub
               </h1>
-              <p className="theme-text-secondary text-lg">Advanced Analytics & Reporting Platform</p>
+              <p className="theme-text-secondary text-lg">{t('extracted.advanced_analytics_reporting_platform')} </p>
             </div>
           </div>
           <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
@@ -693,11 +695,11 @@ const ReportsPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              aria-label="Print dashboard"
+              aria-label={t('extracted.print_dashboard')}
               className={`flex-1 sm:flex-none px-4 py-2 rounded-xl border flex items-center gap-3 glass-effect focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass text-white'}`}
             >
               <Printer className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`} />
-              <span className="font-semibold text-sm">Print</span>
+              <span className="font-semibold text-sm">{t('extracted.print')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -722,7 +724,7 @@ const ReportsPage = () => {
         >
           {/* Quick Stats */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Report Analytics</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_analytics')} </h3>
             <div className="space-y-4">
               {[
                 { label: 'Total Generated', value: '1,247', trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
@@ -748,7 +750,7 @@ const ReportsPage = () => {
 
           {/* Quick Actions */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
             <div className="space-y-3">
               {[
                 { label: 'Generate Disbursement', icon: FilePlus, color: 'bg-blue-500/20 text-blue-400' },
@@ -770,7 +772,7 @@ const ReportsPage = () => {
 
           {/* Report Categories */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Categories</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')} </h3>
             <div className="space-y-3">
               {[
                 { name: 'Financial', count: 45, color: 'bg-green-500' },
@@ -806,7 +808,7 @@ const ReportsPage = () => {
         <FileText className="w-4 h-4 text-white" />
       </div>
       <div>
-        <h2 className="text-lg sm:text-xl font-bold theme-text-primary">Recent Reports</h2>
+        <h2 className="text-lg sm:text-xl font-bold theme-text-primary">{t('extracted.recent_reports')} </h2>
   <p className="text-sm theme-text-muted">{viewMode === 'templates' ? `${reportTemplates.length} templates` : `${filteredReports.length} reports found`}</p>
       </div>
     </div>
@@ -817,7 +819,7 @@ const ReportsPage = () => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
         <input
           type="text"
-          placeholder="Search reports..."
+          placeholder={t('extracted.search_reports')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
@@ -894,7 +896,7 @@ const ReportsPage = () => {
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <p className="text-sm font-bold theme-text-primary">{report.recordCount ?? '--'}</p>
-                    <p className="theme-text-muted text-xs">Records</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.records')} </p>
                   </div>
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <div className="flex items-center justify-center gap-1 mb-1">
@@ -904,11 +906,11 @@ const ReportsPage = () => {
                       })()}
                       <p className="text-sm font-bold theme-text-primary">{formatFileSize(report.fileSize)}</p>
                     </div>
-                    <p className="theme-text-muted text-xs">Size</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.size')} </p>
                   </div>
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <p className="text-sm font-bold theme-text-primary">{report.downloadCount}</p>
-                    <p className="theme-text-muted text-xs">Downloads</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.downloads')} </p>
                   </div>
                 </div>
 
@@ -979,7 +981,7 @@ const ReportsPage = () => {
       className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Performance Metrics</h3>
+        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')} </h3>
         <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
       </div>
       <div className="space-y-3">
@@ -1013,7 +1015,7 @@ const ReportsPage = () => {
       className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Recent Activity</h3>
+        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity_1')} </h3>
         <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
       </div>
       <div className="space-y-3">
@@ -1081,7 +1083,7 @@ const ReportsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedReport(null)} className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors" aria-label="Close report details">
+                  <button onClick={() => setSelectedReport(null)} className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors" aria-label={t('extracted.close_report_details')}>
                     <X className="w-5 h-5 sm:w-6 sm:h-6" />
                   </button>
                 </div>
@@ -1115,8 +1117,8 @@ const ReportsPage = () => {
                 {/* Content would go here based on active tab */}
                 <div className="text-center py-12">
                   <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold theme-text-primary mb-2">Report Details</h3>
-                  <p className="theme-text-muted text-lg">Select a tab to view different aspects of this report</p>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.report_details')} </h3>
+                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_view_different_aspects_of_this_report')} </p>
                 </div>
               </div>
 

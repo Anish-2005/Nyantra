@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocale } from '@/context/LocaleContext';
 
 type Feedback = {
   id: string;
@@ -24,6 +25,7 @@ export default function FeedbackPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'grievance' | 'feedback'>('all');
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useLocale();
 
   useEffect(() => {
     try {
@@ -181,7 +183,7 @@ export default function FeedbackPage() {
               animate={{ opacity: 1, y: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h2 className="text-xl font-semibold theme-text-primary mb-4">Submit New</h2>
+              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.submit_new')} </h2>
 
               <form onSubmit={submitFeedback} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,7 +242,7 @@ export default function FeedbackPage() {
                   <input
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
-                    placeholder="Brief summary of your feedback or grievance"
+                    placeholder={t('extracted.brief_summary_of_your_feedback_or_grievance')}
                     className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     required
                   />
@@ -254,7 +256,7 @@ export default function FeedbackPage() {
                   <textarea
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="Please provide detailed information..."
+                    placeholder={t('extracted.please_provide_detailed_information')}
                     rows={4}
                     className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
                     required
@@ -306,7 +308,7 @@ export default function FeedbackPage() {
         <input
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          placeholder="Search submissions..."
+          placeholder={t('extracted.search_submissions')}
           className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         />
         <svg className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,7 +413,7 @@ export default function FeedbackPage() {
                   <button
                     onClick={e => { e.stopPropagation(); setStatus(feedback.id, 'in-review'); }}
                     className="p-2 rounded-lg theme-bg-card theme-text-muted hover:theme-border-primary transition-all hover:scale-110"
-                    title="Mark in review"
+                    title={t('extracted.mark_in_review')}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -422,7 +424,7 @@ export default function FeedbackPage() {
                   <button
                     onClick={e => { e.stopPropagation(); setStatus(feedback.id, 'resolved'); }}
                     className="p-2 rounded-lg theme-bg-card text-green-600 hover:theme-border-primary transition-all hover:scale-110"
-                    title="Resolve"
+                    title={t('extracted.resolve')}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -432,7 +434,7 @@ export default function FeedbackPage() {
                 <button
                   onClick={e => { e.stopPropagation(); deleteFeedback(feedback.id); }}
                   className="p-2 rounded-lg theme-bg-card text-red-600 hover:theme-border-primary transition-all hover:scale-110"
-                  title="Delete"
+                  title={t('extracted.delete')}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -458,23 +460,23 @@ export default function FeedbackPage() {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">Submission Summary</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.submission_summary')} </h3>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">Total</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold text-orange-600 mb-1">{grievanceCount}</div>
-                  <div className="text-xs theme-text-muted">Grievances</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.grievances')} </div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">Open</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.open_1')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{openCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -487,7 +489,7 @@ export default function FeedbackPage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">In Review</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.in_review')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{inReviewCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -500,7 +502,7 @@ export default function FeedbackPage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">Resolved</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.resolved')} </span>
                     <span className="text-sm font-semibold theme-text-primary">{resolvedCount}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -523,7 +525,7 @@ export default function FeedbackPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">Submission Details</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.submission_details')} </h4>
                     <button
                       onClick={() => setSelectedFeedback(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -536,12 +538,12 @@ export default function FeedbackPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Subject</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')} </div>
                       <div className="font-medium theme-text-primary">{selectedFeedback.subject}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Message</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.message_1')} </div>
                       <div className="theme-text-primary text-sm leading-relaxed">
                         {selectedFeedback.message}
                       </div>
@@ -549,14 +551,14 @@ export default function FeedbackPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Type</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.type_2')} </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(selectedFeedback.type)}`}>
                           {selectedFeedback.type}
                         </span>
                       </div>
 
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Status</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedFeedback.status)}`}>
                           {getStatusIcon(selectedFeedback.status)}
                           {selectedFeedback.status}
@@ -566,7 +568,7 @@ export default function FeedbackPage() {
 
                     {selectedFeedback.priority && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Priority</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')} </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedFeedback.priority)}`}>
                           {selectedFeedback.priority}
                         </span>
@@ -574,7 +576,7 @@ export default function FeedbackPage() {
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">Submission ID</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.submission_id')} </div>
                       <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
                         {selectedFeedback.id}
                       </div>

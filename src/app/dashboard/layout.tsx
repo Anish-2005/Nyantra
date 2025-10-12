@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { theme, toggleTheme } = useTheme();
     // Slightly stronger dropdown backgrounds for better contrast
     const dropdownSolidBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.99)' : 'rgba(255, 255, 255, 0.99)';
+    const { t } = useLocale();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
@@ -19,14 +21,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [notificationOpen, setNotificationOpen] = useState(false);
     
     const navigationItems = [
-        { id: 'overview', label: 'Dashboard', icon: Home },
-        { id: 'applications', label: 'Applications', icon: FileText },
-        { id: 'beneficiaries', label: 'Beneficiaries', icon: Users },
-        { id: 'disbursements', label: 'Disbursements', icon: Wallet },
-        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-        { id: 'grievance', label: 'Grievance', icon: MessageCircle },
-        { id: 'integrations', label: 'Integrations', icon: Database },
-        { id: 'reports', label: 'Reports', icon: DownloadCloud }
+        { id: 'overview', label: t('extracted.dashboard'), icon: Home },
+        { id: 'applications', label: t('extracted.applications'), icon: FileText },
+        { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
+        { id: 'disbursements', label: t('extracted.disbursements'), icon: Wallet },
+        { id: 'analytics', label: t('extracted.analytics_reports'), icon: BarChart3 },
+        { id: 'grievance', label: t('extracted.grievance_hub') || t('extracted.grievance'), icon: MessageCircle },
+    { id: 'integrations', label: t('nav.integrations'), icon: Database },
+        { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud }
     ];
     
     const router = useRouter();
@@ -180,7 +182,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <button
                                     onClick={() => setSidebarOpen(true)}
                                     className="lg:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                                    aria-label="Open sidebar"
+                                    aria-label={t('extracted.open_sidebar')}
                                 >
                                     <Menu className="w-5 h-5 theme-text-primary" />
                                 </button>
@@ -211,7 +213,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className="p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    aria-label="Toggle theme"
+                                    aria-label={t('extracted.toggle_theme')}
                                 >
                                     {theme === 'dark' ? (
                                         <Sun className="w-5 h-5 theme-text-primary" />
@@ -244,13 +246,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 style={{ background: dropdownSolidBg }}
                                             >
                                                 <div className="p-3 border-b theme-border-glass">
-                                                    <h3 className="font-semibold theme-text-primary">Notifications</h3>
+                                                    <h3 className="font-semibold theme-text-primary">{t('extracted.notifications_1')} </h3>
                                                 </div>
                                                 <div className="max-h-96 overflow-y-auto">
                                                     {[1, 2, 3].map((item) => (
                                                         <div key={item} className="p-3 border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors">
-                                                            <p className="text-sm theme-text-primary">New application requires review</p>
-                                                            <p className="text-xs theme-text-muted mt-1">2 hours ago</p>
+                                                            <p className="text-sm theme-text-primary">{t('extracted.new_application_requires_review')} </p>
+                                                            <p className="text-xs theme-text-muted mt-1">{t('extracted.2_hours_ago')} </p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -272,7 +274,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         </div>
                                         <div className="hidden sm:block text-left">
                                             <p className="text-sm font-medium theme-text-primary">{displayName}</p>
-                                            <p className="text-xs theme-text-muted">Administrator</p>
+                                            <p className="text-xs theme-text-muted">{t('extracted.administrator')} </p>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                                     </motion.button>
@@ -312,9 +314,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {/* Breadcrumb Section */}
                         <div className="border-t theme-border-glass px-4 lg:px-6 py-2">
                             <div className="flex items-center gap-2 text-sm theme-text-muted">
-                                <span>Dashboard</span>
+                                <span>{t('extracted.dashboard')} </span>
                                 <ChevronDown className="w-3 h-3 rotate-270" />
-                                <span className="theme-text-primary capitalize">{activeTab.replace('-', ' ')}</span>
+                                <span className="theme-text-primary capitalize">{(
+                                    // try common keys first
+                                    activeTab === 'overview' ? t('extracted.dashboard') :
+                                    activeTab === 'analytics' ? t('extracted.analytics_reports') :
+                                    activeTab === 'applications' ? t('extracted.applications') :
+                                    activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
+                                    activeTab === 'disbursements' ? t('extracted.disbursements') :
+                                    activeTab === 'grievance' ? (t('extracted.grievance_hub') || t('extracted.grievance')) :
+                                    activeTab === 'integrations' ? t('extracted.integrations') :
+                                    activeTab === 'reports' ? (t('extracted.recent_reports') || 'Reports') :
+                                    // fallback: humanize id
+                                    activeTab.replace('-', ' ')
+                                )}</span>
                             </div>
                         </div>
                     </header>

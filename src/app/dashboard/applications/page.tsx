@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import {
@@ -100,6 +101,7 @@ const mockApplications = [
 
 const ApplicationsPage = () => {
     const { theme } = useTheme();
+    const { t } = useLocale();
     // Deterministic formatting helpers to avoid SSR/client hydration mismatches
     const formatDate = (d?: string | Date) => {
         if (!d) return '';
@@ -437,8 +439,8 @@ const ApplicationsPage = () => {
                 className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
             >
                 <div>
-                    <h1 className="text-3xl font-bold theme-text-primary mb-2">Applications Management</h1>
-                    <p className="theme-text-secondary">Track and manage DBT applications under PCR/PoA Acts</p>
+                    <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.applications_management')} </h1>
+                    <p className="theme-text-secondary">{t('extracted.track_and_manage_dbt_applications_under_pcrpoa_acts')} </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <motion.button
@@ -448,7 +450,7 @@ const ApplicationsPage = () => {
                         onClick={() => window.print()}
                     >
                         <Download className="w-4 h-4" />
-                        <span className="hidden sm:inline">Export</span>
+                        <span className="hidden sm:inline">{t('extracted.export')} </span>
                     </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -456,7 +458,7 @@ const ApplicationsPage = () => {
                         className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>New Application</span>
+                        <span>{t('extracted.new_application')} </span>
                     </motion.button>
                 </div>
             </motion.div>
@@ -503,7 +505,7 @@ const ApplicationsPage = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
                         <input
                             type="text"
-                            placeholder="Search by name, ID, or district..."
+                            placeholder={t('extracted.search_by_name_id_or_district')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
@@ -534,7 +536,7 @@ const ApplicationsPage = () => {
                         className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
                     >
                         <Filter className="w-4 h-4" />
-                        <span>Filters</span>
+                        <span>{t('extracted.filters')} </span>
                         {(statusFilter !== 'all' || actTypeFilter !== 'all' || priorityFilter !== 'all') && (
                             <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                         )}
@@ -552,42 +554,42 @@ const ApplicationsPage = () => {
                         >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">Status</label>
+                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.status')} </label>
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                                     >
-                                        <option value="all">All Statuses</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="in-review">In Review</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="rejected">Rejected</option>
-                                        <option value="documents-required">Documents Required</option>
+                                        <option value="all">{t('extracted.all_statuses')} </option>
+                                        <option value="pending">{t('extracted.pending')} </option>
+                                        <option value="in-review">{t('extracted.in_review')} </option>
+                                        <option value="approved">{t('extracted.approved')} </option>
+                                        <option value="rejected">{t('extracted.rejected')} </option>
+                                        <option value="documents-required">{t('extracted.documents_required')} </option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">Act Type</label>
+                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.act_type')} </label>
                                     <select
                                         value={actTypeFilter}
                                         onChange={(e) => setActTypeFilter(e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                                     >
-                                        <option value="all">All Acts</option>
-                                        <option value="PCR Act">PCR Act</option>
-                                        <option value="PoA Act">PoA Act</option>
+                                        <option value="all">{t('extracted.all_acts')} </option>
+                                        <option value="PCR Act">{t('extracted.pcr_act')} </option>
+                                        <option value="PoA Act">{t('extracted.poa_act')} </option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">Priority</label>
+                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.priority')} </label>
                                     <select
                                         value={priorityFilter}
                                         onChange={(e) => setPriorityFilter(e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
                                     >
-                                        <option value="all">All Priorities</option>
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
+                                        <option value="all">{t('extracted.all_priorities')} </option>
+                                        <option value="high">{t('extracted.high')} </option>
+                                        <option value="medium">{t('extracted.medium')} </option>
                                         <option value="low">Low</option>
                                     </select>
                                 </div>
@@ -611,14 +613,14 @@ const ApplicationsPage = () => {
                             <table className="w-full min-w-[700px] border-collapse">
                                 <thead className="theme-bg-glass border-b theme-border-glass">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Application ID</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Applicant</th>
-                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">District</th>
-                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Act Type</th>
-                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Amount</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Status</th>
-                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Priority</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')} </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')} </th>
+                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
+                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
+                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
+                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')} </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y theme-border-glass">
@@ -692,9 +694,9 @@ const ApplicationsPage = () => {
 
                                     <div className="space-y-1 text-sm theme-text-secondary">
                                         <div><strong>ID:</strong> {app.id}</div>
-                                        <div><strong>District:</strong> {app.district}, {app.state}</div>
-                                        <div><strong>Act Type:</strong> {app.actType}</div>
-                                        <div><strong>Amount:</strong> {formatCurrency(app.amount)}</div>
+                                        <div><strong>{t('extracted.district_1')} </strong> {app.district}, {app.state}</div>
+                                        <div><strong>{t('extracted.act_type_1')} </strong> {app.actType}</div>
+                                        <div><strong>{t('extracted.amount_1')} </strong> {formatCurrency(app.amount)}</div>
                                         <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
                                             {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3 mr-1" /> })()}
                                             {app.status.replace('-', ' ')}
@@ -856,7 +858,7 @@ const ApplicationsPage = () => {
                             <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
                                 <div>
                                     <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication.id}</h2>
-                                    <p className="theme-text-muted">Application Details</p>
+                                    <p className="theme-text-muted">{t('extracted.application_details')} </p>
                                 </div>
                                 <button
                                     onClick={() => setSelectedApplication(null)}
@@ -869,33 +871,33 @@ const ApplicationsPage = () => {
                             <div className="p-6 space-y-6">
                                 {/* Applicant Information */}
                                 <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Applicant Information</h3>
+                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.applicant_information_1')} </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                                             <User className="w-5 h-5 theme-text-muted" />
                                             <div>
-                                                <p className="text-xs theme-text-muted">Full Name</p>
+                                                <p className="text-xs theme-text-muted">{t('extracted.full_name')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                                             <Phone className="w-5 h-5 theme-text-muted" />
                                             <div>
-                                                <p className="text-xs theme-text-muted">Phone Number</p>
+                                                <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                                             <FileText className="w-5 h-5 theme-text-muted" />
                                             <div>
-                                                <p className="text-xs theme-text-muted">Aadhaar Number</p>
+                                                <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                                             <MapPin className="w-5 h-5 theme-text-muted" />
                                             <div>
-                                                <p className="text-xs theme-text-muted">Location</p>
+                                                <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.district}, {selectedApplication.state}</p>
                                             </div>
                                         </div>
@@ -904,30 +906,30 @@ const ApplicationsPage = () => {
 
                                 {/* Application Details */}
                                 <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Application Details</h3>
+                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.application_details')} </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Act Type</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
                                         </div>
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Relief Amount</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                                             <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
                                         </div>
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Incident Date</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')} </p>
                                             <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
                                         </div>
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Application Date</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.application_date')} </p>
                                             <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
                                         </div>
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Assigned Officer</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.assigned_officer')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer}</p>
                                         </div>
                                         <div className="p-3 rounded-lg theme-bg-glass">
-                                            <p className="text-xs theme-text-muted mb-1">Documents Uploaded</p>
+                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.documents_uploaded')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.documents} files</p>
                                         </div>
                                     </div>
@@ -936,7 +938,7 @@ const ApplicationsPage = () => {
                                 {/* Status and Priority */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                                        <p className="text-sm theme-text-muted mb-2">Current Status</p>
+                                        <p className="text-sm theme-text-muted mb-2">{t('extracted.current_status')} </p>
                                         <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedApplication.status)}`}>
                                             {(() => {
                                                 const Icon = getStatusIcon(selectedApplication.status);
@@ -946,7 +948,7 @@ const ApplicationsPage = () => {
                                         </span>
                                     </div>
                                     <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                                        <p className="text-sm theme-text-muted mb-2">Priority Level</p>
+                                        <p className="text-sm theme-text-muted mb-2">{t('extracted.priority_level')} </p>
                                         <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getPriorityColor(selectedApplication.priority)}`}>
                                             <AlertTriangle className="w-4 h-4" />
                                             {selectedApplication.priority.toUpperCase()}
@@ -956,7 +958,7 @@ const ApplicationsPage = () => {
 
                                 {/* Documents Section */}
                                 <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Uploaded Documents</h3>
+                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.uploaded_documents')} </h3>
                                     <div className="space-y-2">
                                         {['FIR Copy', 'Medical Certificate', 'Identity Proof', 'Income Certificate'].map((doc, idx) => (
                                             <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass hover:theme-border-glass border border-transparent transition-all">
@@ -966,7 +968,7 @@ const ApplicationsPage = () => {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium theme-text-primary">{doc}</p>
-                                                        <p className="text-xs theme-text-muted">PDF • 2.4 MB</p>
+                                                        <p className="text-xs theme-text-muted">{t('extracted.pdf_24_mb')} </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -984,7 +986,7 @@ const ApplicationsPage = () => {
 
                                 {/* Timeline */}
                                 <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">Application Timeline</h3>
+                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.application_timeline')} </h3>
                                     <div className="space-y-4">
                                         {[
                                             { date: selectedApplication.applicationDate, action: 'Application Submitted', status: 'completed' },

@@ -3,6 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { 
@@ -18,6 +19,7 @@ import {
 export default function ChooseRolePage() {
   const { user, profile, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLocale();
   const router = useRouter();
 
   React.useEffect(() => {
@@ -198,7 +200,7 @@ export default function ChooseRolePage() {
                 >
                   <Image 
                     src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} 
-                    alt="Nyantra" 
+                    alt={t('extracted.nyantra')} 
                     width={48} 
                     height={48} 
                     className="object-contain"
@@ -253,7 +255,7 @@ export default function ChooseRolePage() {
                       <User className="w-6 h-6 text-accent-gradient" />
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="font-semibold theme-text-primary">I&apos;m a User</h3>
+                      <h3 className="font-semibold theme-text-primary">{t('extracted.iaposm_a_user')} </h3>
                       <p className="text-sm theme-text-muted mt-1">
                         Access benefits and services as a beneficiary
                       </p>
@@ -275,7 +277,7 @@ export default function ChooseRolePage() {
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="font-semibold">I&apos;m an Officer</h3>
+                      <h3 className="font-semibold">{t('extracted.iaposm_an_officer')} </h3>
                       <p className="text-sm text-white/80 mt-1">
                         Manage and oversee platform operations
                       </p>
@@ -292,11 +294,11 @@ export default function ChooseRolePage() {
               >
                 <div className="text-center theme-text-muted">
                   <User className="w-4 h-4 mx-auto mb-1" />
-                  <p>For beneficiaries receiving services and benefits</p>
+                  <p>{t('extracted.for_beneficiaries_receiving_services_and_benefits')} </p>
                 </div>
                 <div className="text-center theme-text-muted">
                   <Users className="w-4 h-4 mx-auto mb-1" />
-                  <p>For administrators managing the platform</p>
+                  <p>{t('extracted.for_administrators_managing_the_platform')} </p>
                 </div>
               </motion.div>
 

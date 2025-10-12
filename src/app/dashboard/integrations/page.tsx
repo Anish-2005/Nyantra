@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,Download, Plus, Eye, Edit,
@@ -50,12 +51,15 @@ const PlatformLogos = {
       <path d="M50 40 L50 60 M40 50 L60 50" stroke="#7C3AED" strokeWidth="3" />
     </svg>
   ),
-  NSDL: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
-      <rect x="20" y="20" width="60" height="60" rx="5" fill="#059669" />
-      <text x="50" y="55" textAnchor="middle" fill="#FFFFFF" fontSize="20" fontWeight="bold">NSDL</text>
-    </svg>
-  ),
+  NSDL: () => {
+    const { t } = useLocale();
+    return (
+      <svg viewBox="0 0 100 100" className="w-6 h-6">
+        <rect x="20" y="20" width="60" height="60" rx="5" fill="#059669" />
+        <text x="50" y="55" textAnchor="middle" fill="#FFFFFF" fontSize="20" fontWeight="bold">{t('extracted.nsdl')} </text>
+      </svg>
+    );
+  },
   NPCI: () => (
     <svg viewBox="0 0 100 100" className="w-6 h-6">
       <circle cx="50" cy="50" r="40" fill="#2563EB" />
@@ -444,6 +448,7 @@ const mockIntegrations = [
 
 const IntegrationsPage = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -783,7 +788,7 @@ const IntegrationsPage = () => {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 GovConnect
               </h1>
-              <p className="theme-text-secondary text-sm sm:text-base">Unified Government Integration Platform</p>
+              <p className="theme-text-secondary text-sm sm:text-base">{t('extracted.unified_government_integration_platform')} </p>
             </div>
           </div>
           <p className="theme-text-muted max-w-full sm:max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base">
@@ -795,10 +800,10 @@ const IntegrationsPage = () => {
           <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              aria-label="Export report"
+              aria-label={t('extracted.export_report_1')}
               className={`w-full sm:w-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl border glass-effect focus:outline-none focus:ring-2 focus:ring-offset-2 ${theme === 'light' ? 'theme-bg-glass theme-border-glass text-black focus:ring-black/40' : 'theme-bg-glass theme-border-glass theme-text-primary focus:ring-white/20'}`}>
               <Download className={`w-5 h-5 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
-              <span className={`font-semibold ${theme === 'light' ? 'text-black' : 'theme-text-primary'}`}>Export Report</span>
+              <span className={`font-semibold ${theme === 'light' ? 'text-black' : 'theme-text-primary'}`}>{t('extracted.export_report')} </span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -806,7 +811,7 @@ const IntegrationsPage = () => {
             className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-xl text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
-            <span className="font-semibold">New Integration</span>
+            <span className="font-semibold">{t('extracted.new_integration')} </span>
           </motion.button>
         </div>
       </motion.div>
@@ -853,13 +858,13 @@ const IntegrationsPage = () => {
         >
           {/* Search Box */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Search & Filter</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.search_filter')} </h3>
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
                 <input
                   type="text"
-                  placeholder="Search integrations..."
+                  placeholder={t('extracted.search_integrations')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
@@ -869,44 +874,44 @@ const IntegrationsPage = () => {
               {/* Quick Filters */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Status</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.status')} </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="all">{t('extracted.all_status')} </option>
+                    <option value="active">{t('extracted.active')} </option>
+                    <option value="inactive">{t('extracted.inactive')} </option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Category</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.category_1')} </label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
-                    <option value="all">All Categories</option>
-                    <option value="identity-verification">Identity</option>
-                    <option value="document-verification">Document</option>
-                    <option value="payment-services">Payments</option>
-                    <option value="banking-services">Banking</option>
+                    <option value="all">{t('extracted.all_categories')} </option>
+                    <option value="identity-verification">{t('extracted.identity')} </option>
+                    <option value="document-verification">{t('extracted.document')} </option>
+                    <option value="payment-services">{t('extracted.payments')} </option>
+                    <option value="banking-services">{t('extracted.banking')} </option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm theme-text-muted mb-2">Health</label>
+                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.health')} </label>
                   <select
                     value={healthFilter}
                     onChange={(e) => setHealthFilter(e.target.value)}
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
-                    <option value="all">All Health</option>
-                    <option value="excellent">Excellent</option>
-                    <option value="good">Good</option>
-                    <option value="fair">Fair</option>
+                    <option value="all">{t('extracted.all_health')} </option>
+                    <option value="excellent">{t('extracted.excellent')} </option>
+                    <option value="good">{t('extracted.good')} </option>
+                    <option value="fair">{t('extracted.fair')} </option>
                   </select>
                 </div>
               </div>
@@ -915,7 +920,7 @@ const IntegrationsPage = () => {
 
           {/* Category Overview */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Categories</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')} </h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count]) => {
                 const Icon = getCategoryIcon(category);
@@ -1013,15 +1018,15 @@ const IntegrationsPage = () => {
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
-                    <p className="theme-text-muted text-xs">Success</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.success')} </p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
-                    <p className="theme-text-muted text-xs">Response</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.response')} </p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
-                    <p className="theme-text-muted text-xs">Endpoints</p>
+                    <p className="theme-text-muted text-xs">{t('extracted.endpoints')} </p>
                   </div>
                 </div>
 
@@ -1156,7 +1161,7 @@ const IntegrationsPage = () => {
             <button
               onClick={() => setSelectedIntegration(null)}
               className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors"
-              aria-label="Close"
+              aria-label={t('extracted.close')}
             >
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
@@ -1196,13 +1201,13 @@ const IntegrationsPage = () => {
               {/* Overview Header */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold theme-text-primary mb-4">Integration Overview</h3>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-4">{t('extracted.integration_overview')} </h3>
                   <p className="theme-text-primary text-lg leading-relaxed">{selectedIntegration.description}</p>
                 </div>
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <FileText className="w-6 h-6 theme-text-primary" />
-                    <h4 className="text-lg font-semibold theme-text-primary">Documentation</h4>
+                    <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.documentation')} </h4>
                   </div>
                   <a 
                     href={selectedIntegration.documentation} 
@@ -1211,7 +1216,7 @@ const IntegrationsPage = () => {
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    <span className="font-semibold">View API Documentation</span>
+                    <span className="font-semibold">{t('extracted.view_api_documentation')} </span>
                   </a>
                 </div>
               </div>
@@ -1239,21 +1244,21 @@ const IntegrationsPage = () => {
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-3">
                     <Clock className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">Last Sync</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.last_sync')} </h4>
                   </div>
                   <p className="text-lg theme-text-primary font-mono">{selectedIntegration.lastSync}</p>
                 </div>
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-3">
                     <RefreshCw className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">Next Sync</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.next_sync')} </h4>
                   </div>
                   <p className="text-lg theme-text-primary font-mono">{selectedIntegration.nextSync}</p>
                 </div>
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-3">
                     <Timer className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">Frequency</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.frequency')} </h4>
                   </div>
                   <p className="text-lg theme-text-primary font-semibold capitalize">{selectedIntegration.syncFrequency}</p>
                 </div>
@@ -1261,7 +1266,7 @@ const IntegrationsPage = () => {
 
               {/* Usage Statistics */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">Usage Statistics</h3>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.usage_statistics_1')} </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     { label: 'Monthly Requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
@@ -1283,7 +1288,7 @@ const IntegrationsPage = () => {
             <div className="space-y-8">
               {/* API Configuration */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">API Configuration</h3>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.api_configuration_1')} </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
                     { label: 'Authentication Type', value: selectedIntegration.config.authType, icon: Shield },
@@ -1304,20 +1309,20 @@ const IntegrationsPage = () => {
 
               {/* Security Information */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">Security & Compliance</h3>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.security_compliance')} </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-4">
                       <Shield className="w-6 h-6 theme-text-primary" />
-                      <h4 className="text-lg font-semibold theme-text-primary">Security</h4>
+                      <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.security')} </h4>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm theme-text-muted mb-1">Certification</p>
+                        <p className="text-sm theme-text-muted mb-1">{t('extracted.certification')} </p>
                         <p className="theme-text-primary font-semibold">{selectedIntegration.security}</p>
                       </div>
                       <div>
-                        <p className="text-sm theme-text-muted mb-1">Encryption</p>
+                        <p className="text-sm theme-text-muted mb-1">{t('extracted.encryption')} </p>
                         <p className="theme-text-primary font-semibold">{selectedIntegration.dataEncryption}</p>
                       </div>
                     </div>
@@ -1326,7 +1331,7 @@ const IntegrationsPage = () => {
                   <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-4">
                       <Scale className="w-6 h-6 theme-text-primary" />
-                      <h4 className="text-lg font-semibold theme-text-primary">Compliance</h4>
+                      <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.compliance')} </h4>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {selectedIntegration.compliance.map((comp, idx) => (
@@ -1343,7 +1348,7 @@ const IntegrationsPage = () => {
               <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                 <div className="flex items-center gap-3 mb-4">
                   <Key className="w-6 h-6 theme-text-primary" />
-                  <h4 className="text-lg font-semibold theme-text-primary">API Credentials</h4>
+                  <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.api_credentials')} </h4>
                 </div>
                 <div className="flex items-center gap-4">
                   <code className="flex-1 px-4 py-3 theme-bg-card rounded-xl theme-text-primary font-mono text-lg">
@@ -1384,7 +1389,7 @@ const IntegrationsPage = () => {
 
               {/* Response Time Distribution */}
               <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                <h4 className="text-lg font-semibold theme-text-primary mb-4">Response Time Distribution</h4>
+                <h4 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.response_time_distribution_1')} </h4>
                 <div className="space-y-3">
                   {[
                     { range: '< 1s', percentage: 65, color: 'bg-green-400' },
@@ -1415,25 +1420,25 @@ const IntegrationsPage = () => {
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <Shield className="w-6 h-6 theme-text-primary" />
-                    <h4 className="text-lg font-semibold theme-text-primary">Security Status</h4>
+                    <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.security_status')} </h4>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="theme-text-muted">Encryption</span>
+                      <span className="theme-text-muted">{t('extracted.encryption')} </span>
                       <span className="flex items-center gap-2 text-green-400">
                         <CheckCircle className="w-4 h-4" />
                         Active
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="theme-text-muted">Certificate</span>
+                      <span className="theme-text-muted">{t('extracted.certificate')} </span>
                       <span className="flex items-center gap-2 text-green-400">
                         <CheckCircle className="w-4 h-4" />
                         Valid
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="theme-text-muted">Audit Logging</span>
+                      <span className="theme-text-muted">{t('extracted.audit_logging')} </span>
                       <span className="flex items-center gap-2 text-green-400">
                         <CheckCircle className="w-4 h-4" />
                         Enabled
@@ -1445,7 +1450,7 @@ const IntegrationsPage = () => {
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <Scale className="w-6 h-6 theme-text-primary" />
-                    <h4 className="text-lg font-semibold theme-text-primary">Compliance</h4>
+                    <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.compliance')} </h4>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {selectedIntegration.compliance.map((comp, idx) => (
@@ -1460,7 +1465,7 @@ const IntegrationsPage = () => {
 
               {/* Security Features */}
               <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                <h4 className="text-lg font-semibold theme-text-primary mb-4">Security Features</h4>
+                <h4 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.security_features_1')} </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { feature: 'TLS 1.3 Encryption', status: 'Enabled', icon: Lock },
@@ -1481,12 +1486,12 @@ const IntegrationsPage = () => {
           {activeTab === 'logs' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold theme-text-primary">Recent Activity Logs</h3>
+                <h3 className="text-2xl font-bold theme-text-primary">{t('extracted.recent_activity_logs')} </h3>
                 <div className="flex items-center gap-2">
                   <select className="px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary">
-                    <option>All Activities</option>
-                    <option>Errors Only</option>
-                    <option>Success Only</option>
+                    <option>{t('extracted.all_activities')} </option>
+                    <option>{t('extracted.errors_only')} </option>
+                    <option>{t('extracted.success_only')} </option>
                   </select>
                 </div>
               </div>
@@ -1542,7 +1547,7 @@ const IntegrationsPage = () => {
               {/* Usage Trends */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <h4 className="text-lg font-semibold theme-text-primary mb-4">Usage Trends (30d)</h4>
+                  <h4 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.usage_trends_30d')} </h4>
                   <div className="space-y-4">
                     {[
                       { period: 'Last 7 days', trend: '+12%', color: 'text-green-400' },
@@ -1558,7 +1563,7 @@ const IntegrationsPage = () => {
                 </div>
 
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <h4 className="text-lg font-semibold theme-text-primary mb-4">Performance Score</h4>
+                  <h4 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.performance_score')} </h4>
                   <div className="flex items-center justify-center">
                     <div className="relative w-32 h-32">
                       <div className="w-full h-full rounded-full border-8 border-blue-500/20 flex items-center justify-center">
@@ -1582,8 +1587,8 @@ const IntegrationsPage = () => {
               className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
             >
               <Wifi className="w-5 h-5" />
-              <span className="hidden sm:inline">Test Connection</span>
-              <span className="inline sm:hidden">Test</span>
+              <span className="hidden sm:inline">{t('extracted.test_connection')} </span>
+              <span className="inline sm:hidden">{t('extracted.test')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -1592,8 +1597,8 @@ const IntegrationsPage = () => {
               className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
             >
               <RefreshCw className="w-5 h-5" />
-              <span className="hidden sm:inline">Sync Now</span>
-              <span className="inline sm:hidden">Sync</span>
+              <span className="hidden sm:inline">{t('extracted.sync_now')} </span>
+              <span className="inline sm:hidden">{t('extracted.sync')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -1601,8 +1606,8 @@ const IntegrationsPage = () => {
               className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
             >
               <Edit className="w-5 h-5" />
-              <span className="hidden sm:inline">Edit Config</span>
-              <span className="inline sm:hidden">Edit</span>
+              <span className="hidden sm:inline">{t('extracted.edit_config')} </span>
+              <span className="inline sm:hidden">{t('extracted.edit')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -1610,7 +1615,7 @@ const IntegrationsPage = () => {
               className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-red-500/30 transition-colors"
             >
               <X className="w-5 h-5" />
-              <span className="hidden sm:inline">Disable</span>
+              <span className="hidden sm:inline">{t('extracted.disable')} </span>
               <span className="inline sm:hidden">Off</span>
             </motion.button>
           </div>

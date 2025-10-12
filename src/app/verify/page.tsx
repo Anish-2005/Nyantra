@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { 
@@ -22,6 +23,7 @@ export default function VerifyPage() {
   const router = useRouter();
   const [verifying, setVerifying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { t } = useLocale();
 
   useEffect(() => {
     if (loading) return; // wait until auth/profile loading finishes
@@ -232,7 +234,7 @@ export default function VerifyPage() {
                 >
                   <Image 
                     src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} 
-                    alt="Nyantra" 
+                    alt={t('extracted.nyantra')} 
                     width={48} 
                     height={48} 
                     className="object-contain"
@@ -287,24 +289,24 @@ export default function VerifyPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                     <FileCheck className="w-5 h-5 text-accent-gradient" />
                     <div className="text-left">
-                      <p className="text-sm font-medium theme-text-primary">Document Verification</p>
-                      <p className="text-xs theme-text-muted">Secure identity confirmation</p>
+                      <p className="text-sm font-medium theme-text-primary">{t('extracted.document_verification')} </p>
+                      <p className="text-xs theme-text-muted">{t('extracted.secure_identity_confirmation')} </p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                     <Lock className="w-5 h-5 text-accent-gradient" />
                     <div className="text-left">
-                      <p className="text-sm font-medium theme-text-primary">Encrypted Process</p>
-                      <p className="text-xs theme-text-muted">Your data is protected</p>
+                      <p className="text-sm font-medium theme-text-primary">{t('extracted.encrypted_process')} </p>
+                      <p className="text-xs theme-text-muted">{t('extracted.your_data_is_protected')} </p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                     <UserCheck className="w-5 h-5 text-accent-gradient" />
                     <div className="text-left">
-                      <p className="text-sm font-medium theme-text-primary">Instant Access</p>
-                      <p className="text-xs theme-text-muted">Quick verification process</p>
+                      <p className="text-sm font-medium theme-text-primary">{t('extracted.instant_access')} </p>
+                      <p className="text-xs theme-text-muted">{t('extracted.quick_verification_process')} </p>
                     </div>
                   </div>
                 </motion.div>

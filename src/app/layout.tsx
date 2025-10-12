@@ -5,6 +5,7 @@ import ClientCursor from "../components/ClientCursor";
 import ClientBackgroundCursor from "../components/ClientBackgroundCursor";
 import { ThemeProvider } from '../context/ThemeContext';
 import { AuthProvider } from '../context/AuthContext';
+import { LocaleProvider } from '../context/LocaleContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="hi">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
   <ThemeProvider>
   <AuthProvider>
+  <LocaleProvider>
         {/* Background cursor layer (above background canvases/orbs, below content) */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
           <ClientBackgroundCursor />
@@ -47,6 +49,7 @@ export default function RootLayout({
 
   {/* Foreground pointer cursor */}
   <ClientCursor />
+  </LocaleProvider>
   </AuthProvider>
   </ThemeProvider>
       </body>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion,} from 'framer-motion';
 import type * as THREE from 'three';
 import { Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users, Banknote, DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon, Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3 } from 'lucide-react';
@@ -69,6 +70,7 @@ const analyticsData = {
 
 const AnalyticsPage = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [timeRange, setTimeRange] = useState('year');
   // Filters (reserved for future UI) - currently not used in the demo
   // const [actTypeFilter] = useState('all');
@@ -341,8 +343,8 @@ const AnalyticsPage = () => {
         className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">Analytics & Reports</h1>
-          <p className="theme-text-secondary">Comprehensive insights and performance metrics for DBT under PCR/PoA Acts</p>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.analytics_reports')} </h1>
+          <p className="theme-text-secondary">{t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')} </p>
         </div>
         <div className="flex items-center gap-3">
           <motion.button
@@ -352,7 +354,7 @@ const AnalyticsPage = () => {
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Report</span>
+            <span className="hidden sm:inline">{t('extracted.export_report')} </span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -360,7 +362,7 @@ const AnalyticsPage = () => {
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>Refresh Data</span>
+            <span>{t('extracted.refresh_data')} </span>
           </motion.button>
         </div>
       </motion.div>
@@ -375,7 +377,7 @@ const AnalyticsPage = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 theme-text-muted" />
-            <span className="text-sm font-medium theme-text-primary">Time Period</span>
+            <span className="text-sm font-medium theme-text-primary">{t('extracted.time_period')} </span>
           </div>
           <div className="flex flex-wrap gap-2">
             {[
@@ -475,17 +477,17 @@ const AnalyticsPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold theme-text-primary">Monthly Trends</h3>
-              <p className="text-sm theme-text-muted">Applications vs Disbursements</p>
+              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.monthly_trends')} </h3>
+              <p className="text-sm theme-text-muted">{t('extracted.applications_vs_disbursements')} </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-xs theme-text-muted">Applications</span>
+                <span className="text-xs theme-text-muted">{t('extracted.applications')} </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-xs theme-text-muted">Disbursements</span>
+                <span className="text-xs theme-text-muted">{t('extracted.disbursements')} </span>
               </div>
             </div>
           </div>
@@ -524,8 +526,8 @@ const AnalyticsPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold theme-text-primary">Act-wise Performance</h3>
-              <p className="text-sm theme-text-muted">PCR Act vs PoA Act</p>
+              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.actwise_performance')} </h3>
+              <p className="text-sm theme-text-muted">{t('extracted.pcr_act_vs_poa_act')} </p>
             </div>
             <PieChart className="w-5 h-5 theme-text-muted" />
           </div>
@@ -538,7 +540,7 @@ const AnalyticsPage = () => {
                   </span>
                 </div>
               </div>
-              <h4 className="font-semibold theme-text-primary mb-1">PCR Act</h4>
+              <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.pcr_act')} </h4>
               <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.applications)} Applications</p>
               <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.disbursements)} Disbursed</p>
               <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.pcr.successRate}% Success</p>
@@ -551,7 +553,7 @@ const AnalyticsPage = () => {
                   </span>
                 </div>
               </div>
-              <h4 className="font-semibold theme-text-primary mb-1">PoA Act</h4>
+              <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.poa_act')} </h4>
               <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.applications)} Applications</p>
               <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.disbursements)} Disbursed</p>
               <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.poa.successRate}% Success</p>
@@ -571,8 +573,8 @@ const AnalyticsPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold theme-text-primary">State-wise Performance</h3>
-              <p className="text-sm theme-text-muted">Top performing states</p>
+              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.statewise_performance_1')} </h3>
+              <p className="text-sm theme-text-muted">{t('extracted.top_performing_states')} </p>
             </div>
             <MapIcon className="w-5 h-5 theme-text-muted" />
           </div>
@@ -606,8 +608,8 @@ const AnalyticsPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold theme-text-primary">Category-wise Distribution</h3>
-              <p className="text-sm theme-text-muted">Beneficiary categories</p>
+              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.categorywise_distribution_1')} </h3>
+              <p className="text-sm theme-text-muted">{t('extracted.beneficiary_categories')} </p>
             </div>
             <Users className="w-5 h-5 theme-text-muted" />
           </div>
@@ -645,8 +647,8 @@ const AnalyticsPage = () => {
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Performance Metrics</h3>
-            <p className="text-sm theme-text-muted">Key operational indicators</p>
+            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')} </h3>
+            <p className="text-sm theme-text-muted">{t('extracted.key_operational_indicators')} </p>
           </div>
           <Activity className="w-5 h-5 theme-text-muted" />
         </div>
@@ -675,20 +677,20 @@ const AnalyticsPage = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         <div className="p-6 border-b theme-border-glass">
-          <h3 className="text-lg font-semibold theme-text-primary">Top Performing Districts</h3>
-          <p className="text-sm theme-text-muted">Districts with highest disbursement rates</p>
+          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.top_performing_districts')} </h3>
+          <p className="text-sm theme-text-muted">{t('extracted.districts_with_highest_disbursement_rates')} </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="theme-bg-glass border-b theme-border-glass">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Rank</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">District</th>
-                <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">State</th>
-                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Applications</th>
-                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Disbursements</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">Success Rate</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.rank')} </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.state')} </th>
+                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.applications')} </th>
+                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.disbursements')} </th>
+                <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.success_rate')} </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
               </tr>
             </thead>
             <tbody>
@@ -739,8 +741,8 @@ const AnalyticsPage = () => {
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold theme-text-primary">Generate Custom Reports</h3>
-            <p className="text-sm theme-text-muted">Create detailed reports for analysis and compliance</p>
+            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.generate_custom_reports')} </h3>
+            <p className="text-sm theme-text-muted">{t('extracted.create_detailed_reports_for_analysis_and_compliance')} </p>
           </div>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full">
             <motion.button
@@ -749,7 +751,7 @@ const AnalyticsPage = () => {
               className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center"
             >
               <FileText className="w-4 h-4" />
-              <span>Monthly Report</span>
+              <span>{t('extracted.monthly_report')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -757,7 +759,7 @@ const AnalyticsPage = () => {
               className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center"
             >
               <BarChart3 className="w-4 h-4" />
-              <span>Performance Report</span>
+              <span>{t('extracted.performance_report')} </span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -765,7 +767,7 @@ const AnalyticsPage = () => {
               className="w-full sm:w-auto px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 justify-center"
             >
               <Download className="w-4 h-4" />
-              <span>Export All Data</span>
+              <span>{t('extracted.export_all_data')} </span>
             </motion.button>
           </div>
         </div>

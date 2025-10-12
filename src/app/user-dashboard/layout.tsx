@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import UserSidebar from '@/components/UserSidebar';
 import { Home, FileText, MessageCircle, Users, Wallet, Menu, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import type * as THREE from 'three';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,7 @@ import NotificationDropdown from '@/components/NotificationDropdown';
 export default function UserDashboardLayout({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLocale();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -20,12 +22,12 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
   // User-focused navigation: only pages relevant to applicants are included
   const navigationItems = [
-    { id: 'overview', label: 'Home', icon: Home },
-    { id: 'applications', label: 'My Applications', icon: FileText },
-    { id: 'beneficiaries', label: 'Beneficiaries', icon: Users },
-    { id: 'disbursements', label: 'Payments', icon: Wallet },
-    { id: 'grievance', label: 'Grievances', icon: MessageCircle },
-    { id: 'feedback', label: 'Feedback', icon: HelpCircle }
+    { id: 'overview', label: t('extracted.dashboard') || t('nav.features') || 'Home', icon: Home },
+    { id: 'applications', label: t('my_applications') || t('extracted.applications') || 'My Applications', icon: FileText },
+    { id: 'beneficiaries', label: t('extracted.beneficiaries') || 'Beneficiaries', icon: Users },
+    { id: 'disbursements', label: t('payments') || t('extracted.disbursements') || 'Payments', icon: Wallet },
+    { id: 'grievance', label: t('grievances') || t('extracted.grievance') || 'Grievances', icon: MessageCircle },
+    { id: 'feedback', label: t('extracted.feedback') || 'Feedback', icon: HelpCircle }
   ];
 
   const router = useRouter();
@@ -292,24 +294,24 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                   <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} />
                 </motion.button>
 
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" aria-label="Open sidebar">
+                <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" aria-label={t('extracted.open_sidebar')}>
                   <Menu className="w-5 h-5 theme-text-primary" />
                 </button>
 
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:block">
-                    <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Applicant Portal</h1>
-                    <p className="text-sm theme-text-muted">Applicant tools and status</p>
+                    <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.applicant_portal')} </h1>
+                    <p className="text-sm theme-text-muted">{t('extracted.applicant_tools_and_status')} </p>
                   </div>
                   <div className="sm:hidden">
-                    <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Applicant</h1>
+                    <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.applicant')} </h1>
                   </div>
                 </div>
               </div>
 
               {/* Right Section - Theme Toggle, Notifications & User Menu */}
               <div className="flex items-center gap-3">
-                <motion.button onClick={toggleTheme} className="p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-label="Toggle theme">
+                <motion.button onClick={toggleTheme} className="p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-label={t('extracted.toggle_theme')}>
                   {theme === 'dark' ? <Sun className="w-5 h-5 theme-text-primary" /> : <Moon className="w-5 h-5 theme-text-primary" />}
                 </motion.button>
 
@@ -322,11 +324,11 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                   <AnimatePresence>
                     {notificationOpen && (
                       <NotificationDropdown isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} triggerRef={undefined} width={320}>
-                        <div className="p-3 border-b theme-border-glass"><h3 className="font-semibold theme-text-primary">Notifications</h3></div>
+                        <div className="p-3 border-b theme-border-glass"><h3 className="font-semibold theme-text-primary">{t('extracted.notifications_1')} </h3></div>
                         <div className="max-h-96 overflow-y-auto">
                           {[1,2,3].map(i => (
                             <div key={i} className="p-3 border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors">
-                              <p className="text-sm theme-text-primary">Update regarding your application</p>
+                              <p className="text-sm theme-text-primary">{t('extracted.update_regarding_your_application')} </p>
                               <p className="text-xs theme-text-muted mt-1">{i} hours ago</p>
                             </div>
                           ))}
@@ -339,18 +341,18 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                 <div className="relative">
                   <motion.button onClick={() => setUserMenuOpen(u => !u)} className="flex items-center gap-2 p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"><User className="w-4 h-4 text-white" /></div>
-                    <div className="hidden sm:block text-left"><p className="text-sm font-medium theme-text-primary">{displayName}</p><p className="text-xs theme-text-muted">Applicant</p></div>
+                    <div className="hidden sm:block text-left"><p className="text-sm font-medium theme-text-primary">{displayName}</p><p className="text-xs theme-text-muted">{t('extracted.applicant')} </p></div>
                     <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   <AnimatePresence>
                     {userMenuOpen && (
                       <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} transition={{ duration: 0.2 }} className="absolute right-0 top-full mt-2 w-48 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-1 z-50" style={{ background: dropdownSolidBg }}>
-                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><User className="w-4 h-4"/>Profile</button>
+                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><User className="w-4 h-4"/>{t('extracted.profile')} </button>
                         <div className="border-t theme-border-glass my-1" />
-                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><Settings className="w-4 h-4"/>Settings</button>
+                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><Settings className="w-4 h-4"/>{t('extracted.settings')} </button>
                         <div className="border-t theme-border-glass my-1" />
-                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><HelpCircle className="w-4 h-4"/>Help & Support</button>
+                        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors"><HelpCircle className="w-4 h-4"/>{t('extracted.help_support')} </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -360,9 +362,17 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
             <div className="border-t theme-border-glass px-4 lg:px-6 py-2">
               <div className="flex items-center gap-2 text-sm theme-text-muted">
-                <span>Applicant Portal</span>
+                <span>{t('extracted.applicant_portal')} </span>
                 <ChevronDown className="w-3 h-3 rotate-270" />
-                <span className="theme-text-primary capitalize">{activeTab.replace('-', ' ')}</span>
+                <span className="theme-text-primary capitalize">{(
+                  activeTab === 'overview' ? t('extracted.dashboard') :
+                  activeTab === 'applications' ? t('my_applications') || t('extracted.applications') :
+                  activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
+                  activeTab === 'disbursements' ? t('payments') || t('extracted.disbursements') :
+                  activeTab === 'grievance' ? t('grievances') || t('extracted.grievance') :
+                  activeTab === 'feedback' ? t('extracted.feedback') :
+                  activeTab.replace('-', ' ')
+                )}</span>
               </div>
             </div>
           </header>

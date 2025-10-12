@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
 
@@ -60,6 +61,7 @@ const mockGrievances = [
 
 const GrievancePage = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter] = useState('all');
   const [categoryFilter] = useState('all');
@@ -392,7 +394,7 @@ const GrievancePage = () => {
               <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Grievance Hub
               </h1>
-              <p className="theme-text-secondary text-lg">Advanced Redressal Management System</p>
+              <p className="theme-text-secondary text-lg">{t('extracted.advanced_redressal_management_system')} </p>
             </div>
           </div>
           <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
@@ -404,11 +406,11 @@ const GrievancePage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="Export data"
+            aria-label={t('extracted.export_data_1')}
             className={`px-6 py-3 rounded-xl border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
           >
             <Download className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : ''}`} />
-            <span className="font-semibold">Export Data</span>
+            <span className="font-semibold">{t('extracted.export_data')} </span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -416,7 +418,7 @@ const GrievancePage = () => {
             className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
           >
             <Plus className="w-5 h-5" />
-            <span className="font-semibold">New Case</span>
+            <span className="font-semibold">{t('extracted.new_case')} </span>
           </motion.button>
         </div>
       </motion.div>
@@ -432,7 +434,7 @@ const GrievancePage = () => {
         >
           {/* Quick Stats */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Case Analytics</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_analytics')} </h3>
             <div className="space-y-4">
               {[
                 { label: 'Active Cases', value: stats.open + stats.inProgress, trend: '+8%', icon: AlertCircle, color: 'from-amber-500 to-orange-500' },
@@ -460,7 +462,7 @@ const GrievancePage = () => {
 
           {/* Quick Actions */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
             <div className="space-y-3">
               {[
                 { label: 'Assign Cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
@@ -482,7 +484,7 @@ const GrievancePage = () => {
 
           {/* Category Distribution */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">Case Categories</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_categories')} </h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
                 const Icon = getCategoryIcon(category);
@@ -521,7 +523,7 @@ const GrievancePage = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
                 <input
                   type="text"
-                  placeholder="Search cases..."
+                  placeholder={t('extracted.search_cases')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full lg:w-64 pl-10 pr-4 py-2.5 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
@@ -594,15 +596,15 @@ const GrievancePage = () => {
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <div className="text-center">
                       <p className="text-lg font-bold theme-text-primary">{grievance.attachments}</p>
-                      <p className="theme-text-muted text-xs">Files</p>
+                      <p className="theme-text-muted text-xs">{t('extracted.files')} </p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-bold theme-text-primary">{grievance.communication.length}</p>
-                      <p className="theme-text-muted text-xs">Messages</p>
+                      <p className="theme-text-muted text-xs">{t('extracted.messages')} </p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-bold theme-text-primary">L{grievance.escalationLevel}</p>
-                      <p className="theme-text-muted text-xs">Escalation</p>
+                      <p className="theme-text-muted text-xs">{t('extracted.escalation')} </p>
                     </div>
                   </div>
 
@@ -670,11 +672,11 @@ const GrievancePage = () => {
                       <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
                         <tr>
                           <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Beneficiary</th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>District</th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Priority</th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Status</th>
-                          <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>Actions</th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} </th>
+                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
+                          <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -709,7 +711,7 @@ const GrievancePage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">Resolution Metrics</h3>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
                 <Target className="w-5 h-5 theme-text-muted" />
               </div>
               <div className="space-y-4">
@@ -740,7 +742,7 @@ const GrievancePage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">Recent Updates</h3>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.recent_updates')} </h3>
                 <Activity className="w-5 h-5 theme-text-muted" />
               </div>
               <div className="space-y-4">
@@ -848,8 +850,8 @@ const GrievancePage = () => {
                 {/* Content would go here based on active tab */}
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold theme-text-primary mb-2">Case Management</h3>
-                  <p className="theme-text-muted text-lg">Select a tab to manage different aspects of this case</p>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.case_management')} </h3>
+                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_manage_different_aspects_of_this_case')} </p>
                 </div>
               </div>
 

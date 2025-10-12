@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
@@ -19,6 +20,7 @@ import {
 
 const Dashboard = () => {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -379,14 +381,14 @@ const Dashboard = () => {
   ];
 
   const navigationItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home },
-    { id: 'applications', label: 'Applications', icon: FileText },
-    { id: 'beneficiaries', label: 'Beneficiaries', icon: Users },
-    { id: 'disbursements', label: 'Disbursements', icon: Wallet },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'grievance', label: 'Grievance', icon: MessageCircle },
-    { id: 'integrations', label: 'Integrations', icon: Database },
-    { id: 'reports', label: 'Reports', icon: DownloadCloud }
+    { id: 'overview', label: t('extracted.dashboard'), icon: Home },
+    { id: 'applications', label: t('extracted.applications'), icon: FileText },
+    { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
+    { id: 'disbursements', label: t('extracted.disbursements'), icon: Wallet },
+    { id: 'analytics', label: t('extracted.analytics_reports'), icon: BarChart3 },
+    { id: 'grievance', label: t('extracted.grievance_hub') || t('extracted.grievance'), icon: MessageCircle },
+  { id: 'integrations', label: t('nav.integrations'), icon: Database },
+    { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud }
   ];
 
 
@@ -613,7 +615,7 @@ const Dashboard = () => {
                           Smart DBT Dashboard
                         </motion.span>
                         <h2 className="text-xl sm:text-3xl font-bold theme-text-primary mb-2">
-                          Welcome back, <span className="text-accent-gradient">Officer</span>
+                          Welcome back, <span className="text-accent-gradient">{t('extracted.officer')} </span>
                         </h2>
                         <p className="theme-text-secondary text-sm sm:text-base">{`Here's what's happening with your DBT applications today.`}</p>
                       </div>
@@ -622,7 +624,7 @@ const Dashboard = () => {
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <span>New Application</span>
+                        <span>{t('extracted.new_application')} </span>
                         <Plus className="w-4 h-4" />
                       </motion.button>
                     </div>
@@ -682,22 +684,22 @@ const Dashboard = () => {
 
                             {/* Range Selector */}
                             <div className="flex items-center space-x-1">
-                              <label htmlFor="range" className="text-sm theme-text-muted">Range:</label>
+                              <label htmlFor="range" className="text-sm theme-text-muted">{t('extracted.range')} </label>
                               <select
                                 id="range"
                                 className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
                                 value={chartRange}
                                 onChange={(e) => setChartRange(Number(e.target.value))}
                               >
-                                <option value={7}>Last 7 days</option>
-                                <option value={30}>Last 30 days</option>
-                                <option value={90}>Last 90 days</option>
+                                <option value={7}>{t('extracted.last_7_days')} </option>
+                                <option value={30}>{t('extracted.last_30_days')} </option>
+                                <option value={90}>{t('extracted.last_90_days')} </option>
                               </select>
                             </div>
 
                             {/* Chart Type */}
                             <div className="flex items-center space-x-2">
-                              <label htmlFor="chart-type" className="text-sm theme-text-muted">Type:</label>
+                              <label htmlFor="chart-type" className="text-sm theme-text-muted">{t('extracted.type')} </label>
                               <select
                                 id="chart-type"
                                 className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
@@ -706,10 +708,10 @@ const Dashboard = () => {
                                   setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')
                                 }
                               >
-                                <option value="line">Line</option>
-                                <option value="area">Area</option>
+                                <option value="line">{t('extracted.line')} </option>
+                                <option value="area">{t('extracted.area')} </option>
                                 <option value="bar">Bar</option>
-                                <option value="stacked">Stacked Bar</option>
+                                <option value="stacked">{t('extracted.stacked_bar')} </option>
                               </select>
                             </div>
 
@@ -731,7 +733,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-2 mt-2 sm:mt-0">
                               <label className="inline-flex items-center space-x-2 text-sm">
                                 <input type="checkbox" checked={smoothing} onChange={() => setSmoothing(v => !v)} />
-                                <span>Smoothing</span>
+                                <span>{t('extracted.smoothing')} </span>
                               </label>
                               <button
                                 onClick={exportCSV}
@@ -763,13 +765,13 @@ const Dashboard = () => {
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                          <h3 className="text-lg font-semibold theme-text-primary">Recent Applications</h3>
+                          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.recent_applications_1')} </h3>
                           <motion.button
                             className="flex items-center space-x-2 px-3 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm w-full sm:w-auto justify-center sm:justify-start"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <span>View All</span>
+                            <span>{t('extracted.view_all')} </span>
                             <ChevronRight className="w-4 h-4" />
                           </motion.button>
                         </div>
@@ -817,7 +819,7 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">System Integrations</h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.system_integrations_1')} </h3>
                         <div className="space-y-3">
                           {systemIntegrations.map((integration, index) => (
                             <motion.div
@@ -847,7 +849,7 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">Grievance Status</h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.grievance_status_1')} </h3>
                         <div className="space-y-3">
                           {grievanceData.map((grievance, index) => (
                             <motion.div
@@ -878,7 +880,7 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">Quick Actions</h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
                         <div className="grid grid-cols-2 gap-3">
                           {[
                             { label: 'New App', icon: Plus, color: 'from-blue-500 to-cyan-500' },

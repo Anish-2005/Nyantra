@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+  "i18n:extract": "node ./scripts/extract-i18n.js",
+  "i18n:replace": "node ./scripts/i18n-replace.js",
+  "i18n:populate-hi": "node ./scripts/populate-hi.js",
+  "i18n:group": "node ./scripts/i18n-group.js",
+  "lint:i18n": "node ./scripts/check-i18n-imports.js",
+    "test:i18n": "node ./scripts/test-locales.js",
+    "i18n:export": "node ./scripts/export-i18n-csv.js",
+    "i18n:auto-import": "node ./scripts/auto-import-useLocale.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

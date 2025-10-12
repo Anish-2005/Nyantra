@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { useLocale } from '@/context/LocaleContext';
 type Tx = { 
   id: string; 
   date: string; 
@@ -32,6 +32,7 @@ export default function DisbursementsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'processing' | 'paid' | 'failed'>('all');
   const [selectedTx, setSelectedTx] = useState<Tx | null>(null);
   const [timeRange, setTimeRange] = useState<'all' | 'week' | 'month' | 'quarter'>('all');
+  const { t } = useLocale();
 
   useEffect(() => {
     // Create mock history with more realistic data
@@ -164,7 +165,7 @@ export default function DisbursementsPage() {
               {/* Header with Filters */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary">Transaction History</h2>
+                  <h2 className="text-xl font-semibold theme-text-primary">{t('extracted.transaction_history')} </h2>
                   <p className="theme-text-muted mt-1 text-sm">
                     {filteredTxs.length} transaction{filteredTxs.length !== 1 ? 's' : ''} found
                   </p>
@@ -246,7 +247,7 @@ export default function DisbursementsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <p className="theme-text-muted mb-2">No transactions found</p>
+                      <p className="theme-text-muted mb-2">{t('extracted.no_transactions_found')} </p>
                       <p className="text-sm theme-text-muted">
                         {txs.length === 0 
                           ? "No disbursement history available" 
@@ -333,12 +334,12 @@ export default function DisbursementsPage() {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">Financial Summary</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.financial_summary')} </h3>
               
               <div className="space-y-4">
                 <div className="p-4 rounded-xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm theme-text-muted">Total Disbursed</span>
+                    <span className="text-sm theme-text-muted">{t('extracted.total_disbursed')} </span>
                     <svg className="w-5 h-5 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
@@ -354,17 +355,17 @@ export default function DisbursementsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
                     <div className="text-green-600 text-lg font-bold">₹{paidAmount.toLocaleString()}</div>
-                    <div className="text-xs theme-text-muted">Paid</div>
+                    <div className="text-xs theme-text-muted">{t('extracted.paid')} </div>
                   </div>
                   
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
                     <div className="text-amber-600 text-lg font-bold">₹{pendingAmount.toLocaleString()}</div>
-                    <div className="text-xs theme-text-muted">Pending</div>
+                    <div className="text-xs theme-text-muted">{t('extracted.pending')} </div>
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">Successful Transactions</div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.successful_transactions')} </div>
                   <div className="flex items-center justify-between">
                     <div className="font-semibold theme-text-primary">
                       {filteredTxs.filter(t => t.status === 'paid').length}
@@ -387,7 +388,7 @@ export default function DisbursementsPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">Transaction Details</h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.transaction_details_1')} </h4>
                     <button
                       onClick={() => setSelectedTx(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -400,25 +401,25 @@ export default function DisbursementsPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Description</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')} </div>
                       <div className="font-medium theme-text-primary">{selectedTx.note}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">Beneficiary</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary')} </div>
                       <div className="font-medium theme-text-primary">{selectedTx.beneficiary}</div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Amount</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.amount')} </div>
                         <div className="font-bold text-lg theme-text-primary">
                           ₹{selectedTx.amount.toLocaleString()}
                         </div>
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Status</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTx.status)}`}>
                           {selectedTx.status}
                         </span>
@@ -427,7 +428,7 @@ export default function DisbursementsPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Payment Method</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.payment_method')} </div>
                         <div className="flex items-center gap-2 text-sm theme-text-primary">
                           {getMethodIcon(selectedTx.method)}
                           {getMethodText(selectedTx.method)}
@@ -435,7 +436,7 @@ export default function DisbursementsPage() {
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">Transaction ID</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.transaction_id')} </div>
                         <div className="font-mono text-xs theme-text-primary">
                           {selectedTx.id}
                         </div>
@@ -443,7 +444,7 @@ export default function DisbursementsPage() {
                     </div>
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">Date & Time</div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.date_time')} </div>
                       <div className="theme-text-primary text-sm">
                         {new Date(selectedTx.date).toLocaleString()}
                       </div>

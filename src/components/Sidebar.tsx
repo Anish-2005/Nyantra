@@ -3,6 +3,8 @@ import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { useLocale } from "../context/LocaleContext";
+import LanguageToggle from './LanguageToggle';
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -35,8 +37,8 @@ export default function Sidebar({
   const { theme } = useTheme();
   const { signOutUser } = useAuth();
   const router = useRouter();
+  const { t } = useLocale();
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -45,8 +47,6 @@ export default function Sidebar({
     return () => window.removeEventListener("keydown", handler);
   }, [setOpen]);
 
-  // Show logo only after mount to prevent SSR mismatch
-  // Use same logo selection logic as root navbar
   const logoSrc = theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png';
 
   return (
@@ -62,35 +62,27 @@ export default function Sidebar({
         <div className="p-4 border-b theme-border-glass flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt="Nyantra" fill className="object-contain" />
+              <Image src={logoSrc} alt={t('extracted.nyantra')} fill className="object-contain" />
             </div>
             <div>
-              <div
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-white" : "theme-text-primary"
-                }`}
-              >
-                Nyantra
+              <div className={`text-lg font-bold ${theme === "dark" ? "text-white" : "theme-text-primary"}`}>
+                {t('extracted.nyantra')}
               </div>
-              <div className="text-xs theme-text-muted">DBT Dashboard</div>
+              <div className="text-xs theme-text-muted">{t('extracted.dbt_dashboard')}</div>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setOpen(false)}
             className="p-2 rounded-md theme-border-glass border theme-bg-glass"
-            aria-label="Close sidebar"
+            aria-label={t('extracted.close_sidebar')}
           >
             <ChevronLeft className="w-4 h-4 theme-text-primary" />
           </button>
         </div>
 
         {/* Nav */}
-        <nav
-          className="flex-1 p-3 overflow-auto min-w-0"
-          role="navigation"
-          aria-label="Dashboard navigation"
-        >
+        <nav className="flex-1 p-3 overflow-auto min-w-0" role="navigation" aria-label={t('extracted.dashboard_navigation')}>
           <ul className="space-y-2">
             {items.map((item) => (
               <li key={item.id}>
@@ -98,7 +90,7 @@ export default function Sidebar({
                   type="button"
                   onClick={() => {
                     onChange(item.id);
-                    setOpen(false); // Close sidebar after selecting
+                    setOpen(false);
                   }}
                   className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all min-w-0 ${
                     activeId === item.id
@@ -113,27 +105,30 @@ export default function Sidebar({
             ))}
           </ul>
         </nav>
-        {/* Footer - Logout */}
-        <div className="p-3 border-t theme-border-glass">
+
+        {/* Footer - Language toggle + Logout */}
+        <div className="p-4 border-t theme-border-glass flex flex-col gap-3">
+          <div className="flex justify-center">
+            <LanguageToggle compact vertical />
+          </div>
           <button
             type="button"
             onClick={async () => {
               try {
                 await signOutUser();
                 router.push('/login');
-              } catch {
-                // ignore - AuthContext should surface errors elsewhere
-              }
+              } catch {}
             }}
             className="w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
-            <span className="truncate text-center flex-1">SIGN OUT</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/>
+            </svg>
+            <span className="truncate text-center flex-1">{t('extracted.sign_out')}</span>
           </button>
         </div>
       </motion.div>
 
-      {/* -------------------- MOBILE OVERLAY (FIXED) -------------------- */}
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -160,36 +155,29 @@ export default function Sidebar({
         {/* Header */}
         <div className={`p-4 border-b theme-border-glass flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed ? (
-            <>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-                  <Image src={logoSrc} alt="Nyantra" width={30} height={30} className="w-6 h-6 object-contain" />
-                </div>
-                <div>
-                  <div
-                    className={`text-lg font-bold ${
-                      theme === "dark" ? "text-white" : "theme-text-primary"
-                    }`}
-                  >
-                    Nyantra
-                  </div>
-                  <div className="text-xs theme-text-muted">DBT Dashboard</div>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
+                <Image src={logoSrc} alt={t('extracted.nyantra')} width={30} height={30} className="w-6 h-6 object-contain" />
               </div>
-            </>
+              <div>
+                <div className={`text-lg font-bold ${theme === "dark" ? "text-white" : "theme-text-primary"}`}>
+                  {t('extracted.nyantra')}
+                </div>
+                <div className="text-xs theme-text-muted">{t('extracted.dbt_dashboard')}</div>
+              </div>
+            </div>
           ) : (
             <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt="Nyantra" width={24} height={24} className="w-6 h-6 object-contain" />
+              <Image src={logoSrc} alt={t('extracted.nyantra')} width={24} height={24} className="w-6 h-6 object-contain" />
             </div>
           )}
-          
-          {/* Collapse Toggle - Only show when not collapsed */}
+
           {!collapsed && onToggleCollapse && (
             <button
               type="button"
               onClick={onToggleCollapse}
               className="p-1 rounded-md theme-border-glass border theme-bg-glass hover:theme-bg-hover transition-colors"
-              aria-label="Collapse sidebar"
+              aria-label={t('extracted.collapse_sidebar')}
             >
               <ChevronLeft className="w-3 h-3 theme-text-primary" />
             </button>
@@ -214,52 +202,51 @@ export default function Sidebar({
                   title={collapsed ? item.label : undefined}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && (
-                    <span className="font-medium truncate">{item.label}</span>
-                  )}
+                  {!collapsed && <span className="font-medium truncate">{item.label}</span>}
                 </button>
               </li>
             ))}
           </ul>
         </nav>
 
-        {/* Expand Button - Only show when collapsed */}
+        {/* Expand Button */}
         {collapsed && onToggleCollapse && (
           <div className="p-3 border-t theme-border-glass">
             <button
               type="button"
               onClick={onToggleCollapse}
               className="w-full flex items-center justify-center p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-              aria-label="Expand sidebar"
+              aria-label={t('extracted.expand_sidebar')}
             >
               <ChevronRight className="w-4 h-4 theme-text-primary" />
             </button>
           </div>
         )}
 
-        {/* Footer - Logout */}
-        <div className={`p-3 border-t theme-border-glass ${collapsed ? 'flex justify-center' : ''}`}>
+        {/* Footer - Language + Logout */}
+        <div className={`p-4 border-t theme-border-glass flex flex-col gap-3 ${collapsed ? 'items-center' : ''}`}>
+            {/* Language toggle container */}
+ 
+    <div className="bg-theme-bg-input theme-border-glass border rounded-xl px-3 py-1 flex items-center justify-center gap-2 shadow-sm hover:theme-bg-glass transition-colors">
+      <LanguageToggle compact vertical={collapsed} />
+    </div>
           <button
             type="button"
             onClick={async () => {
               try {
                 await signOutUser();
                 router.push('/login');
-              } catch {
-                // ignore
-              }
+              } catch {}
             }}
             className={`flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass ${
               collapsed ? 'w-10 h-10' : 'w-full'
             }`}
-            title={collapsed ? "Sign Out" : undefined}
+            title={collapsed ? t('extracted.sign_out') : undefined}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/>
             </svg>
-            {!collapsed && (
-              <span className="truncate text-center flex-1">SIGN OUT</span>
-            )}
+            {!collapsed && <span className="truncate text-center flex-1">{t('extracted.sign_out')}</span>}
           </button>
         </div>
       </motion.aside>
