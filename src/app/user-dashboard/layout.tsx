@@ -27,7 +27,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
     { id: 'beneficiaries', label: t('extracted.beneficiaries') || 'Beneficiaries', icon: Users },
     { id: 'disbursements', label: t('payments') || t('extracted.disbursements') || 'Payments', icon: Wallet },
     { id: 'grievance', label: t('grievances') || t('extracted.grievance') || 'Grievances', icon: MessageCircle },
-    { id: 'feedback', label: t('extracted.feedback') || 'Feedback', icon: HelpCircle }
+    { id: 'feedback', label: t('feedback_grievance_portal') || t('extracted.feedback') || 'Feedback', icon: HelpCircle }
   ];
 
   const router = useRouter();
@@ -370,7 +370,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                   activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
                   activeTab === 'disbursements' ? t('payments') || t('extracted.disbursements') :
                   activeTab === 'grievance' ? t('grievances') || t('extracted.grievance') :
-                  activeTab === 'feedback' ? t('extracted.feedback') :
+                  activeTab === 'feedback' ? t('feedback_grievance_portal') || t('extracted.feedback') :
                   activeTab.replace('-', ' ')
                 )}</span>
               </div>
