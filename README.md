@@ -1,56 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nyantra — DBT Portal for Social Justice (Enhanced README)
 
-## Getting Started
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+  <img src="/Logo-Light.png" alt="Nyantra" width="64" height="64" style="border-radius:8px;object-fit:cover;background:#fff;padding:6px"/>
+  <div>
+    <h1 style="margin:0">Nyantra</h1>
+    <p style="margin:4px 0 0;color:#6b7280;max-width:60ch">A demo portal built with Next.js + TypeScript — models applicant flows, disbursements, beneficiaries and a feedback/grievance system. Built to be fully localisable (English + हिन्दी), accessible, and responsive.</p>
+  </div>
+</div>
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Live snapshot
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0">
+  <div style="flex:1;min-width:280px;padding:14px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 30px rgba(2,6,23,0.06)">
+    <h3 style="margin:0 0 8px 0">Primary features</h3>
+    <ul>
+      <li>Applicant dashboard: applications, beneficiaries, disbursements, grievance & feedback.</li>
+      <li>Officer dashboard: analytics, integrations and reports.</li>
+      <li>Lightweight in-repo i18n (JSON) with a global Language Toggle (EN / हिंदी).</li>
+      <li>Theme-aware UI, accessible controls, and compact toggle shown above logout when sidebars are collapsed.</li>
+    </ul>
+  </div>
+  <div style="width:320px;padding:12px;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(2,6,23,0.04)">
+    <h4 style="margin:0 0 8px 0">Run locally</h4>
+    <pre style="background:#0f172a;color:#fff;padding:8px;border-radius:8px;margin:0">npm install
+npm run dev</pre>
+    <small style="color:#6b7280">Open <code>http://localhost:3000</code></small>
+  </div>
+</div>
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick start table
 
-## Learn More
+<table>
+<thead><tr><th>Command</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><code>npm install</code></td><td>Install dependencies</td></tr>
+<tr><td><code>npm run dev</code></td><td>Start development server (open <code>/</code>)</td></tr>
+<tr><td><code>npm run build</code></td><td>Create a production build</td></tr>
+<tr><td><code>npm start</code></td><td>Run production server</td></tr>
+<tr><td><code>npm run lint</code></td><td>ESLint checks</td></tr>
+</tbody>
+</table>
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project layout (high level)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+<table>
+<thead><tr><th>Path</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>src/app/</code></td><td>Pages and layouts (Next.js App Router)</td></tr>
+<tr><td><code>src/components/</code></td><td>UI components (Sidebar, UserSidebar, LanguageToggle, charts)</td></tr>
+<tr><td><code>src/context/</code></td><td>Providers (Auth, Theme, Locale)</td></tr>
+<tr><td><code>src/locales/</code></td><td>Translation JSONs</td></tr>
+<tr><td><code>src/lib/</code></td><td>Utility wrappers (firebase init)</td></tr>
+</tbody>
+</table>
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## UX & Accessibility notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Language toggle: visible in header and sidebars; in collapsed sidebars a compact vertical toggle sits above the logout button.
+- Accessibility: aria-friendly toggles, keyboard navigable controls and visible focus states.
+- Design: theme-aware CSS variables, subtle gradients and glassmorphism cards.
 
-## Production checklist
+---
 
-Small checklist to get this app production-ready:
-
-- Create a `.env.local` file with production Firebase credentials (do NOT check this into source control). Use `.env.example` as a template.
-- In Firebase Console enable the Authentication providers you need (Email/Password, Google, etc.) and add your production domains to Authorized Domains.
-- Configure secrets in your deployment platform (Vercel, Netlify, or your own server) rather than committing them to the repo.
-- Review the Content Security Policy (in `next.config.ts`) and restrict allowed hosts where appropriate for assets and APIs.
-- Add monitoring and error reporting (Sentry or equivalent) and performance monitoring for user flows.
-- Enable HTTPS and HSTS on your hosting platform (Vercel does this by default).
-- Run `npm run build` locally to verify the build passes.
-- Consider adding integration tests for critical flows (login, dashboard access, sign-out).
-
-## Docker
-
-You can build the production image with:
+## Docker (optional)
 
 ```powershell
 docker build -t nyantara:latest .
