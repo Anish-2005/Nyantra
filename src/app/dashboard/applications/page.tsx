@@ -431,7 +431,81 @@ const ApplicationsPage = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+
+        @media print {
+          body {
+            background: white !important;
+          }
+          
+          #applications-three-canvas,
+          canvas {
+            display: none !important;
+          }
+          
+          .no-print {
+            display: none !important;
+          }
+          
+          .print-only {
+            display: block !important;
+          }
+          
+          .theme-bg-card,
+          .theme-bg-glass {
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+          
+          .theme-text-primary {
+            color: #0f172a !important;
+          }
+          
+          .theme-text-secondary,
+          .theme-text-muted {
+            color: #475569 !important;
+          }
+          
+          .accent-gradient {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          
+          table {
+            page-break-inside: auto;
+          }
+          
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+          
+          thead {
+            display: table-header-group;
+          }
+          
+          .print-page-break {
+            page-break-before: always;
+          }
+          
+          @page {
+            margin: 1.5cm;
+            size: A4;
+          }
+        }
       `}</style>
+            
+            {/* Print Header - Only visible when printing */}
+            <div className="print-only hidden">
+                <div style={{ textAlign: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #3b82f6' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', marginBottom: '8px' }}>
+                        {t('applications.title')}
+                    </h1>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>
+                        Generated on {new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                </div>
+            </div>
             {/* Header Section */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -442,7 +516,7 @@ const ApplicationsPage = () => {
                     <h1 className="text-3xl font-bold theme-text-primary mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.title')}</h1>
                     <p className="theme-text-secondary py-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.description')}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 no-print">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -498,7 +572,7 @@ const ApplicationsPage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
+                className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl no-print"
             >
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
@@ -615,18 +689,18 @@ const ApplicationsPage = () => {
                 {viewMode === 'table' ? (
                     <div className="w-full">
                         {/* Desktop Table */}
-                        <div className="hidden sm:block overflow-x-auto">
-                            <table className="w-full min-w-[700px] border-collapse">
+                        <div className="hidden sm:block overflow-x-auto print:block">
+                            <table className="w-full min-w-[700px] border-collapse print:min-w-full">
                                 <thead className="border-b theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
                                     <tr>
                                         <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')} </th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')} </th>
-                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
-                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                                        <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
+                                        <th className="hidden sm:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
+                                        <th className="hidden md:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
+                                        <th className="hidden md:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
-                                        <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')} </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                                        <th className="hidden sm:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')} </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary no-print">{t('extracted.actions')} </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y theme-border-glass">
@@ -648,14 +722,14 @@ const ApplicationsPage = () => {
                                                     <p className="text-xs theme-text-muted">{app.phone}</p>
                                                 </div>
                                             </td>
-                                            <td className="hidden sm:table-cell px-4 py-2">
+                                            <td className="hidden sm:table-cell print:table-cell px-4 py-2">
                                                 <p className="text-sm theme-text-primary">{app.district}</p>
                                                 <p className="text-xs theme-text-muted">{app.state}</p>
                                             </td>
-                                            <td className="hidden md:table-cell px-4 py-2">
+                                            <td className="hidden md:table-cell print:table-cell px-4 py-2">
                                                 <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary" style={{ background: theme === 'light' ? 'rgba(241, 245, 249, 0.8)' : undefined }}>{app.actType}</span>
                                             </td>
-                                            <td className="hidden md:table-cell px-4 py-2 text-sm font-semibold theme-text-primary">
+                                            <td className="hidden md:table-cell print:table-cell px-4 py-2 text-sm font-semibold theme-text-primary">
                                                 {formatCurrency(app.amount)}
                                             </td>
                                             <td className="px-4 py-2">
@@ -664,13 +738,13 @@ const ApplicationsPage = () => {
                                                     {app.status.replace('-', ' ')}
                                                 </span>
                                             </td>
-                                            <td className="hidden sm:table-cell px-4 py-2">
+                                            <td className="hidden sm:table-cell print:table-cell px-4 py-2">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
                                                     {app.priority}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2 flex gap-2">
-                                                <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
+                                            <td className="px-4 py-2 flex gap-2 no-print">
+                                                <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)} />
                                                 <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
                                             </td>
                                         </motion.tr>
@@ -710,7 +784,7 @@ const ApplicationsPage = () => {
                                     </div>
 
                                     <div className="flex gap-2 mt-2">
-                                        <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
+                                        <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)} />
                                         <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
                                     </div>
                                 </motion.div>
@@ -767,7 +841,7 @@ const ApplicationsPage = () => {
                                         {app.status.replace('-', ' ')}
                                     </span>
                                     <div className="flex items-center gap-1">
-                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors">
+                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); }}>
                                             <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                                         </button>
                                         <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors">
@@ -781,7 +855,7 @@ const ApplicationsPage = () => {
                 )}
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
+                <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass no-print" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
                     <p className="text-sm theme-text-muted">
                         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
                     </p>
@@ -884,28 +958,28 @@ const ApplicationsPage = () => {
                                 <div>
                                     <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.applicant_information_1')} </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <User className="w-5 h-5 theme-text-muted" />
                                             <div>
                                                 <p className="text-xs theme-text-muted">{t('extracted.full_name')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <Phone className="w-5 h-5 theme-text-muted" />
                                             <div>
                                                 <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <FileText className="w-5 h-5 theme-text-muted" />
                                             <div>
                                                 <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
                                                 <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <MapPin className="w-5 h-5 theme-text-muted" />
                                             <div>
                                                 <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
@@ -919,27 +993,27 @@ const ApplicationsPage = () => {
                                 <div>
                                     <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.application_details')} </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
                                         </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                                             <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
                                         </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')} </p>
                                             <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
                                         </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.application_date')} </p>
                                             <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
                                         </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.assigned_officer')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer}</p>
                                         </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass">
+                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                             <p className="text-xs theme-text-muted mb-1">{t('extracted.documents_uploaded')} </p>
                                             <p className="font-medium theme-text-primary">{selectedApplication.documents} files</p>
                                         </div>
@@ -972,10 +1046,10 @@ const ApplicationsPage = () => {
                                     <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.uploaded_documents')} </h3>
                                     <div className="space-y-2">
                                         {['FIR Copy', 'Medical Certificate', 'Identity Proof', 'Income Certificate'].map((doc, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass hover:theme-border-glass border border-transparent transition-all">
+                                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass border theme-border-glass hover:shadow-md transition-all" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                                        <FileText className="w-5 h-5 text-blue-400" />
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)' }}>
+                                                        <FileText className="w-5 h-5" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }} />
                                                     </div>
                                                     <div>
                                                         <p className="font-medium theme-text-primary">{doc}</p>
@@ -983,10 +1057,10 @@ const ApplicationsPage = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <button className="p-2 rounded-lg hover:theme-bg-card">
+                                                    <button className="p-2 rounded-lg hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors">
                                                         <Eye className="w-4 h-4" />
                                                     </button>
-                                                    <button className="p-2 rounded-lg hover:theme-bg-card">
+                                                    <button className="p-2 rounded-lg hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors">
                                                         <Download className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1015,7 +1089,7 @@ const ApplicationsPage = () => {
                                                         {item.status === 'completed' && <Check className="w-4 h-4 text-green-400" />}
                                                         {item.status === 'current' && <Clock className="w-4 h-4 text-blue-400" />}
                                                     </div>
-                                                    {idx < 4 && <div className="w-0.5 h-12 bg-gray-500/20 mt-2"></div>}
+                                                    {idx < 4 && <div className="w-0.5 h-12 mt-2" style={{ background: theme === 'light' ? 'rgba(148, 163, 184, 0.3)' : 'rgba(148, 163, 184, 0.2)' }}></div>}
                                                 </div>
                                                 <div className="flex-1 pb-8">
                                                     <p className="font-medium theme-text-primary">{item.action}</p>
@@ -1031,7 +1105,8 @@ const ApplicationsPage = () => {
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-2"
+                                        style={theme === 'light' ? { background: 'rgba(34, 197, 94, 0.15)', color: '#15803d', borderColor: 'rgba(34, 197, 94, 0.4)' } : { background: 'rgba(34, 197, 94, 0.2)', color: '#86efac', borderColor: 'rgba(34, 197, 94, 0.3)' }}
                                     >
                                         <Check className="w-5 h-5" />
                                         Approve Application
@@ -1039,7 +1114,8 @@ const ApplicationsPage = () => {
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                                        style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
                                     >
                                         <MessageSquare className="w-5 h-5" />
                                         Request Documents
@@ -1047,7 +1123,8 @@ const ApplicationsPage = () => {
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-2"
+                                        style={theme === 'light' ? { background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', borderColor: 'rgba(239, 68, 68, 0.4)' } : { background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                                     >
                                         <X className="w-5 h-5" />
                                         Reject Application

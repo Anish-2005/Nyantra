@@ -601,14 +601,14 @@ const BeneficiariesPage = () => {
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
       >
         {[
-          { label: 'Total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
-          { label: 'Verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
-          { label: 'Pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { label: 'Disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote },
-          { label: 'Rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
-          { label: 'Docs Required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
-          { label: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
-          { label: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
+          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
+          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote },
+          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
+          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
+          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -619,7 +619,7 @@ const BeneficiariesPage = () => {
               <stat.icon className="w-5 h-5 text-white" />
             </div>
             <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.label}</p>
+            <p className="text-sm theme-text-muted">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -651,8 +651,8 @@ const BeneficiariesPage = () => {
             ></div>
           </div>
             <div className="flex justify-between text-xs theme-text-muted mt-2">
-            <span>Disbursed: {formatCurrency(stats.disbursedAmount)}</span>
-            <span>Pending: {formatCurrency(stats.pendingAmount)}</span>
+            <span>{t('extracted.disbursed')}: {formatCurrency(stats.disbursedAmount)}</span>
+            <span>{t('extracted.pending')}: {formatCurrency(stats.pendingAmount)}</span>
           </div>
         </motion.div>
 
@@ -672,7 +672,7 @@ const BeneficiariesPage = () => {
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            Protection of Civil Rights Act cases
+            {t('extracted.protection_of_civil_rights_act_cases')}
           </p>
         </motion.div>
 
@@ -692,7 +692,7 @@ const BeneficiariesPage = () => {
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            Prevention of Atrocities Act cases
+            {t('extracted.prevention_of_atrocities_act_cases')}
           </p>
         </motion.div>
       </motion.div>
@@ -723,13 +723,13 @@ const BeneficiariesPage = () => {
               onClick={() => setViewMode('table')}
               className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
             >
-              Table
+              {t('extracted.table')}
             </button>
             <button
               onClick={() => setViewMode('cards')}
               className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
             >
-              Cards
+              {t('extracted.cards')}
             </button>
           </div>
 
@@ -864,7 +864,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <Fingerprint className="w-3.5 h-3.5" />
-                          Aadhaar
+                          {t('extracted.aadhaar')}
                         </span>
                         <span className="theme-text-primary font-mono text-[10px]">{beneficiary.aadhaarNumber}</span>
                       </div>
@@ -872,7 +872,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5" />
-                          Location
+                          {t('extracted.location')}
                         </span>
                         <span className="theme-text-primary font-medium">{beneficiary.district}, {beneficiary.state}</span>
                       </div>
@@ -880,7 +880,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <Scale className="w-3.5 h-3.5" />
-                          Act Type
+                          {t('extracted.act_type')}
                         </span>
                         <span className="theme-text-primary font-medium">{beneficiary.actType}</span>
                       </div>
@@ -888,7 +888,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <DollarSign className="w-3.5 h-3.5" />
-                          Relief Amount
+                          {t('extracted.relief_amount')}
                         </span>
                         <span className="theme-text-primary font-bold">{formatCurrency(beneficiary.reliefAmount)}</span>
                       </div>
@@ -896,7 +896,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <Banknote className="w-3.5 h-3.5" />
-                          Disbursed
+                          {t('extracted.disbursed')}
                         </span>
                         <span className="theme-text-primary font-medium">{formatCurrency(beneficiary.disbursedAmount)}</span>
                       </div>
@@ -904,7 +904,7 @@ const BeneficiariesPage = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5" />
-                          Assigned Officer
+                          {t('extracted.assigned_officer')}
                         </span>
                         <span className="theme-text-primary font-medium truncate max-w-[150px]">{beneficiary.assignedOfficer}</span>
                       </div>
@@ -1005,7 +1005,7 @@ const BeneficiariesPage = () => {
                         <div>
                           <p className="text-sm font-semibold theme-text-primary">{formatCurrency(beneficiary.reliefAmount)}</p>
                           <p className="text-xs theme-text-muted">
-                            Disbursed: {formatCurrency(beneficiary.disbursedAmount)}
+                            {t('extracted.disbursed')}: {formatCurrency(beneficiary.disbursedAmount)}
                           </p>
                         </div>
                       </td>
@@ -1146,7 +1146,7 @@ const BeneficiariesPage = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
           <p className="text-sm theme-text-muted">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredBeneficiaries.length)} of {filteredBeneficiaries.length}
+            {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredBeneficiaries.length)} {t('extracted.of')} {filteredBeneficiaries.length}
           </p>
           <div className="flex items-center gap-2">
             {isMobile ? (
@@ -1158,7 +1158,7 @@ const BeneficiariesPage = () => {
                   onClick={() => setCurrentPage((p: number) => p - 1)}
                   className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
                 >
-                  Prev
+                  {t('extracted.prev')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -1167,7 +1167,7 @@ const BeneficiariesPage = () => {
                   onClick={() => setCurrentPage((p: number) => p + 1)}
                   className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
                 >
-                  Next
+                  {t('extracted.next')}
                 </motion.button>
               </>
             ) : (
@@ -1280,8 +1280,8 @@ const BeneficiariesPage = () => {
                     <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                       <Calendar className="w-5 h-5 theme-text-muted" />
                       <div>
-                        <p className="text-xs theme-text-muted">Age</p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.age} years</p>
+                        <p className="text-xs theme-text-muted">{t('extracted.age')}</p>
+                        <p className="font-medium theme-text-primary">{selectedBeneficiary.age} {t('extracted.years')}</p>
                       </div>
                     </div>
                   </div>
@@ -1426,7 +1426,7 @@ const BeneficiariesPage = () => {
                     className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
                   >
                     <Check className="w-5 h-5" />
-                    Verify Beneficiary
+                    {t('extracted.verify_beneficiary')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -1434,7 +1434,7 @@ const BeneficiariesPage = () => {
                     className="flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"
                   >
                     <Banknote className="w-5 h-5" />
-                    Initiate Disbursement
+                    {t('extracted.initiate_disbursement')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -1442,7 +1442,7 @@ const BeneficiariesPage = () => {
                     className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-5 h-5" />
-                    Request Documents
+                    {t('extracted.request_documents')}
                   </motion.button>
                 </div>
               </div>
