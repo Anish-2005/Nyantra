@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+"use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientCursor from "../components/ClientCursor";
@@ -17,16 +17,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Nyantra - DBT Portal for Social Justice",
-  description: "Empowering Justice Through Technology",
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
-  },
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,6 +24,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="hi">
+      <head>
+        <title>Nyantra - DBT Portal for Social Justice</title>
+        <meta name="description" content="Empowering Justice Through Technology" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

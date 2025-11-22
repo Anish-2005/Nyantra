@@ -219,57 +219,57 @@ const NyantraLanding = () => {
   const features = [
     {
       icon: Shield,
-      title: "Secure Verification",
-      description: "Multi-layer authentication with Aadhaar integration ensuring only genuine beneficiaries receive assistance",
+      title: t('features.secureVerification.title'),
+      description: t('features.secureVerification.description'),
       color: "from-blue-500 to-blue-600",
       darkColor: "from-blue-500 to-blue-600",
       lightColor: "from-blue-400 to-blue-500",
-      features: ["Biometric Verification", "OTP Authentication", "Document Validation"]
+      features: JSON.parse(t('features.secureVerification.features')) as string[]
     },
     {
       icon: Zap,
-      title: "Real-Time Tracking",
-      description: "Monitor every stage from application to disbursement with live updates and transparent status tracking",
+      title: t('features.realTimeTracking.title'),
+      description: t('features.realTimeTracking.description'),
       color: "from-amber-500 to-amber-600",
       darkColor: "from-amber-500 to-amber-600",
       lightColor: "from-amber-400 to-amber-500",
-      features: ["Live Status Updates", "SMS Notifications", "Email Alerts"]
+      features: JSON.parse(t('features.realTimeTracking.features')) as string[]
     },
     {
       icon: Database,
-      title: "Unified Database",
-      description: "Seamless integration with eCourts, CCTNS, and national databases for comprehensive case management",
+      title: t('features.unifiedDatabase.title'),
+      description: t('features.unifiedDatabase.description'),
       color: "from-indigo-500 to-indigo-600",
       darkColor: "from-indigo-500 to-indigo-600",
       lightColor: "from-indigo-400 to-indigo-500",
-      features: ["eCourts Integration", "CCTNS Sync", "DigiLocker Connect"]
+      features: JSON.parse(t('features.unifiedDatabase.features')) as string[]
     },
     {
       icon: Lock,
-      title: "Privacy Protection",
-      description: "Bank-grade encryption and data privacy measures protecting sensitive victim information",
+      title: t('features.privacyProtection.title'),
+      description: t('features.privacyProtection.description'),
       color: "from-purple-500 to-purple-600",
       darkColor: "from-purple-500 to-purple-600",
       lightColor: "from-purple-400 to-purple-500",
-      features: ["End-to-End Encryption", "GDPR Compliant", "Secure Data Storage"]
+      features: JSON.parse(t('features.privacyProtection.features')) as string[]
     },
     {
       icon: TrendingUp,
-      title: "Analytics Dashboard",
-      description: "Comprehensive insights with real-time analytics for better decision-making and accountability",
+      title: t('features.analyticsDashboard.title'),
+      description: t('features.analyticsDashboard.description'),
       color: "from-green-500 to-green-600",
       darkColor: "from-green-500 to-green-600",
       lightColor: "from-green-400 to-green-500",
-      features: ["Custom Reports", "Trend Analysis", "Predictive Insights"]
+      features: JSON.parse(t('features.analyticsDashboard.features')) as string[]
     },
     {
       icon: Users,
-      title: "Multi-Stakeholder Access",
-      description: "Role-based access for victims, officials, and administrators with customized dashboards",
+      title: t('features.multiStakeholder.title'),
+      description: t('features.multiStakeholder.description'),
       color: "from-pink-500 to-pink-600",
       darkColor: "from-pink-500 to-pink-600",
       lightColor: "from-pink-400 to-pink-500",
-      features: ["Role Management", "Custom Permissions", "Audit Trails"]
+      features: JSON.parse(t('features.multiStakeholder.features')) as string[]
     }
   ];
 
@@ -652,7 +652,7 @@ const NyantraLanding = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-left space-y-8"
+                className="text-left space-y-8 overflow-visible"
               >
                 <motion.div variants={itemVariants}>
                   <motion.span
@@ -671,14 +671,17 @@ const NyantraLanding = () => {
 
                 <motion.h1
                   variants={itemVariants}
-                  className="text-5xl md:text-7xl font-bold leading-tight theme-text-primary"
+                  className="text-5xl md:text-7xl font-bold theme-text-primary overflow-visible whitespace-normal py-4"
+                  style={{ lineHeight: '1.4' }}
                 >
                   {t('hero.titleLine1')}{' '}
-                  <span className="text-accent-gradient">
+                  <span className="py-4 text-accent-gradient">
                     {t('hero.titleLine2').split('\n')[0]}
                   </span>
                   <br />
-                  {t('hero.titleLine2').split('\n')[1] || ''}
+                  <span className="block mt-1">
+                    {t('hero.titleLine2').split('\n')[1] || ''}
+                  </span>
                 </motion.h1>
 
                 <motion.p
@@ -759,10 +762,10 @@ const NyantraLanding = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { label: 'Verified', value: '100%', icon: BadgeCheck, color: 'from-green-500 to-emerald-500' },
-                        { label: 'Processing', value: '2 hrs', icon: Clock, color: 'from-blue-500 to-cyan-500' },
-                        { label: 'Amount', value: '₹40K', icon: Wallet, color: 'from-amber-500 to-orange-500' },
-                        { label: 'Status', value: 'Active', icon: Activity, color: 'from-purple-500 to-pink-500' }
+                        { label: t('extracted.verified'), value: '100%', icon: BadgeCheck, color: 'from-green-500 to-emerald-500' },
+                        { label: t('extracted.processing'), value: '2 hrs', icon: Clock, color: 'from-blue-500 to-cyan-500' },
+                        { label: t('extracted.amount'), value: '₹40K', icon: Wallet, color: 'from-amber-500 to-orange-500' },
+                        { label: t('extracted.status'), value: t('extracted.active'), icon: Activity, color: 'from-purple-500 to-pink-500' }
                       ].map((item, i) => (
                         <motion.div
                           key={i}
@@ -785,9 +788,9 @@ const NyantraLanding = () => {
                     <div className="theme-bg-glass rounded-xl p-4 space-y-3 theme-border-glass">
                       <p className="text-sm font-semibold theme-text-secondary">{t('extracted.recent_activities')} </p>
                       {[
-                        { text: 'Application Submitted', time: '2 mins ago', status: 'success' },
-                        { text: 'Document Verified', time: '1 hour ago', status: 'success' },
-                        { text: 'Approval Pending', time: '3 hours ago', status: 'pending' }
+                        { text: t('extracted.application_submitted'), time: t('extracted.two_mins_ago'), status: 'success' },
+                        { text: t('extracted.document_verified'), time: t('extracted.one_hour_ago'), status: 'success' },
+                        { text: t('extracted.approval_pending'), time: t('extracted.three_hours_ago'), status: 'pending' }
                       ].map((activity, i) => (
                         <motion.div
                           key={i}
@@ -881,7 +884,7 @@ const NyantraLanding = () => {
           >
             {[
               {
-                label: 'Beneficiaries Served',
+                label: t('stats.beneficiaries'),
                 value: stats.beneficiaries.toLocaleString(),
                 suffix: '+',
                 icon: Users,
@@ -889,7 +892,7 @@ const NyantraLanding = () => {
                 colorDark: 'from-blue-400 to-indigo-500',
               },
               {
-                label: 'Crores Disbursed',
+                label: t('stats.disbursed'),
                 value: stats.disbursed,
                 suffix: 'Cr+',
                 icon: TrendingUp,
@@ -897,7 +900,7 @@ const NyantraLanding = () => {
                 colorDark: 'from-emerald-400 to-teal-500',
               },
               {
-                label: 'Avg. Processing Time',
+                label: t('stats.avgTime'),
                 value: stats.avgTime,
                 suffix: 'hrs',
                 icon: Clock,
@@ -905,7 +908,7 @@ const NyantraLanding = () => {
                 colorDark: 'from-amber-400 to-yellow-500',
               },
               {
-                label: 'Satisfaction Rate',
+                label: t('stats.satisfaction'),
                 value: stats.satisfaction,
                 suffix: '%',
                 icon: Star,
@@ -994,8 +997,7 @@ const NyantraLanding = () => {
                 {t('features.subtitle')}
               </h2>
               <p className="text-lg md:text-xl theme-text-secondary max-w-3xl mx-auto leading-relaxed">
-                A comprehensive system designed with precision and care — ensuring transparency,
-                speed, and impact at every stage.
+                {t('features.description')}
               </p>
             </motion.div>
 

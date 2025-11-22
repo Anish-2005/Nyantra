@@ -26,7 +26,38 @@
   },
   "features": {
     "title": "Powerful Features",
-    "subtitle": "Everything You Need for Seamless DBT"
+    "subtitle": "Everything You Need for Seamless DBT",
+    "description": "A comprehensive system designed with precision and care — ensuring transparency, speed, and impact at every stage.",
+    "secureVerification": {
+      "title": "Secure Verification",
+      "description": "Multi-layer authentication with Aadhaar integration ensuring only genuine beneficiaries receive assistance",
+      "features": ["Biometric Verification", "OTP Authentication", "Document Validation"]
+    },
+    "realTimeTracking": {
+      "title": "Real-Time Tracking",
+      "description": "Monitor every stage from application to disbursement with live updates and transparent status tracking",
+      "features": ["Live Status Updates", "SMS Notifications", "Email Alerts"]
+    },
+    "unifiedDatabase": {
+      "title": "Unified Database",
+      "description": "Seamless integration with eCourts, CCTNS, and national databases for comprehensive case management",
+      "features": ["eCourts Integration", "CCTNS Sync", "DigiLocker Connect"]
+    },
+    "privacyProtection": {
+      "title": "Privacy Protection",
+      "description": "Bank-grade encryption and data privacy measures protecting sensitive victim information",
+      "features": ["End-to-End Encryption", "GDPR Compliant", "Secure Data Storage"]
+    },
+    "analyticsDashboard": {
+      "title": "Analytics Dashboard",
+      "description": "Comprehensive insights with real-time analytics for better decision-making and accountability",
+      "features": ["Custom Reports", "Trend Analysis", "Predictive Insights"]
+    },
+    "multiStakeholder": {
+      "title": "Multi-Stakeholder Access",
+      "description": "Role-based access for victims, officials, and administrators with customized dashboards",
+      "features": ["Role Management", "Custom Permissions", "Audit Trails"]
+    }
   },
   "footer": {
     "companyDesc": "Empowering social justice through technology. Making Direct Benefit Transfer transparent, efficient, and accessible for all.",
@@ -174,6 +205,7 @@
     "status": "Status",
     "all_statuses": "All Statuses",
     "pending": "Pending",
+    "processing": "Processing",
     "in_review": "In Review",
     "approved": "Approved",
     "rejected": "Rejected",
@@ -918,6 +950,11 @@
     "contact_sales_for_integrations": "Contact sales for integrations",
     "enter_your_email": "Enter your email",
     "scroll_to_top": "Scroll to top",
+    "document_verified": "Document Verified",
+    "approval_pending": "Approval Pending",
+    "two_mins_ago": "2 mins ago",
+    "one_hour_ago": "1 hour ago",
+    "three_hours_ago": "3 hours ago",
     "my_applications": "My Applications",
     "applications_you_submitted_stored_locally_in_your_browser": "Applications you submitted (stored locally in your browser).",
     "main_content_applications_list": "{/* Main Content - Applications List */}",
