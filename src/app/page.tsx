@@ -506,25 +506,31 @@ const NyantraLanding = () => {
                 className="flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('extracted.nyantra_logo')} width={40} height={40} className="object-contain" />
+                <div className="w-10 h-10 flex items-center justify-center overflow-hidden bg-transparent">
+                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={40} height={40} className="object-contain" />
                 </div>
-                <span className="text-2xl font-bold text-accent-gradient">
-                  Nyantra
+                <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
+                  {t('nav.brandName')}
                 </span>
               </motion.div>
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-8">
-                {[t('nav.features'), t('nav.process'), t('nav.benefits'), t('nav.integrations'), t('nav.faq')].map((item) => (
+                {[
+                  { label: t('nav.features'), id: 'features' },
+                  { label: t('nav.process'), id: 'process' },
+                  { label: t('nav.benefits'), id: 'benefits' },
+                  { label: t('nav.integrations'), id: 'integrations' },
+                  { label: t('nav.faq'), id: 'faq' }
+                ].map((item) => (
                   <motion.a
-                    key={item}
-                    href={`#${String(item).toLowerCase()}`}
+                    key={item.id}
+                    href={`#${item.id}`}
                     className="theme-text-secondary hover:text-accent-gradient transition-all font-medium px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {item}
+                    {item.label}
                   </motion.a>
                 ))}
                 <motion.button
@@ -580,15 +586,21 @@ const NyantraLanding = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="px-4 py-6 space-y-3">
-                    {[t('nav.features'), t('nav.process'), t('nav.benefits'), t('nav.integrations'), t('nav.faq')].map((item) => (
+                    {[
+                      { label: t('nav.features'), id: 'features' },
+                      { label: t('nav.process'), id: 'process' },
+                      { label: t('nav.benefits'), id: 'benefits' },
+                      { label: t('nav.integrations'), id: 'integrations' },
+                      { label: t('nav.faq'), id: 'faq' }
+                    ].map((item) => (
                     <motion.a
-                      key={item}
-                      href={`#${item.toLowerCase()}`}
+                      key={item.id}
+                      href={`#${item.id}`}
                       className="block theme-text-secondary hover:text-accent-gradient transition-all font-medium px-4 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
                       whileHover={{ x: 10 }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {item}
+                      {item.label}
                     </motion.a>
                   ))}
                   <div className="pt-4 space-y-3">
@@ -1287,33 +1299,49 @@ const NyantraLanding = () => {
    
 
         {/* Integrations Section */}
-        <section id="integrations" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section id="integrations" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-visible">
           <div className="absolute inset-0 -z-10">
             <div className="absolute top-1/3 left-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-primary, rgba(59,130,246,0.12)), transparent)' }} />
             <div className="absolute bottom-1/4 right-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-secondary, rgba(245,158,11,0.08)), transparent)' }} />
           </div>
 
           <div className="max-w-7xl mx-auto">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12 overflow-visible">
               <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
                 <Database className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                Trusted Integrations
+                {t('integrations.badge')}
               </motion.span>
 
-              <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">{t('extracted.works_seamlessly_with')} </h2>
-              <p className="mt-2 text-sm sm:text-base theme-text-muted max-w-2xl mx-auto">{t('extracted.connect_to_national_and_regional_services_with_secure_audita')} </p>
+              <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary overflow-visible py-4" style={{ lineHeight: '1.4' }}>
+                {t('integrations.title')}
+              </h2>
+              <p className="mt-2 text-sm sm:text-base theme-text-muted max-w-2xl mx-auto overflow-visible py-2">
+                {t('integrations.description')}
+              </p>
             </motion.div>
 
             {/* Integrations Grid */}
             <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
-              {[
-                { key: 'pfms', name: 'PFMS', logo: '/next.svg', desc: 'Payments & DBT', accent: 'from-amber-400 to-amber-500' },
-                { key: 'aadhaar', name: 'Aadhaar', logo: '/window.svg', desc: 'Identity Verification', accent: 'from-blue-400 to-indigo-500' },
-                { key: 'cctns', name: 'CCTNS', logo: '/vercel.svg', desc: 'Police Records', accent: 'from-indigo-400 to-purple-500' },
-                { key: 'ecourts', name: 'eCourts', logo: '/globe.svg', desc: 'Case Fetching', accent: 'from-green-400 to-teal-500' },
-                { key: 'digilocker', name: 'DigiLocker', logo: '/file.svg', desc: 'Document Store', accent: 'from-pink-400 to-rose-500' },
-                { key: 'sms', name: 'SMS Gateways', logo: '/next.svg', desc: 'Notifications', accent: 'from-yellow-400 to-amber-500' }
-              ].map((integration) => (
+              {(() => {
+                const integrationItems = JSON.parse(t('integrations.items')) as Array<{ name: string; desc: string }>;
+                const logos = ['/next.svg', '/window.svg', '/vercel.svg', '/globe.svg', '/file.svg', '/next.svg'];
+                const accents = [
+                  'from-amber-400 to-amber-500',
+                  'from-blue-400 to-indigo-500',
+                  'from-indigo-400 to-purple-500',
+                  'from-green-400 to-teal-500',
+                  'from-pink-400 to-rose-500',
+                  'from-yellow-400 to-amber-500'
+                ];
+                
+                return integrationItems.map((integration, idx) => ({
+                  key: integration.name.toLowerCase().replace(/\s+/g, ''),
+                  name: integration.name,
+                  logo: logos[idx],
+                  desc: integration.desc,
+                  accent: accents[idx]
+                }));
+              })().map((integration: any) => (
                 <motion.div key={integration.key} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
                   <div className="w-full theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center space-y-3 hover:shadow-xl transition-all duration-300">
                     <div className={`w-20 h-20 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br ${integration.accent}`}>
@@ -1325,7 +1353,7 @@ const NyantraLanding = () => {
                       <p className="text-xs theme-text-muted">{integration.desc}</p>
                     </div>
                     <a href={`#`} aria-label={`Learn more about ${integration.name}`} className="mt-2 inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">
-                      Learn
+                      {t('integrations.learnMore')}
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </a>
                   </div>
@@ -1334,10 +1362,12 @@ const NyantraLanding = () => {
             </motion.div>
 
             {/* CTA */}
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 text-center">
-              <p className="theme-text-secondary mb-4">{t('extracted.need_a_custom_connector_we_offer_secure_apis_webhooks_and_en')} </p>
-              <motion.a href="#" className="inline-flex items-center px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg" whileHover={{ scale: 1.05 }} aria-label={t('extracted.contact_sales_for_integrations')}>
-                Contact Sales
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 text-center overflow-visible">
+              <p className="theme-text-secondary mb-4 overflow-visible py-2">
+                {t('integrations.ctaDescription')}
+              </p>
+              <motion.a href="#" className="inline-flex items-center px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg" whileHover={{ scale: 1.05 }} aria-label={t('integrations.ctaButton')}>
+                {t('integrations.ctaButton')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </motion.a>
             </motion.div>
@@ -1345,26 +1375,25 @@ const NyantraLanding = () => {
         </section>
 
 {/* FAQ Section (placed between Benefits and Integrations) */}
-        <section id="faq" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          <div className="max-w-4xl mx-auto text-center mb-12">
+        <section id="faq" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-visible">
+          <div className="max-w-4xl mx-auto text-center mb-12 overflow-visible">
             <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
               <HelpCircle className="inline w-4 h-4 mr-2 text-accent-gradient" />
-              Frequently Asked Questions
+              {t('faq.badge')}
             </motion.span>
 
-            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">{t('extracted.got_questions_weaposve_got_answers')} </h2>
-            <p className="mt-2 text-sm sm:text-base theme-text-muted">{t('extracted.common_queries_about_the_program_security_and_integrations_e')} </p>
+            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary overflow-visible py-4" style={{ lineHeight: '1.4' }}>
+              {t('faq.title')} <span className="block">{t('faq.titleHighlight')}</span>
+            </h2>
+            <p className="mt-2 text-sm sm:text-base theme-text-muted overflow-visible py-2">
+              {t('faq.description')}
+            </p>
           </div>
 
-          <div className="max-w-5xl mx-auto">
-            {[
-              { q: 'How long does verification take?', a: 'Most cases complete within 48-72 hours after documents are uploaded and Aadhaar verification is successful.' },
-              { q: 'Is my data secure?', a: 'Yes. We use bank-grade encryption, role-based access controls, and audit trails to ensure privacy and integrity.' },
-              { q: 'Which documents are required?', a: 'Aadhaar or government ID, FIR (if applicable), bank account details for DBT, and supporting evidence.' },
-              { q: 'Can districts integrate their own SMS gateway?', a: 'Yes — we support multiple SMS gateway providers and can onboard a custom provider via our enterprise onboarding.' }
-            ].map((item, i) => (
-              <motion.div key={i} className="mb-4 rounded-2xl theme-bg-card theme-border-card p-4" initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <FAQItem question={item.q} answer={item.a} index={i} />
+          <div className="max-w-5xl mx-auto overflow-visible">
+            {(JSON.parse(t('faq.items')) as Array<{ question: string; answer: string }>).map((item: any, i: number) => (
+              <motion.div key={i} className="mb-4 rounded-2xl theme-bg-card theme-border-card p-4 overflow-visible" initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+                <FAQItem question={item.question} answer={item.answer} index={i} />
               </motion.div>
             ))}
           </div>
@@ -1376,23 +1405,22 @@ const NyantraLanding = () => {
               {/* Company Info */}
               <div>
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-transparent">
-                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('extracted.nyantara_logo')} width={40} height={40} className="object-contain" />
+                  <div className="w-10 h-10 flex items-center justify-center overflow-hidden bg-transparent">
+                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={40} height={40} className="object-contain" />
                   </div>
-                  <span className="text-2xl font-bold text-accent-gradient">
-                    Nyantara
+                  <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
+                    {t('nav.brandName')}
                   </span>
                 </div>
-                <p className="theme-text-secondary mb-6 leading-relaxed">
-                  Empowering social justice through technology. Making Direct Benefit Transfer
-                  transparent, efficient, and accessible for all.
+                <p className="theme-text-secondary mb-6 leading-relaxed overflow-visible py-2">
+                  {t('footer.companyDesc')}
                 </p>
                 <div className="flex space-x-4">
                   {[
-                    { icon: Globe, label: 'Website' },
-                    { icon: Mail, label: 'Email' },
-                    { icon: Phone, label: 'Phone' },
-                    { icon: MapPinned, label: 'Location' }
+                    { icon: Globe, label: t('footer.social.website') },
+                    { icon: Mail, label: t('footer.social.email') },
+                    { icon: Phone, label: t('footer.social.phone') },
+                    { icon: MapPinned, label: t('footer.social.location') }
                   ].map((social, i) => (
                     <motion.button
                       key={i}
@@ -1409,11 +1437,18 @@ const NyantraLanding = () => {
 
               {/* Quick Links */}
               <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary">{t('extracted.quick_links_1')} </h3>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.quickLinks')}</h3>
                 <ul className="space-y-3">
-                  {['About Us', 'How It Works', 'Success Stories', 'News & Updates', 'Careers', 'Contact'].map((link, i) => (
+                  {[
+                    t('footer.links.about'),
+                    t('footer.links.howItWorks'),
+                    t('footer.links.successStories'),
+                    t('footer.links.newsUpdates'),
+                    t('footer.links.careers'),
+                    t('footer.links.contact')
+                  ].map((link, i) => (
                     <motion.li key={i} whileHover={{ x: 5 }}>
-                      <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2">
+                      <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2 overflow-visible">
                         <ChevronRight className="w-4 h-4" />
                         <span>{link}</span>
                       </a>
@@ -1424,16 +1459,16 @@ const NyantraLanding = () => {
 
               {/* Enhanced Contact Info */}
               <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary">{t('extracted.get_in_touch')} </h3>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.contact.title')}</h3>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
                       <Phone className="w-5 h-5 text-accent-gradient" />
                     </div>
-                    <div>
-                      <p className="text-sm theme-text-muted mb-1">{t('extracted.helpline')} </p>
-                      <p className="theme-text-primary font-semibold">{t('extracted.1800xxxxxxx')} </p>
-                      <p className="text-xs theme-text-muted">{t('extracted.available_247')} </p>
+                    <div className="overflow-visible">
+                      <p className="text-sm theme-text-muted mb-1">{t('footer.contact.helpline')}</p>
+                      <p className="theme-text-primary font-semibold">{t('footer.contact.helplineNumber')}</p>
+                      <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.available247')}</p>
                     </div>
                   </div>
 
@@ -1441,10 +1476,10 @@ const NyantraLanding = () => {
                     <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
                       <Mail className="w-5 h-5 text-accent-gradient" />
                     </div>
-                    <div>
-                      <p className="text-sm theme-text-muted mb-1">{t('extracted.email')} </p>
-                      <p className="theme-text-primary font-semibold">{t('extracted.supportnyantragovin')} </p>
-                      <p className="text-xs theme-text-muted">{t('extracted.response_in_24_hours')} </p>
+                    <div className="overflow-visible">
+                      <p className="text-sm theme-text-muted mb-1">{t('footer.contact.email')}</p>
+                      <p className="theme-text-primary font-semibold">{t('footer.contact.emailAddress')}</p>
+                      <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.responseTime')}</p>
                     </div>
                   </div>
                 </div>
@@ -1452,13 +1487,13 @@ const NyantraLanding = () => {
 
               {/* Newsletter */}
               <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary">Stay Updated</h3>
+                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.newsletter.title')}</h3>
                 <div className="space-y-4">
-                  <p className="theme-text-secondary text-sm">{t('footer.stayUpdated')}</p>
+                  <p className="theme-text-secondary text-sm overflow-visible">{t('footer.newsletter.description')}</p>
                   <div className="flex gap-3">
                     <input
                       type="email"
-                      placeholder={t('extracted.enter_your_email')}
+                      placeholder={t('footer.newsletter.placeholder')}
                       className="flex-1 px-4 py-3 theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
                     />
                     <motion.button
@@ -1466,7 +1501,7 @@ const NyantraLanding = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <span>{t('footer.subscribe')}</span>
+                      <span>{t('footer.newsletter.subscribe')}</span>
                       <Send className="w-4 h-4" />
                     </motion.button>
                   </div>
@@ -1477,19 +1512,24 @@ const NyantraLanding = () => {
             {/* Bottom Bar */}
             <div className="border-t theme-border-glass pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="theme-text-secondary text-sm text-center md:text-left">
-                  <p>{t('footer.copyright')}</p>
-                  <p className="text-xs mt-1">
+                  <div className="theme-text-secondary text-sm text-center md:text-left overflow-visible">
+                  <p className="overflow-visible">{t('footer.copyright')}</p>
+                  <p className="text-xs mt-1 overflow-visible py-1" style={{ lineHeight: '1.4' }}>
                     {t('footer.developedBy')}
                   </p>
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-6 text-sm">
-                  {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Accessibility'].map((link, i) => (
+                  {[
+                    t('footer.links.privacyPolicy'),
+                    t('footer.links.termsOfService'),
+                    t('footer.links.cookiePolicy'),
+                    t('footer.links.accessibility')
+                  ].map((link, i) => (
                     <motion.a
                       key={i}
                       href="#"
-                      className="theme-text-secondary hover:text-accent-gradient transition-colors"
+                      className="theme-text-secondary hover:text-accent-gradient transition-colors overflow-visible"
                       whileHover={{ scale: 1.05 }}
                     >
                       {link}

@@ -15,7 +15,7 @@ import {
   ChevronRight,
   ArrowUpRight, ArrowDownRight, ArrowRight,
   Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, CheckCircle, AlertCircle, Clock as ClockIcon,
-  
+  Archive, Server
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -311,7 +311,7 @@ const Dashboard = () => {
 
   const quickStats = [
     {
-      title: 'Today\'s Applications',
+      title: t('dashboard.quickStats.todaysApplications'),
       value: 23,
       change: '+12%',
       trend: 'up',
@@ -319,7 +319,7 @@ const Dashboard = () => {
       color: 'from-green-500 to-emerald-500'
     },
     {
-      title: 'Pending Review',
+      title: t('dashboard.quickStats.pendingReview'),
       value: 48,
       change: '-5%',
       trend: 'down',
@@ -327,7 +327,7 @@ const Dashboard = () => {
       color: 'from-amber-500 to-orange-500'
     },
     {
-      title: 'This Week Disbursed',
+      title: t('dashboard.quickStats.weekDisbursed'),
       value: '₹42.5L',
       change: '+18%',
       trend: 'up',
@@ -335,7 +335,7 @@ const Dashboard = () => {
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      title: 'Satisfaction Rate',
+      title: t('dashboard.quickStats.satisfactionRate'),
       value: '94.2%',
       change: '+2.1%',
       trend: 'up',
@@ -347,37 +347,37 @@ const Dashboard = () => {
   const grievanceData = [
     {
       id: 'GRV-001',
-      subject: 'Delay in Application Processing',
+      subject: t('dashboard.grievance.subject1'),
       status: 'open',
       priority: 'high',
       date: '2024-03-15',
-      assignedTo: 'Officer Raj'
+      assignedTo: t('dashboard.officers.raj')
     },
     {
       id: 'GRV-002',
-      subject: 'Document Verification Issue',
+      subject: t('dashboard.grievance.subject2'),
       status: 'in-progress',
       priority: 'medium',
       date: '2024-03-14',
-      assignedTo: 'Officer Priya'
+      assignedTo: t('dashboard.officers.priya')
     },
     {
       id: 'GRV-003',
-      subject: 'Payment Disbursement Query',
+      subject: t('dashboard.grievance.subject3'),
       status: 'resolved',
       priority: 'low',
       date: '2024-03-13',
-      assignedTo: 'Officer Amit'
+      assignedTo: t('dashboard.officers.amit')
     }
   ];
 
   const systemIntegrations = [
-    { name: 'Aadhaar', icon: Fingerprint, status: 'active', color: 'from-blue-500 to-blue-600' },
-    { name: 'eCourts', icon: FileText, status: 'active', color: 'from-indigo-500 to-indigo-600' },
-    { name: 'CCTNS', icon: Database, status: 'warning', color: 'from-purple-500 to-purple-600' },
-    { name: 'PFMS', icon: Wallet, status: 'active', color: 'from-green-500 to-green-600' },
-    { name: 'DigiLocker', icon: Package, status: 'active', color: 'from-amber-500 to-amber-600' },
-    { name: 'State DBs', icon: Layers, status: 'active', color: 'from-pink-500 to-pink-600' }
+    { name: t('dashboard.integrations.aadhaar'), icon: Fingerprint, status: 'active', color: 'from-blue-500 to-blue-600' },
+    { name: t('dashboard.integrations.ecourts'), icon: FileText, status: 'active', color: 'from-indigo-500 to-indigo-600' },
+    { name: t('dashboard.integrations.cctns'), icon: Database, status: 'warning', color: 'from-purple-500 to-purple-600' },
+    { name: t('dashboard.integrations.pfms'), icon: Wallet, status: 'active', color: 'from-green-500 to-green-600' },
+    { name: t('dashboard.integrations.digilocker'), icon: Archive, status: 'active', color: 'from-amber-500 to-amber-600' },
+    { name: t('dashboard.integrations.stateDbs'), icon: Server, status: 'error', color: 'from-red-500 to-red-600' }
   ];
 
   const navigationItems = [
@@ -612,12 +612,12 @@ const Dashboard = () => {
                           transition={{ duration: 2, repeat: Infinity }}
                         >
                           <Rocket className="inline w-3 h-3 sm:w-4 sm:h-4 mr-2 text-accent-gradient" />
-                          Smart DBT Dashboard
+                          {t('dashboard.welcome.title')}
                         </motion.span>
-                        <h2 className="text-xl sm:text-3xl font-bold theme-text-primary mb-2">
-                          Welcome back, <span className="text-accent-gradient">{t('extracted.officer')} </span>
+                        <h2 className="text-xl sm:text-3xl font-bold theme-text-primary mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
+                          {t('dashboard.welcome.greeting')} <span className="text-accent-gradient">{t('dashboard.welcome.officer')}</span>
                         </h2>
-                        <p className="theme-text-secondary text-sm sm:text-base">{`Here's what's happening with your DBT applications today.`}</p>
+                        <p className="theme-text-secondary text-sm sm:text-base py-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.welcome.description')}</p>
                       </div>
                       <motion.button
                         className="px-4 py-2.5 sm:px-6 sm:py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
@@ -708,10 +708,10 @@ const Dashboard = () => {
                                   setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')
                                 }
                               >
-                                <option value="line">{t('extracted.line')} </option>
-                                <option value="area">{t('extracted.area')} </option>
-                                <option value="bar">Bar</option>
-                                <option value="stacked">{t('extracted.stacked_bar')} </option>
+                                <option value="line">{t('extracted.line')}</option>
+                                <option value="area">{t('extracted.area')}</option>
+                                <option value="bar">{t('dashboard.chartLabels.bar')}</option>
+                                <option value="stacked">{t('extracted.stacked_bar')}</option>
                               </select>
                             </div>
 
@@ -765,13 +765,13 @@ const Dashboard = () => {
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.recent_applications_1')} </h3>
+                          <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.recentApplications')}</h3>
                           <motion.button
                             className="flex items-center space-x-2 px-3 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm w-full sm:w-auto justify-center sm:justify-start"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <span>{t('extracted.view_all')} </span>
+                            <span>{t('dashboard.sections.viewAll')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </motion.button>
                         </div>
@@ -819,7 +819,7 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.system_integrations_1')} </h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.systemIntegrations')}</h3>
                         <div className="space-y-3">
                           {systemIntegrations.map((integration, index) => (
                             <motion.div
@@ -849,7 +849,7 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.grievance_status_1')} </h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.grievanceStatus')}</h3>
                         <div className="space-y-3">
                           {grievanceData.map((grievance, index) => (
                             <motion.div
@@ -880,16 +880,16 @@ const Dashboard = () => {
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
+                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.quickActions')}</h3>
                         <div className="grid grid-cols-2 gap-3">
                           {[
-                            { label: 'New App', icon: Plus, color: 'from-blue-500 to-cyan-500' },
-                            { label: 'Reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
-                            { label: 'Analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
-                            { label: 'Settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
+                            { labelKey: 'dashboard.quickActionLabels.newApp', icon: Plus, color: 'from-blue-500 to-cyan-500' },
+                            { labelKey: 'dashboard.quickActionLabels.reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
+                            { labelKey: 'dashboard.quickActionLabels.analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
+                            { labelKey: 'dashboard.quickActionLabels.settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
                           ].map((action, index) => (
                             <motion.button
-                              key={action.label}
+                              key={action.labelKey}
                               className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white flex flex-col items-center justify-center space-y-2 shadow-lg`}
                               whileHover={{ scale: 1.05, y: -2 }}
                               whileTap={{ scale: 0.95 }}
@@ -898,7 +898,7 @@ const Dashboard = () => {
                               transition={{ delay: index * 0.1 }}
                             >
                               <action.icon className="w-5 h-5" />
-                              <span className="text-xs font-medium">{action.label}</span>
+                              <span className="text-xs font-medium" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t(action.labelKey)}</span>
                             </motion.button>
                           ))}
                         </div>

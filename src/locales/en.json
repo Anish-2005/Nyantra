@@ -1,5 +1,6 @@
 {
   "nav": {
+    "brandName": "Nyantra",
     "features": "Features",
     "process": "Process",
     "benefits": "Benefits",
@@ -94,6 +95,64 @@
       }
     ]
   },
+  "integrations": {
+    "badge": "Trusted Integrations",
+    "title": "Works Seamlessly With",
+    "description": "Connect to national and regional services with secure, auditable links — out of the box.",
+    "items": [
+      {
+        "name": "PFMS",
+        "desc": "Payments & DBT"
+      },
+      {
+        "name": "Aadhaar",
+        "desc": "Identity Verification"
+      },
+      {
+        "name": "CCTNS",
+        "desc": "Police Records"
+      },
+      {
+        "name": "eCourts",
+        "desc": "Case Fetching"
+      },
+      {
+        "name": "DigiLocker",
+        "desc": "Document Store"
+      },
+      {
+        "name": "SMS Gateways",
+        "desc": "Notifications"
+      }
+    ],
+    "learnMore": "Learn",
+    "ctaDescription": "Need a custom connector? We offer secure APIs, webhooks and enterprise onboarding.",
+    "ctaButton": "Contact Sales"
+  },
+  "faq": {
+    "badge": "Frequently Asked Questions",
+    "title": "Got Questions?",
+    "titleHighlight": "We've got answers.",
+    "description": "Common queries about the program, security, and integrations — explained simply.",
+    "items": [
+      {
+        "question": "How long does verification take?",
+        "answer": "Most cases complete within 48-72 hours after documents are uploaded and Aadhaar verification is successful."
+      },
+      {
+        "question": "Is my data secure?",
+        "answer": "Yes. We use bank-grade encryption, role-based access controls, and audit trails to ensure privacy and integrity."
+      },
+      {
+        "question": "Which documents are required?",
+        "answer": "Aadhaar or government ID, FIR (if applicable), bank account details for DBT, and supporting evidence."
+      },
+      {
+        "question": "Can districts integrate their own SMS gateway?",
+        "answer": "Yes — we support multiple SMS gateway providers and can onboard a custom provider via our enterprise onboarding."
+      }
+    ]
+  },
   "features": {
     "title": "Powerful Features",
     "subtitle": "Everything You Need for Seamless DBT",
@@ -130,9 +189,9 @@
     }
   },
   "footer": {
+    "logo": "Nyantara",
     "companyDesc": "Empowering social justice through technology. Making Direct Benefit Transfer transparent, efficient, and accessible for all.",
-    "stayUpdated": "Stay Updated",
-    "subscribe": "Subscribe",
+    "quickLinks": "Quick Links",
     "links": {
       "about": "About Us",
       "howItWorks": "How It Works",
@@ -151,8 +210,99 @@
       "phone": "Phone",
       "location": "Location"
     },
+    "contact": {
+      "title": "Get in Touch",
+      "helpline": "Helpline",
+      "helplineNumber": "1800-XXX-XXXX",
+      "available247": "Available 24/7",
+      "email": "Email",
+      "emailAddress": "support@nyantra.gov.in",
+      "responseTime": "Response in 24 hours"
+    },
+    "newsletter": {
+      "title": "Stay Updated",
+      "description": "Stay Updated",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe"
+    },
     "copyright": "© 2025 Nyantra. All rights reserved.",
     "developedBy": "Developed under Ministry of Social Justice & Empowerment, Government of India"
+  },
+  "dashboard": {
+    "welcome": {
+      "title": "Smart DBT Dashboard",
+      "greeting": "Welcome back,",
+      "officer": "Officer",
+      "description": "Here's what's happening with your DBT applications today."
+    },
+    "quickStats": {
+      "todaysApplications": "Today's Applications",
+      "pendingReview": "Pending Review",
+      "weekDisbursed": "This Week Disbursed",
+      "satisfactionRate": "Satisfaction Rate"
+    },
+    "sections": {
+      "recentApplications": "Recent Applications",
+      "viewAll": "View All",
+      "systemIntegrations": "System Integrations",
+      "grievanceStatus": "Grievance Status",
+      "quickActions": "Quick Actions"
+    },
+    "grievance": {
+      "subject1": "Delay in Application Processing",
+      "subject2": "Document Verification Issue",
+      "subject3": "Payment Disbursement Query"
+    },
+    "integrations": {
+      "aadhaar": "Aadhaar",
+      "ecourts": "eCourts",
+      "cctns": "CCTNS",
+      "pfms": "PFMS",
+      "digilocker": "DigiLocker",
+      "stateDbs": "State DBs"
+    },
+    "quickActionLabels": {
+      "newApp": "New App",
+      "reports": "Reports",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "officers": {
+      "raj": "Officer Raj",
+      "priya": "Officer Priya",
+      "amit": "Officer Amit"
+    },
+    "chartLabels": {
+      "bar": "Bar"
+    }
+  },
+  "applications": {
+    "title": "Applications Management",
+    "description": "Track and manage DBT applications under PCR/PoA Acts",
+    "export": "Export",
+    "newApplication": "New Application",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "inReview": "In Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "docsRequired": "Docs Required"
+    },
+    "search": "Search by name, ID, or district...",
+    "viewMode": {
+      "table": "Table",
+      "cards": "Cards"
+    },
+    "filters": "Filters",
+    "filterLabels": {
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "actType": "Act Type",
+      "allActs": "All Acts",
+      "priority": "Priority",
+      "allPriorities": "All Priorities"
+    }
   },
   "extracted": {
     "theme_variables": "{/* Theme Variables */}",

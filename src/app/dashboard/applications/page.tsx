@@ -439,18 +439,19 @@ const ApplicationsPage = () => {
                 className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
             >
                 <div>
-                    <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.applications_management')} </h1>
-                    <p className="theme-text-secondary">{t('extracted.track_and_manage_dbt_applications_under_pcrpoa_acts')} </p>
+                    <h1 className="text-3xl font-bold theme-text-primary mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.title')}</h1>
+                    <p className="theme-text-secondary py-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.description')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
+                        className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                         onClick={() => window.print()}
                     >
                         <Download className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t('extracted.export')} </span>
+                        <span className="hidden sm:inline" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.export')}</span>
                     </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -458,7 +459,7 @@ const ApplicationsPage = () => {
                         className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>{t('extracted.new_application')} </span>
+                        <span style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.newApplication')}</span>
                     </motion.button>
                 </div>
             </motion.div>
@@ -471,12 +472,12 @@ const ApplicationsPage = () => {
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
             >
                 {[
-                    { label: 'Total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText },
-                    { label: 'Pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock },
-                    { label: 'In Review', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye },
-                    { label: 'Approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check },
-                    { label: 'Rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
-                    { label: 'Docs Required', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle }
+                    { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText },
+                    { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock },
+                    { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye },
+                    { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check },
+                    { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
+                    { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle }
                 ].map((stat, idx) => (
                     <motion.div
                         key={idx}
@@ -487,7 +488,7 @@ const ApplicationsPage = () => {
                             <stat.icon className="w-5 h-5 text-white" />
                         </div>
                         <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-                        <p className="text-sm theme-text-muted">{stat.label}</p>
+                        <p className="text-sm theme-text-muted" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t(stat.labelKey)}</p>
                     </motion.div>
                 ))}
             </motion.div>
@@ -505,10 +506,11 @@ const ApplicationsPage = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
                         <input
                             type="text"
-                            placeholder={t('extracted.search_by_name_id_or_district')}
+                            placeholder={t('applications.search')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                         />
                     </div>
 
@@ -518,13 +520,13 @@ const ApplicationsPage = () => {
                             onClick={() => setViewMode('table')}
                             className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
                         >
-                            Table
+                            {t('applications.viewMode.table')}
                         </button>
                         <button
                             onClick={() => setViewMode('cards')}
                             className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
                         >
-                            Cards
+                            {t('applications.viewMode.cards')}
                         </button>
                     </div>
 
@@ -533,10 +535,11 @@ const ApplicationsPage = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
+                        className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'}`}
+                        style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
                     >
                         <Filter className="w-4 h-4" />
-                        <span>{t('extracted.filters')} </span>
+                        <span style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filters')}</span>
                         {(statusFilter !== 'all' || actTypeFilter !== 'all' || priorityFilter !== 'all') && (
                             <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                         )}
@@ -554,43 +557,46 @@ const ApplicationsPage = () => {
                         >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.status')} </label>
+                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.status')}</label>
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                     >
-                                        <option value="all">{t('extracted.all_statuses')} </option>
-                                        <option value="pending">{t('extracted.pending')} </option>
-                                        <option value="in-review">{t('extracted.in_review')} </option>
-                                        <option value="approved">{t('extracted.approved')} </option>
-                                        <option value="rejected">{t('extracted.rejected')} </option>
-                                        <option value="documents-required">{t('extracted.documents_required')} </option>
+                                        <option value="all">{t('applications.filterLabels.allStatuses')}</option>
+                                        <option value="pending">{t('applications.stats.pending')}</option>
+                                        <option value="in-review">{t('applications.stats.inReview')}</option>
+                                        <option value="approved">{t('applications.stats.approved')}</option>
+                                        <option value="rejected">{t('applications.stats.rejected')}</option>
+                                        <option value="documents-required">{t('applications.stats.docsRequired')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.act_type')} </label>
+                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.actType')}</label>
                                     <select
                                         value={actTypeFilter}
                                         onChange={(e) => setActTypeFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                     >
-                                        <option value="all">{t('extracted.all_acts')} </option>
-                                        <option value="PCR Act">{t('extracted.pcr_act')} </option>
-                                        <option value="PoA Act">{t('extracted.poa_act')} </option>
+                                        <option value="all">{t('applications.filterLabels.allActs')}</option>
+                                        <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                                        <option value="PoA Act">{t('extracted.poa_act')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm theme-text-muted mb-2">{t('extracted.priority')} </label>
+                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.priority')}</label>
                                     <select
                                         value={priorityFilter}
                                         onChange={(e) => setPriorityFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                     >
-                                        <option value="all">{t('extracted.all_priorities')} </option>
-                                        <option value="high">{t('extracted.high')} </option>
-                                        <option value="medium">{t('extracted.medium')} </option>
-                                        <option value="low">Low</option>
+                                        <option value="all">{t('applications.filterLabels.allPriorities')}</option>
+                                        <option value="high">{t('extracted.high')}</option>
+                                        <option value="medium">{t('extracted.medium')}</option>
+                                        <option value="low">{t('extracted.low')}</option>
                                     </select>
                                 </div>
                             </div>
@@ -611,7 +617,7 @@ const ApplicationsPage = () => {
                         {/* Desktop Table */}
                         <div className="hidden sm:block overflow-x-auto">
                             <table className="w-full min-w-[700px] border-collapse">
-                                <thead className="theme-bg-glass border-b theme-border-glass">
+                                <thead className="border-b theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
                                     <tr>
                                         <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')} </th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')} </th>
@@ -647,7 +653,7 @@ const ApplicationsPage = () => {
                                                 <p className="text-xs theme-text-muted">{app.state}</p>
                                             </td>
                                             <td className="hidden md:table-cell px-4 py-2">
-                                                <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">{app.actType}</span>
+                                                <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary" style={{ background: theme === 'light' ? 'rgba(241, 245, 249, 0.8)' : undefined }}>{app.actType}</span>
                                             </td>
                                             <td className="hidden md:table-cell px-4 py-2 text-sm font-semibold theme-text-primary">
                                                 {formatCurrency(app.amount)}
@@ -664,8 +670,8 @@ const ApplicationsPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-2 flex gap-2">
-                                                <Eye className="w-4 h-4 cursor-pointer" />
-                                                <Edit className="w-4 h-4 cursor-pointer" />
+                                                <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
+                                                <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
                                             </td>
                                         </motion.tr>
                                     ))}
@@ -704,8 +710,8 @@ const ApplicationsPage = () => {
                                     </div>
 
                                     <div className="flex gap-2 mt-2">
-                                        <Eye className="w-4 h-4 cursor-pointer" />
-                                        <Edit className="w-4 h-4 cursor-pointer" />
+                                        <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
+                                        <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
                                     </div>
                                 </motion.div>
                             ))}
@@ -761,11 +767,11 @@ const ApplicationsPage = () => {
                                         {app.status.replace('-', ' ')}
                                     </span>
                                     <div className="flex items-center gap-1">
-                                        <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                                            <Eye className="w-4 h-4" />
+                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors">
+                                            <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                                         </button>
-                                        <button className="p-1.5 rounded-lg hover:theme-bg-card">
-                                            <Edit className="w-4 h-4" />
+                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors">
+                                            <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                                         </button>
                                     </div>
                                 </div>
@@ -775,7 +781,7 @@ const ApplicationsPage = () => {
                 )}
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
+                <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
                     <p className="text-sm theme-text-muted">
                         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
                     </p>
@@ -787,7 +793,8 @@ const ApplicationsPage = () => {
                                     whileTap={{ scale: 0.95 }}
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage((p: number) => p - 1)}
-                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
                                     Prev
                                 </motion.button>
@@ -796,7 +803,8 @@ const ApplicationsPage = () => {
                                     whileTap={{ scale: 0.95 }}
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage((p: number) => p + 1)}
-                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
                                     Next
                                 </motion.button>
@@ -808,7 +816,8 @@ const ApplicationsPage = () => {
                                     whileTap={{ scale: 0.95 }}
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage((p: number) => p - 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </motion.button>
@@ -818,7 +827,8 @@ const ApplicationsPage = () => {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setCurrentPage(i + 1)}
-                                        className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border'}`}
+                                        className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
+                                        style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
                                     >
                                         {i + 1}
                                     </motion.button>
@@ -828,7 +838,8 @@ const ApplicationsPage = () => {
                                     whileTap={{ scale: 0.95 }}
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage((p: number) => p + 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </motion.button>
@@ -855,14 +866,14 @@ const ApplicationsPage = () => {
                             onClick={(e) => e.stopPropagation()}
                             className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto'}`}
                         >
-                            <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
+                            <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}>
                                 <div>
                                     <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication.id}</h2>
                                     <p className="theme-text-muted">{t('extracted.application_details')} </p>
                                 </div>
                                 <button
                                     onClick={() => setSelectedApplication(null)}
-                                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
+                                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
