@@ -96,7 +96,7 @@ const AnalyticsPage = () => {
   const performanceIndicators = useMemo(() => {
     return [
       {
-        label: 'Application Success Rate',
+        labelKey: 'extracted.application_success_rate',
         value: `${filteredData.overview.successRate}%`,
         change: '+2.3%',
         trend: 'up',
@@ -104,15 +104,15 @@ const AnalyticsPage = () => {
         color: 'from-green-500 to-emerald-500'
       },
       {
-        label: 'Avg Processing Time',
-        value: `${filteredData.overview.avgProcessingTime} days`,
-        change: '-0.8 days',
+        labelKey: 'extracted.avg_processing_time',
+        value: `${filteredData.overview.avgProcessingTime} ${t('extracted.days')}`,
+        change: `-0.8 ${t('extracted.days')}`,
         trend: 'down',
         icon: TrendingDown,
         color: 'from-blue-500 to-cyan-500'
       },
       {
-        label: 'Disbursement Rate',
+        labelKey: 'extracted.disbursement_rate',
         value: `${Math.round((filteredData.overview.totalDisbursements / filteredData.overview.totalApplications) * 100)}%`,
         change: '+4.1%',
         trend: 'up',
@@ -120,7 +120,7 @@ const AnalyticsPage = () => {
         color: 'from-purple-500 to-pink-500'
       },
       {
-        label: 'Amount Disbursed',
+        labelKey: 'extracted.amount_disbursed',
         value: `₹${(filteredData.overview.totalAmount / 10000000).toFixed(1)}Cr`,
         change: '+12.5%',
         trend: 'up',
@@ -128,7 +128,7 @@ const AnalyticsPage = () => {
         color: 'from-amber-500 to-orange-500'
       }
     ];
-  }, [filteredData]);
+  }, [filteredData, t]);
 
   // Detect small screens and adjust UI defaults for better mobile UX
   useEffect(() => {
@@ -350,7 +350,8 @@ const AnalyticsPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
+            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
@@ -381,11 +382,11 @@ const AnalyticsPage = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 'week', label: 'Last Week' },
-              { value: 'month', label: 'Last Month' },
-              { value: 'quarter', label: 'Last Quarter' },
-              { value: 'year', label: 'Last Year' },
-              { value: 'custom', label: 'Custom Range' }
+              { value: 'week', labelKey: 'extracted.last_week' },
+              { value: 'month', labelKey: 'extracted.last_month' },
+              { value: 'quarter', labelKey: 'extracted.last_quarter' },
+              { value: 'year', labelKey: 'extracted.last_year' },
+              { value: 'custom', labelKey: 'extracted.custom_range' }
             ].map((period) => (
               <motion.button
                 key={period.value}
@@ -395,10 +396,11 @@ const AnalyticsPage = () => {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
                   timeRange === period.value 
                     ? 'accent-gradient text-white' 
-                    : 'theme-bg-glass theme-text-muted'
+                    : 'theme-bg-glass theme-text-muted border theme-border-glass'
                 }`}
+                style={timeRange !== period.value && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
               >
-                {period.label}
+                {t(period.labelKey)}
               </motion.button>
             ))}
           </div>
@@ -422,6 +424,9 @@ const AnalyticsPage = () => {
               transition={{ delay: 0.1 + idx * 0.1 }}
               whileHover={{ y: -4 }}
               className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+              style={{
+                background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+              }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${indicator.color} flex items-center justify-center`}>
@@ -433,7 +438,7 @@ const AnalyticsPage = () => {
                 </div>
               </div>
               <p className="text-2xl font-bold theme-text-primary mb-1">{indicator.value}</p>
-              <p className="text-sm theme-text-muted">{indicator.label}</p>
+              <p className="text-sm theme-text-muted">{t(indicator.labelKey)}</p>
             </motion.div>
           );
         })}
@@ -447,21 +452,24 @@ const AnalyticsPage = () => {
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
         {[
-          { label: 'Total Applications', value: formatNumber(filteredData.overview.totalApplications), icon: FileText, color: 'from-blue-500 to-cyan-500' },
-          { label: 'Beneficiaries', value: formatNumber(filteredData.overview.totalBeneficiaries), icon: Users, color: 'from-green-500 to-emerald-500' },
-          { label: 'Disbursements', value: formatNumber(filteredData.overview.totalDisbursements), icon: Banknote, color: 'from-purple-500 to-pink-500' },
-          { label: 'Amount Disbursed', value: formatCurrency(filteredData.overview.totalAmount), icon: DollarSign, color: 'from-amber-500 to-orange-500' }
+          { labelKey: 'extracted.total_applications', value: formatNumber(filteredData.overview.totalApplications), icon: FileText, color: 'from-blue-500 to-cyan-500' },
+          { labelKey: 'extracted.beneficiaries', value: formatNumber(filteredData.overview.totalBeneficiaries), icon: Users, color: 'from-green-500 to-emerald-500' },
+          { labelKey: 'extracted.disbursements', value: formatNumber(filteredData.overview.totalDisbursements), icon: Banknote, color: 'from-purple-500 to-pink-500' },
+          { labelKey: 'extracted.amount_disbursed', value: formatCurrency(filteredData.overview.totalAmount), icon: DollarSign, color: 'from-amber-500 to-orange-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
             whileHover={{ y: -2 }}
             className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl text-center"
+            style={{
+              background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+            }}
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 mx-auto`}>
               <stat.icon className="w-5 h-5 text-white" />
             </div>
             <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.label}</p>
+            <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -541,9 +549,9 @@ const AnalyticsPage = () => {
                 </div>
               </div>
               <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.pcr_act')} </h4>
-              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.applications)} Applications</p>
-              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.disbursements)} Disbursed</p>
-              <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.pcr.successRate}% Success</p>
+              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.applications)} {t('extracted.applications')}</p>
+              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.pcr.disbursements)} {t('extracted.disbursed')}</p>
+              <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.pcr.successRate}% {t('extracted.success')}</p>
             </div>
             <div className="text-center">
                 <div className="relative inline-block mb-4">
@@ -554,9 +562,9 @@ const AnalyticsPage = () => {
                 </div>
               </div>
               <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.poa_act')} </h4>
-              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.applications)} Applications</p>
-              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.disbursements)} Disbursed</p>
-              <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.poa.successRate}% Success</p>
+              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.applications)} {t('extracted.applications')}</p>
+              <p className="text-sm theme-text-muted">{formatNumber(filteredData.actWiseBreakdown.poa.disbursements)} {t('extracted.disbursed')}</p>
+              <p className="text-sm font-medium text-green-500">{filteredData.actWiseBreakdown.poa.successRate}% {t('extracted.success')}</p>
             </div>
           </div>
         </motion.div>
@@ -587,12 +595,12 @@ const AnalyticsPage = () => {
                   </div>
                   <div>
                     <p className="font-medium theme-text-primary">{state.state}</p>
-                    <p className="text-xs theme-text-muted">{state.applications} applications</p>
+                    <p className="text-xs theme-text-muted">{state.applications} {t('extracted.applications_lowercase')}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold theme-text-primary">{state.disbursements} disbursed</p>
-                  <p className="text-xs theme-text-muted">{state.successRate}% success</p>
+                  <p className="font-semibold theme-text-primary">{state.disbursements} {t('extracted.disbursed_lowercase')}</p>
+                  <p className="text-xs theme-text-muted">{state.successRate}% {t('extracted.success_lowercase')}</p>
                 </div>
               </div>
             ))}
@@ -629,8 +637,8 @@ const AnalyticsPage = () => {
                   ></div>
                 </div>
                 <div className="flex justify-between text-xs theme-text-muted mt-2">
-                  <span>{formatNumber(data.applications)} applications</span>
-                  <span>{formatNumber(data.disbursements)} disbursed</span>
+                  <span>{formatNumber(data.applications)} {t('extracted.applications_lowercase')}</span>
+                  <span>{formatNumber(data.disbursements)} {t('extracted.disbursed_lowercase')}</span>
                 </div>
               </div>
             ))}
@@ -654,16 +662,16 @@ const AnalyticsPage = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: 'Avg Processing Time', value: `${filteredData.performanceMetrics.avgApplicationToDisbursement} days`, icon: ClockIcon },
-            { label: 'Avg Verification Time', value: `${filteredData.performanceMetrics.avgVerificationTime} days`, icon: CheckCircle },
-            { label: 'Rejection Rate', value: `${filteredData.performanceMetrics.rejectionRate}%`, icon: XCircle },
-            { label: 'Document Deficiency', value: `${filteredData.performanceMetrics.documentDeficiencyRate}%`, icon: AlertCircle },
-            { label: 'Appeal Success Rate', value: `${filteredData.performanceMetrics.appealSuccessRate}%`, icon: AwardIcon }
+            { labelKey: 'extracted.avg_processing_time', value: `${filteredData.performanceMetrics.avgApplicationToDisbursement} ${t('extracted.days')}`, icon: ClockIcon },
+            { labelKey: 'extracted.avg_verification_time', value: `${filteredData.performanceMetrics.avgVerificationTime} ${t('extracted.days')}`, icon: CheckCircle },
+            { labelKey: 'extracted.rejection_rate', value: `${filteredData.performanceMetrics.rejectionRate}%`, icon: XCircle },
+            { labelKey: 'extracted.document_deficiency', value: `${filteredData.performanceMetrics.documentDeficiencyRate}%`, icon: AlertCircle },
+            { labelKey: 'extracted.appeal_success_rate', value: `${filteredData.performanceMetrics.appealSuccessRate}%`, icon: AwardIcon }
           ].map((metric, idx) => (
             <div key={idx} className="text-center p-4 rounded-lg theme-bg-glass">
               <metric.icon className="w-8 h-8 theme-text-primary mx-auto mb-2" />
               <p className="text-lg font-bold theme-text-primary mb-1">{metric.value}</p>
-              <p className="text-xs theme-text-muted">{metric.label}</p>
+              <p className="text-xs theme-text-muted">{t(metric.labelKey)}</p>
             </div>
           ))}
         </div>
@@ -675,6 +683,9 @@ const AnalyticsPage = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
+        style={{
+          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+        }}
       >
         <div className="p-6 border-b theme-border-glass">
           <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.top_performing_districts')} </h3>
@@ -720,7 +731,10 @@ const AnalyticsPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors border theme-border-glass"
+                      style={{
+                        background: theme === 'light' ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.95)'
+                      }}
                     >
                       <Eye className="w-4 h-4" />
                     </motion.button>
@@ -738,6 +752,9 @@ const AnalyticsPage = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.55 }}
         className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+        style={{
+          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+        }}
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
@@ -748,7 +765,8 @@ const AnalyticsPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center theme-text-primary"
+              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             >
               <FileText className="w-4 h-4" />
               <span>{t('extracted.monthly_report')} </span>
@@ -756,7 +774,8 @@ const AnalyticsPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center theme-text-primary"
+              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             >
               <BarChart3 className="w-4 h-4" />
               <span>{t('extracted.performance_report')} </span>
