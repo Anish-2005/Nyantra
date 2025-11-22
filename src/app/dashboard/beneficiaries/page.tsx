@@ -576,7 +576,8 @@ const BeneficiariesPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
+            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
@@ -713,7 +714,8 @@ const BeneficiariesPage = () => {
               placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             />
           </div>
 
@@ -738,7 +740,8 @@ const BeneficiariesPage = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
+            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'}`}
+            style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
           >
             <Filter className="w-4 h-4" />
             <span>{t('extracted.filters')} </span>
@@ -763,7 +766,8 @@ const BeneficiariesPage = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_statuses')} </option>
                     <option value="verified">{t('extracted.verified')} </option>
@@ -778,7 +782,8 @@ const BeneficiariesPage = () => {
                   <select
                     value={actTypeFilter}
                     onChange={(e) => setActTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_acts')} </option>
                     <option value="PCR Act">{t('extracted.pcr_act')} </option>
@@ -790,7 +795,8 @@ const BeneficiariesPage = () => {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_categories')} </option>
                     <option value="SC">SC</option>
@@ -803,7 +809,8 @@ const BeneficiariesPage = () => {
                   <select
                     value={verificationFilter}
                     onChange={(e) => setVerificationFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_verification')} </option>
                     <option value="verified">{t('extracted.verified')} </option>
@@ -1033,21 +1040,24 @@ const BeneficiariesPage = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setSelectedBeneficiary(beneficiary)}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
                             <Eye className="w-4 h-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
                             <Edit className="w-4 h-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </motion.button>
@@ -1156,7 +1166,8 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   {t('extracted.prev')}
                 </motion.button>
@@ -1165,7 +1176,8 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   {t('extracted.next')}
                 </motion.button>
@@ -1177,7 +1189,8 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </motion.button>
@@ -1187,7 +1200,8 @@ const BeneficiariesPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border'}`}
+                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
+                    style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
                   >
                     {i + 1}
                   </motion.button>
@@ -1197,7 +1211,8 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </motion.button>
@@ -1223,6 +1238,7 @@ const BeneficiariesPage = () => {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
+              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}
             >
               <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
                 <div>
@@ -1242,42 +1258,42 @@ const BeneficiariesPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.personal_information_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <User className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.full_name')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.name}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                         <User className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.fatheraposs_name')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.fatherName}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Fingerprint className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.aadhaarNumber}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Phone className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.phone}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Shield className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.category_1')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.category}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Calendar className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.age')}</p>
@@ -1291,21 +1307,21 @@ const BeneficiariesPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.address_information_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <MapPin className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.district')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.district}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <MapPin className="w-5 h-5 theme-text-muted" />
                       <div>
                         <p className="text-xs theme-text-muted">{t('extracted.state')} </p>
                         <p className="font-medium theme-text-primary">{selectedBeneficiary.state}</p>
                       </div>
                     </div>
-                    <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass">
+                    <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.complete_address')} </p>
                       <p className="font-medium theme-text-primary">{selectedBeneficiary.address}</p>
                     </div>
@@ -1316,27 +1332,27 @@ const BeneficiariesPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_financial_details')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')} </p>
                       <p className="font-medium theme-text-primary">{selectedBeneficiary.actType}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.case_number')} </p>
                       <p className="font-medium theme-text-primary">{selectedBeneficiary.caseNumber}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')} </p>
                       <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.incidentDate)}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.reliefAmount)}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.disbursed_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.disbursedAmount)}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.registration_date')} </p>
                       <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.registrationDate)}</p>
                     </div>
@@ -1347,11 +1363,11 @@ const BeneficiariesPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.bank_account_details')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
                       <p className="font-medium theme-text-primary">{selectedBeneficiary.bankAccount}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
                       <p className="font-medium theme-text-primary">{selectedBeneficiary.ifsc}</p>
                     </div>
@@ -1394,10 +1410,10 @@ const BeneficiariesPage = () => {
                       'Caste Certificate',
                       'Bank Passbook'
                     ].map((doc, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass hover:theme-border-glass border border-transparent transition-all">
+                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass hover:theme-border-glass border transition-all" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined, borderColor: theme === 'light' ? 'rgba(226, 232, 240, 0.8)' : 'transparent' }}>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)' }}>
+                            <FileText className="w-5 h-5" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }} />
                           </div>
                           <div>
                             <p className="font-medium theme-text-primary">{doc}</p>
@@ -1405,10 +1421,10 @@ const BeneficiariesPage = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-lg hover:theme-bg-card">
+                          <button className="p-2 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-2 rounded-lg hover:theme-bg-card">
+                          <button className="p-2 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
                             <Download className="w-4 h-4" />
                           </button>
                           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -1423,7 +1439,12 @@ const BeneficiariesPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                    style={{
+                      backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                      color: theme === 'light' ? '#15803d' : '#86efac',
+                      border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                    }}
                   >
                     <Check className="w-5 h-5" />
                     {t('extracted.verify_beneficiary')}
@@ -1431,7 +1452,12 @@ const BeneficiariesPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                    style={{
+                      backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
+                      color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
+                      border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+                    }}
                   >
                     <Banknote className="w-5 h-5" />
                     {t('extracted.initiate_disbursement')}
@@ -1439,7 +1465,8 @@ const BeneficiariesPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <MessageSquare className="w-5 h-5" />
                     {t('extracted.request_documents')}

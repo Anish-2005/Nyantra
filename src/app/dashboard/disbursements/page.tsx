@@ -657,7 +657,8 @@ const DisbursementsPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2"
+            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
@@ -682,14 +683,14 @@ const DisbursementsPage = () => {
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
       >
         {[
-          { label: 'Total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote },
-          { label: 'Completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle },
-          { label: 'Pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { label: 'In Progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle },
-          { label: 'Failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle },
-          { label: 'Cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X },
-          { label: 'Success Rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp },
-          { label: 'Retry Needed', value: mockDisbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote },
+          { labelKey: 'extracted.completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle },
+          { labelKey: 'extracted.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock },
+          { labelKey: 'extracted.in_progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle },
+          { labelKey: 'extracted.failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle },
+          { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X },
+          { labelKey: 'extracted.success_rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp },
+          { labelKey: 'extracted.retry_needed', value: mockDisbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -700,7 +701,7 @@ const DisbursementsPage = () => {
               <stat.icon className="w-5 h-5 text-white" />
             </div>
             <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.label}</p>
+            <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -732,8 +733,8 @@ const DisbursementsPage = () => {
             ></div>
           </div>
           <div className="flex justify-between text-xs theme-text-muted mt-2">
-            <span>Total: {formatCurrency(stats.totalAmount)}</span>
-            <span>Pending: {formatCurrency(stats.pendingAmount)}</span>
+            <span>{t('extracted.total')}: {formatCurrency(stats.totalAmount)}</span>
+            <span>{t('extracted.pending')}: {formatCurrency(stats.pendingAmount)}</span>
           </div>
         </motion.div>
 
@@ -753,7 +754,7 @@ const DisbursementsPage = () => {
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PCR Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} disbursed
+            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PCR Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
 
@@ -773,7 +774,7 @@ const DisbursementsPage = () => {
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PoA Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} disbursed
+            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PoA Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
       </motion.div>
@@ -836,7 +837,8 @@ const DisbursementsPage = () => {
               placeholder={t('extracted.search_by_beneficiary_transaction_id_or_district')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             />
           </div>
 
@@ -846,13 +848,13 @@ const DisbursementsPage = () => {
               onClick={() => setViewMode('table')}
               className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
             >
-              Table
+              {t('extracted.table')}
             </button>
             <button
               onClick={() => setViewMode('cards')}
               className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
             >
-              Cards
+              {t('extracted.cards')}
             </button>
           </div>
 
@@ -861,7 +863,8 @@ const DisbursementsPage = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass'}`}
+            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'}`}
+            style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
           >
             <Filter className="w-4 h-4" />
             <span>{t('extracted.filters')} </span>
@@ -886,7 +889,8 @@ const DisbursementsPage = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_statuses')} </option>
                     <option value="completed">{t('extracted.completed')} </option>
@@ -901,7 +905,8 @@ const DisbursementsPage = () => {
                   <select
                     value={actTypeFilter}
                     onChange={(e) => setActTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_acts')} </option>
                     <option value="PCR Act">{t('extracted.pcr_act')} </option>
@@ -913,7 +918,8 @@ const DisbursementsPage = () => {
                   <select
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_time')} </option>
                     <option value="today">{t('extracted.today')} </option>
@@ -926,12 +932,13 @@ const DisbursementsPage = () => {
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <option value="all">{t('extracted.all_priorities')} </option>
                     <option value="high">{t('extracted.high')} </option>
                     <option value="medium">{t('extracted.medium')} </option>
-                    <option value="low">Low</option>
+                    <option value="low">{t('extracted.low')}</option>
                   </select>
                 </div>
               </div>
@@ -1051,7 +1058,7 @@ const DisbursementsPage = () => {
                       {disbursement.retryCount > 0 && (
                         <p className="text-xs theme-text-muted mt-2 flex items-center gap-1">
                           <RotateCcw className="w-3 h-3" />
-                          Retries: {disbursement.retryCount}
+                          {t('extracted.retries')}: {disbursement.retryCount}
                         </p>
                       )}
                       {disbursement.failureReason && (
@@ -1074,7 +1081,12 @@ const DisbursementsPage = () => {
                       {disbursement.status === 'failed' ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); }}
-                          className="px-3 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                          className="px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                          style={{
+                            backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                            color: theme === 'light' ? '#15803d' : '#86efac',
+                            border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                          }}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>{t('extracted.retry')} </span>
@@ -1082,7 +1094,8 @@ const DisbursementsPage = () => {
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); }}
-                          className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
+                          className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all theme-text-primary"
+                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                         >
                           <Download className="w-3.5 h-3.5" />
                           <span>{t('extracted.receipt')} </span>
@@ -1090,7 +1103,8 @@ const DisbursementsPage = () => {
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all theme-text-primary"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
                         <span>{t('extracted.more')} </span>
@@ -1140,7 +1154,7 @@ const DisbursementsPage = () => {
                         {disbursement.transactionId}
                       </td>
                       <td className="hidden md:table-cell px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass">
+                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                           {disbursement.actType}
                         </span>
                       </td>
@@ -1163,7 +1177,7 @@ const DisbursementsPage = () => {
                           {disbursement.status.replace('-', ' ')}
                         </span>
                         {disbursement.retryCount > 0 && (
-                          <p className="text-xs theme-text-muted mt-1">Retries: {disbursement.retryCount}</p>
+                          <p className="text-xs theme-text-muted mt-1">{t('extracted.retries')}: {disbursement.retryCount}</p>
                         )}
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
@@ -1175,7 +1189,8 @@ const DisbursementsPage = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setSelectedDisbursement(disbursement)}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
                             <Eye className="w-4 h-4" />
                           </motion.button>
@@ -1183,7 +1198,8 @@ const DisbursementsPage = () => {
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors"
+                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
+                              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                             >
                               <RotateCcw className="w-4 h-4" />
                             </motion.button>
@@ -1191,7 +1207,8 @@ const DisbursementsPage = () => {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
+                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </motion.button>
@@ -1258,11 +1275,11 @@ const DisbursementsPage = () => {
                     {disbursement.status.replace('-', ' ')}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card">
+                    <button className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
                       <Eye className="w-4 h-4" />
                     </button>
                     {disbursement.status === 'failed' && (
-                      <button className="p-1.5 rounded-lg hover:theme-bg-card">
+                      <button className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
                         <RotateCcw className="w-4 h-4" />
                       </button>
                     )}
@@ -1276,7 +1293,7 @@ const DisbursementsPage = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
           <p className="text-sm theme-text-muted">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredDisbursements.length)} of {filteredDisbursements.length}
+            {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredDisbursements.length)} {t('extracted.of')} {filteredDisbursements.length}
           </p>
           <div className="flex items-center gap-2">
             {isMobile ? (
@@ -1286,18 +1303,20 @@ const DisbursementsPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
-                  Prev
+                  {t('extracted.prev')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
-                  Next
+                  {t('extracted.next')}
                 </motion.button>
               </>
             ) : (
@@ -1307,7 +1326,8 @@ const DisbursementsPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </motion.button>
@@ -1317,7 +1337,8 @@ const DisbursementsPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border'}`}
+                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
+                    style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
                   >
                     {i + 1}
                   </motion.button>
@@ -1327,7 +1348,8 @@ const DisbursementsPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50"
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </motion.button>
@@ -1380,28 +1402,28 @@ const DisbursementsPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_information')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs theme-text-muted">{t('extracted.beneficiary_name')} </p>
                         <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p> {/* -> Handles long names */}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
                         <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p> {/* -> Handles long numbers */}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
                         <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
@@ -1415,29 +1437,29 @@ const DisbursementsPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.transaction_details_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
                       <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
                       <p className="font-medium theme-text-primary font-mono break-all">
                         {selectedDisbursement.utrNumber || 'Not Available'}
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
                       <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_fee')} </p>
                       <p className="font-medium theme-text-primary">{formatCurrency(selectedDisbursement.transactionFee)}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.net_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.netAmount)}</p>
                     </div>
@@ -1448,11 +1470,11 @@ const DisbursementsPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.bank_account_details')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p> {/* -> Handles long account numbers */}
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.ifsc}</p>
                     </div>
@@ -1508,11 +1530,11 @@ const DisbursementsPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.officer_information_1')} </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.initiated_by')} </p>
                       <p className="font-medium theme-text-primary">{selectedDisbursement.initiatedBy}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass">
+                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.verified_by')} </p>
                       <p className="font-medium theme-text-primary">
                         {selectedDisbursement.verifiedBy || 'Pending Verification'}
@@ -1527,37 +1549,53 @@ const DisbursementsPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                      style={{
+                        backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                        color: theme === 'light' ? '#15803d' : '#86efac',
+                        border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                      }}
                     >
                       <RotateCcw className="w-5 h-5" />
-                      Retry Disbursement
+                      {t('extracted.retry_disbursement')}
                     </motion.button>
                   )}
                   {selectedDisbursement.status === 'pending' && (
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 px-4 py-3 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                      style={{
+                        backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
+                        color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
+                        border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+                      }}
                     >
                       <PlayCircle className="w-5 h-5" />
-                      Initiate Payment
+                      {t('extracted.initiate_payment')}
                     </motion.button>
                   )}
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
                     <Download className="w-5 h-5" />
-                    Download Receipt
+                    {t('extracted.download_receipt')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                    style={{
+                      backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
+                      color: theme === 'light' ? '#dc2626' : '#fca5a5',
+                      border: theme === 'light' ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
+                    }}
                   >
                     <X className="w-5 h-5" />
-                    Cancel Disbursement
+                    {t('extracted.cancel_disbursement')}
                   </motion.button>
                 </div>
               </div>

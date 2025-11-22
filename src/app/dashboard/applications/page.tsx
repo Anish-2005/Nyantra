@@ -857,7 +857,7 @@ const ApplicationsPage = () => {
                 {/* Pagination */}
                 <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass no-print" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
                     <p className="text-sm theme-text-muted">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
+                        {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredApplications.length)} {t('extracted.of')} {filteredApplications.length}
                     </p>
                     <div className="flex items-center gap-2">
                         {isMobile ? (
@@ -870,7 +870,7 @@ const ApplicationsPage = () => {
                                     className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                                     style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
-                                    Prev
+                                    {t('extracted.prev')}
                                 </motion.button>
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
@@ -880,7 +880,7 @@ const ApplicationsPage = () => {
                                     className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                                     style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                                 >
-                                    Next
+                                    {t('extracted.next')}
                                 </motion.button>
                             </>
                         ) : (
