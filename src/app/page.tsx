@@ -273,66 +273,39 @@ const NyantraLanding = () => {
     }
   ];
 
-  const processSteps = [
-    {
-      step: "01",
-      title: "Register & Verify",
-      description: "Victim registers on portal with Aadhaar-based verification",
-      icon: UserCheck,
-      darkColor: "bg-blue-500",
-      lightColor: "bg-blue-400"
-    },
-    {
-      step: "02",
-      title: "File FIR & Upload",
-      description: "Auto-fetch FIR from CCTNS or manual upload with documents",
-      icon: Upload,
-      darkColor: "bg-indigo-500",
-      lightColor: "bg-indigo-400"
-    },
-    {
-      step: "03",
-      title: "Smart Assessment",
-      description: "AI-powered validation and automatic eligibility check",
-      icon: CheckSquare,
-      darkColor: "bg-purple-500",
-      lightColor: "bg-purple-400"
-    },
-    {
-      step: "04",
-      title: "Approval Workflow",
-      description: "Multi-level approval with time-bound processing",
-      icon: CheckCircle,
-      darkColor: "bg-green-500",
-      lightColor: "bg-green-400"
-    },
-    {
-      step: "05",
-      title: "Direct Transfer",
-      description: `Instant DBT to verified bank account via the     
-      PFMS`,
-      icon: Wallet,
-      darkColor: "bg-amber-500",
-      lightColor: "bg-amber-400"
-    },
-    {
-      step: "06",
-      title: "Track & Feedback",
-      description: "Real-time tracking and grievance redressal mechanism",
-      icon: Activity,
-      darkColor: "bg-pink-500",
-      lightColor: "bg-pink-400"
-    }
+  const icons = [UserCheck, Upload, CheckSquare, CheckCircle, Wallet, Activity];
+  const colors = [
+    { dark: "bg-blue-500", light: "bg-blue-400" },
+    { dark: "bg-indigo-500", light: "bg-indigo-400" },
+    { dark: "bg-purple-500", light: "bg-purple-400" },
+    { dark: "bg-green-500", light: "bg-green-400" },
+    { dark: "bg-amber-500", light: "bg-amber-400" },
+    { dark: "bg-pink-500", light: "bg-pink-400" }
   ];
 
-  const benefits = [
-    { icon: Clock, title: "72% Faster", desc: "Processing Time", darkColor: "text-blue-500", lightColor: "text-blue-600" },
-    { icon: Target, title: "99.5% Accuracy", desc: "In Verification", darkColor: "text-amber-500", lightColor: "text-amber-600" },
-    { icon: Shield, title: "Zero Leakage", desc: "Fraud Prevention", darkColor: "text-green-500", lightColor: "text-green-600" },
-    { icon: Globe, title: "Pan-India", desc: "Coverage", darkColor: "text-indigo-500", lightColor: "text-indigo-600" },
-    { icon: Smartphone, title: "Mobile First", desc: "Accessible Anywhere", darkColor: "text-purple-500", lightColor: "text-purple-600" },
-    { icon: Eye, title: "100% Transparent", desc: "Full Visibility", darkColor: "text-pink-500", lightColor: "text-pink-600" }
+  const processSteps = JSON.parse(t('process.steps')).map((step: any, i: number) => ({
+    ...step,
+    icon: icons[i],
+    darkColor: colors[i].dark,
+    lightColor: colors[i].light
+  }));
+
+  const benefitIcons = [Clock, Target, Shield, Globe, Smartphone, Eye];
+  const benefitColors = [
+    { dark: "text-blue-500", light: "text-blue-600" },
+    { dark: "text-amber-500", light: "text-amber-600" },
+    { dark: "text-green-500", light: "text-green-600" },
+    { dark: "text-indigo-500", light: "text-indigo-600" },
+    { dark: "text-purple-500", light: "text-purple-600" },
+    { dark: "text-pink-500", light: "text-pink-600" }
   ];
+
+  const benefits = JSON.parse(t('benefits.items')).map((item: any, i: number) => ({
+    ...item,
+    icon: benefitIcons[i],
+    darkColor: benefitColors[i].dark,
+    lightColor: benefitColors[i].light
+  }));
 
  
   
@@ -1099,15 +1072,15 @@ const NyantraLanding = () => {
                 whileHover={{ scale: 1.05 }}
               >
                 <Activity className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                Simple Process
+                {t('process.badge')}
               </motion.span>
 
               <h2 className="text-4xl md:text-5xl font-extrabold mb-4 theme-text-primary">
-                From Application to{' '}
-                <span className="text-accent-gradient">{t('extracted.disbursement')} </span>
+                {t('process.title')}{' '}
+                <span className="text-accent-gradient">{t('process.titleHighlight')}</span>
               </h2>
               <p className="text-lg md:text-xl theme-text-secondary max-w-3xl mx-auto leading-relaxed">
-                Six streamlined steps ensuring a seamless, transparent, and rapid benefit delivery process.
+                {t('process.description')}
               </p>
             </motion.div>
 
@@ -1131,7 +1104,7 @@ const NyantraLanding = () => {
                 viewport={{ once: true, amount: 0.1 }}
                 variants={containerVariants}
               >
-                {processSteps.map((step, i) => (
+                {processSteps.map((step: any, i: number) => (
                   <motion.div key={i} variants={itemVariants} className="relative">
                     <motion.div
                       className="theme-bg-card rounded-2xl p-8 theme-border-card backdrop-blur-xl transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-2 relative overflow-hidden"
@@ -1235,15 +1208,15 @@ const NyantraLanding = () => {
                 whileHover={{ scale: 1.08 }}
               >
                 <Target className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                Our Promise
+                {t('benefits.badge')}
               </motion.span>
 
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight theme-text-primary">
-                Why Choose <span className="text-accent-gradient">{t('extracted.nyantra')} </span>
+              <h2 className="mt-4 text-4xl md:text-5xl font-bold mb-4 tracking-tight theme-text-primary overflow-visible px-4">
+                {t('benefits.title')} <span className="py-4 text-accent-gradient whitespace-nowrap">{t('benefits.titleHighlight')}</span>
               </h2>
 
               <p className="text-lg md:text-xl theme-text-secondary max-w-2xl mx-auto leading-relaxed">
-                Delivering measurable, meaningful impact with cutting-edge precision.
+                {t('benefits.description')}
               </p>
             </motion.div>
 
@@ -1255,7 +1228,7 @@ const NyantraLanding = () => {
               viewport={{ once: true }}
               variants={containerVariants}
             >
-              {benefits.map((benefit, i) => (
+              {benefits.map((benefit: any, i: number) => (
                 <motion.div
                   key={i}
                   variants={itemVariants}

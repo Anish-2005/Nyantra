@@ -24,6 +24,76 @@
     "avgTime": "Avg. Processing Time",
     "satisfaction": "Satisfaction Rate"
   },
+  "process": {
+    "badge": "Simple Process",
+    "title": "From Application to",
+    "titleHighlight": "Disbursement",
+    "description": "Six streamlined steps ensuring a seamless, transparent, and rapid benefit delivery process.",
+    "steps": [
+      {
+        "step": "01",
+        "title": "Register & Verify",
+        "description": "Victim registers on portal with Aadhaar-based verification"
+      },
+      {
+        "step": "02",
+        "title": "File FIR & Upload",
+        "description": "Auto-fetch FIR from CCTNS or manual upload with documents"
+      },
+      {
+        "step": "03",
+        "title": "Smart Assessment",
+        "description": "AI-powered validation and automatic eligibility check"
+      },
+      {
+        "step": "04",
+        "title": "Approval Workflow",
+        "description": "Multi-level approval with time-bound processing"
+      },
+      {
+        "step": "05",
+        "title": "Direct Transfer",
+        "description": "Instant DBT to verified bank account via the PFMS"
+      },
+      {
+        "step": "06",
+        "title": "Track & Feedback",
+        "description": "Real-time tracking and grievance redressal mechanism"
+      }
+    ]
+  },
+  "benefits": {
+    "badge": "Our Promise",
+    "title": "Why Choose",
+    "titleHighlight": "Nyantra",
+    "description": "Delivering measurable, meaningful impact with cutting-edge precision.",
+    "items": [
+      {
+        "title": "72% Faster",
+        "desc": "Processing Time"
+      },
+      {
+        "title": "99.5% Accuracy",
+        "desc": "In Verification"
+      },
+      {
+        "title": "Zero Leakage",
+        "desc": "Fraud Prevention"
+      },
+      {
+        "title": "Pan-India",
+        "desc": "Coverage"
+      },
+      {
+        "title": "Mobile First",
+        "desc": "Accessible Anywhere"
+      },
+      {
+        "title": "100% Transparent",
+        "desc": "Full Visibility"
+      }
+    ]
+  },
   "features": {
     "title": "Powerful Features",
     "subtitle": "Everything You Need for Seamless DBT",
