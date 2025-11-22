@@ -1607,6 +1607,8 @@
     "success_rate": "सफलता दर",
     "retry_needed": "पुनः प्रयास आवश्यक",
     "retries": "पुनः प्रयास",
+    "high": "उच्च",
+    "medium": "मध्यम",
     "actions": "कार्रवाई",
     "idx_1": "{idx + 1}",
     "districtdistrict": "{district.district}",
