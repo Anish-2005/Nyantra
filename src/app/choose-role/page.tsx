@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import LanguageToggle from '@/components/LanguageToggle';
 import { 
   Sun, 
   Moon, 
@@ -172,16 +173,19 @@ export default function ChooseRolePage() {
           animate="visible"
           className="w-full max-w-md"
         >
-          {/* Theme Toggle */}
-          <motion.button
-            variants={itemVariants}
-            onClick={toggleTheme}
-            className="absolute top-4 right-4 p-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary backdrop-blur-xl"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </motion.button>
+          {/* Theme & Language Toggles */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <LanguageToggle compact className="backdrop-blur-xl" />
+            <motion.button
+              variants={itemVariants}
+              onClick={toggleTheme}
+              className="p-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary backdrop-blur-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.button>
+          </div>
 
           {/* Role Selection Card */}
           <motion.div
@@ -213,7 +217,7 @@ export default function ChooseRolePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    Choose your role
+                    {t('extracted.choose_your_role')}
                   </motion.h2>
                   <motion.p 
                     className="text-sm theme-text-muted"
@@ -221,7 +225,7 @@ export default function ChooseRolePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    Select how you&apos;ll use the platform
+                    {t('extracted.select_how_youaposll_use_the_platform')}
                   </motion.p>
                 </div>
               </div>
@@ -237,7 +241,7 @@ export default function ChooseRolePage() {
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 <Rocket className="inline w-3 h-3 mr-2 text-accent-gradient" />
-                Smart DBT Platform
+                {t('extracted.smart_dbt_platform')}
               </motion.div>
 
               {/* Role Selection */}
@@ -251,13 +255,13 @@ export default function ChooseRolePage() {
                   onClick={() => pickRole('user')}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg theme-bg-card flex items-center justify-center">
-                      <User className="w-6 h-6 text-accent-gradient" />
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${theme === 'light' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'theme-bg-card'}`}>
+                      <User className={`w-6 h-6 ${theme === 'light' ? 'text-white' : 'text-accent-gradient'}`} />
                     </div>
                     <div className="flex-1 text-left">
                       <h3 className="font-semibold theme-text-primary">{t('extracted.iaposm_a_user')} </h3>
                       <p className="text-sm theme-text-muted mt-1">
-                        Access benefits and services as a beneficiary
+                        {t('extracted.access_benefits_and_services_as_a_beneficiary')}
                       </p>
                     </div>
                     <ArrowRight className="w-5 h-5 theme-text-muted" />
@@ -279,7 +283,7 @@ export default function ChooseRolePage() {
                     <div className="flex-1 text-left">
                       <h3 className="font-semibold">{t('extracted.iaposm_an_officer')} </h3>
                       <p className="text-sm text-white/80 mt-1">
-                        Manage and oversee platform operations
+                        {t('extracted.manage_and_oversee_platform_operations')}
                       </p>
                     </div>
                     <ArrowRight className="w-5 h-5 text-white" />
@@ -294,11 +298,11 @@ export default function ChooseRolePage() {
               >
                 <div className="text-center theme-text-muted">
                   <User className="w-4 h-4 mx-auto mb-1" />
-                  <p>{t('extracted.for_beneficiaries_receiving_services_and_benefits')} </p>
+                  <p>{t('extracted.for_beneficiaries_receiving_services_and_benefits')}</p>
                 </div>
                 <div className="text-center theme-text-muted">
                   <Users className="w-4 h-4 mx-auto mb-1" />
-                  <p>{t('extracted.for_administrators_managing_the_platform')} </p>
+                  <p>{t('extracted.for_administrators_managing_the_platform')}</p>
                 </div>
               </motion.div>
 
@@ -308,7 +312,7 @@ export default function ChooseRolePage() {
                 variants={itemVariants}
               >
                 <Shield className="w-3 h-3" />
-                Your role can be updated later by platform administrators
+                {t('extracted.your_role_can_be_updated_later_by_platform_administrators')}
               </motion.p>
             </div>
           </motion.div>

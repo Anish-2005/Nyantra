@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/context/LocaleContext';
 import LanguageToggle from './LanguageToggle';
+import ThemeToggle from './ThemeToggle';
 
 type NavItem = {
   id: string;
@@ -106,8 +107,9 @@ export default function UserSidebar({
 
         {/* Footer: Language + Logout (Mobile) */}
         <div className="p-4 border-t theme-border-glass flex flex-col gap-3">
-          <div className="flex justify-center">
-            <LanguageToggle compact vertical />
+          <div className="flex items-center justify-center gap-2">
+            <ThemeToggle compact />
+            <LanguageToggle compact />
           </div>
           <button
             type="button"
@@ -199,14 +201,11 @@ export default function UserSidebar({
         </nav>
 
         {/* Footer: Language + Logout (Desktop) */}
-        <div
-          className={`p-4 border-t theme-border-glass flex flex-col items-center gap-3 ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
-          <div className="flex justify-center w-full">
-            {/* Ensure visible even when collapsed - use compact + vertical so it stacks nicely */}
-            <LanguageToggle compact vertical />
+        <div className={`p-4 border-t theme-border-glass flex flex-col gap-3 ${collapsed ? 'items-center' : ''}`}>
+            {/* Language & Theme toggle container */}
+          <div className={`flex ${collapsed ? 'flex-col gap-2' : 'flex-row gap-2'} items-center justify-center`}>
+            <ThemeToggle compact className="flex items-center justify-center" />
+            <LanguageToggle compact vertical={collapsed} />
           </div>
 
           <button

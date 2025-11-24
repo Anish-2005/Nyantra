@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import LanguageToggle from '@/components/LanguageToggle';
 import { 
   Sun, 
   Moon, 
@@ -206,16 +207,19 @@ export default function VerifyPage() {
           animate="visible"
           className="w-full max-w-md"
         >
-          {/* Theme Toggle */}
-          <motion.button
-            variants={itemVariants}
-            onClick={toggleTheme}
-            className="absolute top-4 right-4 p-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary backdrop-blur-xl"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </motion.button>
+          {/* Theme & Language Toggles */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <LanguageToggle compact className="backdrop-blur-xl" />
+            <motion.button
+              variants={itemVariants}
+              onClick={toggleTheme}
+              className="p-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary backdrop-blur-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.button>
+          </div>
 
           {/* Verification Card */}
           <motion.div
@@ -247,7 +251,7 @@ export default function VerifyPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    Verify your identity
+                    {t('extracted.verify_your_identity')}
                   </motion.h2>
                   <motion.p 
                     className="text-sm theme-text-muted"
@@ -255,7 +259,7 @@ export default function VerifyPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    Secure access to your dashboard
+                    {t('extracted.secure_access_to_your_dashboard')}
                   </motion.p>
                 </div>
               </div>
@@ -270,8 +274,8 @@ export default function VerifyPage() {
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <Rocket className="inline w-3 h-3 mr-2 text-accent-gradient" />
-                Identity Verification Required
+                <Rocket className={`inline w-3 h-3 mr-2 ${theme === 'light' ? 'text-blue-600' : 'text-accent-gradient'}`} />
+                {t('extracted.identity_verification_required')}
               </motion.div>
 
               {/* Verification Content */}
@@ -279,15 +283,14 @@ export default function VerifyPage() {
                 {/* Description */}
                 <motion.div variants={itemVariants} className="text-center">
                   <p className="theme-text-muted mb-4">
-                    To continue to your user dashboard, connect with DigiLocker for secure document verification. 
-                    This ensures the security and authenticity of your account.
+                    {t('extracted.to_continue_to_your_user_dashboard')}
                   </p>
                 </motion.div>
 
                 {/* Verification Steps */}
                 <motion.div variants={itemVariants} className="space-y-3">
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                    <FileCheck className="w-5 h-5 text-accent-gradient" />
+                    <FileCheck className={`w-5 h-5 ${theme === 'light' ? 'text-blue-600' : 'text-accent-gradient'}`} />
                     <div className="text-left">
                       <p className="text-sm font-medium theme-text-primary">{t('extracted.document_verification')} </p>
                       <p className="text-xs theme-text-muted">{t('extracted.secure_identity_confirmation')} </p>
@@ -295,7 +298,7 @@ export default function VerifyPage() {
                   </div>
                   
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                    <Lock className="w-5 h-5 text-accent-gradient" />
+                    <Lock className={`w-5 h-5 ${theme === 'light' ? 'text-purple-600' : 'text-accent-gradient'}`} />
                     <div className="text-left">
                       <p className="text-sm font-medium theme-text-primary">{t('extracted.encrypted_process')} </p>
                       <p className="text-xs theme-text-muted">{t('extracted.your_data_is_protected')} </p>
@@ -303,7 +306,7 @@ export default function VerifyPage() {
                   </div>
                   
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                    <UserCheck className="w-5 h-5 text-accent-gradient" />
+                    <UserCheck className={`w-5 h-5 ${theme === 'light' ? 'text-green-600' : 'text-accent-gradient'}`} />
                     <div className="text-left">
                       <p className="text-sm font-medium theme-text-primary">{t('extracted.instant_access')} </p>
                       <p className="text-xs theme-text-muted">{t('extracted.quick_verification_process')} </p>
@@ -329,7 +332,7 @@ export default function VerifyPage() {
                         />
                       </div>
                       <p className="text-xs theme-text-muted text-center">
-                        {progress < 100 ? 'Verifying your identity...' : 'Verification complete!'}
+                        {progress < 100 ? t('extracted.verifying_your_identity') : t('extracted.verification_complete')}
                       </p>
                     </motion.div>
                   )}
@@ -347,12 +350,12 @@ export default function VerifyPage() {
                   {verifying ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Verifying...
+                      {t('extracted.verifying')}
                     </>
                   ) : (
                     <>
                       <FileCheck className="w-5 h-5" />
-                      Connect to DigiLocker (mock)
+                      {t('extracted.connect_to_digilocker_mock')}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -365,7 +368,7 @@ export default function VerifyPage() {
                 variants={itemVariants}
               >
                 <Shield className="w-3 h-3" />
-                Your data is securely encrypted and protected during verification
+                {t('extracted.your_data_is_securely_encrypted')}
               </motion.p>
             </div>
           </motion.div>
