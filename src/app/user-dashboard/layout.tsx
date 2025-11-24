@@ -366,11 +366,11 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                 <ChevronDown className="w-3 h-3 rotate-270" />
                 <span className="theme-text-primary capitalize">{(
                   activeTab === 'overview' ? t('extracted.dashboard') :
-                  activeTab === 'applications' ? t('my_applications') || t('extracted.applications') :
+                  activeTab === 'applications' ? t('extracted.my_applications') :
                   activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
-                  activeTab === 'disbursements' ? t('payments') || t('extracted.disbursements') :
-                  activeTab === 'grievance' ? t('grievances') || t('extracted.grievance') :
-                  activeTab === 'feedback' ? t('feedback_grievance_portal') || t('extracted.feedback') :
+                  activeTab === 'disbursements' ? t('extracted.payments') :
+                  activeTab === 'grievance' ? t('extracted.grievances') :
+                  activeTab === 'feedback' ? t('extracted.feedback') :
                   activeTab.replace('-', ' ')
                 )}</span>
               </div>

@@ -74,7 +74,7 @@ export default function BeneficiariesPage() {
   };
 
   const removeBeneficiary = (id: string) => {
-    if (!window.confirm('Are you sure you want to remove this beneficiary?')) return;
+    if (!window.confirm(t('extracted.are_you_sure_remove_beneficiary'))) return;
     
     const next = list.filter(l => l.id !== id);
     setList(next);
@@ -99,10 +99,10 @@ export default function BeneficiariesPage() {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            Beneficiaries
+            {t('extracted.beneficiaries_page')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            Add and manage beneficiary details linked to your applications.
+            {t('extracted.add_and_manage_beneficiary_details')}
           </p>
         </motion.div>
 
@@ -116,14 +116,14 @@ export default function BeneficiariesPage() {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
               <h2 className="text-xl font-semibold theme-text-primary mb-4">
-                {editing ? 'Edit Beneficiary' : 'Add New Beneficiary'}
+                {editing ? t('extracted.edit_beneficiary') : t('extracted.add_new_beneficiary')}
               </h2>
               
               <form onSubmit={editing ? updateBeneficiary : addBeneficiary} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Full Name *
+                      {t('extracted.full_name')} *
                     </label>
                     <input 
                       value={editing ? editing.name : name}
@@ -139,7 +139,7 @@ export default function BeneficiariesPage() {
                   
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Relation
+                      {t('extracted.relation')}
                     </label>
                     <input 
                       value={editing ? editing.relation || '' : relation}
@@ -156,7 +156,7 @@ export default function BeneficiariesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Date of Birth
+                      {t('extracted.date_of_birth')}
                     </label>
                     <input 
                       type="date"
@@ -171,7 +171,7 @@ export default function BeneficiariesPage() {
                   
                   <div className="md:col-span-1">
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Notes
+                      {t('extracted.notes')}
                     </label>
                     <input 
                       value={editing ? editing.notes || '' : notes}
@@ -193,7 +193,7 @@ export default function BeneficiariesPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    {editing ? 'Update Beneficiary' : 'Add Beneficiary'}
+                    {editing ? t('extracted.update_beneficiary') : t('extracted.add_beneficiary')}
                   </button>
                   
                   {editing && (
@@ -202,7 +202,7 @@ export default function BeneficiariesPage() {
                       onClick={() => setEditing(null)}
                       className="px-6 py-3 border theme-border-glass theme-text-muted hover:theme-bg-glass font-medium rounded-lg transition-colors"
                     >
-                      Cancel
+                      {t('extracted.cancel')}
                     </button>
                   )}
                 </div>
@@ -218,7 +218,7 @@ export default function BeneficiariesPage() {
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold theme-text-primary">
-                  Your Beneficiaries ({filteredList.length})
+                  {t('extracted.your_beneficiaries')} ({filteredList.length})
                 </h3>
                 
                 <div className="relative flex-1 sm:flex-none sm:w-64">
@@ -248,12 +248,12 @@ export default function BeneficiariesPage() {
                         </svg>
                       </div>
                       <p className="theme-text-muted mb-2">
-                        {list.length === 0 ? 'No beneficiaries yet' : 'No matching beneficiaries found'}
+                        {list.length === 0 ? t('extracted.no_beneficiaries_yet') : t('extracted.no_matching_beneficiaries_found')}
                       </p>
                       <p className="text-sm theme-text-muted">
                         {list.length === 0 
-                          ? "Add your first beneficiary using the form above." 
-                          : "Try adjusting your search terms."}
+                          ? t('extracted.add_your_first_beneficiary') 
+                          : t('extracted.try_adjusting_search_terms')}
                       </p>
                     </motion.div>
                   ) : (
@@ -284,7 +284,7 @@ export default function BeneficiariesPage() {
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                   selected?.id === beneficiary.id 
                                     ? 'bg-white/20 text-white' 
-                                    : 'bg-blue-100 text-blue-800'
+                                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                                 }`}>
                                   {beneficiary.relation}
                                 </span>
@@ -367,23 +367,23 @@ export default function BeneficiariesPage() {
               transition={{ delay: 0.2 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')} </h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')}</h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">
                     {new Set(list.map(b => b.relation)).size}
                   </div>
-                  <div className="text-xs theme-text-muted">{t('extracted.relation')} s</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.relations')}</div>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')} </div>
+                <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')}</div>
                 <div className="font-medium theme-text-primary text-sm truncate">
                   {list[0]?.name || '—'}
                 </div>
@@ -403,7 +403,7 @@ export default function BeneficiariesPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.beneficiary_details')} </h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.beneficiary_details')}</h4>
                     <button
                       onClick={() => setSelected(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -416,20 +416,20 @@ export default function BeneficiariesPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.full_name')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.full_name')}</div>
                       <div className="font-medium theme-text-primary">{selected.name}</div>
                     </div>
 
                     {selected.relation && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.relation')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.relation')}</div>
                         <div className="font-medium theme-text-primary">{selected.relation}</div>
                       </div>
                     )}
 
                     {selected.dob && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.date_of_birth')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.date_of_birth')}</div>
                         <div className="font-medium theme-text-primary">
                           {new Date(selected.dob).toLocaleDateString()}
                         </div>
@@ -438,7 +438,7 @@ export default function BeneficiariesPage() {
 
                     {selected.notes && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.notes')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.notes')}</div>
                         <div className="theme-text-primary text-sm leading-relaxed">
                           {selected.notes}
                         </div>
@@ -446,12 +446,12 @@ export default function BeneficiariesPage() {
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary_id')} </div>
-                      <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary_id')}</div>
+                      <div className="font-mono text-xs theme-text-primary theme-bg-glass px-2 py-1 rounded">
                         {selected.id}
                       </div>
                       <div className="text-xs theme-text-muted mt-2">
-                        Added: {new Date(selected.createdAt).toLocaleString()}
+                        {t('extracted.added')}: {new Date(selected.createdAt).toLocaleString()}
                       </div>
                     </div>
                   </div>

@@ -66,10 +66,10 @@ export default function ApplicationsPage() {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            My Applications
+            {t('extracted.my_applications')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            Applications you submitted (stored locally in your browser).
+            {t('extracted.applications_you_submitted')}
           </p>
         </motion.div>
 
@@ -91,8 +91,8 @@ export default function ApplicationsPage() {
   {['all', 'recent', 'amount'].map(option => {
     const isActive = filter === option;
     const label =
-      option === 'all' ? 'All Applications' :
-      option === 'recent' ? 'Last 30 Days' : 'With Amount';
+      option === 'all' ? t('extracted.all_applications') :
+      option === 'recent' ? t('extracted.last_30_days') : t('extracted.with_amount');
 
     return (
       <button
@@ -122,7 +122,7 @@ export default function ApplicationsPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Clear All
+                    {t('extracted.clear_all')}
                   </button>
                 </div>
               </div>
@@ -141,11 +141,11 @@ export default function ApplicationsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <p className="theme-text-muted mb-2">{t('extracted.no_applications_found')} </p>
+                      <p className="theme-text-muted mb-2">{t('extracted.no_applications_found')}</p>
                       <p className="text-sm theme-text-muted">
                         {items.length === 0 
-                          ? "You haven't submitted any applications yet." 
-                          : "No applications match your current filter."}
+                          ? t('extracted.you_havent_submitted_any_applications_yet') 
+                          : t('extracted.no_applications_match_filter')}
                       </p>
                     </motion.div>
                   ) : (
@@ -168,15 +168,15 @@ export default function ApplicationsPage() {
                               <h3 className={`font-semibold truncate ${
                                 selected?.id === item.id ? 'text-white' : 'theme-text-primary'
                               }`}>
-                                {item.name ?? (item.anonymous ? 'Anonymous' : 'Unnamed')}
+                                {item.name ?? (item.anonymous ? t('extracted.anonymous') : t('extracted.unnamed'))}
                               </h3>
                               {item.anonymous && (
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                   selected?.id === item.id 
                                     ? 'bg-white/20 text-white' 
-                                    : 'bg-blue-100 text-blue-800'
+                                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                                 }`}>
-                                  Anonymous
+                                  {t('extracted.anonymous')}
                                 </span>
                               )}
                             </div>
@@ -223,29 +223,29 @@ export default function ApplicationsPage() {
           <div className="space-y-6">
             {/* Summary Card */}
             <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6">
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')} </h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')}</h3>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{items.length}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{recentCount}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.last_30_days')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.last_30_days')}</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">{t('extracted.total_amount_requested')} </div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.total_amount_requested')}</div>
                   <div className="font-semibold theme-text-primary text-lg">
                     ₹{totalAmount.toLocaleString()}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')} </div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')}</div>
                   <div className="font-medium theme-text-primary text-sm mb-1 truncate">
                     {items[0]?.id ?? '—'}
                   </div>
@@ -266,7 +266,7 @@ export default function ApplicationsPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.application_details')} </h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.application_details')}</h4>
                     <button
                       onClick={() => setSelected(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -279,9 +279,9 @@ export default function ApplicationsPage() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">{t('extracted.application_id')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.application_id')}</span>
                       <div className="flex items-center gap-2">
-                        <code className="text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
+                        <code className="text-xs theme-text-primary theme-bg-glass px-2 py-1 rounded">
                           {selected.id}
                         </code>
                         <button
@@ -297,33 +297,33 @@ export default function ApplicationsPage() {
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">{t('extracted.fir_number')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.fir_number')}</span>
                       <span className="text-sm font-medium theme-text-primary">{selected.firNumber}</span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">{t('extracted.applicant_name')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.applicant_name')}</span>
                       <span className="text-sm font-medium theme-text-primary">
-                        {selected.name ?? (selected.anonymous ? 'Anonymous' : 'Not provided')}
+                        {selected.name ?? (selected.anonymous ? t('extracted.anonymous') : t('extracted.not_provided'))}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">{t('extracted.amount')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.amount')}</span>
                       <span className="text-sm font-medium theme-text-primary">
-                        {selected.amountRequested ? `₹${selected.amountRequested.toLocaleString()}` : 'Not specified'}
+                        {selected.amountRequested ? `₹${selected.amountRequested.toLocaleString()}` : t('extracted.not_specified')}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2 border-b theme-border-glass">
-                      <span className="text-sm theme-text-muted">{t('extracted.files')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.files')}</span>
                       <span className="text-sm font-medium theme-text-primary">
                         {selected.files?.length ?? 0}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-sm theme-text-muted">{t('extracted.submitted')} </span>
+                      <span className="text-sm theme-text-muted">{t('extracted.submitted')}</span>
                       <span className="text-sm theme-text-primary">
                         {new Date(selected.createdAt).toLocaleString()}
                       </span>
@@ -340,14 +340,14 @@ export default function ApplicationsPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Copied!
+                          {t('extracted.copied_to_clipboard')}!
                         </>
                       ) : (
                         <>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          Copy ID
+                          {t('extracted.copy_id')}
                         </>
                       )}
                     </button>
@@ -366,13 +366,13 @@ export default function ApplicationsPage() {
                   className="fixed bottom-4 right-4 theme-bg-card theme-border-glass border rounded-lg p-4 shadow-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-medium theme-text-primary">{t('extracted.copied_to_clipboard')} </p>
+                      <p className="text-sm font-medium theme-text-primary">{t('extracted.copied_to_clipboard')}</p>
                     </div>
                   </div>
                 </motion.div>
