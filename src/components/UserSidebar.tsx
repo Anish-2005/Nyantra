@@ -164,16 +164,7 @@ export default function UserSidebar({
             </div>
           )}
 
-          {!collapsed && onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="p-1 rounded-md theme-border-glass border theme-bg-glass hover:theme-bg-hover transition-colors"
-              aria-label={t('extracted.collapse_sidebar')}
-            >
-              <ChevronLeft className="w-3 h-3 theme-text-primary" />
-            </button>
-          )}
+          
         </div>
 
         <nav className="flex-1 p-3 overflow-auto min-w-0">

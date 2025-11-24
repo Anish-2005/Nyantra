@@ -244,9 +244,9 @@ export default function UserDashboard() {
                             className="sr-only"
                           />
                           <div className={`block w-10 h-5 rounded-full transition-colors ${
-                            anonymous ? 'bg-blue-500' : 'theme-bg-glass border theme-border-glass'
+                            anonymous ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-300'
                           }`}></div>
-                          <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                          <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${
                             anonymous ? 'transform translate-x-5' : ''
                           }`}></div>
                         </div>

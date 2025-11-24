@@ -311,9 +311,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
               {/* Right Section - Theme Toggle, Notifications & User Menu */}
               <div className="flex items-center gap-3">
-                <motion.button onClick={toggleTheme} className="p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-label={t('extracted.toggle_theme')}>
-                  {theme === 'dark' ? <Sun className="w-5 h-5 theme-text-primary" /> : <Moon className="w-5 h-5 theme-text-primary" />}
-                </motion.button>
+               
 
                 <div className="relative">
                   <motion.button onClick={() => setNotificationOpen(n => !n)} className="relative p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -339,10 +337,10 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                 </div>
 
                 <div className="relative">
-                  <motion.button onClick={() => setUserMenuOpen(u => !u)} className="flex items-center gap-2 p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"><User className="w-4 h-4 text-white" /></div>
-                    <div className="hidden sm:block text-left"><p className="text-sm font-medium theme-text-primary">{displayName}</p><p className="text-xs theme-text-muted">{t('extracted.applicant')} </p></div>
-                    <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  <motion.button onClick={() => setUserMenuOpen(u => !u)} className="flex items-center gap-2 px-2 py-2 h-9 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"><User className="w-3 h-3 text-white" /></div>
+                    <div className="hidden sm:block text-left"><p className="text-xs font-medium theme-text-primary">{displayName}</p></div>
+                    <ChevronDown className={`w-3 h-3 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   <AnimatePresence>
