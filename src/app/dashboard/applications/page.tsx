@@ -554,69 +554,101 @@ const ApplicationsPage = () => {
                 </div>
             </motion.div>
 
-            {/* Real-Time Statistics with Progress Indicators */}
+            {/* Innovative Chip-Style Statistics with Micro-animations */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"
             >
                 {[
-                    { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText, status: 'active' },
-                    { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning' },
-                    { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye, status: 'processing' },
-                    { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check, status: 'success' },
-                    { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error' },
-                    { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle, status: 'alert' }
+                    { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText, status: 'active', borderColor: 'border-blue-500/30' },
+                    { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning', borderColor: 'border-amber-500/30' },
+                    { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye, status: 'processing', borderColor: 'border-purple-500/30' },
+                    { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check, status: 'success', borderColor: 'border-green-500/30' },
+                    { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error', borderColor: 'border-red-500/30' },
+                    { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle, status: 'alert', borderColor: 'border-indigo-500/30' }
                 ].map((stat, idx) => (
                     <motion.div
                         key={idx}
-                        whileHover={{ y: -4, scale: 1.02 }}
-                        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl relative overflow-hidden group"
+                        whileHover={{ y: -6, scale: 1.05, rotateY: 5 }}
+                        className={`theme-bg-card theme-border-glass border-2 ${stat.borderColor} rounded-2xl p-4 backdrop-blur-xl relative overflow-hidden group cursor-pointer`}
+                        style={{ transformStyle: 'preserve-3d' }}
                     >
-                        {/* Status Indicator */}
-                        <div className="absolute top-3 right-3">
-                            <motion.div
-                                className={`w-2 h-2 rounded-full ${
-                                    stat.status === 'success' ? 'bg-green-500' :
-                                    stat.status === 'warning' ? 'bg-amber-500' :
-                                    stat.status === 'error' ? 'bg-red-500' :
-                                    stat.status === 'processing' ? 'bg-blue-500' :
-                                    stat.status === 'alert' ? 'bg-purple-500' : 'bg-cyan-500'
-                                }`}
-                                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                                transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-                            />
+                        {/* Diagonal Stripe Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: `repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)`,
+                            backgroundSize: '10px 10px'
+                          }} className={stat.status === 'success' ? 'text-green-500' : stat.status === 'warning' ? 'text-amber-500' : stat.status === 'error' ? 'text-red-500' : 'text-blue-500'} />
                         </div>
 
-                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 relative`}>
-                            <stat.icon className="w-5 h-5 text-white relative z-10" />
-                            <motion.div
-                                className="absolute inset-0 bg-white rounded-lg"
-                                initial={{ scale: 0, opacity: 0.6 }}
-                                animate={{ scale: 1.5, opacity: 0 }}
-                                transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.3 }}
-                            />
-                        </div>
-
-                        <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
-                        <p className="text-xs theme-text-muted mb-3" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t(stat.labelKey)}</p>
-
-                        {/* Progress Bar */}
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
-                            <motion.div
-                                className={`h-full bg-gradient-to-r ${stat.color}`}
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(stat.value / stats.total) * 100}%` }}
-                                transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
-                            />
-                        </div>
-
-                        {/* Hover glow */}
+                        {/* Floating Badge with Count */}
                         <motion.div
-                            className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-xl transition-opacity duration-500 -z-10`}
+                          className={`absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white dark:border-gray-900`}
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        >
+                          {stat.value}
+                        </motion.div>
+
+                        {/* Animated Icon with Glow */}
+                        <motion.div 
+                          className="relative w-12 h-12 mb-3"
+                          animate={{ rotateY: [0, 360] }}
+                          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                        >
+                          <div className={`w-full h-full rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
+                            <stat.icon className="w-6 h-6 text-white relative z-10" />
+                          </div>
+                          {/* Pulsing Glow Ring */}
+                          <motion.div
+                            className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.color}`}
+                            animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                        </motion.div>
+
+                        {/* Value Display */}
+                        <motion.p 
+                          className="text-3xl font-black theme-text-primary mb-1"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", delay: idx * 0.05 }}
+                        >
+                          {stat.value}
+                        </motion.p>
+                        
+                        {/* Label with Truncation */}
+                        <p className="text-xs font-semibold theme-text-muted leading-tight truncate" title={t(stat.labelKey)}>
+                          {t(stat.labelKey)}
+                        </p>
+
+                        {/* Circular Progress Indicator */}
+                        <div className="mt-3 relative h-2">
+                          <div className="absolute inset-0 flex gap-0.5">
+                            {[...Array(8)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="flex-1 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden"
+                                initial={{ opacity: 0.3 }}
+                              >
+                                <motion.div
+                                  className={`h-full bg-gradient-to-r ${stat.color}`}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: i < Math.ceil((stat.value / stats.total) * 8) ? '100%' : '0%' }}
+                                  transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Hover Highlight */}
+                        <motion.div
+                          className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-15 rounded-2xl transition-opacity duration-300`}
                         />
-                    </motion.div>
+                      </motion.div>
                 ))}
             </motion.div>
 

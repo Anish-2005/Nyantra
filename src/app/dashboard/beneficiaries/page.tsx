@@ -610,79 +610,434 @@ const BeneficiariesPage = () => {
         </div>
       </motion.div>
 
-      {/* Real-Time Statistics with Progress Indicators */}
+      {/* Innovative Profile Card Statistics */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User, status: 'active' },
-          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck, status: 'success' },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning' },
-          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote, status: 'success' },
-          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error' },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle, status: 'alert' },
-          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield, status: 'info' },
-          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award, status: 'info' }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User, status: 'active', bgPattern: 'dots' },
+          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck, status: 'success', bgPattern: 'grid' },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning', bgPattern: 'waves' },
+          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote, status: 'success', bgPattern: 'circles' },
+          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error', bgPattern: 'diagonal' },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle, status: 'alert', bgPattern: 'zigzag' },
+          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield, status: 'info', bgPattern: 'squares' },
+          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award, status: 'info', bgPattern: 'lines' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
-            whileHover={{ y: -4, scale: 1.02 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl relative overflow-hidden group"
+            initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            transition={{ delay: idx * 0.05, type: "spring" }}
+            whileHover={{ y: -8, scale: 1.05, rotateZ: 2 }}
+            className="relative group cursor-pointer"
+            style={{ perspective: '1000px' }}
           >
-            {/* Status Indicator */}
-            <div className="absolute top-3 right-3">
+            {/* Decorative Corner Element */}
+            <div className={`absolute -top-2 -right-2 w-16 h-16 bg-gradient-to-br ${stat.color} opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity`} />
+            
+            {/* Main Card */}
+            <div className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 backdrop-blur-xl relative overflow-hidden"
+                 style={{ transformStyle: 'preserve-3d' }}>
+              
+              {/* Pattern Background */}
+              <div className="absolute inset-0 opacity-5">
+                {stat.bgPattern === 'dots' && (
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                    backgroundSize: '8px 8px'
+                  }} className="text-blue-500" />
+                )}
+                {stat.bgPattern === 'grid' && (
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
+                    backgroundSize: '10px 10px'
+                  }} className="text-green-500" />
+                )}
+                {stat.bgPattern === 'waves' && (
+                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,20 Q10,10 20,20 T40,20 T60,20 T80,20 T100,20" stroke="currentColor" fill="none" className="text-amber-500" />
+                  </svg>
+                )}
+              </div>
+
+              {/* Floating Status Orb */}
               <motion.div
-                className={`w-2 h-2 rounded-full ${
-                  stat.status === 'success' ? 'bg-green-500' :
-                  stat.status === 'warning' ? 'bg-amber-500' :
-                  stat.status === 'error' ? 'bg-red-500' :
-                  stat.status === 'alert' ? 'bg-purple-500' : 'bg-cyan-500'
-                }`}
-                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                className="absolute -top-1 -right-1 w-10 h-10"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              >
+                <div className={`w-full h-full rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
+                  <motion.div
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      stat.status === 'success' ? 'bg-white' :
+                      stat.status === 'warning' ? 'bg-white' :
+                      stat.status === 'error' ? 'bg-white' : 'bg-white'
+                    }`}
+                    animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Icon with 3D Effect */}
+              <motion.div 
+                className="relative mb-3"
+                whileHover={{ rotateY: 180 }}
+                transition={{ duration: 0.6 }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl relative`}
+                     style={{ transform: 'translateZ(20px)' }}>
+                  <stat.icon className="w-7 h-7 text-white" />
+                  
+                  {/* Inner glow */}
+                  <motion.div
+                    className="absolute inset-0 rounded-xl bg-white"
+                    animate={{ scale: [1, 1.2], opacity: [0.3, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </div>
+                
+                {/* Shadow layer */}
+                <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.color} blur-md opacity-40`} 
+                     style={{ transform: 'translateZ(-10px)' }} />
+              </motion.div>
+
+              {/* Value with Split-flap Display Effect */}
+              <div className="relative mb-2">
+                <motion.h3 
+                  className="text-3xl font-black theme-text-primary"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + idx * 0.05 }}
+                >
+                  {stat.value}
+                </motion.h3>
+                <motion.div
+                  className={`absolute -bottom-1 left-0 h-1 bg-gradient-to-r ${stat.color} rounded-full`}
+                  initial={{ width: 0 }}
+                  animate={{ width: '60%' }}
+                  transition={{ delay: 0.4 + idx * 0.05, duration: 0.6 }}
+                />
+              </div>
+
+              {/* Label */}
+              <p className="text-xs font-bold theme-text-muted uppercase tracking-wide leading-tight">
+                {stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}
+              </p>
+
+              {/* Percentage Badge */}
+              <motion.div 
+                className="absolute bottom-3 right-3"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.6 + idx * 0.05, type: "spring" }}
+              >
+                <div className={`px-2 py-1 rounded-full bg-gradient-to-r ${stat.color} text-white text-xs font-bold`}>
+                  {((stat.value / stats.total) * 100).toFixed(0)}%
+                </div>
+              </motion.div>
+
+              {/* Segmented Progress Indicator */}
+              <div className="mt-4 flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className={`flex-1 h-1 rounded-full ${
+                      i < Math.ceil((stat.value / stats.total) * 5) 
+                        ? `bg-gradient-to-r ${stat.color}` 
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
+                  />
+                ))}
+              </div>
+
+              {/* Hover Shine Effect */}
+              <motion.div
+                className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity duration-500`}
+                style={{ mixBlendMode: 'overlay' }}
               />
             </div>
-
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 relative`}>
-              <stat.icon className="w-5 h-5 text-white relative z-10" />
-              <motion.div
-                className="absolute inset-0 bg-white rounded-lg"
-                initial={{ scale: 0, opacity: 0.6 }}
-                animate={{ scale: 1.5, opacity: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.3 }}
-              />
-            </div>
-
-            <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
-            <p className="text-xs theme-text-muted mb-3">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
-              <motion.div
-                className={`h-full bg-gradient-to-r ${stat.color}`}
-                initial={{ width: 0 }}
-                animate={{ width: `${(stat.value / stats.total) * 100}%` }}
-                transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
-              />
-            </div>
-
-            {/* Hover glow */}
-            <motion.div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-xl transition-opacity duration-500 -z-10`}
-            />
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Financial Overview */}
+      {/* Premium Financial Dashboard Cards */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
+        >
+          {/* Animated Background Gradient */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent"
+            animate={{ 
+              backgroundPosition: ['0% 0%', '100% 100%'],
+            }}
+            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            style={{ backgroundSize: '200% 200%' }}
+          />
+          
+          {/* Floating Particles */}
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-green-500/20 rounded-full"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -50, 0],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                delay: i * 1.5
+              }}
+              style={{ left: `${20 + i * 30}%`, top: '50%' }}
+            />
+          ))}
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <motion.div 
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-2xl"
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <DollarSign className="w-8 h-8 text-white" />
+              </motion.div>
+              
+              {/* Live Update Indicator */}
+              <motion.div
+                className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 rounded-full"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <motion.div 
+                  className="w-2 h-2 bg-green-500 rounded-full"
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <span className="text-xs font-semibold text-green-600 dark:text-green-400">Live</span>
+              </motion.div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.total_relief_amount')}</p>
+              <motion.p 
+                className="text-4xl font-black theme-text-primary"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.3 }}
+              >
+                {formatCurrency(stats.totalAmount)}
+              </motion.p>
+            </div>
+
+            {/* Animated Progress Bar with Gradient */}
+            <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 rounded-full relative"
+                initial={{ width: 0 }}
+                animate={{ width: '85%' }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
+              >
+                {/* Shine effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                />
+              </motion.div>
+            </div>
+
+            {/* Stats Footer */}
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <span className="theme-text-muted font-medium">Disbursed</span>
+              <span className="font-bold text-green-600 dark:text-green-400">+12.5% this month</span>
+            </div>
+          </div>
+
+          {/* Corner Decoration */}
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors duration-500" />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
+        >
+          {/* Animated Background Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <svg className="w-full h-full">
+              <defs>
+                <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="10" cy="10" r="1.5" fill="currentColor" className="text-blue-500" />
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+          </div>
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <motion.div 
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-2xl"
+                whileHover={{ rotate: -360, scale: 1.1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Scale className="w-8 h-8 text-white" />
+              </motion.div>
+              
+              <div className="text-right">
+                <p className="text-xs theme-text-muted mb-1">PCR Act</p>
+                <p className="text-2xl font-black theme-text-primary">{mockBeneficiaries.filter(b => b.actType === 'PCR Act').length}</p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.pcr_act_disbursements')}</p>
+              <motion.p 
+                className="text-4xl font-black theme-text-primary"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.4 }}
+              >
+                {formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + b.reliefAmount, 0))}
+              </motion.p>
+            </div>
+
+            {/* Circular Progress */}
+            <div className="flex items-center gap-4">
+              <div className="relative w-16 h-16">
+                <svg className="transform -rotate-90 w-16 h-16">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-gray-200 dark:text-gray-700" />
+                  <motion.circle 
+                    cx="32" cy="32" r="28" 
+                    stroke="url(#blueGradient)" 
+                    strokeWidth="4" 
+                    fill="none" 
+                    strokeLinecap="round"
+                    initial={{ strokeDashoffset: 175.93 }}
+                    animate={{ strokeDashoffset: 175.93 * 0.3 }}
+                    transition={{ duration: 1.5, delay: 0.5 }}
+                    style={{ strokeDasharray: 175.93 }}
+                  />
+                  <defs>
+                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#6366f1" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-bold theme-text-primary">70%</span>
+                </div>
+              </div>
+              
+              <div className="flex-1">
+                <p className="text-xs theme-text-muted">Success Rate</p>
+                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">Above Target</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors duration-500" />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
+        >
+          {/* Wave Pattern Background */}
+          <div className="absolute inset-0 opacity-5">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,50 Q25,25 50,50 T100,50 T150,50 T200,50 T250,50" stroke="currentColor" strokeWidth="2" fill="none" className="text-purple-500" />
+              <path d="M0,70 Q25,45 50,70 T100,70 T150,70 T200,70 T250,70" stroke="currentColor" strokeWidth="2" fill="none" className="text-purple-500" />
+            </svg>
+          </div>
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <motion.div 
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl"
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Heart className="w-8 h-8 text-white" />
+              </motion.div>
+              
+              <div className="text-right">
+                <p className="text-xs theme-text-muted mb-1">PoA Act</p>
+                <p className="text-2xl font-black theme-text-primary">{mockBeneficiaries.filter(b => b.actType === 'PoA Act').length}</p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.poa_act_disbursements')}</p>
+              <motion.p 
+                className="text-4xl font-black theme-text-primary"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.5 }}
+              >
+                {formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + b.reliefAmount, 0))}
+              </motion.p>
+            </div>
+
+            {/* Stacked Progress Bars */}
+            <div className="space-y-2">
+              {['Verified', 'Pending', 'Processing'].map((status, idx) => (
+                <div key={status} className="flex items-center gap-3">
+                  <span className="text-xs theme-text-muted w-20">{status}</span>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      className={`h-full rounded-full ${
+                        idx === 0 ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
+                        idx === 1 ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                        'bg-gradient-to-r from-blue-500 to-cyan-500'
+                      }`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${70 - idx * 20}%` }}
+                      transition={{ duration: 1, delay: 0.6 + idx * 0.1 }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold theme-text-primary w-8">{70 - idx * 20}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors duration-500" />
+        </motion.div>
+      </motion.div>
+
+      {/* Keep rest of Financial Overview section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className="hidden"
       >
         <motion.div
           whileHover={{ y: -2 }}

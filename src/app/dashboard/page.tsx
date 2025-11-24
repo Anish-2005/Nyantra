@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
@@ -15,12 +15,18 @@ import {
   ChevronRight,
   ArrowUpRight, ArrowDownRight, ArrowRight,
   Home, MessageCircle, Database, DownloadCloud, Fingerprint, Package, Layers, CheckCircle, AlertCircle, Clock as ClockIcon,
-  Archive, Server
+  Archive, Server,
+  Activity,
+  Download,
+  RefreshCw,
+  BarChart,
+  Zap
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -641,157 +647,341 @@ const Dashboard = () => {
                     </div>
                   </motion.div>
 
-                  {/* Real-Time Stats with Progress Indicators */}
+                  {/* Innovative Floating Metric Cards with Hexagon Design */}
                   <motion.div
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
                   >
-                    {quickStats.map((stat) => (
+                    {quickStats.map((stat, idx) => (
                       <motion.div
                         key={stat.title}
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl group relative overflow-hidden"
-                        whileHover={{ y: -4, scale: 1.02 }}
+                        className="relative group cursor-pointer"
+                        whileHover={{ y: -8, scale: 1.03 }}
+                        transition={{ type: "spring", stiffness: 300 }}
                       >
-                        {/* Status Indicator */}
-                        <div className="absolute top-3 right-3">
-                          <motion.div
-                            className={`w-2 h-2 rounded-full ${stat.trend === 'up' ? 'bg-green-500' : 'bg-amber-500'}`}
-                            animate={{ scale: [1, 1.3, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between mb-3 sm:mb-4">
-                          <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg relative`}>
-                            <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                            <motion.div
-                              className="absolute inset-0 bg-white rounded-xl"
-                              initial={{ scale: 0, opacity: 0.6 }}
-                              animate={{ scale: 1.5, opacity: 0 }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
+                        {/* Hexagonal Background Accent */}
+                        <div className="absolute inset-0 opacity-20">
+                          <svg viewBox="0 0 100 100" className="w-full h-full">
+                            <polygon 
+                              points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" 
+                              fill="currentColor"
+                              className={`${stat.trend === 'up' ? 'text-green-500' : 'text-amber-500'}`}
                             />
-                          </div>
-                          <div className={`flex items-center space-x-1 text-xs sm:text-sm font-semibold px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'}`}>
-                            {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" /> : <ArrowDownRight className="w-3 h-3 sm:w-4 sm:h-4" />}
-                            <span>{stat.change}</span>
-                          </div>
+                          </svg>
                         </div>
 
-                        <h3 className="text-lg sm:text-2xl font-bold theme-text-primary mb-1">{stat.value}</h3>
-                        <p className="text-xs sm:text-sm theme-text-muted mb-3">{stat.title}</p>
-
-                        {/* Progress Bar */}
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        {/* Main Card */}
+                        <div className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-5 backdrop-blur-xl overflow-hidden">
+                          {/* Animated Corner Accent */}
                           <motion.div
-                            className={`h-full bg-gradient-to-r ${stat.color}`}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.random() * 40 + 60}%` }}
-                            transition={{ duration: 1, delay: 0.2 }}
+                            className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-full`}
+                            animate={{ scale: [1, 1.2, 1], rotate: [0, 10, 0] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                          
+                          {/* Floating Status Badge */}
+                          <motion.div
+                            className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg"
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                          >
+                            <motion.div
+                              className={`w-3 h-3 rounded-full ${stat.trend === 'up' ? 'bg-green-500' : 'bg-amber-500'}`}
+                              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </motion.div>
+
+                          {/* Icon with Orbital Ring */}
+                          <div className="relative w-16 h-16 mb-4">
+                            <motion.div
+                              className="absolute inset-0 rounded-full border-2 border-dashed opacity-20"
+                              style={{ borderColor: `var(--${stat.trend === 'up' ? 'green' : 'amber'}-500)` }}
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            />
+                            <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl`}>
+                              <stat.icon className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+
+                          {/* Value with Counting Animation Effect */}
+                          <motion.h3 
+                            className="text-3xl font-black theme-text-primary mb-1 tracking-tight"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                          >
+                            {stat.value}
+                          </motion.h3>
+                          
+                          <p className="text-sm font-medium theme-text-muted mb-3">{stat.title}</p>
+
+                          {/* Trend Indicator Bar */}
+                          <div className="flex items-center gap-2">
+                            <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'}`}>
+                              {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                              <span>{stat.change}</span>
+                            </div>
+                            <div className="flex-1 text-xs theme-text-muted">vs last period</div>
+                          </div>
+
+                          {/* Hover Overlay */}
+                          <motion.div
+                            className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-300`}
                           />
                         </div>
-
-                        {/* Hover glow */}
-                        <motion.div
-                          className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-xl transition-opacity duration-500 -z-10`}
-                        />
                       </motion.div>
                     ))}
                   </motion.div>
 
-                  {/* Charts and Main Content Grid */}
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
-                    {/* Left Column - Charts and Applications */}
-                    <div className="xl:col-span-2 space-y-4 lg:space-y-6">
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-md flex flex-col gap-6"
-                      >
-                        
-
-                        {/* Chart Container */}
-                        <div className="relative w-full flex flex-col sm:flex-row items-center justify-center gap-4">
-                          {/* Background Accent */}
-                          <div className="absolute inset-0 accent-gradient opacity-5 pointer-events-none z-0 rounded-xl" aria-hidden />
-
-                          {/* Floating Filter Panel */}
-                          <div className="absolute top-4 mx-4 z-20 bg-[var(--glass-bg)] backdrop-blur-sm border theme-border-glass rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full sm:w-auto max-w-xs sm:max-w-none">
-
-                            {/* Range Selector */}
-                            <div className="flex items-center space-x-1">
-                              <label htmlFor="range" className="text-sm theme-text-muted">{t('extracted.range')} </label>
-                              <select
-                                id="range"
-                                className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
-                                value={chartRange}
-                                onChange={(e) => setChartRange(Number(e.target.value))}
+                  {/* Premium Analytics Dashboard */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                              { name: 'Rajesh Kumar', id: 'BEN-001234', status: 'Verified', amount: '₹40,000', color: 'from-green-500 to-emerald-500', badge: 'bg-green-500' },
+                              { name: 'Priya Singh', id: 'BEN-001235', status: 'Verified', amount: '₹35,000', color: 'from-blue-500 to-cyan-500', badge: 'bg-blue-500' },
+                              { name: 'Amit Sharma', id: 'BEN-001236', status: 'Verified', amount: '₹42,000', color: 'from-purple-500 to-pink-500', badge: 'bg-purple-500' }
+                            ].map((beneficiary, idx) => (
+                              <motion.div
+                                key={beneficiary.id}
+                                className={`relative p-5 rounded-2xl theme-bg-glass border-2 theme-border-glass group/beneficiary shadow-xl overflow-hidden flex flex-col gap-3`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1, type: "spring" }}
+                                whileHover={{ scale: 1.05, y: -3 }}
                               >
-                                <option value={7}>{t('extracted.last_7_days')} </option>
-                                <option value={30}>{t('extracted.last_30_days')} </option>
-                                <option value={90}>{t('extracted.last_90_days')} </option>
-                              </select>
-                            </div>
+                                {/* Animated Background Pattern */}
+                                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                      <pattern id={`beneficiary-bg-${idx}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                                      </pattern>
+                                    </defs>
+                                    <rect width="100%" height="100%" fill={`url(#beneficiary-bg-${idx})`} />
+                                  </svg>
+                                </div>
 
-                            {/* Chart Type */}
-                            <div className="flex items-center space-x-2">
-                              <label htmlFor="chart-type" className="text-sm theme-text-muted">{t('extracted.type')} </label>
-                              <select
-                                id="chart-type"
-                                className="px-3 py-1 rounded-lg border theme-border-glass theme-bg-glass text-sm"
-                                value={chartType}
-                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                                  setChartType(e.target.value as 'line' | 'area' | 'bar' | 'stacked')
-                                }
-                              >
-                                <option value="line">{t('extracted.line')}</option>
-                                <option value="area">{t('extracted.area')}</option>
-                                <option value="bar">{t('dashboard.chartLabels.bar')}</option>
-                                <option value="stacked">{t('extracted.stacked_bar')}</option>
-                              </select>
-                            </div>
+                                {/* Floating Badge */}
+                                <motion.div
+                                  className={`absolute -top-3 -right-3 w-8 h-8 rounded-full ${beneficiary.badge} flex items-center justify-center shadow-lg border-4 border-white/40 z-10`}
+                                  animate={{ y: [0, -8, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                                >
+                                  <CheckCircle className="w-4 h-4 text-white" />
+                                </motion.div>
 
-                            {/* Dataset Toggles */}
-                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Avatar and Info */}
+                                <div className="flex flex-col items-center gap-2 mb-2">
+                                  <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${beneficiary.color} flex items-center justify-center text-white font-extrabold text-2xl shadow-lg`}>
+                                    {beneficiary.name.charAt(0)}
+                                    {/* Shine effect */}
+                                    <motion.div
+                                      className="absolute inset-0 rounded-2xl bg-white opacity-0"
+                                      whileHover={{ opacity: 0.08 }}
+                                      transition={{ duration: 0.4 }}
+                                    />
+                                  </div>
+                                  <p className="font-bold theme-text-primary text-base text-center mt-1">{beneficiary.name}</p>
+                                  <span className="text-xs theme-text-muted bg-gray-500/10 px-2 py-0.5 rounded">{beneficiary.id}</span>
+                                </div>
+
+                                {/* Status and Amount */}
+                                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
+                                    <CheckCircle className="w-3 h-3" />
+                                    {beneficiary.status}
+                                  </span>
+                                  <span className="font-bold theme-text-primary text-base">{beneficiary.amount}</span>
+                                </div>
+
+                                {/* Animated Progress Bar */}
+                                <div className="mt-2">
+                                  <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <motion.div
+                                      className={`h-full bg-gradient-to-r ${beneficiary.color}`}
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${80 + idx * 10}%` }}
+                                      transition={{ delay: 0.4 + idx * 0.1, duration: 0.8, ease: "easeOut" }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Shine Effect on Hover */}
+                                <motion.div
+                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/beneficiary:opacity-10"
+                                  initial={{ x: '-100%' }}
+                                  whileHover={{ x: '100%' }}
+                                  transition={{ duration: 0.6 }}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
+                                <span className="text-xs theme-text-muted">Live Data Stream</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={exportCSV}
+                              className="px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 text-sm font-medium theme-text-primary"
+                            >
+                              <Download className="w-4 h-4" />
+                              <span className="hidden sm:inline">Export</span>
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center gap-2 text-sm font-medium shadow-lg"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              <span className="hidden sm:inline">Refresh</span>
+                            </motion.button>
+                          </div>
+                        </div>
+
+                        {/* Modern Filter Chips */}
+                        <div className="relative z-10 mb-6 space-y-4">
+                          <div className="flex flex-wrap gap-3">
+                            {/* Time Range Chips */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">Period:</span>
                               {[
-                                { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications },
-                                { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved },
-                                { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending }
-                              ].map(ds => (
-                                <label key={ds.id} className="inline-flex items-center space-x-2 text-sm">
-                                  <input type="checkbox" checked={ds.value} onChange={() => ds.setter(v => !v)} />
-                                  <span>{ds.label}</span>
-                                </label>
+                                { value: 7, label: '7D' },
+                                { value: 30, label: '30D' },
+                                { value: 90, label: '90D' }
+                              ].map((range) => (
+                                <motion.button
+                                  key={range.value}
+                                  onClick={() => setChartRange(range.value)}
+                                  className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                                    chartRange === range.value
+                                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                                      : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
+                                  }`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  {range.label}
+                                </motion.button>
                               ))}
                             </div>
 
-                            {/* Extra Controls */}
-                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                              <label className="inline-flex items-center space-x-2 text-sm">
-                                <input type="checkbox" checked={smoothing} onChange={() => setSmoothing(v => !v)} />
-                                <span>{t('extracted.smoothing')} </span>
-                              </label>
-                              <button
-                                onClick={exportCSV}
-                                className="px-3 py-1 rounded-lg accent-gradient text-white text-sm hover:opacity-90 transition"
-                              >
-                                Download CSV
-                              </button>
+                            {/* Chart Type Selector */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">View:</span>
+                              {[
+                                { value: 'line', icon: TrendingUp, label: 'Line' },
+                                { value: 'area', icon: BarChart, label: 'Area' },
+                                { value: 'bar', icon: BarChart3, label: 'Bar' }
+                              ].map((type) => (
+                                <motion.button
+                                  key={type.value}
+                                  onClick={() => setChartType(type.value as 'line' | 'area' | 'bar' | 'stacked')}
+                                  className={`p-2 rounded-xl transition-all ${
+                                    chartType === type.value
+                                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                                      : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
+                                  }`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  title={type.label}
+                                >
+                                  <type.icon className="w-4 h-4" />
+                                </motion.button>
+                              ))}
                             </div>
                           </div>
 
-                          {/* Chart */}
-                          <div className="w-full relative z-10 flex flex-col items-center pt-8">
-                            <div className="flex items-center justify-center gap-2 mb-4 text-sm theme-text-muted">
-                              
-                              <span className='pb-20'></span>
-                            </div>
-                            <div className="w-full max-w-4xl">
-                              <AnalyticsChart dataSets={dataSets} chartType={chartType} />
-                            </div>
+                          {/* Dataset Toggle Chips */}
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications, color: "from-blue-500 to-cyan-500" },
+                              { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved, color: "from-green-500 to-emerald-500" },
+                              { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending, color: "from-amber-500 to-orange-500" }
+                            ].map(ds => (
+                              <motion.button
+                                key={ds.id}
+                                onClick={() => ds.setter(v => !v)}
+                                className={`px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${
+                                  ds.value
+                                    ? `bg-gradient-to-r ${ds.color} text-white border-transparent shadow-lg`
+                                    : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-blue-500/30'
+                                }`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <motion.div
+                                  className={`w-2 h-2 rounded-full ${ds.value ? 'bg-white' : 'bg-gray-400'}`}
+                                  animate={ds.value ? { scale: [1, 1.3, 1] } : {}}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                />
+                                {ds.label}
+                              </motion.button>
+                            ))}
+                            
+                            {/* Smoothing Toggle */}
+                            <motion.button
+                              onClick={() => setSmoothing(v => !v)}
+                              className={`px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${
+                                smoothing
+                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
+                                  : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-purple-500/30'
+                              }`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Zap className={`w-3 h-3 ${smoothing ? 'text-white' : 'text-gray-400'}`} />
+                              {t('extracted.smoothing')}
+                            </motion.button>
                           </div>
                         </div>
+
+                        {/* Chart Area with Enhanced Styling */}
+                        <div className="relative z-10">
+                          {/* Chart Statistics Bar */}
+                          <div className="grid grid-cols-3 gap-4 mb-6">
+                            {[
+                              { label: 'Peak Value', value: '1,247', color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
+                              { label: 'Average', value: '856', color: 'from-purple-500 to-pink-500', icon: Activity },
+                              { label: 'Growth Rate', value: '+23%', color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
+                            ].map((stat, idx) => (
+                              <motion.div
+                                key={stat.label}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="theme-bg-glass rounded-2xl p-4 border theme-border-glass"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                                    <stat.icon className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs theme-text-muted">{stat.label}</p>
+                                    <p className="text-xl font-bold theme-text-primary">{stat.value}</p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {/* Main Chart */}
+                          <div className="relative rounded-2xl theme-bg-glass p-4 border theme-border-glass">
+                            <AnalyticsChart dataSets={dataSets} chartType={chartType} />
+                          </div>
+                        </div>
+
+                        {/* Decorative Elements */}
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
 
 
@@ -811,6 +1001,7 @@ const Dashboard = () => {
                             />
                           </div>
                           <motion.button
+                            onClick={() => router.push('/dashboard/applications')}
                             className="flex items-center space-x-2 px-3 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm w-full sm:w-auto justify-center sm:justify-start"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -887,98 +1078,926 @@ const Dashboard = () => {
                           ))}
                         </div>
                       </motion.div>
+
+                      {/* Beneficiaries Preview */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'radial-gradient(circle, rgba(59, 130, 246, 0.8) 1px, transparent 1px)',
+                            backgroundSize: '20px 20px'
+                          }} />
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <motion.div 
+                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <Users className="w-7 h-7 text-white" />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-xl font-bold theme-text-primary">Verified Beneficiaries</h3>
+                                <p className="text-sm theme-text-muted">Active profiles with full verification</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/beneficiaries')}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05, x: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                              { name: 'Rajesh Kumar', id: 'BEN-001234', status: 'Verified', amount: '₹40,000', color: 'from-green-500 to-emerald-500' },
+                              { name: 'Priya Singh', id: 'BEN-001235', status: 'Verified', amount: '₹35,000', color: 'from-blue-500 to-cyan-500' },
+                              { name: 'Amit Sharma', id: 'BEN-001236', status: 'Verified', amount: '₹42,000', color: 'from-purple-500 to-pink-500' }
+                            ].map((beneficiary, idx) => (
+                              <motion.div
+                                key={beneficiary.id}
+                                className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass group/card"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.03, y: -5 }}
+                              >
+                                <div className="flex items-center gap-3 mb-3">
+                                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${beneficiary.color} flex items-center justify-center text-white font-bold text-lg`}>
+                                    {beneficiary.name.charAt(0)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold theme-text-primary text-sm truncate">{beneficiary.name}</p>
+                                    <p className="text-xs theme-text-muted">{beneficiary.id}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
+                                    <CheckCircle className="w-3 h-3" />
+                                    {beneficiary.status}
+                                  </span>
+                                  <span className="font-bold theme-text-primary text-sm">{beneficiary.amount}</span>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* Disbursements Preview */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'linear-gradient(45deg, rgba(168, 85, 247, 0.5) 25%, transparent 25%, transparent 75%, rgba(168, 85, 247, 0.5) 75%, rgba(168, 85, 247, 0.5)), linear-gradient(45deg, rgba(168, 85, 247, 0.5) 25%, transparent 25%, transparent 75%, rgba(168, 85, 247, 0.5) 75%, rgba(168, 85, 247, 0.5))',
+                            backgroundSize: '20px 20px',
+                            backgroundPosition: '0 0, 10px 10px'
+                          }} />
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <motion.div 
+                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1, rotate: -5 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <Wallet className="w-7 h-7 text-white" />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-xl font-bold theme-text-primary">Recent Disbursements</h3>
+                                <p className="text-sm theme-text-muted">Latest payment transactions</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/disbursements')}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05, x: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+
+                          <div className="space-y-3">
+                            {[
+                              { id: 'DIS-001234', beneficiary: 'Rajesh Kumar', amount: '₹40,000', status: 'Completed', date: '2024-03-15', color: 'bg-green-500' },
+                              { id: 'DIS-001235', beneficiary: 'Priya Singh', amount: '₹35,000', status: 'Processing', date: '2024-03-14', color: 'bg-blue-500' },
+                              { id: 'DIS-001236', beneficiary: 'Amit Sharma', amount: '₹42,000', status: 'Completed', date: '2024-03-13', color: 'bg-green-500' }
+                            ].map((disbursement, idx) => (
+                              <motion.div
+                                key={disbursement.id}
+                                className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.02, x: 5 }}
+                              >
+                                <div className={`w-2 h-16 rounded-full ${disbursement.color} absolute left-0`} />
+                                <div className="flex-1 pl-4">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                      <p className="font-semibold theme-text-primary text-sm">{disbursement.beneficiary}</p>
+                                      <p className="text-xs theme-text-muted">{disbursement.id}</p>
+                                    </div>
+                                    <span className="font-bold text-lg theme-text-primary">{disbursement.amount}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                      disbursement.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                    }`}>
+                                      <div className={`w-1.5 h-1.5 rounded-full ${disbursement.color}`} />
+                                      {disbursement.status}
+                                    </span>
+                                    <span className="text-xs theme-text-muted flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {disbursement.date}
+                                    </span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* Analytics Preview */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)',
+                            backgroundSize: '25px 25px'
+                          }} />
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <motion.div 
+                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
+                                animate={{ rotate: [0, 360] }}
+                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                              >
+                                <BarChart3 className="w-7 h-7 text-white" />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-xl font-bold theme-text-primary">Performance Analytics</h3>
+                                <p className="text-sm theme-text-muted">Key metrics and insights</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/analytics')}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05, x: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                              { label: 'Total Applications', value: '1,247', change: '+12%', trend: 'up', icon: FileText, color: 'from-blue-500 to-cyan-500' },
+                              { label: 'Success Rate', value: '87.5%', change: '+3.2%', trend: 'up', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                              { label: 'Avg. Processing', value: '4.2 days', change: '-0.8', trend: 'down', icon: Clock, color: 'from-amber-500 to-orange-500' },
+                              { label: 'Total Disbursed', value: '₹3.28Cr', change: '+18%', trend: 'up', icon: Wallet, color: 'from-purple-500 to-pink-500' }
+                            ].map((metric, idx) => (
+                              <motion.div
+                                key={metric.label}
+                                className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.05, y: -5 }}
+                              >
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-3`}>
+                                  <metric.icon className="w-5 h-5 text-white" />
+                                </div>
+                                <p className="text-xs theme-text-muted mb-1">{metric.label}</p>
+                                <p className="text-xl font-bold theme-text-primary mb-1">{metric.value}</p>
+                                <div className={`flex items-center gap-1 text-xs font-semibold ${metric.trend === 'up' ? 'text-green-500' : 'text-amber-500'}`}>
+                                  {metric.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                  {metric.change}
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* Reports Preview */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern - Waves */}
+                        <div className="absolute inset-0 opacity-5">
+                          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                              <pattern id="wave-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                                <path d="M0 50 Q 25 30, 50 50 T 100 50" stroke="rgba(59, 130, 246, 0.8)" fill="none" strokeWidth="2" />
+                              </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#wave-pattern)" />
+                          </svg>
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <motion.div 
+                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <FileText className="w-7 h-7 text-white" />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-xl font-bold theme-text-primary">Generated Reports</h3>
+                                <p className="text-sm theme-text-muted">Latest system reports</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/reports')}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05, x: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+
+                          <div className="space-y-3">
+                            {[
+                              { name: 'Monthly DBT Disbursement', type: 'Financial', status: 'Completed', size: '4.2 MB', date: '2024-03-18', icon: Wallet },
+                              { name: 'Beneficiary Verification', type: 'Operational', status: 'Completed', size: '2.8 MB', date: '2024-03-17', icon: CheckCircle },
+                              { name: 'Application Analytics', type: 'Statistical', status: 'Processing', size: '3.5 MB', date: '2024-03-16', icon: BarChart3 }
+                            ].map((report, idx) => (
+                              <motion.div
+                                key={report.name}
+                                className="p-4 rounded-xl theme-bg-glass border theme-border-glass"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.02 }}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                                    <report.icon className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold theme-text-primary text-sm mb-1">{report.name}</p>
+                                    <div className="flex items-center gap-2 text-xs theme-text-muted">
+                                      <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 font-medium">{report.type}</span>
+                                      <span>•</span>
+                                      <span>{report.size}</span>
+                                      <span>•</span>
+                                      <span>{report.date}</span>
+                                    </div>
+                                  </div>
+                                  <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+                                    report.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                  }`}>
+                                    {report.status}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
                     </div>
 
                     {/* Right Column - Side Panels */}
                     <div className="space-y-4 lg:space-y-6">
-                      {/* System Integrations */}
+                      {/* System Integrations Preview */}
                       <motion.div
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.systemIntegrations')}</h3>
-                        <div className="space-y-3">
-                          {systemIntegrations.map((integration, index) => (
-                            <motion.div
-                              key={integration.name}
-                              className="flex items-center justify-between p-3 rounded-xl theme-bg-glass"
-                              whileHover={{ scale: 1.02 }}
-                              initial={{ opacity: 0, x: 20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <div className={`p-2 rounded-lg bg-gradient-to-br ${integration.color}`}>
-                                  <integration.icon className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="font-medium theme-text-primary text-sm">{integration.name}</span>
-                              </div>
-                              <div className={`w-2 h-2 rounded-full ${integration.status === 'active' ? 'bg-green-500' :
-                                  integration.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-                                }`} />
-                            </motion.div>
-                          ))}
+                        {/* Animated Mesh Background */}
+                        <div className="absolute inset-0 opacity-5">
+                          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                              <pattern id="integration-mesh" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <circle cx="20" cy="20" r="1.5" fill="rgba(99, 102, 241, 0.8)" />
+                                <line x1="20" y1="20" x2="40" y2="20" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="0.5" />
+                                <line x1="20" y1="20" x2="20" y2="40" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="0.5" />
+                              </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#integration-mesh)" />
+                          </svg>
                         </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                              <motion.div 
+                                className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <Database className="w-5 h-5 text-white" />
+                                {/* Pulse rings */}
+                                <motion.div
+                                  className="absolute inset-0 rounded-xl border-2 border-indigo-500"
+                                  animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
+                                />
+                                <motion.div
+                                  className="absolute inset-0 rounded-xl border-2 border-purple-500"
+                                  animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity, delay: 1, repeatDelay: 0.5 }}
+                                />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.systemIntegrations')}</h3>
+                                <p className="text-xs theme-text-muted">Connected Services</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/integrations')}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold text-xs shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </motion.button>
+                          </div>
+
+                          {/* Grid Layout for Integrations */}
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {systemIntegrations.map((integration, index) => (
+                              <motion.div
+                                key={integration.name}
+                                className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass group/card overflow-hidden"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.08, type: "spring" }}
+                                whileHover={{ scale: 1.05, y: -3 }}
+                              >
+                                {/* Status Indicator Strip */}
+                                <div className={`absolute top-0 left-0 right-0 h-1 ${
+                                  integration.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                                  integration.status === 'warning' ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 
+                                  'bg-gradient-to-r from-red-500 to-rose-500'
+                                }`} />
+
+                                {/* Connection Animation Lines */}
+                                <motion.div
+                                  className={`absolute inset-0 opacity-10`}
+                                  style={{
+                                    background: `linear-gradient(135deg, ${
+                                      integration.status === 'active' ? 'rgba(34, 197, 94, 0.3)' :
+                                      integration.status === 'warning' ? 'rgba(245, 158, 11, 0.3)' : 
+                                      'rgba(239, 68, 68, 0.3)'
+                                    } 0%, transparent 50%)`
+                                  }}
+                                  animate={{ 
+                                    backgroundPosition: ['0% 0%', '100% 100%'],
+                                  }}
+                                  transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
+                                />
+
+                                <div className="relative flex flex-col items-center text-center gap-2">
+                                  {/* Icon with Hexagon Frame */}
+                                  <div className="relative">
+                                    <motion.div 
+                                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${integration.color} flex items-center justify-center shadow-md`}
+                                      whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+                                      transition={{ duration: 0.5 }}
+                                    >
+                                      <integration.icon className="w-5 h-5 text-white" />
+                                    </motion.div>
+                                    
+                                    {/* Floating Status Badge */}
+                                    <motion.div
+                                      className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 theme-bg-card ${
+                                        integration.status === 'active' ? 'bg-green-500 border-green-300' :
+                                        integration.status === 'warning' ? 'bg-amber-500 border-amber-300' : 
+                                        'bg-red-500 border-red-300'
+                                      }`}
+                                      animate={{ 
+                                        scale: integration.status === 'active' ? [1, 1.2, 1] : 1,
+                                        opacity: integration.status === 'active' ? [1, 0.6, 1] : 1
+                                      }}
+                                      transition={{ duration: 2, repeat: Infinity }}
+                                    />
+                                  </div>
+
+                                  {/* Integration Name */}
+                                  <div>
+                                    <p className="font-semibold theme-text-primary text-xs leading-tight">{integration.name}</p>
+                                    <p className={`text-[10px] font-medium mt-0.5 ${
+                                      integration.status === 'active' ? 'text-green-500' :
+                                      integration.status === 'warning' ? 'text-amber-500' : 
+                                      'text-red-500'
+                                    }`}>
+                                      {integration.status === 'active' ? 'Connected' :
+                                       integration.status === 'warning' ? 'Warning' : 'Error'}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Shine Effect on Hover */}
+                                <motion.div
+                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/card:opacity-20"
+                                  initial={{ x: '-100%' }}
+                                  whileHover={{ x: '100%' }}
+                                  transition={{ duration: 0.6 }}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {/* Connection Status Summary */}
+                          <div className="mt-4 pt-3 border-t theme-border-glass">
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                                  <span className="theme-text-muted">
+                                    {systemIntegrations.filter(i => i.status === 'active').length} Active
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                  <span className="theme-text-muted">
+                                    {systemIntegrations.filter(i => i.status === 'warning').length} Warning
+                                  </span>
+                                </div>
+                              </div>
+                              <motion.div
+                                className="flex items-center gap-1 text-green-500 font-medium"
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <span>Live</span>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Enhanced Decorative Elements */}
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
 
-                      {/* Grievance Status */}
+                      {/* Grievance Hub Preview */}
                       <motion.div
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.grievanceStatus')}</h3>
-                        <div className="space-y-3">
-                          {grievanceData.map((grievance, index) => (
-                            <motion.div
-                              key={grievance.id}
-                              className="p-3 rounded-xl theme-bg-glass border theme-border-glass"
-                              whileHover={{ scale: 1.02 }}
-                              initial={{ opacity: 0, x: 20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <p className="font-medium theme-text-primary text-sm flex-1 pr-2">{grievance.subject}</p>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(grievance.priority)}`}>
-                                  {grievance.priority}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs theme-text-muted">
-                                <span>{grievance.assignedTo}</span>
-                                <span>{grievance.date}</span>
-                              </div>
-                            </motion.div>
-                          ))}
+                        {/* Alert Wave Background */}
+                        <div className="absolute inset-0 opacity-5">
+                          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                              <pattern id="grievance-alert" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                                <circle cx="30" cy="30" r="2" fill="rgba(239, 68, 68, 0.6)" />
+                                <path d="M15,30 L30,15 L45,30 L30,45 Z" stroke="rgba(239, 68, 68, 0.4)" fill="none" strokeWidth="1" />
+                              </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grievance-alert)" />
+                          </svg>
                         </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                              <motion.div 
+                                className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <MessageCircle className="w-5 h-5 text-white" />
+                                {/* Alert Ripple Effect */}
+                                <motion.div
+                                  className="absolute inset-0 rounded-xl bg-red-500"
+                                  animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                />
+                              </motion.div>
+                              <div>
+                                <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.grievanceStatus')}</h3>
+                                <p className="text-xs theme-text-muted">Active Issues</p>
+                              </div>
+                            </div>
+                            <motion.button
+                              onClick={() => router.push('/dashboard/grievance')}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold text-xs shadow-lg hover:shadow-xl transition-shadow"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>View Full</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </motion.button>
+                          </div>
+                          
+                          <div className="space-y-2.5">
+                            {grievanceData.map((grievance, index) => {
+                              const priorityConfig = {
+                                high: { 
+                                  bg: 'from-red-500 to-rose-500', 
+                                  text: 'text-red-500',
+                                  icon: AlertCircle,
+                                  glow: 'shadow-red-500/30'
+                                },
+                                medium: { 
+                                  bg: 'from-amber-500 to-orange-500', 
+                                  text: 'text-amber-500',
+                                  icon: Clock,
+                                  glow: 'shadow-amber-500/30'
+                                },
+                                low: { 
+                                  bg: 'from-blue-500 to-cyan-500', 
+                                  text: 'text-blue-500',
+                                  icon: CheckCircle,
+                                  glow: 'shadow-blue-500/30'
+                                }
+                              };
+                              
+                              const config = priorityConfig[grievance.priority as keyof typeof priorityConfig];
+                              const PriorityIcon = config.icon;
+
+                              return (
+                                <motion.div
+                                  key={grievance.id}
+                                  className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass group/item overflow-hidden"
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: index * 0.1, type: "spring" }}
+                                  whileHover={{ scale: 1.03, x: 5 }}
+                                >
+                                  {/* Priority Accent Bar */}
+                                  <motion.div 
+                                    className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${config.bg}`}
+                                    initial={{ height: 0 }}
+                                    animate={{ height: '100%' }}
+                                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                                  />
+
+                                  {/* Hover Glow Effect */}
+                                  <motion.div
+                                    className={`absolute inset-0 bg-gradient-to-r ${config.bg} opacity-0 group-hover/item:opacity-5`}
+                                    transition={{ duration: 0.3 }}
+                                  />
+
+                                  <div className="relative pl-3">
+                                    {/* Header Row */}
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                                        {/* Priority Icon */}
+                                        <motion.div
+                                          className={`w-8 h-8 rounded-lg bg-gradient-to-br ${config.bg} flex items-center justify-center shadow-lg ${config.glow} flex-shrink-0 mt-0.5`}
+                                          whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                                          transition={{ duration: 0.5 }}
+                                        >
+                                          <PriorityIcon className="w-4 h-4 text-white" />
+                                        </motion.div>
+
+                                        {/* Subject */}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-semibold theme-text-primary text-sm leading-tight line-clamp-2">
+                                            {grievance.subject}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Priority Badge */}
+                                      <motion.div
+                                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getPriorityColor(grievance.priority)} shadow-sm flex-shrink-0`}
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ delay: 0.4 + index * 0.1 }}
+                                        whileHover={{ scale: 1.1 }}
+                                      >
+                                        {grievance.priority}
+                                      </motion.div>
+                                    </div>
+
+                                    {/* Info Row */}
+                                    <div className="flex items-center justify-between text-xs theme-text-muted pl-10">
+                                      <div className="flex items-center gap-1.5">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${config.text.replace('text', 'bg')}`} />
+                                        <span className="font-medium">{grievance.assignedTo}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        <span>{grievance.date}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Progress Indicator */}
+                                    <div className="mt-2 pl-10">
+                                      <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <motion.div
+                                          className={`h-full bg-gradient-to-r ${config.bg}`}
+                                          initial={{ width: 0 }}
+                                          animate={{ width: grievance.priority === 'high' ? '75%' : grievance.priority === 'medium' ? '50%' : '25%' }}
+                                          transition={{ delay: 0.5 + index * 0.1, duration: 0.8, ease: "easeOut" }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Shine Effect */}
+                                  <motion.div
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/item:opacity-10"
+                                    initial={{ x: '-100%' }}
+                                    whileHover={{ x: '100%' }}
+                                    transition={{ duration: 0.6 }}
+                                  />
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Priority Summary */}
+                          <div className="mt-4 pt-3 border-t theme-border-glass">
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1.5">
+                                  <AlertCircle className="w-3 h-3 text-red-500" />
+                                  <span className="theme-text-muted font-medium">
+                                    {grievanceData.filter(g => g.priority === 'high').length} High
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="w-3 h-3 text-amber-500" />
+                                  <span className="theme-text-muted font-medium">
+                                    {grievanceData.filter(g => g.priority === 'medium').length} Medium
+                                  </span>
+                                </div>
+                              </div>
+                              <motion.div
+                                className="flex items-center gap-1 text-red-500 font-semibold"
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                <span>Active</span>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Enhanced Decorative Elements */}
+                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-red-500/20 to-rose-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-rose-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
 
                       {/* Quick Actions */}
                       <motion.div
                         variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
                       >
-                        <h3 className="text-lg font-semibold theme-text-primary mb-4" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.quickActions')}</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          {[
-                            { labelKey: 'dashboard.quickActionLabels.newApp', icon: Plus, color: 'from-blue-500 to-cyan-500' },
-                            { labelKey: 'dashboard.quickActionLabels.reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
-                            { labelKey: 'dashboard.quickActionLabels.analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
-                            { labelKey: 'dashboard.quickActionLabels.settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
-                          ].map((action, index) => (
-                            <motion.button
-                              key={action.labelKey}
-                              className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white flex flex-col items-center justify-center space-y-2 shadow-lg`}
-                              whileHover={{ scale: 1.05, y: -2 }}
-                              whileTap={{ scale: 0.95 }}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              <action.icon className="w-5 h-5" />
-                              <span className="text-xs font-medium" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t(action.labelKey)}</span>
-                            </motion.button>
-                          ))}
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'linear-gradient(45deg, rgba(59, 130, 246, 0.5) 25%, transparent 25%, transparent 75%, rgba(59, 130, 246, 0.5) 75%, rgba(59, 130, 246, 0.5)), linear-gradient(45deg, rgba(59, 130, 246, 0.5) 25%, transparent 25%, transparent 75%, rgba(59, 130, 246, 0.5) 75%, rgba(59, 130, 246, 0.5))',
+                            backgroundSize: '15px 15px',
+                            backgroundPosition: '0 0, 7.5px 7.5px'
+                          }} />
                         </div>
+
+                        <div className="relative z-10">
+                          <h3 className="text-lg font-semibold theme-text-primary mb-4 flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
+                            <Zap className="w-5 h-5 text-amber-500" />
+                            {t('dashboard.sections.quickActions')}
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { labelKey: 'dashboard.quickActionLabels.newApp', icon: Plus, color: 'from-blue-500 to-cyan-500' },
+                              { labelKey: 'dashboard.quickActionLabels.reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
+                              { labelKey: 'dashboard.quickActionLabels.analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
+                              { labelKey: 'dashboard.quickActionLabels.settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
+                            ].map((action, index) => (
+                              <motion.button
+                                key={action.labelKey}
+                                className={`p-4 rounded-xl bg-gradient-to-br ${action.color} text-white flex flex-col items-center justify-center space-y-2 shadow-lg relative overflow-hidden`}
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.1 }}
+                              >
+                                <motion.div
+                                  className="absolute inset-0 bg-white"
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  whileHover={{ scale: 2, opacity: 0.1 }}
+                                  transition={{ duration: 0.3 }}
+                                />
+                                <action.icon className="w-6 h-6" />
+                                <span className="text-xs font-semibold text-center" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t(action.labelKey)}</span>
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* System Health Monitor */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'radial-gradient(circle, rgba(34, 197, 94, 0.8) 1px, transparent 1px)',
+                            backgroundSize: '20px 20px'
+                          }} />
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
+                              <Activity className="w-5 h-5 text-green-500" />
+                              System Health
+                            </h3>
+                            <motion.div
+                              className="w-3 h-3 rounded-full bg-green-500"
+                              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
+
+                          <div className="space-y-3">
+                            {[
+                              { label: 'Server Uptime', value: '99.9%', status: 'excellent', color: 'text-green-500' },
+                              { label: 'API Response', value: '45ms', status: 'good', color: 'text-green-500' },
+                              { label: 'Database Load', value: '34%', status: 'normal', color: 'text-blue-500' },
+                              { label: 'Active Users', value: '1,247', status: 'high', color: 'text-purple-500' }
+                            ].map((metric, idx) => (
+                              <motion.div
+                                key={metric.label}
+                                className="flex items-center justify-between p-3 rounded-xl theme-bg-glass"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.02 }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-2 h-2 rounded-full ${metric.color.replace('text', 'bg')}`} />
+                                  <span className="text-sm theme-text-primary font-medium">{metric.label}</span>
+                                </div>
+                                <span className={`font-bold text-sm ${metric.color}`}>{metric.value}</span>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* Recent Activity Feed */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute inset-0" style={{
+                            backgroundImage: 'linear-gradient(rgba(168, 85, 247, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.5) 1px, transparent 1px)',
+                            backgroundSize: '15px 15px'
+                          }} />
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
+                              <Clock className="w-5 h-5 text-purple-500" />
+                              Recent Activity
+                            </h3>
+                          </div>
+
+                          <div className="space-y-3">
+                            {[
+                              { action: 'New Application', user: 'Rajesh Kumar', time: '2 min ago', icon: Plus, color: 'from-blue-500 to-cyan-500' },
+                              { action: 'Disbursement Approved', user: 'Officer Sharma', time: '15 min ago', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
+                              { action: 'Report Generated', user: 'System', time: '1 hr ago', icon: FileText, color: 'from-amber-500 to-orange-500' },
+                              { action: 'Grievance Resolved', user: 'Officer Verma', time: '3 hrs ago', icon: MessageCircle, color: 'from-red-500 to-rose-500' }
+                            ].map((activity, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="flex items-start gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.02, x: 5 }}
+                              >
+                                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${activity.color} flex items-center justify-center flex-shrink-0`}>
+                                  <activity.icon className="w-4 h-4 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
+                                  <p className="text-xs theme-text-muted truncate">by {activity.user}</p>
+                                </div>
+                                <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                      </motion.div>
+
+                      {/* Performance Metrics */}
+                      <motion.div
+                        variants={itemVariants}
+                        className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                      >
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                              <pattern id="perf-wave" x="0" y="0" width="100" height="50" patternUnits="userSpaceOnUse">
+                                <path d="M0 25 Q 25 15, 50 25 T 100 25" stroke="rgba(59, 130, 246, 0.8)" fill="none" strokeWidth="1" />
+                              </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#perf-wave)" />
+                          </svg>
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
+                              <TrendingUp className="w-5 h-5 text-blue-500" />
+                              Performance
+                            </h3>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { label: 'Today', value: '156', change: '+12%', icon: Rocket, color: 'from-blue-500 to-cyan-500' },
+                              { label: 'This Week', value: '892', change: '+8%', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                              { label: 'Success', value: '87.5%', change: '+3%', icon: Award, color: 'from-purple-500 to-pink-500' },
+                              { label: 'Pending', value: '45', change: '-5%', icon: Clock, color: 'from-amber-500 to-orange-500' }
+                            ].map((metric, idx) => (
+                              <motion.div
+                                key={metric.label}
+                                className="p-3 rounded-xl theme-bg-glass border theme-border-glass"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.05 }}
+                              >
+                                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${metric.color} flex items-center justify-center mb-2`}>
+                                  <metric.icon className="w-4 h-4 text-white" />
+                                </div>
+                                <p className="text-xs theme-text-muted mb-1">{metric.label}</p>
+                                <div className="flex items-center justify-between">
+                                  <p className="text-lg font-bold theme-text-primary">{metric.value}</p>
+                                  <span className={`text-xs font-semibold ${metric.change.startsWith('+') ? 'text-green-500' : 'text-amber-500'}`}>
+                                    {metric.change}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Decorative orb */}
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
                     </div>
                   </div>
