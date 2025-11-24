@@ -10,7 +10,9 @@ import {
   Clock, AlertCircle, FileText, User, Phone, MapPin,
   Calendar, DollarSign, MessageSquare, MoreVertical,
   Shield, Award, Heart, Scale, BadgeCheck,
-  Banknote, Fingerprint
+  Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
+  Activity, Target, Globe, Layers, Star,
+  CheckCircle, Tag, Grid3X3, Layout
 } from 'lucide-react';
 
 // Mock data for beneficiaries
@@ -316,7 +318,7 @@ const BeneficiariesPage = () => {
       } catch { }
 
       const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = 1000;
+      const particlesCount = 200; // Reduced for subtlety
       const posArray = new Float32Array(particlesCount * 3);
 
       for (let i = 0; i < particlesCount * 3; i++) {
@@ -326,41 +328,41 @@ const BeneficiariesPage = () => {
       particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
       const particlesMaterial = new THREE.PointsMaterial({
-        size: theme === 'dark' ? 0.012 : 0.008,
+        size: theme === 'dark' ? 0.005 : 0.003, // Smaller
         color: particleColor,
         transparent: true,
-        opacity: theme === 'dark' ? 0.6 : 0.4,
+        opacity: theme === 'dark' ? 0.3 : 0.2, // Less opacity
         blending: THREE.AdditiveBlending
       });
 
       const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
       scene.add(particlesMesh);
 
-      // Create connecting lines
-      const linesGeometry = new THREE.BufferGeometry();
-      const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
+      // Remove connecting lines for cleaner look
+      // const linesGeometry = new THREE.BufferGeometry();
+      // const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
 
-      const linesPositions: number[] = [];
-      for (let i = 0; i < 80; i++) {
-        const x1 = (Math.random() - 0.5) * 8;
-        const y1 = (Math.random() - 0.5) * 8;
-        const z1 = (Math.random() - 0.5) * 8;
-        const x2 = x1 + (Math.random() - 0.5) * 1.5;
-        const y2 = y1 + (Math.random() - 0.5) * 1.5;
-        const z2 = z1 + (Math.random() - 0.5) * 1.5;
-        linesPositions.push(x1, y1, z1, x2, y2, z2);
-      }
+      // const linesPositions: number[] = [];
+      // for (let i = 0; i < 80; i++) {
+      //     const x1 = (Math.random() - 0.5) * 8;
+      //     const y1 = (Math.random() - 0.5) * 8;
+      //     const z1 = (Math.random() - 0.5) * 8;
+      //     const x2 = x1 + (Math.random() - 0.5) * 1.5;
+      //     const y2 = y1 + (Math.random() - 0.5) * 1.5;
+      //     const z2 = z1 + (Math.random() - 0.5) * 1.5;
+      //     linesPositions.push(x1, y1, z1, x2, y2, z2);
+      // }
 
-      linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-      const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-      scene.add(linesMesh);
+      // linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
+      // const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
+      // scene.add(linesMesh);
 
       let animationId: number | null = null;
       const animate = () => {
         animationId = requestAnimationFrame(animate);
-        particlesMesh.rotation.y += 0.0003;
-        particlesMesh.rotation.x += 0.0001;
-        linesMesh.rotation.y -= 0.0002;
+        particlesMesh.rotation.y += 0.0001; // Slower
+        particlesMesh.rotation.x += 0.00005;
+        // linesMesh.rotation.y -= 0.0002;
         renderer.render(scene, camera);
       };
 
@@ -381,8 +383,8 @@ const BeneficiariesPage = () => {
         renderer.dispose();
         particlesGeometry.dispose();
         particlesMaterial.dispose();
-        linesGeometry.dispose();
-        linesMaterial.dispose();
+        // linesGeometry.dispose();
+        // linesMaterial.dispose();
       };
     })();
   }, [theme]);
@@ -562,209 +564,74 @@ const BeneficiariesPage = () => {
         }
       `}</style>
       
-      {/* Real-Time Monitoring Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl -z-10" />
-        
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <motion.div
-                className="w-3 h-3 rounded-full bg-green-500"
-                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_tracking')} • {filteredBeneficiaries.length} {t('extracted.active_beneficiaries')}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
-              {t('extracted.beneficiary')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
-            </h1>
-            <p className="theme-text-secondary text-sm sm:text-base">
-              {t('extracted.realtime_beneficiary_tracking_description')}
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border theme-border-glass flex items-center gap-2 theme-text-primary shadow-md text-sm"
-              onClick={() => window.print()}
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
             >
-              <Download className="w-4 h-4" />
-              <span>{t('extracted.export_data')}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2.5 accent-gradient text-white rounded-xl flex items-center gap-2 shadow-lg text-sm font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t('extracted.add_beneficiary')}</span>
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="flex-1">
+                        <h1 className="text-3xl font-bold theme-text-primary mb-2">
+                            {t('extracted.beneficiary')} <span className="text-accent-gradient">{t('extracted.management')}</span>
+                        </h1>
+                        <p className="theme-text-secondary text-base">
+                            {t('extracted.comprehensive_oversight_of_dbt_beneficiaries')}
+                        </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span>{t('extracted.export_data')}</span>
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>{t('extracted.add_beneficiary')}</span>
+                        </motion.button>
+                    </div>
+                </div>
+            </motion.div>
 
-      {/* Innovative Profile Card Statistics */}
+      {/* Statistics Cards */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3"
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User, status: 'active', bgPattern: 'dots' },
-          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck, status: 'success', bgPattern: 'grid' },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning', bgPattern: 'waves' },
-          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote, status: 'success', bgPattern: 'circles' },
-          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error', bgPattern: 'diagonal' },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle, status: 'alert', bgPattern: 'zigzag' },
-          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield, status: 'info', bgPattern: 'squares' },
-          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award, status: 'info', bgPattern: 'lines' }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
+          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
+          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote },
+          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
+          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
+          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            transition={{ delay: idx * 0.05, type: "spring" }}
-            whileHover={{ y: -8, scale: 1.05, rotateZ: 2 }}
-            className="relative group cursor-pointer"
-            style={{ perspective: '1000px' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
           >
-            {/* Decorative Corner Element */}
-            <div className={`absolute -top-2 -right-2 w-16 h-16 bg-gradient-to-br ${stat.color} opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity`} />
-            
-            {/* Main Card */}
-            <div className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 backdrop-blur-xl relative overflow-hidden"
-                 style={{ transformStyle: 'preserve-3d' }}>
-              
-              {/* Pattern Background */}
-              <div className="absolute inset-0 opacity-5">
-                {stat.bgPattern === 'dots' && (
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-                    backgroundSize: '8px 8px'
-                  }} className="text-blue-500" />
-                )}
-                {stat.bgPattern === 'grid' && (
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
-                    backgroundSize: '10px 10px'
-                  }} className="text-green-500" />
-                )}
-                {stat.bgPattern === 'waves' && (
-                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0,20 Q10,10 20,20 T40,20 T60,20 T80,20 T100,20" stroke="currentColor" fill="none" className="text-amber-500" />
-                  </svg>
-                )}
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                <stat.icon className="w-5 h-5 text-white" />
               </div>
-
-              {/* Floating Status Orb */}
-              <motion.div
-                className="absolute -top-1 -right-1 w-10 h-10"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-              >
-                <div className={`w-full h-full rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
-                  <motion.div
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      stat.status === 'success' ? 'bg-white' :
-                      stat.status === 'warning' ? 'bg-white' :
-                      stat.status === 'error' ? 'bg-white' : 'bg-white'
-                    }`}
-                    animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </div>
-              </motion.div>
-
-              {/* Icon with 3D Effect */}
-              <motion.div 
-                className="relative mb-3"
-                whileHover={{ rotateY: 180 }}
-                transition={{ duration: 0.6 }}
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl relative`}
-                     style={{ transform: 'translateZ(20px)' }}>
-                  <stat.icon className="w-7 h-7 text-white" />
-                  
-                  {/* Inner glow */}
-                  <motion.div
-                    className="absolute inset-0 rounded-xl bg-white"
-                    animate={{ scale: [1, 1.2], opacity: [0.3, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </div>
-                
-                {/* Shadow layer */}
-                <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.color} blur-md opacity-40`} 
-                     style={{ transform: 'translateZ(-10px)' }} />
-              </motion.div>
-
-              {/* Value with Split-flap Display Effect */}
-              <div className="relative mb-2">
-                <motion.h3 
-                  className="text-3xl font-black theme-text-primary"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + idx * 0.05 }}
-                >
-                  {stat.value}
-                </motion.h3>
-                <motion.div
-                  className={`absolute -bottom-1 left-0 h-1 bg-gradient-to-r ${stat.color} rounded-full`}
-                  initial={{ width: 0 }}
-                  animate={{ width: '60%' }}
-                  transition={{ delay: 0.4 + idx * 0.05, duration: 0.6 }}
-                />
-              </div>
-
-              {/* Label */}
-              <p className="text-xs font-bold theme-text-muted uppercase tracking-wide leading-tight">
-                {stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}
-              </p>
-
-              {/* Percentage Badge */}
-              <motion.div 
-                className="absolute bottom-3 right-3"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.6 + idx * 0.05, type: "spring" }}
-              >
-                <div className={`px-2 py-1 rounded-full bg-gradient-to-r ${stat.color} text-white text-xs font-bold`}>
-                  {((stat.value / stats.total) * 100).toFixed(0)}%
-                </div>
-              </motion.div>
-
-              {/* Segmented Progress Indicator */}
-              <div className="mt-4 flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className={`flex-1 h-1 rounded-full ${
-                      i < Math.ceil((stat.value / stats.total) * 5) 
-                        ? `bg-gradient-to-r ${stat.color}` 
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
-                  />
-                ))}
-              </div>
-
-              {/* Hover Shine Effect */}
-              <motion.div
-                className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity duration-500`}
-                style={{ mixBlendMode: 'overlay' }}
-              />
+              <span className="text-lg font-bold theme-text-primary">{stat.value}</span>
             </div>
+            <p className="text-sm font-medium theme-text-muted">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -1105,131 +972,438 @@ const BeneficiariesPage = () => {
         </motion.div>
       </motion.div>
 
-      {/* Filters and Search */}
+      {/* Enhanced Filters and Search Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
+        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group"
       >
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-            <input
-              type="text"
-              placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            />
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1 sm:p-2">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-            >
-              {t('extracted.table')}
-            </button>
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-            >
-              {t('extracted.cards')}
-            </button>
-          </div>
-
-          {/* Filter Toggle */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'}`}
-            style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden rounded-3xl">
+          {/* Floating search icons */}
+          <motion.div
+            className="absolute top-4 right-8 w-8 h-8 opacity-10"
+            animate={{
+              y: [0, -10, 0],
+              rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Filter className="w-4 h-4" />
-            <span>{t('extracted.filters')} </span>
-            {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
-              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            )}
-          </motion.button>
+            <Search className="w-full h-full text-blue-500" />
+          </motion.div>
+          <motion.div
+            className="absolute bottom-6 left-12 w-6 h-6 opacity-10"
+            animate={{
+              y: [0, 8, 0],
+              x: [0, 5, 0]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          >
+            <Filter className="w-full h-full text-purple-500" />
+          </motion.div>
+
+          {/* Gradient waves */}
+          <motion.div
+            className="absolute inset-0 opacity-5"
+            animate={{
+              backgroundPosition: ['0% 0%', '100% 100%'],
+            }}
+            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+            style={{
+              background: 'linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent, rgba(147, 197, 253, 0.1), transparent)',
+              backgroundSize: '400% 400%'
+            }}
+          />
         </div>
 
-        {/* Expanded Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.status')} </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <option value="all">{t('extracted.all_statuses')} </option>
-                    <option value="verified">{t('extracted.verified')} </option>
-                    <option value="pending-verification">{t('extracted.pending_verification')} </option>
-                    <option value="disbursed">{t('extracted.disbursed')} </option>
-                    <option value="rejected">{t('extracted.rejected')} </option>
-                    <option value="documents-required">{t('extracted.documents_required')} </option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.act_type')} </label>
-                  <select
-                    value={actTypeFilter}
-                    onChange={(e) => setActTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <option value="all">{t('extracted.all_acts')} </option>
-                    <option value="PCR Act">{t('extracted.pcr_act')} </option>
-                    <option value="PoA Act">{t('extracted.poa_act')} </option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.category_1')} </label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <option value="all">{t('extracted.all_categories')} </option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="OBC">OBC</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm theme-text-muted mb-2">{t('extracted.verification')} </label>
-                  <select
-                    value={verificationFilter}
-                    onChange={(e) => setVerificationFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <option value="all">{t('extracted.all_verification')} </option>
-                    <option value="verified">{t('extracted.verified')} </option>
-                    <option value="pending">{t('extracted.pending')} </option>
-                    <option value="rejected">{t('extracted.rejected')} </option>
-                    <option value="documents-required">{t('extracted.documents_required')} </option>
-                  </select>
-                </div>
+        <div className="relative z-10 space-y-6">
+          {/* Enhanced Search Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <motion.div
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Search className="w-5 h-5 text-white" />
+              </motion.div>
+              <div>
+                <h3 className="text-lg font-bold theme-text-primary">Advanced Search</h3>
+                <p className="text-sm theme-text-muted">Find beneficiaries by name, ID, or location</p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            <div className="relative">
+              <motion.input
+                type="text"
+                placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 rounded-2xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-lg font-medium shadow-xl"
+                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                whileFocus={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.div
+                className="absolute left-4 top-1/2 -translate-y-1/2"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Search className="w-6 h-6 theme-text-muted" />
+              </motion.div>
+
+              {/* Search suggestions indicator */}
+              {searchQuery && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2"
+                >
+                  <span className="text-sm theme-text-muted font-medium">
+                    {filteredBeneficiaries.length} results
+                  </span>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-4 h-4 text-blue-500" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {/* Enhanced Controls Row */}
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            {/* View Mode Toggle with Enhanced Design */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-semibold theme-text-muted uppercase tracking-wide">View Mode</span>
+              <div className="flex items-center gap-1 theme-bg-glass rounded-2xl p-1 border-2 theme-border-glass">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setViewMode('table')}
+                  className={`relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                    viewMode === 'table'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'theme-text-muted hover:theme-text-primary'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Grid3X3 className="w-4 h-4" />
+                    <span>{t('extracted.table')}</span>
+                  </div>
+                  {viewMode === 'table' && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl"
+                      initial={false}
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setViewMode('cards')}
+                  className={`relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                    viewMode === 'cards'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'theme-text-muted hover:theme-text-primary'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Layout className="w-4 h-4" />
+                    <span>{t('extracted.cards')}</span>
+                  </div>
+                  {viewMode === 'cards' && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl"
+                      initial={false}
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Enhanced Filter Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`group relative px-6 py-3 rounded-2xl font-semibold flex items-center gap-3 shadow-xl overflow-hidden ${
+                showFilters
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'
+                  : 'theme-bg-glass theme-border-glass border-2 theme-text-primary'
+              }`}
+              style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative flex items-center gap-3">
+                <motion.div
+                  animate={{ rotate: showFilters ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Filter className="w-5 h-5" />
+                </motion.div>
+                <span>{t('extracted.filters')}</span>
+                {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  >
+                    !
+                  </motion.div>
+                )}
+              </div>
+              <motion.div
+                className="absolute inset-0 bg-white/20 rounded-2xl"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.6 }}
+              />
+            </motion.button>
+          </div>
+
+          {/* Enhanced Expandable Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="relative pt-6 border-t-2 theme-border-glass">
+                  {/* Filter background decoration */}
+                  <div className="absolute inset-0 opacity-5">
+                    <motion.div
+                      animate={{
+                        backgroundPosition: ['0% 0%', '100% 100%'],
+                      }}
+                      transition={{ duration: 15, repeat: Infinity, repeatType: "reverse" }}
+                      style={{
+                        background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1), rgba(196, 181, 253, 0.1), rgba(251, 207, 232, 0.1))',
+                        backgroundSize: '400% 400%',
+                        borderRadius: '16px'
+                      }}
+                      className="absolute inset-0 rounded-2xl"
+                    />
+                  </div>
+
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Status Filter */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.status')}</label>
+                      </div>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-sm font-medium shadow-lg"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <option value="all">{t('extracted.all_statuses')}</option>
+                        <option value="verified">{t('extracted.verified')}</option>
+                        <option value="pending-verification">{t('extracted.pending_verification')}</option>
+                        <option value="disbursed">{t('extracted.disbursed')}</option>
+                        <option value="rejected">{t('extracted.rejected')}</option>
+                        <option value="documents-required">{t('extracted.documents_required')}</option>
+                      </select>
+                    </motion.div>
+
+                    {/* Act Type Filter */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                          <Scale className="w-4 h-4 text-white" />
+                        </div>
+                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.act_type')}</label>
+                      </div>
+                      <select
+                        value={actTypeFilter}
+                        onChange={(e) => setActTypeFilter(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-lg"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <option value="all">{t('extracted.all_acts')}</option>
+                        <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                        <option value="PoA Act">{t('extracted.poa_act')}</option>
+                      </select>
+                    </motion.div>
+
+                    {/* Category Filter */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                          <Shield className="w-4 h-4 text-white" />
+                        </div>
+                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.category_1')}</label>
+                      </div>
+                      <select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-sm font-medium shadow-lg"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <option value="all">{t('extracted.all_categories')}</option>
+                        <option value="SC">SC</option>
+                        <option value="ST">ST</option>
+                        <option value="OBC">OBC</option>
+                      </select>
+                    </motion.div>
+
+                    {/* Verification Filter */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                          <Shield className="w-4 h-4 text-white" />
+                        </div>
+                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.verification')}</label>
+                      </div>
+                      <select
+                        value={verificationFilter}
+                        onChange={(e) => setVerificationFilter(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm font-medium shadow-lg"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <option value="all">{t('extracted.all_verification')}</option>
+                        <option value="verified">{t('extracted.verified')}</option>
+                        <option value="pending">{t('extracted.pending')}</option>
+                        <option value="rejected">{t('extracted.rejected')}</option>
+                        <option value="documents-required">{t('extracted.documents_required')}</option>
+                      </select>
+                    </motion.div>
+                  </div>
+
+                  {/* Active Filters Display */}
+                  {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 pt-4 border-t theme-border-glass"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Tag className="w-4 h-4 theme-text-muted" />
+                        <span className="text-sm font-semibold theme-text-primary">Active Filters</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {statusFilter !== 'all' && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-700 dark:text-green-400 rounded-full text-xs font-medium border border-green-500/30"
+                          >
+                            Status: {statusFilter.replace('-', ' ')}
+                            <button
+                              onClick={() => setStatusFilter('all')}
+                              className="hover:bg-green-500/30 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </motion.span>
+                        )}
+                        {actTypeFilter !== 'all' && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium border border-blue-500/30"
+                          >
+                            Act: {actTypeFilter}
+                            <button
+                              onClick={() => setActTypeFilter('all')}
+                              className="hover:bg-blue-500/30 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </motion.span>
+                        )}
+                        {categoryFilter !== 'all' && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium border border-purple-500/30"
+                          >
+                            Category: {categoryFilter}
+                            <button
+                              onClick={() => setCategoryFilter('all')}
+                              className="hover:bg-purple-500/30 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </motion.span>
+                        )}
+                        {verificationFilter !== 'all' && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium border border-amber-500/30"
+                          >
+                            Verification: {verificationFilter.replace('-', ' ')}
+                            <button
+                              onClick={() => setVerificationFilter('all')}
+                              className="hover:bg-amber-500/30 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </motion.span>
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            setStatusFilter('all');
+                            setActTypeFilter('all');
+                            setCategoryFilter('all');
+                            setVerificationFilter('all');
+                          }}
+                          className="px-3 py-1.5 bg-gray-500/20 text-gray-700 dark:text-gray-400 rounded-full text-xs font-medium border border-gray-500/30 hover:bg-gray-500/30"
+                        >
+                          Clear All
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom accent gradient */}
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-b-3xl"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+        />
       </motion.div>
 
       {/* Beneficiaries List */}

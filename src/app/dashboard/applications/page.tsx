@@ -73,61 +73,61 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Applicant Information */}
             <div>
-                <h3 className="text-lg font-semibold theme-text-primary mb-4">Applicant Information</h3>
+                <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicantInformation')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Full Name *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')} *</label>
                         <input
                             type="text"
                             required
                             value={formData.applicantName}
                             onChange={(e) => handleInputChange('applicantName', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter applicant's full name"
+                            placeholder={t('applications.enterApplicantFullName')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Phone Number *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')} *</label>
                         <input
                             type="tel"
                             required
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter phone number"
+                            placeholder={t('applications.enterPhoneNumber')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Aadhaar Number *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')} *</label>
                         <input
                             type="text"
                             required
                             value={formData.aadhaar}
                             onChange={(e) => handleInputChange('aadhaar', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter 12-digit Aadhaar number"
+                            placeholder={t('applications.enter12DigitAadhaarNumber')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">District *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
                         <input
                             type="text"
                             required
                             value={formData.district}
                             onChange={(e) => handleInputChange('district', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter district"
+                            placeholder={t('applications.enterDistrict')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">State *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')} *</label>
                         <input
                             type="text"
                             required
                             value={formData.state}
                             onChange={(e) => handleInputChange('state', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter state"
+                            placeholder={t('applications.enterState')}
                         />
                     </div>
                 </div>
@@ -135,23 +135,23 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
 
             {/* Application Details */}
             <div>
-                <h3 className="text-lg font-semibold theme-text-primary mb-4">Application Details</h3>
+                <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicationDetails')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Act Type *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')} *</label>
                         <select
                             required
                             value={formData.actType}
                             onChange={(e) => handleInputChange('actType', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                         >
-                            <option value="">Select Act Type</option>
-                            <option value="PCR Act">PCR Act</option>
-                            <option value="PoA Act">PoA Act</option>
+                            <option value="">{t('applications.selectActType')}</option>
+                            <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                            <option value="PoA Act">{t('extracted.poa_act')}</option>
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Incident Date *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')} *</label>
                         <input
                             type="date"
                             required
@@ -161,7 +161,7 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Relief Amount (₹) *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
                         <input
                             type="number"
                             required
@@ -170,29 +170,29 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
                             value={formData.amount}
                             onChange={(e) => handleInputChange('amount', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter relief amount"
+                            placeholder={t('applications.enterReliefAmount')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Priority Level</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.priorityLevel')}</label>
                         <select
                             value={formData.priority}
                             onChange={(e) => handleInputChange('priority', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                         >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
+                            <option value="low">{t('extracted.low')}</option>
+                            <option value="medium">{t('extracted.medium')}</option>
+                            <option value="high">{t('extracted.high')}</option>
                         </select>
                     </div>
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Assigned Officer</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.assigned_officer')}</label>
                         <input
                             type="text"
                             value={formData.assignedOfficer}
                             onChange={(e) => handleInputChange('assignedOfficer', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder="Enter assigned officer name (optional)"
+                            placeholder={t('applications.enterAssignedOfficerNameOptional')}
                         />
                     </div>
                 </div>
@@ -208,7 +208,7 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
                     className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
                     style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
                 >
-                    Cancel
+                    {t('extracted.cancel')}
                 </motion.button>
                 <motion.button
                     type="submit"
@@ -220,12 +220,12 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
                     {isSubmitting ? (
                         <>
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Creating...
+                            {t('extracted.creating')}...
                         </>
                     ) : (
                         <>
                             <Plus className="w-5 h-5" />
-                            Create Application
+                            {t('applications.createApplication')}
                         </>
                     )}
                 </motion.button>
@@ -849,7 +849,7 @@ const ApplicationsPage = () => {
                     <div className="p-6 border-b theme-border-glass">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.new_application')}</h2>
+                                <h2 className="text-2xl font-bold theme-text-primary">{t('applications.createANewReliefApplication')}</h2>
                                 <p className="theme-text-muted">Create a new relief application</p>
                             </div>
                             <motion.button
@@ -1239,329 +1239,6 @@ const ApplicationsPage = () => {
                 </>
             )}
 
-            {/* Application Detail Modal */}
-            <AnimatePresence>
-                {selectedApplication && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setSelectedApplication(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto'}`}
-                        >
-                            <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}>
-                                <div>
-                                    <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication.id}</h2>
-                                    <p className="theme-text-muted">{t('extracted.application_details')} </p>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedApplication(null)}
-                                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div className="p-6 space-y-6">
-                                {/* Applicant Information */}
-                                <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.applicant_information_1')} </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <User className="w-5 h-5 theme-text-muted" />
-                                            <div>
-                                                <p className="text-xs theme-text-muted">{t('extracted.full_name')} </p>
-                                                <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <Phone className="w-5 h-5 theme-text-muted" />
-                                            <div>
-                                                <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
-                                                <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <FileText className="w-5 h-5 theme-text-muted" />
-                                            <div>
-                                                <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
-                                                <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <MapPin className="w-5 h-5 theme-text-muted" />
-                                            <div>
-                                                <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
-                                                <p className="font-medium theme-text-primary">{selectedApplication.district}, {selectedApplication.state}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Application Details */}
-                                <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.application_details')} </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')} </p>
-                                            <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
-                                            <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')} </p>
-                                            <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.application_date')} </p>
-                                            <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.assigned_officer')} </p>
-                                            <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                            <p className="text-xs theme-text-muted mb-1">{t('extracted.documents_uploaded')} </p>
-                                            <p className="font-medium theme-text-primary">{selectedApplication.documents} files</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Status and Priority */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                                        <p className="text-sm theme-text-muted mb-2">{t('extracted.current_status')} </p>
-                                        <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedApplication.status)}`}>
-                                            {(() => {
-                                                const Icon = getStatusIcon(selectedApplication.status);
-                                                return <Icon className="w-4 h-4" />;
-                                            })()}
-                                            {selectedApplication.status.replace('-', ' ').toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                                        <p className="text-sm theme-text-muted mb-2">{t('extracted.priority_level')} </p>
-                                        <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getPriorityColor(selectedApplication.priority)}`}>
-                                            <AlertTriangle className="w-4 h-4" />
-                                            {selectedApplication.priority.toUpperCase()}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Documents Section */}
-                                <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.uploaded_documents')} </h3>
-                                    <div className="space-y-2">
-                                        {['FIR Copy', 'Medical Certificate', 'Identity Proof', 'Income Certificate'].map((doc, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass border theme-border-glass hover:shadow-md transition-all" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)' }}>
-                                                        <FileText className="w-5 h-5" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium theme-text-primary">{doc}</p>
-                                                        <p className="text-xs theme-text-muted">{t('extracted.pdf_24_mb')} </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button className="p-2 rounded-lg hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors">
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button className="p-2 rounded-lg hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors">
-                                                        <Download className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Timeline */}
-                                <div>
-                                    <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.application_timeline')} </h3>
-                                    <div className="space-y-4">
-                                        {[
-                                            { date: selectedApplication.applicationDate, action: 'Application Submitted', status: 'completed' },
-                                            { date: selectedApplication.applicationDate, action: 'Document Verification', status: 'completed' },
-                                            { date: selectedApplication.lastUpdate, action: 'Under Review', status: 'current' },
-                                            { date: '', action: 'Approval Pending', status: 'pending' },
-                                            { date: '', action: 'Disbursement', status: 'pending' }
-                                        ].map((item, idx) => (
-                                            <div key={idx} className="flex gap-4">
-                                                <div className="flex flex-col items-center">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${item.status === 'completed' ? 'bg-green-500/20 border-2 border-green-500' :
-                                                        item.status === 'current' ? 'bg-blue-500/20 border-2 border-blue-500 animate-pulse' :
-                                                            'bg-gray-500/20 border-2 border-gray-500'
-                                                        }`}>
-                                                        {item.status === 'completed' && <Check className="w-4 h-4 text-green-400" />}
-                                                        {item.status === 'current' && <Clock className="w-4 h-4 text-blue-400" />}
-                                                    </div>
-                                                    {idx < 4 && <div className="w-0.5 h-12 mt-2" style={{ background: theme === 'light' ? 'rgba(148, 163, 184, 0.3)' : 'rgba(148, 163, 184, 0.2)' }}></div>}
-                                                </div>
-                                                <div className="flex-1 pb-8">
-                                                    <p className="font-medium theme-text-primary">{item.action}</p>
-                                                    {item.date && <p className="text-xs theme-text-muted">{new Date(item.date).toLocaleString()}</p>}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-2"
-                                        style={theme === 'light' ? { background: 'rgba(34, 197, 94, 0.15)', color: '#15803d', borderColor: 'rgba(34, 197, 94, 0.4)' } : { background: 'rgba(34, 197, 94, 0.2)', color: '#86efac', borderColor: 'rgba(34, 197, 94, 0.3)' }}
-                                    >
-                                        <Check className="w-5 h-5" />
-                                        Approve Application
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                                        style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
-                                    >
-                                        <MessageSquare className="w-5 h-5" />
-                                        Request Documents
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex-1 px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-2"
-                                        style={theme === 'light' ? { background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', borderColor: 'rgba(239, 68, 68, 0.4)' } : { background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                                    >
-                                        <X className="w-5 h-5" />
-                                        Reject Application
-                                    </motion.button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Export Modal */}
-            <AnimatePresence>
-                {showExportModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowExportModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="export-modal theme-bg-card theme-border-glass border rounded-2xl max-w-md w-full p-6"
-                        >
-                            <div className="text-center mb-6">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                                    <Download className="w-8 h-8 text-white" />
-                                </div>
-                                <h2 className="text-2xl font-bold theme-text-primary mb-2">Export Applications</h2>
-                                <p className="theme-text-secondary">Choose your preferred export format</p>
-                            </div>
-
-                            <div className="space-y-3">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        exportApplicationsData(filteredApplications);
-                                        setShowExportModal(false);
-                                    }}
-                                    className="w-full p-4 theme-bg-glass theme-border-glass border rounded-xl flex items-center gap-4 hover:shadow-md transition-all"
-                                >
-                                    <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-green-600" />
-                                    </div>
-                                    <div className="text-left flex-1">
-                                        <h3 className="font-semibold theme-text-primary">Export as CSV</h3>
-                                        <p className="text-sm theme-text-muted">Spreadsheet format with all application details</p>
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 theme-text-muted" />
-                                </motion.button>
-
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        exportApplicationsPDF(filteredApplications);
-                                        setShowExportModal(false);
-                                    }}
-                                    className="w-full p-4 theme-bg-glass theme-border-glass border rounded-xl flex items-center gap-4 hover:shadow-md transition-all"
-                                >
-                                    <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-red-600" />
-                                    </div>
-                                    <div className="text-left flex-1">
-                                        <h3 className="font-semibold theme-text-primary">Export as PDF</h3>
-                                        <p className="text-sm theme-text-muted">Professional report format</p>
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 theme-text-muted" />
-                                </motion.button>
-                            </div>
-
-                            <div className="mt-6 pt-4 border-t theme-border-glass">
-                                <p className="text-xs theme-text-muted text-center">
-                                    {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''} will be exported
-                                </p>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* New Application Modal */}
-            <AnimatePresence>
-                {showNewApplicationModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowNewApplicationModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="theme-bg-card theme-border-glass border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                        >
-                            <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}>
-                                <div>
-                                    <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.new_application')}</h2>
-                                    <p className="theme-text-muted">Create a new relief application</p>
-                                </div>
-                                <button
-                                    onClick={() => setShowNewApplicationModal(false)}
-                                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <NewApplicationForm onClose={() => setShowNewApplicationModal(false)} />
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };
