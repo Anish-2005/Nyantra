@@ -643,17 +643,43 @@ const DisbursementsPage = () => {
         }
       `}</style>
 
-      {/* Header Section */}
+      {/* Header Section - Real-time Monitoring */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.disbursements_management')} </h1>
-          <p className="theme-text-secondary">{t('extracted.track_and_manage_dbt_payments_under_pcrpoa_acts')} </p>
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl"
+        />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <motion.div
+              className="w-3 h-3 rounded-full bg-green-500"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm font-medium theme-text-secondary">
+              {t('extracted.live_tracking')} • {filteredDisbursements.length} {t('extracted.active_disbursements')}
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t('extracted.disbursement')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          </h1>
+          <p className="theme-text-secondary max-w-2xl">{t('extracted.realtime_disbursement_tracking_description')}</p>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="relative z-10 flex items-center gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -662,7 +688,7 @@ const DisbursementsPage = () => {
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('extracted.export')} </span>
+            <span className="hidden sm:inline">{t('extracted.export_data')}</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -670,12 +696,12 @@ const DisbursementsPage = () => {
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
           >
             <Plus className="w-4 h-4" />
-            <span>{t('extracted.new_disbursement')} </span>
+            <span>{t('extracted.new_disbursement')}</span>
           </motion.button>
         </div>
       </motion.div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards - Enhanced with Real-time Indicators */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -683,25 +709,62 @@ const DisbursementsPage = () => {
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote },
-          { labelKey: 'extracted.completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle },
-          { labelKey: 'extracted.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { labelKey: 'extracted.in_progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle },
-          { labelKey: 'extracted.failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle },
-          { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X },
-          { labelKey: 'extracted.success_rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp },
-          { labelKey: 'extracted.retry_needed', value: mockDisbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote, statusColor: 'bg-cyan-500' },
+          { labelKey: 'extracted.completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle, statusColor: 'bg-green-500' },
+          { labelKey: 'extracted.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, statusColor: 'bg-amber-500' },
+          { labelKey: 'extracted.in_progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle, statusColor: 'bg-purple-500' },
+          { labelKey: 'extracted.failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle, statusColor: 'bg-red-500' },
+          { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X, statusColor: 'bg-gray-500' },
+          { labelKey: 'extracted.success_rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp, statusColor: 'bg-teal-500' },
+          { labelKey: 'extracted.retry_needed', value: mockDisbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw, statusColor: 'bg-orange-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
             whileHover={{ y: -4 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
+            className="relative theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl overflow-hidden group"
           >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-              <stat.icon className="w-5 h-5 text-white" />
+            {/* Status indicator dot */}
+            <motion.div
+              className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.6, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+            />
+            
+            {/* Animated icon with ripple effect */}
+            <div className="relative mb-3">
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                <stat.icon className="w-5 h-5 text-white relative z-10" />
+              </div>
+              <motion.div
+                className="absolute inset-0 rounded-lg bg-white"
+                animate={{
+                  scale: [1, 1.5],
+                  opacity: [0.6, 0]
+                }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.15 }}
+              />
             </div>
-            <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
+            
+            <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
+            <p className="text-sm theme-text-muted mb-2">{t(stat.labelKey)}</p>
+            
+            {/* Progress bar */}
+            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full bg-gradient-to-r ${stat.color}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${typeof stat.value === 'number' ? (stat.value / stats.total) * 100 : 100}%` }}
+                transition={{ duration: 1, delay: idx * 0.1 }}
+              />
+            </div>
+            
+            {/* Hover glow effect */}
+            <motion.div
+              className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+            />
           </motion.div>
         ))}
       </motion.div>

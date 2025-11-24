@@ -379,30 +379,43 @@ const GrievancePage = () => {
         }
       `}</style>
 
-      {/* Header Section - Redesigned */}
+      {/* Header Section - Real-time Monitoring */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        <div className="text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center">
-              <MessageSquare className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Grievance Hub
-              </h1>
-              <p className="theme-text-secondary text-lg">{t('extracted.advanced_redressal_management_system')} </p>
-            </div>
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
+        />
+        
+        <div className="relative z-10 text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+            <motion.div
+              className="w-3 h-3 rounded-full bg-purple-500"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm font-medium theme-text-secondary">
+              {t('extracted.live_tracking')} • {filteredGrievances.length} {t('extracted.active_grievances')}
+            </span>
           </div>
-          <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
-            {t('extracted.manage_and_resolve_beneficiary_grievances_efficiently_under')}
-          </p>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t('extracted.grievance')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          </h1>
+          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_grievance_tracking_description')}</p>
         </div>
         
-        <div className="flex items-center justify-center lg:justify-end gap-3">
+        <div className="relative z-10 flex items-center justify-center lg:justify-end gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

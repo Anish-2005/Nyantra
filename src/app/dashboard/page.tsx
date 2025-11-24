@@ -593,44 +593,55 @@ const Dashboard = () => {
                   exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
-                  {/* Welcome Banner */}
+                  {/* Real-Time Monitoring Header */}
                   <motion.div
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
                     className="theme-bg-card theme-border-glass border rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden"
                   >
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl -z-10" />
+                    
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                       <div className="flex-1">
-                        <motion.span
-                          className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-3"
-                          animate={{
-                            boxShadow: theme === 'dark'
-                              ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 8px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
-                              : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 8px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          <Rocket className="inline w-3 h-3 sm:w-4 sm:h-4 mr-2 text-accent-gradient" />
-                          {t('dashboard.welcome.title')}
-                        </motion.span>
-                        <h2 className="text-xl sm:text-3xl font-bold theme-text-primary mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
-                          {t('dashboard.welcome.greeting')} <span className="text-accent-gradient">{t('dashboard.welcome.officer')}</span>
+                        <div className="flex items-center gap-3 mb-3">
+                          <motion.div
+                            className="w-3 h-3 rounded-full bg-green-500"
+                            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+                          {t('extracted.realtime_monitoring_dashboard').split(' ')[0]} <span className="text-accent-gradient">{t('extracted.realtime_monitoring_dashboard').split(' ').slice(1).join(' ')}</span>
                         </h2>
-                        <p className="theme-text-secondary text-sm sm:text-base py-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.welcome.description')}</p>
+                        <p className="theme-text-secondary text-sm sm:text-base">
+                          {t('extracted.comprehensive_oversight_description')}
+                        </p>
                       </div>
-                      <motion.button
-                        className="px-4 py-2.5 sm:px-6 sm:py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <span>{t('extracted.new_application')} </span>
-                        <Plus className="w-4 h-4" />
-                      </motion.button>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        <motion.button
+                          className="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold text-white flex items-center gap-2 shadow-lg text-sm"
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>{t('extracted.auto_refresh')} {t('extracted.on')}</span>
+                        </motion.button>
+                        <motion.button
+                          className="px-4 py-2.5 accent-gradient rounded-xl font-semibold text-white flex items-center gap-2 shadow-lg text-sm"
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{t('extracted.new_application')}</span>
+                        </motion.button>
+                      </div>
                     </div>
                   </motion.div>
 
-                  {/* Quick Stats */}
+                  {/* Real-Time Stats with Progress Indicators */}
                   <motion.div
                     variants={containerVariants}
                     initial="hidden"
@@ -644,17 +655,43 @@ const Dashboard = () => {
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl group relative overflow-hidden"
                         whileHover={{ y: -4, scale: 1.02 }}
                       >
+                        {/* Status Indicator */}
+                        <div className="absolute top-3 right-3">
+                          <motion.div
+                            className={`w-2 h-2 rounded-full ${stat.trend === 'up' ? 'bg-green-500' : 'bg-amber-500'}`}
+                            animate={{ scale: [1, 1.3, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                        </div>
+
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
-                          <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
+                          <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg relative`}>
                             <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                            <motion.div
+                              className="absolute inset-0 bg-white rounded-xl"
+                              initial={{ scale: 0, opacity: 0.6 }}
+                              animate={{ scale: 1.5, opacity: 0 }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            />
                           </div>
-                          <div className={`flex items-center space-x-1 text-xs sm:text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                          <div className={`flex items-center space-x-1 text-xs sm:text-sm font-semibold px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'}`}>
                             {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" /> : <ArrowDownRight className="w-3 h-3 sm:w-4 sm:h-4" />}
                             <span>{stat.change}</span>
                           </div>
                         </div>
+
                         <h3 className="text-lg sm:text-2xl font-bold theme-text-primary mb-1">{stat.value}</h3>
-                        <p className="text-xs sm:text-sm theme-text-muted">{stat.title}</p>
+                        <p className="text-xs sm:text-sm theme-text-muted mb-3">{stat.title}</p>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                          <motion.div
+                            className={`h-full bg-gradient-to-r ${stat.color}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.random() * 40 + 60}%` }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                          />
+                        </div>
 
                         {/* Hover glow */}
                         <motion.div
@@ -759,38 +796,77 @@ const Dashboard = () => {
 
 
 
-                      {/* Recent Applications */}
+                      {/* Live Application Tracking */}
                       <motion.div
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm"
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                          <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.sections.recentApplications')}</h3>
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>Live Application Tracking</h3>
+                            <motion.div
+                              className="w-2 h-2 rounded-full bg-green-500"
+                              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
                           <motion.button
                             className="flex items-center space-x-2 px-3 py-2 rounded-xl theme-bg-glass theme-text-primary text-sm w-full sm:w-auto justify-center sm:justify-start"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <span>{t('dashboard.sections.viewAll')}</span>
+                            <span>View All Tracking</span>
                             <ChevronRight className="w-4 h-4" />
                           </motion.button>
                         </div>
 
                         <div className="space-y-3">
-                          {recentApplications.map(app => (
+                          {recentApplications.map((app, idx) => (
                             <motion.div
                               key={app.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all gap-3"
+                              className="relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all gap-3"
                               whileHover={{ x: 4 }}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.1 }}
                             >
-                              <div className="flex items-center space-x-3 sm:space-x-4">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold text-sm sm:text-base">
-                                  {app.avatar}
+                              {/* Color-coded status strip */}
+                              <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${
+                                app.status === 'approved' ? 'bg-green-500' :
+                                app.status === 'pending' ? 'bg-amber-500' :
+                                app.status === 'in-review' ? 'bg-blue-500' : 'bg-red-500'
+                              }`} />
+
+                              <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0 pl-3">
+                                <div className="relative">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl accent-gradient flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+                                    {app.avatar}
+                                  </div>
+                                  {/* Progress ring */}
+                                  <svg className="absolute -top-1 -right-1 w-5 h-5" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" 
+                                      className={app.status === 'approved' ? 'text-green-500' : app.status === 'pending' ? 'text-amber-500' : 'text-blue-500'}
+                                      strokeWidth="2" strokeDasharray="50" strokeDashoffset={app.status === 'approved' ? '0' : app.status === 'in-review' ? '25' : '40'}
+                                      strokeLinecap="round" transform="rotate(-90 10 10)" />
+                                  </svg>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium theme-text-primary text-sm sm:text-base truncate">{app.name}</p>
-                                  <p className="text-xs sm:text-sm theme-text-muted truncate">{app.district} • {app.type}</p>
-                                  <div className="flex items-center space-x-2 mt-1 sm:hidden">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-medium theme-text-primary text-sm sm:text-base truncate">{app.name}</p>
+                                    <span className="text-xs theme-text-muted bg-gray-500/10 px-2 py-0.5 rounded">{app.id}</span>
+                                  </div>
+                                  <p className="text-xs sm:text-sm theme-text-muted truncate mb-1">{app.district} • {app.type}</p>
+                                  
+                                  {/* Status timeline */}
+                                  <div className="flex items-center gap-1.5 mt-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${app.status === 'approved' || app.status === 'in-review' || app.status === 'pending' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                    <div className={`h-px flex-1 ${app.status === 'approved' || app.status === 'in-review' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                    <div className={`w-1.5 h-1.5 rounded-full ${app.status === 'approved' || app.status === 'in-review' ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                                    <div className={`h-px flex-1 ${app.status === 'approved' ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                                    <div className={`w-1.5 h-1.5 rounded-full ${app.status === 'approved' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                  </div>
+
+                                  <div className="flex items-center space-x-2 mt-2 sm:hidden">
                                     <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
                                       {getStatusIcon(app.status)}
                                       <span className="capitalize">{app.status}</span>
@@ -799,12 +875,13 @@ const Dashboard = () => {
                                   </div>
                                 </div>
                               </div>
-                              <div className="hidden sm:flex sm:items-center sm:space-x-4 text-right">
-                                <p className="font-semibold theme-text-primary">₹{app.amount.toLocaleString()}</p>
-                                <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                              <div className="hidden sm:flex sm:flex-col sm:items-end sm:space-y-2 text-right">
+                                <p className="font-semibold theme-text-primary text-lg">₹{app.amount.toLocaleString()}</p>
+                                <span className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(app.status)}`}>
                                   {getStatusIcon(app.status)}
                                   <span className="capitalize">{app.status}</span>
                                 </span>
+                                <span className="text-xs theme-text-muted">{app.date}</span>
                               </div>
                             </motion.div>
                           ))}

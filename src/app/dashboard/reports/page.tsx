@@ -667,30 +667,45 @@ const ReportsPage = () => {
         }
       `}</style>
 
-      {/* Header Section - Redesigned */}
+      {/* Header Section - Real-time Monitoring */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        <div className="text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {t('extracted.report_hub')}
-              </h1>
-              <p className="theme-text-secondary text-lg">{t('extracted.advanced_analytics_reporting_platform')} </p>
-            </div>
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl"
+        />
+        
+        <div className="relative z-10 text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+            <motion.div
+              className="w-3 h-3 rounded-full bg-indigo-500"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm font-medium theme-text-secondary">
+              {t('extracted.live_tracking')} • {t('extracted.report_hub')}
+            </span>
           </div>
-          <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t('extracted.report_hub')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          </h1>
+          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">
             {t('extracted.generate_analyze_schedule_comprehensive_reports')}
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3 w-full sm:w-auto">
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3 w-full sm:w-auto">
           <div className="w-full sm:w-auto flex gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -699,7 +714,7 @@ const ReportsPage = () => {
               className={`flex-1 sm:flex-none px-4 py-2 rounded-xl border flex items-center gap-3 glass-effect focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass text-white'}`}
             >
               <Printer className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`} />
-              <span className="font-semibold text-sm">{t('extracted.print')} </span>
+              <span className="font-semibold text-sm">{t('extracted.print')}</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -707,7 +722,7 @@ const ReportsPage = () => {
               className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
             >
               <FilePlus className="w-5 h-5" />
-              <span className="font-semibold text-sm">{t('extracted.new')}</span>
+              <span className="font-semibold text-sm">{t('extracted.generate_report')}</span>
             </motion.button>
           </div>
         </div>

@@ -773,37 +773,51 @@ const IntegrationsPage = () => {
         }
       `}</style>
 
-      {/* Header Section - Completely Redesigned */}
+      {/* Header Section - Real-time Monitoring */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        <div className="text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient flex items-center justify-center">
-              <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                GovConnect
-              </h1>
-              <p className="theme-text-secondary text-sm sm:text-base">{t('extracted.unified_government_integration_platform')}</p>
-            </div>
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"
+        />
+        
+        <div className="relative z-10 text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+            <motion.div
+              className="w-3 h-3 rounded-full bg-cyan-500"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm font-medium theme-text-secondary">
+              {t('extracted.live_tracking')} • {filteredIntegrations.length} {t('extracted.active_integrations')}
+            </span>
           </div>
-          <p className="theme-text-muted max-w-full sm:max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base">
-            {t('extracted.secure_realtime_integration_with_government_systems_for_dbt')}
-          </p>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t('extracted.integration')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          </h1>
+          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_integration_tracking_description')}</p>
         </div>
         
-  <div className="flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
+        <div className="relative z-10 flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
           <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label={t('extracted.export_report_1')}
-              className={`w-full sm:w-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl border glass-effect focus:outline-none focus:ring-2 focus:ring-offset-2 ${theme === 'light' ? 'theme-bg-glass theme-border-glass text-black focus:ring-black/40' : 'theme-bg-glass theme-border-glass theme-text-primary focus:ring-white/20'}`}>
-              <Download className={`w-5 h-5 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
-              <span className={`font-semibold ${theme === 'light' ? 'text-black' : 'theme-text-primary'}`}>{t('extracted.export_report')} </span>
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label={t('extracted.export_report_1')}
+            className={`w-full sm:w-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl border glass-effect focus:outline-none focus:ring-2 focus:ring-offset-2 ${theme === 'light' ? 'theme-bg-glass theme-border-glass text-black focus:ring-black/40' : 'theme-bg-glass theme-border-glass theme-text-primary focus:ring-white/20'}`}
+          >
+            <Download className={`w-5 h-5 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+            <span className={`font-semibold ${theme === 'light' ? 'text-black' : 'theme-text-primary'}`}>{t('extracted.export_data')}</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -811,12 +825,12 @@ const IntegrationsPage = () => {
             className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-xl text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
-            <span className="font-semibold">{t('extracted.new_integration')} </span>
+            <span className="font-semibold">{t('extracted.new_integration')}</span>
           </motion.button>
         </div>
       </motion.div>
 
-      {/* Quick Stats Bar - New Design */}
+      {/* Quick Stats Bar - Enhanced with Real-time Indicators */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -824,25 +838,60 @@ const IntegrationsPage = () => {
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
       >
         {[
-          { labelKey: 'extracted.active', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500' },
-          { labelKey: 'extracted.endpoints', value: stats.totalEndpoints, icon: Network, color: 'from-blue-500 to-cyan-500' },
-          { labelKey: 'extracted.success_rate', value: `${stats.avgSuccessRate}%`, icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
-          { labelKey: 'extracted.response', value: '< 2s', icon: Zap, color: 'from-orange-500 to-red-500' }
+          { labelKey: 'extracted.active', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500', statusColor: 'bg-green-500' },
+          { labelKey: 'extracted.endpoints', value: stats.totalEndpoints, icon: Network, color: 'from-blue-500 to-cyan-500', statusColor: 'bg-blue-500' },
+          { labelKey: 'extracted.success_rate', value: `${stats.avgSuccessRate}%`, icon: TrendingUp, color: 'from-purple-500 to-pink-500', statusColor: 'bg-purple-500' },
+          { labelKey: 'extracted.response', value: '< 2s', icon: Zap, color: 'from-orange-500 to-red-500', statusColor: 'bg-orange-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
             whileHover={{ y: -4, scale: 1.02 }}
-            className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer"
+            className="relative theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer overflow-hidden group"
           >
+            {/* Status indicator dot */}
+            <motion.div
+              className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.6, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+            />
+            
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
                 <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
               </div>
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                <stat.icon className="w-6 h-6 text-white" />
+              <div className="relative">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                  <stat.icon className="w-6 h-6 text-white relative z-10" />
+                </div>
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-white"
+                  animate={{
+                    scale: [1, 1.5],
+                    opacity: [0.6, 0]
+                  }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.15 }}
+                />
               </div>
             </div>
+            
+            {/* Progress bar */}
+            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-3">
+              <motion.div
+                className={`h-full bg-gradient-to-r ${stat.color}`}
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 1, delay: idx * 0.1 }}
+              />
+            </div>
+            
+            {/* Hover glow effect */}
+            <motion.div
+              className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+            />
           </motion.div>
         ))}
       </motion.div>

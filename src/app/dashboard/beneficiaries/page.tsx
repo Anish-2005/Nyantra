@@ -562,39 +562,55 @@ const BeneficiariesPage = () => {
         }
       `}</style>
       
-      {/* Header Section */}
+      {/* Real-Time Monitoring Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden"
       >
-        <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.beneficiaries_management')} </h1>
-          <p className="theme-text-secondary">{t('extracted.track_and_manage_dbt_beneficiaries_under_pcrpoa_acts')} </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            onClick={() => window.print()}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('extracted.export')} </span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('extracted.add_beneficiary')} </span>
-          </motion.button>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl -z-10" />
+        
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <motion.div
+                className="w-3 h-3 rounded-full bg-green-500"
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_tracking')} • {filteredBeneficiaries.length} {t('extracted.active_beneficiaries')}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+              {t('extracted.beneficiary')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+            </h1>
+            <p className="theme-text-secondary text-sm sm:text-base">
+              {t('extracted.realtime_beneficiary_tracking_description')}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border theme-border-glass flex items-center gap-2 theme-text-primary shadow-md text-sm"
+              onClick={() => window.print()}
+            >
+              <Download className="w-4 h-4" />
+              <span>{t('extracted.export_data')}</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2.5 accent-gradient text-white rounded-xl flex items-center gap-2 shadow-lg text-sm font-semibold"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t('extracted.add_beneficiary')}</span>
+            </motion.button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Statistics Cards */}
+      {/* Real-Time Statistics with Progress Indicators */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -602,25 +618,61 @@ const BeneficiariesPage = () => {
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
-          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote },
-          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
-          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
-          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award }
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User, status: 'active' },
+          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck, status: 'success' },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning' },
+          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote, status: 'success' },
+          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error' },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle, status: 'alert' },
+          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield, status: 'info' },
+          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award, status: 'info' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
-            whileHover={{ y: -4 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl relative overflow-hidden group"
           >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-              <stat.icon className="w-5 h-5 text-white" />
+            {/* Status Indicator */}
+            <div className="absolute top-3 right-3">
+              <motion.div
+                className={`w-2 h-2 rounded-full ${
+                  stat.status === 'success' ? 'bg-green-500' :
+                  stat.status === 'warning' ? 'bg-amber-500' :
+                  stat.status === 'error' ? 'bg-red-500' :
+                  stat.status === 'alert' ? 'bg-purple-500' : 'bg-cyan-500'
+                }`}
+                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+              />
             </div>
-            <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
+
+            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 relative`}>
+              <stat.icon className="w-5 h-5 text-white relative z-10" />
+              <motion.div
+                className="absolute inset-0 bg-white rounded-lg"
+                initial={{ scale: 0, opacity: 0.6 }}
+                animate={{ scale: 1.5, opacity: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.3 }}
+              />
+            </div>
+
+            <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
+            <p className="text-xs theme-text-muted mb-3">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
+              <motion.div
+                className={`h-full bg-gradient-to-r ${stat.color}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${(stat.value / stats.total) * 100}%` }}
+                transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
+              />
+            </div>
+
+            {/* Hover glow */}
+            <motion.div
+              className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-xl transition-opacity duration-500 -z-10`}
+            />
           </motion.div>
         ))}
       </motion.div>

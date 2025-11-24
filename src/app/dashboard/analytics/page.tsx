@@ -336,17 +336,43 @@ const AnalyticsPage = () => {
         }
       `}</style>
       
-      {/* Header Section */}
+      {/* Header Section - Real-time Monitoring */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        <div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">{t('extracted.analytics_reports')} </h1>
-          <p className="theme-text-secondary">{t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')} </p>
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"
+        />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <motion.div
+              className="w-3 h-3 rounded-full bg-blue-500"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm font-medium theme-text-secondary">
+              {t('extracted.live_tracking')} • {t('extracted.analytics')} {t('extracted.monitoring_center')}
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t('extracted.analytics')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          </h1>
+          <p className="theme-text-secondary max-w-2xl">{t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')}</p>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="relative z-10 flex items-center gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -355,7 +381,7 @@ const AnalyticsPage = () => {
             onClick={() => window.print()}
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('extracted.export_report')} </span>
+            <span className="hidden sm:inline">{t('extracted.export_data')}</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -363,7 +389,7 @@ const AnalyticsPage = () => {
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>{t('extracted.refresh_data')} </span>
+            <span>{t('extracted.refresh_data')}</span>
           </motion.button>
         </div>
       </motion.div>
