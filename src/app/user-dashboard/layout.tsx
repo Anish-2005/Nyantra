@@ -22,12 +22,12 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
   // User-focused navigation: only pages relevant to applicants are included
   const navigationItems = [
-    { id: 'overview', label: t('extracted.dashboard') || t('nav.features') || 'Home', icon: Home },
-    { id: 'applications', label: 'My Applications', icon: FileText },
-    { id: 'beneficiaries', label: t('extracted.beneficiaries') || 'Beneficiaries', icon: Users },
-    { id: 'disbursements', label: t('payments') || t('extracted.disbursements') || 'Payments', icon: Wallet },
-    { id: 'grievance', label: 'Grievances', icon: MessageCircle },
-    { id: 'feedback', label: 'Feedback', icon: HelpCircle }
+    { id: 'overview', label: t('extracted.dashboard'), icon: Home },
+    { id: 'applications', label: t('extracted.my_applications'), icon: FileText },
+    { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
+    { id: 'disbursements', label: t('extracted.payments'), icon: Wallet },
+    { id: 'grievance', label: t('extracted.grievances'), icon: MessageCircle },
+    { id: 'feedback', label: t('extracted.feedback'), icon: HelpCircle }
   ];
 
   const router = useRouter();

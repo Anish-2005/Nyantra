@@ -172,10 +172,10 @@ export default function UserDashboard() {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            Applicant Portal
+            {t('extracted.applicant_portal')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            Submit your application for relief. This is a client-only mock — submissions are stored locally in your browser.
+            {t('extracted.submit_your_application_for_relief')}
           </p>
         </motion.div>
 
@@ -189,7 +189,7 @@ export default function UserDashboard() {
                 : 'theme-text-muted hover:theme-text-primary theme-bg-glass'
             }`}
           >
-            New Application
+            {t('extracted.new_application')}
           </button>
           <button
             onClick={() => setActiveTab('recent')}
@@ -199,7 +199,7 @@ export default function UserDashboard() {
                 : 'theme-text-muted hover:theme-text-primary theme-bg-glass'
             }`}
           >
-            Recent ({recent.length})
+            {t('extracted.recent')} ({recent.length})
           </button>
         </div>
 
@@ -219,13 +219,13 @@ export default function UserDashboard() {
                   {/* Personal Information Section */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      Personal Information
+                      {t('extracted.personal_information')}
                     </h3>
                     
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 theme-bg-glass rounded-lg">
                       <div className="flex-1">
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Full name
+                          {t('extracted.full_name')}
                         </label>
                         <input 
                           value={name} 
@@ -251,7 +251,7 @@ export default function UserDashboard() {
                           }`}></div>
                         </div>
                         <span className="text-sm font-medium theme-text-muted">
-                          Submit Anonymously
+                          {t('extracted.submit_anonymously')}
                         </span>
                       </label>
                     </div>
@@ -259,7 +259,7 @@ export default function UserDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Phone (optional)
+                          {t('extracted.phone_optional')}
                         </label>
                         <input 
                           value={phone} 
@@ -270,7 +270,7 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Aadhaar (optional)
+                          {t('extracted.aadhaar_optional')}
                         </label>
                         <input 
                           value={aadhaar} 
@@ -286,12 +286,12 @@ export default function UserDashboard() {
                   {/* Case Information Section */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      Case Information
+                      {t('extracted.case_information')}
                     </h3>
                     
                     <div>
                       <label className="text-sm font-medium theme-text-muted block mb-2">
-                        FIR / Case number *
+                        {t('extracted.fir_case_number_required')}
                       </label>
                       <input 
                         required 
@@ -305,7 +305,7 @@ export default function UserDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Police Station
+                          {t('extracted.police_station')}
                         </label>
                         <input 
                           value={policeStation} 
@@ -316,7 +316,7 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          eCourts Case ID (optional)
+                          {t('extracted.ecourts_case_id_optional')}
                         </label>
                         <input 
                           value={courtCaseId} 
@@ -331,13 +331,13 @@ export default function UserDashboard() {
                   {/* Financial Information Section */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      Financial Information
+                      {t('extracted.financial_information')}
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Amount requested (₹)
+                          {t('extracted.amount_requested_inr')}
                         </label>
                         <input 
                           type="number" 
@@ -350,7 +350,7 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Bank account (optional)
+                          {t('extracted.bank_account_optional')}
                         </label>
                         <input 
                           value={bankAccount} 
@@ -364,7 +364,7 @@ export default function UserDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          IFSC (optional)
+                          {t('extracted.ifsc_optional')}
                         </label>
                         <input 
                           value={ifsc} 
@@ -376,7 +376,7 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <label className="text-sm font-medium theme-text-muted block mb-2">
-                          Supporting documents (max 5)
+                          {t('extracted.supporting_documents_max_5')}
                         </label>
                         <div className="border-2 border-dashed theme-border-glass rounded-lg p-4 transition-colors hover:border-blue-400">
                           <input 
@@ -436,10 +436,10 @@ export default function UserDashboard() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Submitting...
+                          {t('extracted.submitting')}
                         </>
                       ) : (
-                        'Submit Application'
+                        t('extracted.submit_application')
                       )}
                     </button>
                     <button 
@@ -447,7 +447,7 @@ export default function UserDashboard() {
                       onClick={resetForm}
                       className="px-6 py-3 border theme-border-glass theme-text-muted hover:theme-bg-glass font-medium rounded-lg transition-colors"
                     >
-                      Reset Form
+                      {t('extracted.reset_form')}
                     </button>
                   </div>
                 </form>
@@ -466,10 +466,10 @@ export default function UserDashboard() {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold theme-text-primary">
-                    Recent Submissions
+                    {t('extracted.recent_submissions')}
                   </h3>
                   <span className="text-sm theme-text-muted">
-                    {recent.length} application{recent.length !== 1 ? 's' : ''}
+                    {recent.length} {recent.length !== 1 ? t('extracted.applications') : t('extracted.application')}
                   </span>
                 </div>
 
@@ -480,15 +480,15 @@ export default function UserDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <p className="theme-text-muted mb-2">{t('extracted.no_submissions_yet')} </p>
+                    <p className="theme-text-muted mb-2">{t('extracted.no_submissions_yet')}</p>
                     <p className="text-sm theme-text-muted mb-4">
-                      Your applications will appear here once submitted
+                      {t('extracted.your_applications_will_appear_here')}
                     </p>
                     <button
                       onClick={() => setActiveTab('form')}
                       className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                     >
-                      Create your first application
+                      {t('extracted.create_your_first_application')}
                     </button>
                   </div>
                 ) : (
@@ -505,11 +505,11 @@ export default function UserDashboard() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2">
                               <h4 className="font-semibold theme-text-primary truncate">
-                                {r.name ?? (r.anonymous ? 'Anonymous' : '—')}
+                                {r.name ?? (r.anonymous ? t('extracted.anonymous') : '—')}
                               </h4>
                               {r.anonymous && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  Anonymous
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  {t('extracted.anonymous')}
                                 </span>
                               )}
                             </div>
