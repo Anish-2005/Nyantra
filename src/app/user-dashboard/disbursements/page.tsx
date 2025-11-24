@@ -75,27 +75,27 @@ export default function DisbursementsPage() {
   switch (status) {
     case 'pending':
       return `
-        bg-yellow-100 text-yellow-800 border border-yellow-200 
+        bg-yellow-200 text-yellow-900 border border-yellow-300 font-semibold
         dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30
       `;
     case 'processing':
       return `
-        bg-blue-100 text-blue-800 border border-blue-200 
+        bg-blue-200 text-blue-900 border border-blue-300 font-semibold
         dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30
       `;
     case 'paid':
       return `
-        bg-green-100 text-green-800 border border-green-200 
+        bg-green-200 text-green-900 border border-green-300 font-semibold
         dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30
       `;
     case 'failed':
       return `
-        bg-red-100 text-red-800 border border-red-200 
+        bg-red-200 text-red-900 border border-red-300 font-semibold
         dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30
       `;
     default:
       return `
-        bg-gray-100 text-gray-800 border border-gray-200 
+        bg-gray-200 text-gray-900 border border-gray-300 font-semibold
         dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30
       `;
   }
@@ -130,12 +130,11 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
   };
 
   const getMethodText = (method?: Tx['method']) => {
-    const texts: Record<NonNullable<Tx['method']>, string> = {
-      bank_transfer: 'Bank Transfer',
-      upi: 'UPI Payment',
-      cash: 'Cash Disbursement'
-    };
-    return method ? texts[method as NonNullable<Tx['method']>] : 'Unknown';
+    if (!method) return 'Unknown';
+    if (method === 'bank_transfer') return t('extracted.bank_transfer');
+    if (method === 'upi') return t('extracted.upi_payment');
+    if (method === 'cash') return t('extracted.cash_disbursement');
+    return 'Unknown';
   };
 
   return (
@@ -148,10 +147,10 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            Payments & Disbursements
+            {t('extracted.payments_disbursements')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            Track your relief payment history and disbursement status
+            {t('extracted.track_relief_payment_history')}
           </p>
         </motion.div>
 
@@ -165,9 +164,9 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
               {/* Header with Filters */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary">{t('extracted.transaction_history')} </h2>
+                  <h2 className="text-xl font-semibold theme-text-primary">{t('extracted.transaction_history')}</h2>
                   <p className="theme-text-muted mt-1 text-sm">
-                    {filteredTxs.length} transaction{filteredTxs.length !== 1 ? 's' : ''} found
+                    {filteredTxs.length} {t('extracted.transactions_found')}
                   </p>
                 </div>
                 
@@ -177,10 +176,10 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
     {(['all', 'week', 'month', 'quarter'] as const).map(option => {
       const isActive = timeRange === option;
       const label =
-        option === 'all' ? 'All Time' :
-        option === 'week' ? 'Last 7 Days' :
-        option === 'month' ? 'Last 30 Days' :
-        'Last 90 Days';
+        option === 'all' ? t('extracted.all_time') :
+        option === 'week' ? t('extracted.last_7_days') :
+        option === 'month' ? t('extracted.last_30_days') :
+        t('extracted.last_90_days');
 
       return (
         <button
@@ -207,8 +206,11 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
     {(['all', 'pending', 'processing', 'paid', 'failed'] as const).map(option => {
       const isActive = filter === option;
       const label =
-        option === 'all' ? 'All Status' :
-        option.charAt(0).toUpperCase() + option.slice(1);
+        option === 'all' ? t('extracted.all_status') :
+        option === 'pending' ? t('extracted.pending') :
+        option === 'processing' ? t('extracted.processing') :
+        option === 'paid' ? t('extracted.paid') :
+        t('extracted.failed');
 
       return (
         <button
@@ -247,11 +249,11 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <p className="theme-text-muted mb-2">{t('extracted.no_transactions_found')} </p>
+                      <p className="theme-text-muted mb-2">{t('extracted.no_transactions_found')}</p>
                       <p className="text-sm theme-text-muted">
                         {txs.length === 0 
-                          ? "No disbursement history available" 
-                          : "No transactions match your current filters"}
+                          ? t('extracted.no_disbursement_history_available') 
+                          : t('extracted.no_transactions_match_filters')}
                       </p>
                     </motion.div>
                   ) : (
@@ -277,7 +279,10 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                                 {tx.note}
                               </h3>
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}>
-                                {tx.status}
+                                {tx.status === 'pending' ? t('extracted.pending') :
+                                 tx.status === 'processing' ? t('extracted.processing') :
+                                 tx.status === 'paid' ? t('extracted.paid') :
+                                 t('extracted.failed')}
                               </span>
                             </div>
                             
@@ -334,12 +339,12 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.financial_summary')} </h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.financial_summary')}</h3>
               
               <div className="space-y-4">
                 <div className="p-4 rounded-xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm theme-text-muted">{t('extracted.total_disbursed')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.total_disbursed')}</span>
                     <svg className="w-5 h-5 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
@@ -348,24 +353,24 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                     ₹{total.toLocaleString()}
                   </div>
                   <div className="text-xs theme-text-muted mt-1">
-                    Across {filteredTxs.length} transactions
+                    {t('extracted.across_transactions')} {filteredTxs.length}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
-                    <div className="text-green-600 text-lg font-bold">₹{paidAmount.toLocaleString()}</div>
-                    <div className="text-xs theme-text-muted">{t('extracted.paid')} </div>
+                    <div className="text-green-600 dark:text-green-400 text-lg font-bold">₹{paidAmount.toLocaleString()}</div>
+                    <div className="text-xs theme-text-muted">{t('extracted.paid')}</div>
                   </div>
                   
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
-                    <div className="text-amber-600 text-lg font-bold">₹{pendingAmount.toLocaleString()}</div>
-                    <div className="text-xs theme-text-muted">{t('extracted.pending')} </div>
+                    <div className="text-amber-600 dark:text-amber-400 text-lg font-bold">₹{pendingAmount.toLocaleString()}</div>
+                    <div className="text-xs theme-text-muted">{t('extracted.pending')}</div>
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">{t('extracted.successful_transactions')} </div>
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.successful_transactions')}</div>
                   <div className="flex items-center justify-between">
                     <div className="font-semibold theme-text-primary">
                       {filteredTxs.filter(t => t.status === 'paid').length}
@@ -388,7 +393,7 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.transaction_details_1')} </h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.transaction_details_1')}</h4>
                     <button
                       onClick={() => setSelectedTx(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -401,34 +406,37 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')}</div>
                       <div className="font-medium theme-text-primary">{selectedTx.note}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary')}</div>
                       <div className="font-medium theme-text-primary">{selectedTx.beneficiary}</div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.amount')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.amount')}</div>
                         <div className="font-bold text-lg theme-text-primary">
                           ₹{selectedTx.amount.toLocaleString()}
                         </div>
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')}</div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTx.status)}`}>
-                          {selectedTx.status}
+                          {selectedTx.status === 'pending' ? t('extracted.pending') :
+                           selectedTx.status === 'processing' ? t('extracted.processing') :
+                           selectedTx.status === 'paid' ? t('extracted.paid') :
+                           t('extracted.failed')}
                         </span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.payment_method')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.payment_method')}</div>
                         <div className="flex items-center gap-2 text-sm theme-text-primary">
                           {getMethodIcon(selectedTx.method)}
                           {getMethodText(selectedTx.method)}
@@ -436,7 +444,7 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.transaction_id')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.transaction_id')}</div>
                         <div className="font-mono text-xs theme-text-primary">
                           {selectedTx.id}
                         </div>
@@ -444,7 +452,7 @@ const icons: Partial<Record<NonNullable<Tx['method']>, React.ReactNode>> = {
                     </div>
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.date_time')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.date_time')}</div>
                       <div className="theme-text-primary text-sm">
                         {new Date(selectedTx.date).toLocaleString()}
                       </div>

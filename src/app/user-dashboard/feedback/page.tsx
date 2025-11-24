@@ -167,10 +167,10 @@ export default function FeedbackPage() {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            Feedback & Grievance Portal
+            {t('extracted.feedback_grievance_portal')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            Submit feedback or report grievances. This demo stores items locally for preview.
+            {t('extracted.submit_feedback_or_report_grievances')}
           </p>
         </motion.div>
 
@@ -183,14 +183,14 @@ export default function FeedbackPage() {
               animate={{ opacity: 1, y: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.submit_new')} </h2>
+              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.submit_new')}</h2>
 
               <form onSubmit={submitFeedback} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Type Selector */}
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Type *
+                      {t('extracted.type_1')} *
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {['feedback', 'grievance'].map(option => (
@@ -203,7 +203,7 @@ export default function FeedbackPage() {
                             : 'theme-border-glass theme-bg-input theme-text-primary hover:theme-bg-glass'
                             }`}
                         >
-                          {option === 'feedback' ? 'General Feedback' : 'Grievance'}
+                          {option === 'feedback' ? t('extracted.general_feedback') : t('extracted.grievance_1')}
                         </button>
                       ))}
                     </div>
@@ -213,7 +213,7 @@ export default function FeedbackPage() {
                   {type === 'grievance' && (
                     <div>
                       <label className="text-sm font-medium theme-text-muted block mb-2">
-                        Priority
+                        {t('extracted.priority_1')}
                       </label>
                       <div className="flex gap-2 flex-wrap">
                         {['low', 'medium', 'high'].map(option => (
@@ -226,7 +226,7 @@ export default function FeedbackPage() {
                               : 'theme-border-glass theme-bg-input theme-text-primary hover:theme-bg-glass'
                               }`}
                           >
-                            {option.charAt(0).toUpperCase() + option.slice(1)}
+                            {t(`extracted.${option}`)}
                           </button>
                         ))}
                       </div>
@@ -237,7 +237,7 @@ export default function FeedbackPage() {
                 {/* Subject Input */}
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
-                    Subject *
+                    {t('extracted.subject')} *
                   </label>
                   <input
                     value={subject}
@@ -251,7 +251,7 @@ export default function FeedbackPage() {
                 {/* Message Input */}
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
-                    Message *
+                    {t('extracted.message_1')} *
                   </label>
                   <textarea
                     value={message}
@@ -273,7 +273,7 @@ export default function FeedbackPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
-                    Submit {type === 'grievance' ? 'Grievance' : 'Feedback'}
+                    {type === 'grievance' ? t('extracted.submit_grievance') : t('extracted.submit_feedback')}
                   </button>
 
                   <button
@@ -281,7 +281,7 @@ export default function FeedbackPage() {
                     onClick={() => { setSubject(''); setMessage(''); setType('feedback'); setPriority('medium'); }}
                     className="px-6 py-3 border theme-border-glass theme-text-muted hover:theme-bg-glass font-medium rounded-lg transition-colors"
                   >
-                    Reset
+                    {t('extracted.reset')}
                   </button>
                 </div>
               </form>
@@ -299,7 +299,7 @@ export default function FeedbackPage() {
   {/* Header: Title + Filters */}
   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
     <h3 className="text-lg font-semibold theme-text-primary">
-      Your Submissions ({filteredList.length})
+      {t('extracted.your_submissions')} ({filteredList.length})
     </h3>
 
     <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
@@ -318,25 +318,35 @@ export default function FeedbackPage() {
 
       {/* Type & Status Filters */}
       <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto justify-start lg:justify-end">
-        {['Type', 'Status'].map((label, i) => (
+        {[t('extracted.type_2'), t('extracted.status')].map((label, i) => (
           <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <span className="text-xs theme-text-muted">{label}</span>
             <div className="inline-flex flex-wrap gap-2">
-              {(label === 'Type' ? ['all', 'feedback', 'grievance'] : ['all', 'open', 'in-review', 'resolved']).map(option => {
-                const isActive = (label === 'Type' ? typeFilter : filter) === option;
-                const colorClass = label === 'Type'
+              {(i === 0 ? ['all', 'feedback', 'grievance'] : ['all', 'open', 'in-review', 'resolved']).map(option => {
+                const isActive = (i === 0 ? typeFilter : filter) === option;
+                const colorClass = i === 0
                   ? isActive ? 'bg-blue-600 text-white' : 'bg-transparent theme-text-primary hover:theme-bg-glass'
                   : isActive ? 'bg-green-600 text-white' : 'bg-transparent theme-text-primary hover:theme-bg-glass';
+                
+                const getLabel = () => {
+                  if (option === 'all') return i === 0 ? t('extracted.all_types') : t('extracted.all_statuss');
+                  if (option === 'feedback') return t('extracted.feedback');
+                  if (option === 'grievance') return t('extracted.grievance_1');
+                  if (option === 'open') return t('extracted.open');
+                  if (option === 'in-review') return t('extracted.in_review');
+                  if (option === 'resolved') return t('extracted.resolved');
+                  return option;
+                };
 
                 return (
                   <button
                     key={option}
-                    onClick={() => label === 'Type'
+                    onClick={() => i === 0
                       ? setTypeFilter(option as 'all' | 'feedback' | 'grievance')
                       : setFilter(option as 'all' | 'open' | 'in-review' | 'resolved')}
                     className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all min-w-[6rem] focus:outline-none ${colorClass}`}
                   >
-                    {option === 'all' ? `All ${label}s` : option.replace(/(^\w)/, c => c.toUpperCase())}
+                    {getLabel()}
                   </button>
                 );
               })}
@@ -362,12 +372,12 @@ export default function FeedbackPage() {
             </svg>
           </div>
           <p className="theme-text-muted mb-2">
-            {list.length === 0 ? 'No submissions yet' : 'No matching submissions found'}
+            {list.length === 0 ? t('extracted.no_submissions_yet') : t('extracted.no_matching_submissions_found')}
           </p>
           <p className="text-sm theme-text-muted">
             {list.length === 0
-              ? 'Submit your first feedback or grievance using the form above.'
-              : 'Try adjusting your search or filter criteria.'}
+              ? t('extracted.submit_your_first_feedback_or_grievance')
+              : t('extracted.try_adjusting_search_or_filter_criteria')}
           </p>
         </motion.div>
       ) : (
@@ -396,7 +406,7 @@ export default function FeedbackPage() {
                   </span>
                   {feedback.priority && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(feedback.priority)}`}>
-                      {feedback.priority} priority
+                      {t(`extracted.${feedback.priority}_priority`)}
                     </span>
                   )}
                 </div>
@@ -404,7 +414,7 @@ export default function FeedbackPage() {
                   {feedback.message}
                 </p>
                 <div className={`text-xs mt-2 ${selectedFeedback?.id === feedback.id ? 'text-white/80' : 'theme-text-muted'}`}>
-                  Submitted: {new Date(feedback.createdAt).toLocaleString()}
+                  {t('extracted.submitted')}: {new Date(feedback.createdAt).toLocaleString()}
                 </div>
               </div>
 
@@ -460,28 +470,28 @@ export default function FeedbackPage() {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.submission_summary')} </h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.submission_summary')}</h3>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold text-orange-600 mb-1">{grievanceCount}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.grievances')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.grievances')}</div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.open_1')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.open')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{openCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
-                      className="bg-amber-500 h-2 rounded-full"
+                      className="bg-amber-500 dark:bg-amber-400 h-2 rounded-full"
                       style={{ width: `${list.length ? (openCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -489,12 +499,12 @@ export default function FeedbackPage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.in_review')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.in_review')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{inReviewCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
-                      className="bg-blue-500 h-2 rounded-full"
+                      className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full"
                       style={{ width: `${list.length ? (inReviewCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -502,12 +512,12 @@ export default function FeedbackPage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.resolved')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.resolved')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{resolvedCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full"
+                      className="bg-green-500 dark:bg-green-400 h-2 rounded-full"
                       style={{ width: `${list.length ? (resolvedCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -525,7 +535,7 @@ export default function FeedbackPage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.submission_details')} </h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.submission_details')}</h4>
                     <button
                       onClick={() => setSelectedFeedback(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -538,12 +548,12 @@ export default function FeedbackPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')}</div>
                       <div className="font-medium theme-text-primary">{selectedFeedback.subject}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.message_1')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.message_1')}</div>
                       <div className="theme-text-primary text-sm leading-relaxed">
                         {selectedFeedback.message}
                       </div>
@@ -551,14 +561,14 @@ export default function FeedbackPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.type_2')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.type_2')}</div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(selectedFeedback.type)}`}>
-                          {selectedFeedback.type}
+                          {selectedFeedback.type === 'feedback' ? t('extracted.feedback') : t('extracted.grievance_1')}
                         </span>
                       </div>
 
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')}</div>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedFeedback.status)}`}>
                           {getStatusIcon(selectedFeedback.status)}
                           {selectedFeedback.status}
@@ -568,20 +578,20 @@ export default function FeedbackPage() {
 
                     {selectedFeedback.priority && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')}</div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedFeedback.priority)}`}>
-                          {selectedFeedback.priority}
+                          {t(`extracted.${selectedFeedback.priority}`)}
                         </span>
                       </div>
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.submission_id')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.submission_id')}</div>
                       <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
                         {selectedFeedback.id}
                       </div>
                       <div className="text-xs theme-text-muted mt-2">
-                        Submitted: {new Date(selectedFeedback.createdAt).toLocaleString()}
+                        {t('extracted.submitted')}: {new Date(selectedFeedback.createdAt).toLocaleString()}
                       </div>
                     </div>
                   </div>

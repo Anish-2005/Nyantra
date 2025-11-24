@@ -67,7 +67,7 @@ export default function GrievancePage() {
   };
 
   const deleteGrievance = (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this grievance?')) return;
+    if (!window.confirm(t('extracted.are_you_sure_delete_grievance'))) return;
     
     const next = list.filter(l => l.id !== id);
     setList(next); 
@@ -135,10 +135,10 @@ export default function GrievancePage() {
           className="mb-6 md:mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            Grievance Portal
+            {t('extracted.grievance_portal')}
           </h1>
           <p className="theme-text-muted mt-2 text-sm md:text-base">
-            File and track grievances related to your applications and payments
+            {t('extracted.file_and_track_grievances')}
           </p>
         </motion.div>
 
@@ -151,19 +151,23 @@ export default function GrievancePage() {
               animate={{ opacity: 1, y: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')} </h2>
+              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')}</h2>
               
               <form onSubmit={submitGrievance} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Category
+                      {t('extracted.category')}
                     </label>
                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
   {['general', 'application', 'payment', 'technical', 'other'].map(option => {
     const isActive = category === option;
     const label =
-      option.charAt(0).toUpperCase() + option.slice(1); // Capitalize first letter
+      option === 'general' ? t('extracted.general') :
+      option === 'application' ? t('extracted.application') :
+      option === 'payment' ? t('extracted.payment') :
+      option === 'technical' ? t('extracted.technical') :
+      t('extracted.other');
 
     return (
       <button
@@ -183,12 +187,15 @@ export default function GrievancePage() {
                   
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
-                      Priority
+                      {t('extracted.priority')}
                     </label>
                     <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
   {['low', 'medium', 'high'].map(option => {
     const isActive = priority === option;
-    const label = option.charAt(0).toUpperCase() + option.slice(1); // Capitalize first letter
+    const label =
+      option === 'low' ? t('extracted.low') :
+      option === 'medium' ? t('extracted.medium') :
+      t('extracted.high');
 
     return (
       <button
@@ -209,7 +216,7 @@ export default function GrievancePage() {
 
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
-                    Subject *
+                    {t('extracted.subject')} *
                   </label>
                   <input 
                     value={subject}
@@ -222,7 +229,7 @@ export default function GrievancePage() {
 
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
-                    Description *
+                    {t('extracted.description')} *
                   </label>
                   <textarea 
                     value={description}
@@ -242,7 +249,7 @@ export default function GrievancePage() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
-                  Submit Grievance
+                  {t('extracted.submit_grievance')}
                 </button>
               </form>
             </motion.div>
@@ -256,7 +263,7 @@ export default function GrievancePage() {
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold theme-text-primary">
-                  Your Grievances ({filteredList.length})
+                  {t('extracted.your_grievances')} ({filteredList.length})
                 </h3>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
@@ -277,9 +284,10 @@ export default function GrievancePage() {
   {['all', 'open', 'in-progress', 'resolved'].map(option => {
     const isActive = filter === option;
     const label =
-      option === 'all' ? 'All Status' :
-      option === 'in-progress' ? 'In Progress' :
-      option.charAt(0).toUpperCase() + option.slice(1);
+      option === 'all' ? t('extracted.all_status') :
+      option === 'open' ? t('extracted.open') :
+      option === 'in-progress' ? t('extracted.in_progress') :
+      t('extracted.resolved');
 
     return (
       <button
@@ -314,12 +322,12 @@ export default function GrievancePage() {
                         </svg>
                       </div>
                       <p className="theme-text-muted mb-2">
-                        {list.length === 0 ? 'No grievances filed yet' : 'No matching grievances found'}
+                        {list.length === 0 ? t('extracted.no_grievances_filed_yet') : t('extracted.no_matching_grievances_found')}
                       </p>
                       <p className="text-sm theme-text-muted">
                         {list.length === 0 
-                          ? "File your first grievance using the form above." 
-                          : "Try adjusting your search or filter criteria."}
+                          ? t('extracted.file_your_first_grievance') 
+                          : t('extracted.try_adjusting_search_or_filter')}
                       </p>
                     </motion.div>
                   ) : (
@@ -350,10 +358,14 @@ export default function GrievancePage() {
                                 <div className="flex flex-wrap gap-2 mb-2">
                                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(grievance.status)}`}>
                                     {getStatusIcon(grievance.status)}
-                                    {grievance.status}
+                                    {grievance.status === 'open' ? t('extracted.open') :
+                                     grievance.status === 'in-progress' ? t('extracted.in_progress') :
+                                     t('extracted.resolved')}
                                   </span>
                                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(grievance.priority)}`}>
-                                    {grievance.priority} priority
+                                    {grievance.priority === 'low' ? t('extracted.low_priority') :
+                                     grievance.priority === 'medium' ? t('extracted.medium_priority') :
+                                     t('extracted.high_priority')}
                                   </span>
                                   {grievance.category && (
                                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -377,7 +389,7 @@ export default function GrievancePage() {
                             <div className={`text-xs mt-2 ${
                               selectedGrv?.id === grievance.id ? 'text-white/80' : 'theme-text-muted'
                             }`}>
-                              Filed: {new Date(grievance.date).toLocaleString()}
+                              {t('extracted.filed')}: {new Date(grievance.date).toLocaleString()}
                             </div>
                           </div>
                           
@@ -431,28 +443,28 @@ export default function GrievancePage() {
               animate={{ opacity: 1, x: 0 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.grievance_summary')} </h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.grievance_summary')}</h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
                   <div className="text-2xl font-bold theme-text-primary mb-1">{list.length}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')} </div>
+                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold text-amber-600 mb-1">{openCount}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.urgent')} </div>
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">{openCount}</div>
+                  <div className="text-xs theme-text-muted">{t('extracted.urgent')}</div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.open_1')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.open_1')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{openCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
-                      className="bg-amber-500 h-2 rounded-full" 
+                      className="bg-amber-500 dark:bg-amber-400 h-2 rounded-full" 
                       style={{ width: `${list.length ? (openCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -460,12 +472,12 @@ export default function GrievancePage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.in_progress')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.in_progress')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{inProgressCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
-                      className="bg-blue-500 h-2 rounded-full" 
+                      className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full" 
                       style={{ width: `${list.length ? (inProgressCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -473,12 +485,12 @@ export default function GrievancePage() {
 
                 <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm theme-text-muted">{t('extracted.resolved')} </span>
+                    <span className="text-sm theme-text-muted">{t('extracted.resolved')}</span>
                     <span className="text-sm font-semibold theme-text-primary">{resolvedCount}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
-                      className="bg-green-500 h-2 rounded-full" 
+                      className="bg-green-500 dark:bg-green-400 h-2 rounded-full" 
                       style={{ width: `${list.length ? (resolvedCount / list.length) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -496,7 +508,7 @@ export default function GrievancePage() {
                   className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.grievance_details')} </h4>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.grievance_details')}</h4>
                     <button
                       onClick={() => setSelectedGrv(null)}
                       className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
@@ -509,12 +521,12 @@ export default function GrievancePage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')}</div>
                       <div className="font-medium theme-text-primary">{selectedGrv.subject}</div>
                     </div>
 
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')} </div>
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.description_1')}</div>
                       <div className="theme-text-primary text-sm leading-relaxed">
                         {selectedGrv.description}
                       </div>
@@ -522,24 +534,28 @@ export default function GrievancePage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')}</div>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedGrv.status)}`}>
                           {getStatusIcon(selectedGrv.status)}
-                          {selectedGrv.status}
+                          {selectedGrv.status === 'open' ? t('extracted.open') :
+                           selectedGrv.status === 'in-progress' ? t('extracted.in_progress') :
+                           t('extracted.resolved')}
                         </span>
                       </div>
                       
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')}</div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedGrv.priority)}`}>
-                          {selectedGrv.priority}
+                          {selectedGrv.priority === 'low' ? t('extracted.low') :
+                           selectedGrv.priority === 'medium' ? t('extracted.medium') :
+                           t('extracted.high')}
                         </span>
                       </div>
                     </div>
 
                     {selectedGrv.category && (
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.category_1')} </div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.category_1')}</div>
                         <div className="font-medium theme-text-primary capitalize">
                           {selectedGrv.category}
                         </div>
@@ -547,12 +563,12 @@ export default function GrievancePage() {
                     )}
 
                     <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.grievance_id')} </div>
-                      <div className="font-mono text-xs theme-text-primary bg-theme-glass px-2 py-1 rounded">
+                      <div className="text-sm theme-text-muted mb-1">{t('extracted.grievance_id')}</div>
+                      <div className="font-mono text-xs theme-text-primary theme-bg-glass px-2 py-1 rounded">
                         {selectedGrv.id}
                       </div>
                       <div className="text-xs theme-text-muted mt-2">
-                        Filed: {new Date(selectedGrv.date).toLocaleString()}
+                        {t('extracted.filed')}: {new Date(selectedGrv.date).toLocaleString()}
                       </div>
                     </div>
                   </div>
