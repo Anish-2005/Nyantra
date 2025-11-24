@@ -398,7 +398,7 @@ const GrievancePage = () => {
             </div>
           </div>
           <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
-            Manage and resolve beneficiary grievances efficiently under PCR/PoA Acts with real-time tracking
+            {t('extracted.manage_and_resolve_beneficiary_grievances_efficiently_under')}
           </p>
         </div>
         
@@ -437,10 +437,10 @@ const GrievancePage = () => {
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_analytics')} </h3>
             <div className="space-y-4">
               {[
-                { label: 'Active Cases', value: stats.open + stats.inProgress, trend: '+8%', icon: AlertCircle, color: 'from-amber-500 to-orange-500' },
-                { label: 'Avg Resolution', value: `${stats.avgResolutionTime}d`, trend: '-1.2d', icon: Timer, color: 'from-blue-500 to-cyan-500' },
-                { label: 'Satisfaction', value: `${stats.satisfactionRate}%`, trend: '+5%', icon: Star, color: 'from-yellow-500 to-amber-500' },
-                { label: 'Escalated', value: stats.escalated, trend: '+2', icon: AlertOctagon, color: 'from-red-500 to-rose-500' }
+                { labelKey: 'extracted.active_cases_label', value: stats.open + stats.inProgress, trend: '+8%', icon: AlertCircle, color: 'from-amber-500 to-orange-500' },
+                { labelKey: 'extracted.avg_resolution_label', value: `${stats.avgResolutionTime}d`, trend: '-1.2d', icon: Timer, color: 'from-blue-500 to-cyan-500' },
+                { labelKey: 'extracted.satisfaction_label', value: `${stats.satisfactionRate}%`, trend: '+5%', icon: Star, color: 'from-yellow-500 to-amber-500' },
+                { labelKey: 'extracted.escalated_label', value: stats.escalated, trend: '+2', icon: AlertOctagon, color: 'from-red-500 to-rose-500' }
               ].map((stat, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
                   <div className="flex items-center gap-3">
@@ -449,7 +449,7 @@ const GrievancePage = () => {
                     </div>
                     <div>
                       <p className="font-semibold theme-text-primary">{stat.value}</p>
-                      <p className="text-sm theme-text-muted">{stat.label}</p>
+                      <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
                     </div>
                   </div>
                   <span className={`text-sm font-semibold ${stat.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
@@ -465,10 +465,10 @@ const GrievancePage = () => {
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
             <div className="space-y-3">
               {[
-                { label: 'Assign Cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
-                { label: 'Bulk Update', icon: Edit, color: 'bg-purple-500/20 text-purple-400' },
-                { label: 'Generate Report', icon: FileText, color: 'bg-green-500/20 text-green-400' },
-                { label: 'Call Center', icon: PhoneCall, color: 'bg-orange-500/20 text-orange-400' }
+                { labelKey: 'extracted.assign_cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
+                { labelKey: 'extracted.bulk_update', icon: Edit, color: 'bg-purple-500/20 text-purple-400' },
+                { labelKey: 'extracted.generate_report', icon: FileText, color: 'bg-green-500/20 text-green-400' },
+                { labelKey: 'extracted.call_center', icon: PhoneCall, color: 'bg-orange-500/20 text-orange-400' }
               ].map((action, idx) => (
                 <motion.button
                   key={idx}
@@ -476,7 +476,7 @@ const GrievancePage = () => {
                   className={`w-full flex items-center gap-3 p-3 rounded-xl ${action.color} transition-colors`}
                 >
                   <action.icon className="w-5 h-5" />
-                  <span className="font-medium text-sm">{action.label}</span>
+                  <span className="font-medium text-sm">{t(action.labelKey)}</span>
                 </motion.button>
               ))}
             </div>
@@ -488,11 +488,12 @@ const GrievancePage = () => {
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
                 const Icon = getCategoryIcon(category);
+                const categoryKey = `extracted.${category.replace('-', '_')}`;
                 return (
                   <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
                     <div className="flex items-center gap-3">
                       <Icon className="w-4 h-4 theme-text-primary" />
-                      <span className="text-sm theme-text-primary capitalize">{category.replace('-', ' ')}</span>
+                      <span className="text-sm theme-text-primary">{t(categoryKey)}</span>
                     </div>
                     <span className="text-sm theme-text-muted">{count}</span>
                   </div>
@@ -513,7 +514,7 @@ const GrievancePage = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold theme-text-primary">
-                Active Cases <span className="theme-text-muted text-lg">({filteredGrievances.length})</span>
+                {t('extracted.active_cases')} <span className="theme-text-muted text-lg">({filteredGrievances.length})</span>
               </h2>
             </div>
             
@@ -532,17 +533,20 @@ const GrievancePage = () => {
 
               {/* View Toggle */}
               <div className="flex items-center gap-2 theme-bg-glass rounded-xl p-1">
-                {['dashboard', 'list'].map((mode) => (
+                {[
+                  { mode: 'dashboard', labelKey: 'extracted.dashboard_view' },
+                  { mode: 'list', labelKey: 'extracted.list_view' }
+                ].map(({ mode, labelKey }) => (
                   <motion.button
                     key={mode}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(mode as 'dashboard' | 'list')}
-                    className={`px-4 py-2 rounded-lg capitalize ${
+                    className={`px-4 py-2 rounded-lg ${
                       viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
                     }`}
                   >
-                    {mode}
+                    {t(labelKey)}
                   </motion.button>
                 ))}
               </div>
@@ -551,7 +555,7 @@ const GrievancePage = () => {
 
           {/* Cases Grid / List - separate dashboard and list layouts */}
           {viewMode === 'dashboard' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {paginatedGrievances.map((grievance, idx) => (
                 <motion.div
                   key={grievance.id}
@@ -581,8 +585,13 @@ const GrievancePage = () => {
                       <span className={`px-3 py-1 ${getPriorityColor(grievance.priority)} text-xs font-bold rounded-full`}>
                         {grievance.priority.toUpperCase()}
                       </span>
-                      <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors text-theme-text-muted">
-                        <MoreVertical className="w-4 h-4" />
+                      <button 
+                        className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass"
+                        style={{
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                        }}
+                      >
+                        <MoreVertical className="w-4 h-4 theme-text-primary" />
                       </button>
                     </div>
                   </div>
@@ -622,19 +631,25 @@ const GrievancePage = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
-                        className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors"
+                        className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors border theme-border-glass"
+                        style={{
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                        }}
                         aria-label={`View ${grievance.id}`}
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4 h-4 theme-text-primary" />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); /* placeholder for call action */ }}
-                        className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors"
+                        className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors border theme-border-glass"
+                        style={{
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                        }}
                         aria-label={`Call ${grievance.id}`}
                       >
-                        <PhoneCall className="w-4 h-4" />
+                        <PhoneCall className="w-4 h-4 theme-text-primary" />
                       </motion.button>
                     </div>
                   </div>
@@ -656,8 +671,14 @@ const GrievancePage = () => {
                         <div className="text-right">
                           <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span>
                           <div className="mt-2 flex items-center justify-end gap-2">
-                            <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass">
-                              <Eye className="w-4 h-4" />
+                            <button 
+                              onClick={() => setSelectedGrievance(g)} 
+                              className="p-2 rounded-lg theme-bg-glass border theme-border-glass"
+                              style={{
+                                background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                              }}
+                            >
+                              <Eye className="w-4 h-4 theme-text-primary" />
                             </button>
                           </div>
                         </div>
@@ -716,13 +737,13 @@ const GrievancePage = () => {
               </div>
               <div className="space-y-4">
                 {[
-                  { label: 'Within SLA', value: 78, color: 'bg-green-500' },
-                  { label: 'Near SLA', value: 15, color: 'bg-amber-500' },
-                  { label: 'Breached SLA', value: 7, color: 'bg-red-500' }
+                  { labelKey: 'extracted.within_sla', value: 78, color: 'bg-green-500' },
+                  { labelKey: 'extracted.near_sla', value: 15, color: 'bg-amber-500' },
+                  { labelKey: 'extracted.breached_sla', value: 7, color: 'bg-red-500' }
                 ].map((metric, idx) => (
-                  <div key={idx} className="space-y-2">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
+                      <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{t(metric.labelKey)}</span>
                       <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
                     </div>
                     <div className={`w-full rounded-full h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
@@ -747,10 +768,10 @@ const GrievancePage = () => {
               </div>
               <div className="space-y-4">
                 {[
-                  { action: 'Case Resolved', user: 'Officer Sharma', time: '2 min ago', status: 'success' },
-                  { action: 'New Escalation', user: 'System', time: '5 min ago', status: 'warning' },
-                  { action: 'Document Uploaded', user: 'Beneficiary', time: '10 min ago', status: 'info' },
-                  { action: 'Follow-up Required', user: 'Officer Verma', time: '15 min ago', status: 'error' }
+                  { actionKey: 'extracted.case_resolved', userKey: 'extracted.officer_sharma', timeKey: 'extracted.min_ago_2', status: 'success' },
+                  { actionKey: 'extracted.new_escalation', userKey: 'extracted.system', timeKey: 'extracted.min_ago_5', status: 'warning' },
+                  { actionKey: 'extracted.document_uploaded', userKey: 'extracted.beneficiary_user', timeKey: 'extracted.min_ago_10', status: 'info' },
+                  { actionKey: 'extracted.followup_required', userKey: 'extracted.officer_verma', timeKey: 'extracted.min_ago_15', status: 'error' }
                 ].map((activity, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
                     <div className={`w-2 h-2 rounded-full ${
@@ -759,8 +780,8 @@ const GrievancePage = () => {
                       activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
                     }`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
-                      <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
+                      <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
+                      <p className="text-xs theme-text-muted truncate">{t(activity.userKey)} • {t(activity.timeKey)}</p>
                     </div>
                     <ArrowUpRight className="w-4 h-4 theme-text-muted flex-shrink-0" />
                   </div>
@@ -778,7 +799,8 @@ const GrievancePage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
             onClick={() => setSelectedGrievance(null)}
           >
             <motion.div
@@ -787,9 +809,17 @@ const GrievancePage = () => {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className="theme-bg-card theme-border-glass border rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
+              style={{
+                background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
+              }}
             >
               {/* Enhanced Header */}
-              <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-8">
+              <div 
+                className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-8"
+                style={{
+                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
+                }}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
@@ -813,9 +843,12 @@ const GrievancePage = () => {
                   </div>
                   <button
                     onClick={() => setSelectedGrievance(null)}
-                    className="p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors"
+                    className="p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors border theme-border-glass"
+                    style={{
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                    }}
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-6 h-6 theme-text-primary" />
                   </button>
                 </div>
               </div>
@@ -850,45 +883,68 @@ const GrievancePage = () => {
                 {/* Content would go here based on active tab */}
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.case_management')} </h3>
-                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_manage_different_aspects_of_this_case')} </p>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.case_management')}</h3>
+                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_manage_different_aspects_of_this_case')}</p>
                 </div>
               </div>
 
               {/* Enhanced Action Buttons */}
-              <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8">
+              <div 
+                className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8"
+                style={{
+                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
+                }}
+              >
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
+                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
+                    style={{
+                      background: theme === 'light' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                      borderColor: theme === 'light' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(34, 197, 94, 0.3)',
+                      color: theme === 'light' ? '#15803d' : '#86efac'
+                    }}
                   >
                     <CheckCircle className="w-5 h-5" />
-                    Resolve Case
+                    {t('extracted.resolve_case')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-purple-500/30 transition-colors"
+                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
+                    style={{
+                      background: theme === 'light' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.2)',
+                      borderColor: theme === 'light' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(168, 85, 247, 0.3)',
+                      color: theme === 'light' ? '#7e22ce' : '#d8b4fe'
+                    }}
                   >
                     <PhoneCall className="w-5 h-5" />
-                    Call Now
+                    {t('extracted.call_now')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
+                    style={{
+                      background: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
+                      borderColor: theme === 'light' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)',
+                      color: theme === 'light' ? '#1d4ed8' : '#93c5fd'
+                    }}
                   >
                     <Mail className="w-5 h-5" />
-                    Send Email
+                    {t('extracted.send_email')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="px-6 py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+                    style={{
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
+                    }}
                   >
-                    <AlertOctagon className="w-5 h-5" />
-                    Escalate
+                    <AlertOctagon className="w-5 h-5 theme-text-primary" />
+                    {t('extracted.escalate_case')}
                   </motion.button>
                 </div>
               </div>

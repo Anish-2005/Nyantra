@@ -733,10 +733,10 @@ const AnalyticsPage = () => {
                       whileTap={{ scale: 0.9 }}
                       className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors border theme-border-glass"
                       style={{
-                        background: theme === 'light' ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.95)'
+                        background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
                       }}
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4 theme-text-primary" />
                     </motion.button>
                   </td>
                 </motion.tr>
