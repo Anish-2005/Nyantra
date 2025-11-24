@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useLocale } from "../context/LocaleContext";
 import LanguageToggle from './LanguageToggle';
@@ -21,9 +21,8 @@ type Props = {
   activeId: string;
   onChange: (id: string) => void;
   open: boolean;
-  setOpen: (v: boolean) => void;
-  collapsed?: boolean;
-  onToggleCollapse?: () => void;
+  setOpen: (open: boolean) => void;
+  collapsed: boolean;
 };
 
 export default function Sidebar({
@@ -33,7 +32,6 @@ export default function Sidebar({
   open,
   setOpen,
   collapsed = false,
-  onToggleCollapse,
 }: Props) {
   const { theme } = useTheme();
   const { signOutUser } = useAuth();

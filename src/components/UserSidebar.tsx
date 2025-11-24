@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -21,9 +21,8 @@ type Props = {
   activeId: string;
   onChange: (id: string) => void;
   open: boolean;
-  setOpen: (v: boolean) => void;
-  collapsed?: boolean;
-  onToggleCollapse?: () => void;
+  setOpen: (open: boolean) => void;
+  collapsed: boolean;
 };
 
 export default function UserSidebar({
@@ -33,7 +32,6 @@ export default function UserSidebar({
   open,
   setOpen,
   collapsed = false,
-  onToggleCollapse,
 }: Props) {
   const { theme } = useTheme();
   const { signOutUser } = useAuth();

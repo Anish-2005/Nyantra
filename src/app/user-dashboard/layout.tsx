@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import UserSidebar from '@/components/UserSidebar';
-import { Home, FileText, MessageCircle, Users, Wallet, Menu, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from 'lucide-react';
+import { Home, FileText, MessageCircle, Users, Wallet, Menu, Bell, User, ChevronDown, Settings, HelpCircle, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import type * as THREE from 'three';
@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from '@/components/NotificationDropdown';
 
 export default function UserDashboardLayout({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const { user } = useAuth();
   const { t } = useLocale();
   const [sidebarOpen, setSidebarOpen] = useState(false);
