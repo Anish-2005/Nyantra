@@ -27,6 +27,7 @@ const Dashboard = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,6 +42,15 @@ const Dashboard = () => {
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
 
   const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Refs
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const mousePositionRef = useRef({ x: 0, y: 0 });
+
+  // Scroll progress for progress bar
+  const { scrollYProgress } = useScroll();
+  const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   // Update time on client side only to prevent hydration mismatch
   useEffect(() => {
