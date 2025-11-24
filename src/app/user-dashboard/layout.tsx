@@ -276,7 +276,6 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
           open={sidebarOpen}
           setOpen={setSidebarOpen}
           collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(s => !s)}
         />
 
         <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>

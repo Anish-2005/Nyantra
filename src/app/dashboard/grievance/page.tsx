@@ -740,8 +740,8 @@ const GrievancePage = () => {
                   { labelKey: 'extracted.within_sla', value: 78, color: 'bg-green-500' },
                   { labelKey: 'extracted.near_sla', value: 15, color: 'bg-amber-500' },
                   { labelKey: 'extracted.breached_sla', value: 7, color: 'bg-red-500' }
-                ].map((metric, idx) => (
-                  <div className="space-y-2">
+                ].map((metric) => (
+                  <div key={metric.labelKey} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{t(metric.labelKey)}</span>
                       <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>

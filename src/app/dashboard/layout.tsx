@@ -153,7 +153,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     open={sidebarOpen}
                     setOpen={setSidebarOpen}
                     collapsed={sidebarCollapsed}
-                    onToggleCollapse={toggleSidebarCollapse}
                 />
 
                 {/* Main Content */}
