@@ -680,13 +680,13 @@ const ReportsPage = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Report Hub
+                {t('extracted.report_hub')}
               </h1>
               <p className="theme-text-secondary text-lg">{t('extracted.advanced_analytics_reporting_platform')} </p>
             </div>
           </div>
           <p className="theme-text-muted max-w-2xl mx-auto lg:mx-0">
-            Generate, analyze, and schedule comprehensive reports for DBT under PCR/PoA Acts
+            {t('extracted.generate_analyze_schedule_comprehensive_reports')}
           </p>
         </div>
 
@@ -707,7 +707,7 @@ const ReportsPage = () => {
               className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
             >
               <FilePlus className="w-5 h-5" />
-              <span className="font-semibold text-sm">New</span>
+              <span className="font-semibold text-sm">{t('extracted.new')}</span>
             </motion.button>
           </div>
         </div>
@@ -727,10 +727,10 @@ const ReportsPage = () => {
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_analytics')} </h3>
             <div className="space-y-4">
               {[
-                { label: 'Total Generated', value: '1,247', trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
-                { label: 'Avg Processing Time', value: '2.3s', trend: '-0.4s', icon: Zap, color: 'from-green-500 to-emerald-500' },
-                { label: 'Success Rate', value: '98.7%', trend: '+1.2%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
-                { label: 'Active Schedules', value: '24', trend: '+3', icon: Clock, color: 'from-orange-500 to-red-500' }
+                { labelKey: 'extracted.total_generated', value: '1,247', trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
+                { labelKey: 'extracted.avg_processing_time', value: '2.3s', trend: '-0.4s', icon: Zap, color: 'from-green-500 to-emerald-500' },
+                { labelKey: 'extracted.success_rate_label', value: '98.7%', trend: '+1.2%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+                { labelKey: 'extracted.active_schedules', value: '24', trend: '+3', icon: Clock, color: 'from-orange-500 to-red-500' }
               ].map((stat, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
                   <div className="flex items-center gap-3">
@@ -739,7 +739,7 @@ const ReportsPage = () => {
                     </div>
                     <div>
                       <p className="font-semibold theme-text-primary">{stat.value}</p>
-                      <p className="text-sm theme-text-muted">{stat.label}</p>
+                      <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-green-400">{stat.trend}</span>
@@ -753,10 +753,10 @@ const ReportsPage = () => {
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
             <div className="space-y-3">
               {[
-                { label: 'Generate Disbursement', icon: FilePlus, color: 'bg-blue-500/20 text-blue-400' },
-                { label: 'Schedule Weekly', icon: Calendar, color: 'bg-purple-500/20 text-purple-400' },
-                { label: 'Download All', icon: Download, color: 'bg-green-500/20 text-green-400' },
-                { label: 'View Templates', icon: BookOpen, color: 'bg-orange-500/20 text-orange-400' }
+                { labelKey: 'extracted.generate_disbursement', icon: FilePlus, color: 'bg-blue-500/20 text-blue-400' },
+                { labelKey: 'extracted.schedule_weekly', icon: Calendar, color: 'bg-purple-500/20 text-purple-400' },
+                { labelKey: 'extracted.download_all', icon: Download, color: 'bg-green-500/20 text-green-400' },
+                { labelKey: 'extracted.view_templates', icon: BookOpen, color: 'bg-orange-500/20 text-orange-400' }
               ].map((action, idx) => (
                 <motion.button
                   key={idx}
@@ -764,7 +764,7 @@ const ReportsPage = () => {
                   className={`w-full flex items-center gap-3 p-3 rounded-xl ${action.color} transition-colors`}
                 >
                   <action.icon className="w-5 h-5" />
-                  <span className="font-medium text-sm">{action.label}</span>
+                  <span className="font-medium text-sm">{t(action.labelKey)}</span>
                 </motion.button>
               ))}
             </div>
@@ -775,16 +775,16 @@ const ReportsPage = () => {
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')} </h3>
             <div className="space-y-3">
               {[
-                { name: 'Financial', count: 45, color: 'bg-green-500' },
-                { name: 'Compliance', count: 32, color: 'bg-blue-500' },
-                { name: 'Performance', count: 28, color: 'bg-purple-500' },
-                { name: 'Statistical', count: 19, color: 'bg-orange-500' },
-                { name: 'Technical', count: 15, color: 'bg-red-500' }
+                { nameKey: 'extracted.financial', count: 45, color: 'bg-green-500' },
+                { nameKey: 'extracted.compliance', count: 32, color: 'bg-blue-500' },
+                { nameKey: 'extracted.performance', count: 28, color: 'bg-purple-500' },
+                { nameKey: 'extracted.statistical', count: 19, color: 'bg-orange-500' },
+                { nameKey: 'extracted.technical', count: 15, color: 'bg-red-500' }
               ].map((category, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
-                    <span className="text-sm theme-text-primary">{category.name}</span>
+                    <span className="text-sm theme-text-primary">{t(category.nameKey)}</span>
                   </div>
                   <span className="text-sm theme-text-muted">{category.count}</span>
                 </div>
@@ -829,10 +829,10 @@ const ReportsPage = () => {
       {/* View Toggle */}
       <div className="flex items-center gap-1 theme-bg-glass rounded-xl p-1">
         {[
-          { mode: 'reports', label: 'Reports', icon: FileText },
-          { mode: 'templates', label: 'Templates', icon: BookOpen },
-          { mode: 'scheduled', label: 'Scheduled', icon: Clock }
-        ].map(({ mode, label, icon: Icon }) => (
+          { mode: 'reports', labelKey: 'extracted.reports', icon: FileText },
+          { mode: 'templates', labelKey: 'extracted.templates', icon: BookOpen },
+          { mode: 'scheduled', labelKey: 'extracted.scheduled', icon: Clock }
+        ].map(({ mode, labelKey, icon: Icon }) => (
           <motion.button
             key={mode}
             whileHover={{ scale: 1.05 }}
@@ -845,7 +845,7 @@ const ReportsPage = () => {
             }`}
           >
             <Icon className="w-3 h-3" />
-            <span className="hidden sm:inline">{label}</span>
+            <span className="hidden sm:inline">{t(labelKey)}</span>
           </motion.button>
         ))}
       </div>
@@ -853,7 +853,7 @@ const ReportsPage = () => {
   </div>
           {/* Reports Grid */}
           {/* Reports Grid - Fixed Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedReports.map((report, idx) => (
               <motion.div
                 key={report.id}
@@ -986,15 +986,15 @@ const ReportsPage = () => {
       </div>
       <div className="space-y-3">
         {[
-          { label: 'Success Rate', value: 98, color: 'bg-green-500', icon: CheckCircle },
-          { label: 'Processing Speed', value: 85, color: 'bg-blue-500', icon: Zap },
-          { label: 'User Satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
+          { labelKey: 'extracted.success_rate_label', value: 98, color: 'bg-green-500', icon: CheckCircle },
+          { labelKey: 'extracted.processing_speed', value: 85, color: 'bg-blue-500', icon: Zap },
+          { labelKey: 'extracted.user_satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
         ].map((metric, idx) => (
           <div key={idx} className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
-                <span className="text-sm theme-text-primary">{metric.label}</span>
+                <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
               </div>
               <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
             </div>
@@ -1020,10 +1020,10 @@ const ReportsPage = () => {
       </div>
       <div className="space-y-3">
         {[
-          { action: 'Monthly Report Generated', user: 'System', time: '2 min ago', status: 'success' },
-          { action: 'Weekly Schedule Created', user: 'Admin', time: '5 min ago', status: 'info' },
-          { action: 'Export Completed', user: 'Officer Sharma', time: '10 min ago', status: 'success' },
-          { action: 'Processing Failed', user: 'System', time: '15 min ago', status: 'error' }
+          { actionKey: 'extracted.monthly_report_generated', userKey: 'extracted.system', timeKey: 'extracted.min_ago_2', status: 'success' },
+          { actionKey: 'extracted.weekly_schedule_created', userKey: 'extracted.admin', timeKey: 'extracted.min_ago_5', status: 'info' },
+          { actionKey: 'extracted.export_completed', user: 'Officer Sharma', timeKey: 'extracted.min_ago_10', status: 'success' },
+          { actionKey: 'extracted.processing_failed', userKey: 'extracted.system', timeKey: 'extracted.min_ago_15', status: 'error' }
         ].map((activity, idx) => (
           <div key={idx} className="flex items-center gap-3 p-2 rounded-lg theme-bg-glass">
             <div className={`w-1.5 h-1.5 rounded-full ${
@@ -1031,8 +1031,8 @@ const ReportsPage = () => {
               activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
             }`} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
-              <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
+              <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
+              <p className="text-xs theme-text-muted truncate">{activity.userKey ? t(activity.userKey) : activity.user} • {t(activity.timeKey)}</p>
             </div>
             <ArrowUpRight className="w-3 h-3 theme-text-muted flex-shrink-0" />
           </div>
@@ -1050,7 +1050,8 @@ const ReportsPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+            style={{ zIndex: 9999 }}
+            className={`fixed inset-0 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto ${theme === 'light' ? 'bg-black/40' : 'bg-black/60'}`}
             onClick={() => setSelectedReport(null)}
             aria-modal="true"
             role="dialog"
@@ -1060,10 +1061,10 @@ const ReportsPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="theme-bg-card theme-border-glass border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
+              className={`border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-6xl my-6 overflow-hidden glass-effect shadow-2xl ${theme === 'light' ? 'bg-white border-gray-200' : 'theme-bg-card theme-border-glass'}`}
             >
               {/* Enhanced Header */}
-              <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-4 sm:p-8">
+              <div className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
@@ -1083,14 +1084,14 @@ const ReportsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedReport(null)} className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors" aria-label={t('extracted.close_report_details')}>
-                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <button onClick={() => setSelectedReport(null)} className={`p-2 sm:p-3 rounded-xl hover:bg-red-500/20 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700' : 'theme-bg-glass theme-text-primary'}`} aria-label={t('extracted.close_report_details')}>
+                    <X className={`w-5 h-5 sm:w-6 sm:h-6 ${theme === 'light' ? 'text-gray-700' : ''}`} />
                   </button>
                 </div>
               </div>
 
               {/* Enhanced Tabs */}
-              <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
+              <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent'}`}>
                 <div className="flex overflow-x-auto px-8">
                   {[
                     { id: 'overview', label: 'Overview', icon: Eye },
@@ -1123,12 +1124,12 @@ const ReportsPage = () => {
               </div>
 
               {/* Enhanced Action Buttons */}
-              <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8">
+              <div className={`sticky bottom-0 backdrop-blur-xl border-t p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
+                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
                   >
                     <Download className="w-5 h-5" />
                     Download Report
@@ -1136,7 +1137,7 @@ const ReportsPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-purple-500/30 transition-colors"
+                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'}`}
                   >
                     <Clock className="w-5 h-5" />
                     Schedule
@@ -1144,7 +1145,7 @@ const ReportsPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
                   >
                     <Share2 className="w-5 h-5" />
                     Share
@@ -1152,7 +1153,7 @@ const ReportsPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass hover:theme-bg-card'}`}
                   >
                     <Sparkles className="w-5 h-5" />
                     Analyze

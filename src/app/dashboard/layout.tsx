@@ -191,15 +191,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <div className="flex items-center gap-3">
                                     <div className="hidden sm:block">
                                         <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                            Nyantra Dashboard
+                                            {t('extracted.nyantra_dashboard')}
                                         </h1>
                                         <p className="text-sm theme-text-muted">
-                                            Direct Benefit Transfer Management
+                                            {t('extracted.direct_benefit_transfer_management')}
                                         </p>
                                     </div>
                                     <div className="sm:hidden">
                                         <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                            Nyantra
+                                            {t('extracted.nyantra')}
                                         </h1>
                                     </div>
                                 </div>
@@ -207,20 +207,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                             {/* Right Section - Theme Toggle, Notifications & User Menu */}
                             <div className="flex items-center gap-3">
-                                {/* Theme Toggle */}
-                                <motion.button
-                                    onClick={toggleTheme}
-                                    className="p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    aria-label={t('extracted.toggle_theme')}
-                                >
-                                    {theme === 'dark' ? (
-                                        <Sun className="w-5 h-5 theme-text-primary" />
-                                    ) : (
-                                        <Moon className="w-5 h-5 theme-text-primary" />
-                                    )}
-                                </motion.button>
+                               
 
                                 {/* Notifications */}
                                 <div className="relative">
@@ -265,16 +252,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <div className="relative">
                                     <motion.button
                                         onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-2 p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
+                                        className="flex items-center gap-2 h-[41px] px-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                            <User className="w-4 h-4 text-white" />
+                                        <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                                            <User className="w-3.5 h-3.5 text-white" />
                                         </div>
                                         <div className="hidden sm:block text-left">
-                                            <p className="text-sm font-medium theme-text-primary">{displayName}</p>
-                                            <p className="text-xs theme-text-muted">{t('extracted.administrator')} </p>
+                                            <p className="text-sm font-medium theme-text-primary leading-tight">{displayName}</p>
+                                            <p className="text-xs theme-text-muted leading-tight">{t('extracted.administrator')} </p>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                                     </motion.button>

@@ -788,11 +788,11 @@ const IntegrationsPage = () => {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 GovConnect
               </h1>
-              <p className="theme-text-secondary text-sm sm:text-base">{t('extracted.unified_government_integration_platform')} </p>
+              <p className="theme-text-secondary text-sm sm:text-base">{t('extracted.unified_government_integration_platform')}</p>
             </div>
           </div>
           <p className="theme-text-muted max-w-full sm:max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base">
-            Secure, real-time integration with government systems for DBT under PCR/PoA Acts
+            {t('extracted.secure_realtime_integration_with_government_systems_for_dbt')}
           </p>
         </div>
         
@@ -824,10 +824,10 @@ const IntegrationsPage = () => {
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
       >
         {[
-          { label: 'Active Services', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500' },
-          { label: 'Total Endpoints', value: stats.totalEndpoints, icon: Network, color: 'from-blue-500 to-cyan-500' },
-          { label: 'Success Rate', value: `${stats.avgSuccessRate}%`, icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
-          { label: 'Response Time', value: '< 2s', icon: Zap, color: 'from-orange-500 to-red-500' }
+          { labelKey: 'extracted.active', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500' },
+          { labelKey: 'extracted.endpoints', value: stats.totalEndpoints, icon: Network, color: 'from-blue-500 to-cyan-500' },
+          { labelKey: 'extracted.success_rate', value: `${stats.avgSuccessRate}%`, icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+          { labelKey: 'extracted.response', value: '< 2s', icon: Zap, color: 'from-orange-500 to-red-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -837,7 +837,7 @@ const IntegrationsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
-                <p className="text-sm theme-text-muted">{stat.label}</p>
+                <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
               </div>
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6 text-white" />
@@ -893,11 +893,11 @@ const IntegrationsPage = () => {
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
-                    <option value="all">{t('extracted.all_categories')} </option>
-                    <option value="identity-verification">{t('extracted.identity')} </option>
-                    <option value="document-verification">{t('extracted.document')} </option>
-                    <option value="payment-services">{t('extracted.payments')} </option>
-                    <option value="banking-services">{t('extracted.banking')} </option>
+                    <option value="all">{t('extracted.all_categories')}</option>
+                    <option value="identity-verification">{t('extracted.identity')}</option>
+                    <option value="document-verification">{t('extracted.document')}</option>
+                    <option value="payment-services">{t('extracted.payments')}</option>
+                    <option value="banking-services">{t('extracted.banking')}</option>
                   </select>
                 </div>
 
@@ -908,10 +908,10 @@ const IntegrationsPage = () => {
                     onChange={(e) => setHealthFilter(e.target.value)}
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
-                    <option value="all">{t('extracted.all_health')} </option>
-                    <option value="excellent">{t('extracted.excellent')} </option>
-                    <option value="good">{t('extracted.good')} </option>
-                    <option value="fair">{t('extracted.fair')} </option>
+                    <option value="all">{t('extracted.all_health')}</option>
+                    <option value="excellent">{t('extracted.excellent')}</option>
+                    <option value="good">{t('extracted.good')}</option>
+                    <option value="fair">{t('extracted.fair')}</option>
                   </select>
                 </div>
               </div>
@@ -933,7 +933,7 @@ const IntegrationsPage = () => {
                     <div className="flex items-center gap-3">
                       <Icon className="w-5 h-5 theme-text-primary" />
                       <span className="theme-text-primary text-sm font-medium">
-                        {formatCategoryName(category)}
+                        {t(`extracted.${category.replace(/-/g, '_')}`)}
                       </span>
                     </div>
                     <span className="px-2 py-1 rounded-full theme-bg-card theme-text-primary text-xs font-bold">
@@ -957,7 +957,7 @@ const IntegrationsPage = () => {
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold theme-text-primary">
-                Government Integrations <span className="theme-text-muted text-lg">({filteredIntegrations.length})</span>
+                {t('extracted.government_integrations')} <span className="theme-text-muted text-lg">({filteredIntegrations.length})</span>
               </h2>
             </div>
             
@@ -1018,15 +1018,15 @@ const IntegrationsPage = () => {
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.success')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.response')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.endpoints')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
                   </div>
                 </div>
 
@@ -1071,7 +1071,7 @@ const IntegrationsPage = () => {
           {/* Pagination */}
           <div className="flex items-center justify-between pt-4 sm:pt-6 border-t theme-border-glass flex-wrap gap-3">
             <p className="theme-text-muted text-sm">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredIntegrations.length)} of {filteredIntegrations.length} integrations
+              {t('extracted.showing')} {((currentPage - 1) * itemsPerPage) + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredIntegrations.length)} {t('extracted.of')} {filteredIntegrations.length} {t('extracted.integrations')}
             </p>
             <div className="flex items-center gap-2">
               <motion.button
@@ -1118,7 +1118,8 @@ const IntegrationsPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      style={{ zIndex: 9999 }}
+      className={`fixed inset-0 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto ${theme === 'light' ? 'bg-black/40' : 'bg-black/60'}`}
       onClick={() => setSelectedIntegration(null)}
     >
       <motion.div
@@ -1126,10 +1127,10 @@ const IntegrationsPage = () => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="theme-bg-card theme-border-glass border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-4xl sm:max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
+        className={`border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-4xl sm:max-w-6xl my-6 overflow-hidden glass-effect shadow-2xl ${theme === 'light' ? 'bg-white border-gray-200' : 'theme-bg-card theme-border-glass'}`}
       >
         {/* Enhanced Header */}
-        <div className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-4 sm:p-8">
+        <div className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 sm:gap-4 flex-1">
               <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
@@ -1160,24 +1161,24 @@ const IntegrationsPage = () => {
             </div>
             <button
               onClick={() => setSelectedIntegration(null)}
-              className="p-2 sm:p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors"
+              className={`p-2 sm:p-3 rounded-xl hover:bg-red-500/20 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700' : 'theme-bg-glass theme-text-primary'}`}
               aria-label={t('extracted.close')}
             >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              <X className={`w-5 h-5 sm:w-6 sm:h-6 ${theme === 'light' ? 'text-gray-700' : ''}`} />
             </button>
           </div>
         </div>
 
         {/* Enhanced Tabs */}
-        <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
+        <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent'}`}>
           <div className="flex overflow-x-auto px-4 sm:px-8">
             {[
-              { id: 'overview', label: 'Overview', icon: Eye },
-              { id: 'configuration', label: 'Configuration', icon: Cpu },
-              { id: 'performance', label: 'Performance', icon: Activity },
-              { id: 'security', label: 'Security', icon: Shield },
-              { id: 'logs', label: 'Activity Logs', icon: FileText },
-              { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+              { id: 'overview', labelKey: 'extracted.overview', icon: Eye },
+              { id: 'configuration', labelKey: 'extracted.configuration', icon: Cpu },
+              { id: 'performance', labelKey: 'extracted.performance', icon: Activity },
+              { id: 'security', labelKey: 'extracted.security', icon: Shield },
+              { id: 'logs', labelKey: 'extracted.logs', icon: FileText },
+              { id: 'analytics', labelKey: 'extracted.analytics', icon: TrendingUp }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1189,19 +1190,19 @@ const IntegrationsPage = () => {
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="p-4 sm:p-8 space-y-8 max-h-[calc(95vh-160px)] overflow-y-auto">
+        <div className={`p-4 sm:p-8 space-y-8 max-h-[60vh] overflow-y-auto ${theme === 'light' ? 'bg-white' : ''}`}>
           {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Overview Header */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold theme-text-primary mb-4">{t('extracted.integration_overview')} </h3>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-4">{t('extracted.integration_overview')}</h3>
                   <p className="theme-text-primary text-lg leading-relaxed">{selectedIntegration.description}</p>
                 </div>
                 <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
@@ -1224,17 +1225,17 @@ const IntegrationsPage = () => {
               {/* Key Metrics Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
-                  { label: 'Success Rate', value: `${selectedIntegration.successRate}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-                  { label: 'Response Time', value: selectedIntegration.responseTime, icon: Zap, color: 'from-blue-500 to-cyan-500' },
-                  { label: 'API Endpoints', value: selectedIntegration.endpoints, icon: Network, color: 'from-purple-500 to-pink-500' },
-                  { label: 'API Version', value: selectedIntegration.apiVersion, icon: Code, color: 'from-orange-500 to-red-500' }
+                  { labelKey: 'extracted.success_rate', value: `${selectedIntegration.successRate}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                  { labelKey: 'extracted.response', value: selectedIntegration.responseTime, icon: Zap, color: 'from-blue-500 to-cyan-500' },
+                  { labelKey: 'extracted.endpoints', value: selectedIntegration.endpoints, icon: Network, color: 'from-purple-500 to-pink-500' },
+                  { labelKey: 'extracted.api_version', value: selectedIntegration.apiVersion, icon: Code, color: 'from-orange-500 to-red-500' }
                 ].map((metric, idx) => (
                   <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}>
                       <metric.icon className="w-6 h-6 text-white" />
                     </div>
                     <p className="text-2xl font-bold theme-text-primary mb-1">{metric.value}</p>
-                    <p className="text-sm theme-text-muted">{metric.label}</p>
+                    <p className="text-sm theme-text-muted">{t(metric.labelKey)}</p>
                   </div>
                 ))}
               </div>
@@ -1266,17 +1267,17 @@ const IntegrationsPage = () => {
 
               {/* Usage Statistics */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.usage_statistics_1')} </h3>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.usage_statistics_1')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
-                    { label: 'Monthly Requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
-                    { label: 'Daily Average', value: selectedIntegration.usage.daily.toLocaleString(), icon: Activity },
-                    { label: 'Error Count', value: selectedIntegration.usage.errors, icon: AlertCircle }
+                    { labelKey: 'extracted.monthly_requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
+                    { labelKey: 'extracted.daily_average', value: selectedIntegration.usage.daily.toLocaleString(), icon: Activity },
+                    { labelKey: 'extracted.error_count', value: selectedIntegration.usage.errors, icon: AlertCircle }
                   ].map((stat, idx) => (
                     <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
                       <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
                       <p className="text-3xl font-bold theme-text-primary mb-2">{stat.value}</p>
-                      <p className="text-sm theme-text-muted">{stat.label}</p>
+                      <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
                     </div>
                   ))}
                 </div>
@@ -1288,18 +1289,18 @@ const IntegrationsPage = () => {
             <div className="space-y-8">
               {/* API Configuration */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.api_configuration_1')} </h3>
+                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.api_configuration_1')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: 'Authentication Type', value: selectedIntegration.config.authType, icon: Shield },
-                    { label: 'Rate Limit', value: selectedIntegration.config.rateLimit, icon: Gauge },
-                    { label: 'Timeout', value: selectedIntegration.config.timeout, icon: Clock },
-                    { label: 'API Version', value: selectedIntegration.apiVersion, icon: Code }
+                    { labelKey: 'extracted.authentication_type', value: selectedIntegration.config.authType, icon: Shield },
+                    { labelKey: 'extracted.rate_limit', value: selectedIntegration.config.rateLimit, icon: Gauge },
+                    { labelKey: 'extracted.timeout', value: selectedIntegration.config.timeout, icon: Clock },
+                    { labelKey: 'extracted.api_version', value: selectedIntegration.apiVersion, icon: Code }
                   ].map((config, idx) => (
                     <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
                       <div className="flex items-center gap-3 mb-3">
                         <config.icon className="w-5 h-5 theme-text-primary" />
-                        <h4 className="font-semibold theme-text-primary">{config.label}</h4>
+                        <h4 className="font-semibold theme-text-primary">{t(config.labelKey)}</h4>
                       </div>
                       <p className="text-lg theme-text-primary font-semibold">{config.value}</p>
                     </div>
@@ -1578,44 +1579,44 @@ const IntegrationsPage = () => {
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-4 sm:p-8">
+        <div className={`sticky bottom-0 backdrop-blur-xl border-t p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
-              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-green-500/30 transition-colors"
+              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
             >
               <Wifi className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.test_connection')} </span>
-              <span className="inline sm:hidden">{t('extracted.test')} </span>
+              <span className="hidden sm:inline">{t('extracted.test_connection')}</span>
+              <span className="inline sm:hidden">{t('extracted.test')}</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
-              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-blue-500/30 transition-colors"
+              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
             >
               <RefreshCw className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.sync_now')} </span>
-              <span className="inline sm:hidden">{t('extracted.sync')} </span>
+              <span className="hidden sm:inline">{t('extracted.sync_now')}</span>
+              <span className="inline sm:hidden">{t('extracted.sync')}</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
+              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
             >
               <Edit className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.edit_config')} </span>
-              <span className="inline sm:hidden">{t('extracted.edit')} </span>
+              <span className="hidden sm:inline">{t('extracted.edit_config')}</span>
+              <span className="inline sm:hidden">{t('extracted.edit')}</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-semibold flex items-center justify-center gap-3 hover:bg-red-500/30 transition-colors"
+              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
             >
               <X className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.disable')} </span>
+              <span className="hidden sm:inline">{t('extracted.disable')}</span>
               <span className="inline sm:hidden">Off</span>
             </motion.button>
           </div>

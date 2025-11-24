@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useLocale } from "../context/LocaleContext";
 import LanguageToggle from './LanguageToggle';
+import ThemeToggle from './ThemeToggle';
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -108,8 +109,9 @@ export default function Sidebar({
 
         {/* Footer - Language toggle + Logout */}
         <div className="p-4 border-t theme-border-glass flex flex-col gap-3">
-          <div className="flex justify-center">
-            <LanguageToggle compact vertical />
+          <div className="flex items-center justify-center gap-2">
+            <ThemeToggle compact />
+            <LanguageToggle compact />
           </div>
           <button
             type="button"
@@ -172,16 +174,6 @@ export default function Sidebar({
             </div>
           )}
 
-          {!collapsed && onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="p-1 rounded-md theme-border-glass border theme-bg-glass hover:theme-bg-hover transition-colors"
-              aria-label={t('extracted.collapse_sidebar')}
-            >
-              <ChevronLeft className="w-3 h-3 theme-text-primary" />
-            </button>
-          )}
         </div>
 
         {/* Nav */}
@@ -209,27 +201,13 @@ export default function Sidebar({
           </ul>
         </nav>
 
-        {/* Expand Button */}
-        {collapsed && onToggleCollapse && (
-          <div className="p-3 border-t theme-border-glass">
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="w-full flex items-center justify-center p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-              aria-label={t('extracted.expand_sidebar')}
-            >
-              <ChevronRight className="w-4 h-4 theme-text-primary" />
-            </button>
-          </div>
-        )}
-
         {/* Footer - Language + Logout */}
         <div className={`p-4 border-t theme-border-glass flex flex-col gap-3 ${collapsed ? 'items-center' : ''}`}>
-            {/* Language toggle container */}
- 
-    <div className="bg-theme-bg-input theme-border-glass border rounded-xl px-3 py-1 flex items-center justify-center gap-2 shadow-sm hover:theme-bg-glass transition-colors">
-      <LanguageToggle compact vertical={collapsed} />
-    </div>
+            {/* Language & Theme toggle container */}
+          <div className={`flex ${collapsed ? 'flex-col gap-2' : 'flex-row gap-2'} items-center justify-center`}>
+            <ThemeToggle compact className="flex items-center justify-center" />
+            <LanguageToggle compact vertical={collapsed} />
+          </div>
           <button
             type="button"
             onClick={async () => {
