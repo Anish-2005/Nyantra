@@ -4,100 +4,357 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 import {
     Search, Filter, Download, Plus, Eye, Edit, ChevronLeft, ChevronRight, X, Check,
     Clock, AlertCircle, FileText, User, Phone, MapPin,
-    DollarSign, MessageSquare, AlertTriangle
+    DollarSign, MessageSquare, AlertTriangle, ChevronDown
 } from 'lucide-react';
 
-// Mock data for applications
-const mockApplications = [
-    {
-        id: 'APP-2024-001234',
-        applicantName: 'Rajesh Kumar',
-        aadhaar: '****-****-1234',
-        phone: '+91 98765-43210',
-        district: 'Patna',
-        state: 'Bihar',
-        actType: 'PCR Act',
-        incidentDate: '2024-02-15',
-        applicationDate: '2024-02-20',
-        status: 'pending',
-        amount: 40000,
-        priority: 'high',
-        assignedOfficer: 'Officer Sharma',
-        documents: 4,
-        lastUpdate: '2024-03-15 14:30'
-    },
-    {
-        id: 'APP-2024-001235',
-        applicantName: 'Priya Singh',
-        aadhaar: '****-****-5678',
-        phone: '+91 98765-43211',
-        district: 'Lucknow',
-        state: 'Uttar Pradesh',
-        actType: 'PoA Act',
-        incidentDate: '2024-02-10',
-        applicationDate: '2024-02-18',
-        status: 'in-review',
-        amount: 35000,
+// New Application Form Component
+const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
+    const { theme } = useTheme();
+    const { t } = useLocale();
+    const [formData, setFormData] = useState({
+        applicantName: '',
+        aadhaar: '',
+        phone: '',
+        district: '',
+        state: '',
+        actType: '',
+        incidentDate: '',
+        amount: '',
         priority: 'medium',
-        assignedOfficer: 'Officer Verma',
-        documents: 5,
-        lastUpdate: '2024-03-14 10:15'
-    },
-    {
-        id: 'APP-2024-001236',
-        applicantName: 'Amit Verma',
-        aadhaar: '****-****-9012',
-        phone: '+91 98765-43212',
-        district: 'Jaipur',
-        state: 'Rajasthan',
-        actType: 'PCR Act',
-        incidentDate: '2024-01-25',
-        applicationDate: '2024-02-05',
-        status: 'approved',
-        amount: 45000,
-        priority: 'medium',
-        assignedOfficer: 'Officer Kapoor',
-        documents: 6,
-        lastUpdate: '2024-03-10 16:45'
-    },
-    {
-        id: 'APP-2024-001237',
-        applicantName: 'Sunita Devi',
-        aadhaar: '****-****-3456',
-        phone: '+91 98765-43213',
-        district: 'Bhopal',
-        state: 'Madhya Pradesh',
-        actType: 'PoA Act',
-        incidentDate: '2024-02-28',
-        applicationDate: '2024-03-05',
-        status: 'documents-required',
-        amount: 38000,
-        priority: 'high',
-        assignedOfficer: 'Officer Gupta',
-        documents: 3,
-        lastUpdate: '2024-03-13 09:20'
-    },
-    {
-        id: 'APP-2024-001238',
-        applicantName: 'Ramesh Yadav',
-        aadhaar: '****-****-7890',
-        phone: '+91 98765-43214',
-        district: 'Ranchi',
-        state: 'Jharkhand',
-        actType: 'PCR Act',
-        incidentDate: '2024-03-01',
-        applicationDate: '2024-03-08',
-        status: 'rejected',
-        amount: 42000,
-        priority: 'low',
-        assignedOfficer: 'Officer Mishra',
-        documents: 4,
-        lastUpdate: '2024-03-12 11:30'
-    }
-];
+        assignedOfficer: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            const applicationsRef = collection(db, 'applications');
+            const newApplication = {
+                applicantName: formData.applicantName,
+                aadhaar: formData.aadhaar,
+                phone: formData.phone,
+                district: formData.district,
+                state: formData.state,
+                actType: formData.actType,
+                incidentDate: formData.incidentDate,
+                applicationDate: new Date().toISOString(),
+                status: 'pending',
+                amount: parseFloat(formData.amount) || 0,
+                priority: formData.priority,
+                assignedOfficer: formData.assignedOfficer,
+                documents: 0,
+                lastUpdate: new Date().toISOString()
+            };
+
+            await addDoc(applicationsRef, newApplication);
+            onCancel(); // Hide form after successful creation
+        } catch (error) {
+            console.error('Error creating application:', error);
+            // You could add error handling here
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Applicant Information */}
+            <div>
+                <h3 className="text-lg font-semibold theme-text-primary mb-4">Applicant Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Full Name *</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.applicantName}
+                            onChange={(e) => handleInputChange('applicantName', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter applicant's full name"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Phone Number *</label>
+                        <input
+                            type="tel"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter phone number"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Aadhaar Number *</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.aadhaar}
+                            onChange={(e) => handleInputChange('aadhaar', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter 12-digit Aadhaar number"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">District *</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.district}
+                            onChange={(e) => handleInputChange('district', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter district"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">State *</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.state}
+                            onChange={(e) => handleInputChange('state', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter state"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Application Details */}
+            <div>
+                <h3 className="text-lg font-semibold theme-text-primary mb-4">Application Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Act Type *</label>
+                        <select
+                            required
+                            value={formData.actType}
+                            onChange={(e) => handleInputChange('actType', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        >
+                            <option value="">Select Act Type</option>
+                            <option value="PCR Act">PCR Act</option>
+                            <option value="PoA Act">PoA Act</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Incident Date *</label>
+                        <input
+                            type="date"
+                            required
+                            value={formData.incidentDate}
+                            onChange={(e) => handleInputChange('incidentDate', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Relief Amount (₹) *</label>
+                        <input
+                            type="number"
+                            required
+                            min="0"
+                            step="0.01"
+                            value={formData.amount}
+                            onChange={(e) => handleInputChange('amount', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter relief amount"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Priority Level</label>
+                        <select
+                            value={formData.priority}
+                            onChange={(e) => handleInputChange('priority', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Assigned Officer</label>
+                        <input
+                            type="text"
+                            value={formData.assignedOfficer}
+                            onChange={(e) => handleInputChange('assignedOfficer', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            placeholder="Enter assigned officer name (optional)"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
+                <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onCancel}
+                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                    style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
+                >
+                    Cancel
+                </motion.button>
+                <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Creating...
+                        </>
+                    ) : (
+                        <>
+                            <Plus className="w-5 h-5" />
+                            Create Application
+                        </>
+                    )}
+                </motion.button>
+            </div>
+        </form>
+    );
+};
+
+// Application data type
+interface Application {
+    id: string;
+    applicantName: string;
+    aadhaar: string;
+    phone: string;
+    district: string;
+    state: string;
+    actType: string;
+    incidentDate: string;
+    applicationDate: string;
+    status: string;
+    amount: number;
+    priority: string;
+    assignedOfficer: string;
+    documents: number;
+    lastUpdate: string;
+}
+
+// Function to export applications data as CSV
+const exportApplicationsData = (applications: Application[]) => {
+    const headers = [
+        'Application ID',
+        'Applicant Name',
+        'Aadhaar Number',
+        'Phone Number',
+        'District',
+        'State',
+        'Act Type',
+        'Incident Date',
+        'Application Date',
+        'Status',
+        'Amount (INR)',
+        'Priority',
+        'Assigned Officer',
+        'Documents Count',
+        'Last Update'
+    ];
+
+    const rows = applications.map(app => [
+        app.id,
+        app.applicantName,
+        app.aadhaar,
+        app.phone,
+        app.district,
+        app.state,
+        app.actType,
+        app.incidentDate,
+        app.applicationDate,
+        app.status,
+        app.amount.toString(),
+        app.priority,
+        app.assignedOfficer,
+        app.documents.toString(),
+        app.lastUpdate
+    ]);
+
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `applications_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// Function to export applications data as PDF
+const exportApplicationsPDF = (applications: Application[]) => {
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(20);
+    doc.text('Applications Report', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 32);
+    doc.text(`Total Applications: ${applications.length}`, 14, 38);
+
+    // Prepare table data
+    const headers = [
+        ['Application ID', 'Applicant Name', 'District', 'Act Type', 'Amount', 'Status', 'Priority']
+    ];
+
+    const rows = applications.map(app => [
+        app.id,
+        app.applicantName,
+        `${app.district}, ${app.state}`,
+        app.actType,
+        `₹${app.amount.toLocaleString('en-IN')}`,
+        app.status.replace('-', ' '),
+        app.priority
+    ]);
+
+    // Add table
+    autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: 45,
+        styles: {
+            fontSize: 8,
+            cellPadding: 3,
+        },
+        headStyles: {
+            fillColor: [59, 130, 246],
+            textColor: 255,
+            fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+            fillColor: [248, 250, 252],
+        },
+        margin: { top: 45 },
+    });
+
+    // Save the PDF
+    doc.save(`applications_report_${new Date().toISOString().split('T')[0]}.pdf`);
+};
 
 const ApplicationsPage = () => {
     const { theme } = useTheme();
@@ -128,14 +385,18 @@ const ApplicationsPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedApplication, setSelectedApplication] = useState<typeof mockApplications[0] | null>(null);
+    const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
     const [isMobile, setIsMobile] = useState<boolean>(false);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [applications, setApplications] = useState<Application[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Filter and sort applications
     const filteredApplications = useMemo(() => {
-        let filtered = [...mockApplications];
+        let filtered = [...applications];
 
         // Search filter
         if (searchQuery) {
@@ -163,8 +424,8 @@ const ApplicationsPage = () => {
 
         // Sort
         filtered.sort((a, b) => {
-            const aVal = a[sortBy as keyof typeof a];
-            const bVal = b[sortBy as keyof typeof b];
+            const aVal = a[sortBy as keyof Application];
+            const bVal = b[sortBy as keyof Application];
 
             if (sortOrder === 'asc') {
                 return aVal > bVal ? 1 : -1;
@@ -174,7 +435,7 @@ const ApplicationsPage = () => {
         });
 
         return filtered;
-    }, [searchQuery, statusFilter, actTypeFilter, priorityFilter, sortBy, sortOrder]);
+    }, [applications, searchQuery, statusFilter, actTypeFilter, priorityFilter, sortBy, sortOrder]);
 
     // Pagination
     const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
@@ -186,14 +447,14 @@ const ApplicationsPage = () => {
     // Statistics
     const stats = useMemo(() => {
         return {
-            total: mockApplications.length,
-            pending: mockApplications.filter(a => a.status === 'pending').length,
-            inReview: mockApplications.filter(a => a.status === 'in-review').length,
-            approved: mockApplications.filter(a => a.status === 'approved').length,
-            rejected: mockApplications.filter(a => a.status === 'rejected').length,
-            documentsRequired: mockApplications.filter(a => a.status === 'documents-required').length
+            total: applications.length,
+            pending: applications.filter(a => a.status === 'pending').length,
+            inReview: applications.filter(a => a.status === 'in-review').length,
+            approved: applications.filter(a => a.status === 'approved').length,
+            rejected: applications.filter(a => a.status === 'rejected').length,
+            documentsRequired: applications.filter(a => a.status === 'documents-required').length
         };
-    }, []);
+    }, [applications]);
 
     // Detect small screens and adjust UI defaults for better mobile UX
     useEffect(() => {
@@ -213,10 +474,42 @@ const ApplicationsPage = () => {
         };
     }, []);
 
-    // Prefer cards view on mobile for readability
+    // Fetch applications from Firebase
     useEffect(() => {
-        if (isMobile) setViewMode('cards');
-    }, [isMobile]);
+        const applicationsRef = collection(db, 'applications');
+        const q = query(applicationsRef, orderBy('applicationDate', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const apps: Application[] = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                apps.push({
+                    id: doc.id,
+                    applicantName: data.applicantName || '',
+                    aadhaar: data.aadhaar || '',
+                    phone: data.phone || '',
+                    district: data.district || '',
+                    state: data.state || '',
+                    actType: data.actType || '',
+                    incidentDate: data.incidentDate || '',
+                    applicationDate: data.applicationDate || '',
+                    status: data.status || 'pending',
+                    amount: data.amount || 0,
+                    priority: data.priority || 'medium',
+                    assignedOfficer: data.assignedOfficer || '',
+                    documents: data.documents || 0,
+                    lastUpdate: data.lastUpdate || ''
+                });
+            });
+            setApplications(apps);
+            setLoading(false);
+        }, (error) => {
+            console.error('Error fetching applications:', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     // Three.js canvas background (particles + connecting lines) — theme-aware
     useEffect(() => {
@@ -236,7 +529,7 @@ const ApplicationsPage = () => {
             camera.position.z = 5;
             renderer.setClearColor(0x000000, 0);
 
-            // Theme-aware colors
+            // Theme-aware colors - subtle
             let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
             let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
             try {
@@ -248,7 +541,7 @@ const ApplicationsPage = () => {
             } catch { }
 
             const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 1000;
+            const particlesCount = 200; // Reduced for subtlety
             const posArray = new Float32Array(particlesCount * 3);
 
             for (let i = 0; i < particlesCount * 3; i++) {
@@ -258,41 +551,41 @@ const ApplicationsPage = () => {
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
             const particlesMaterial = new THREE.PointsMaterial({
-                size: theme === 'dark' ? 0.012 : 0.008,
+                size: theme === 'dark' ? 0.005 : 0.003, // Smaller
                 color: particleColor,
                 transparent: true,
-                opacity: theme === 'dark' ? 0.6 : 0.4,
+                opacity: theme === 'dark' ? 0.3 : 0.2, // Less opacity
                 blending: THREE.AdditiveBlending
             });
 
             const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
             scene.add(particlesMesh);
 
-            // Create connecting lines
-            const linesGeometry = new THREE.BufferGeometry();
-            const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
+            // Remove connecting lines for cleaner look
+            // const linesGeometry = new THREE.BufferGeometry();
+            // const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
 
-            const linesPositions: number[] = [];
-            for (let i = 0; i < 80; i++) {
-                const x1 = (Math.random() - 0.5) * 8;
-                const y1 = (Math.random() - 0.5) * 8;
-                const z1 = (Math.random() - 0.5) * 8;
-                const x2 = x1 + (Math.random() - 0.5) * 1.5;
-                const y2 = y1 + (Math.random() - 0.5) * 1.5;
-                const z2 = z1 + (Math.random() - 0.5) * 1.5;
-                linesPositions.push(x1, y1, z1, x2, y2, z2);
-            }
+            // const linesPositions: number[] = [];
+            // for (let i = 0; i < 80; i++) {
+            //     const x1 = (Math.random() - 0.5) * 8;
+            //     const y1 = (Math.random() - 0.5) * 8;
+            //     const z1 = (Math.random() - 0.5) * 8;
+            //     const x2 = x1 + (Math.random() - 0.5) * 1.5;
+            //     const y2 = y1 + (Math.random() - 0.5) * 1.5;
+            //     const z2 = z1 + (Math.random() - 0.5) * 1.5;
+            //     linesPositions.push(x1, y1, z1, x2, y2, z2);
+            // }
 
-            linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-            const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-            scene.add(linesMesh);
+            // linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
+            // const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
+            // scene.add(linesMesh);
 
             let animationId: number | null = null;
             const animate = () => {
                 animationId = requestAnimationFrame(animate);
-                particlesMesh.rotation.y += 0.0003;
-                particlesMesh.rotation.x += 0.0001;
-                linesMesh.rotation.y -= 0.0002;
+                particlesMesh.rotation.y += 0.0001; // Slower
+                particlesMesh.rotation.x += 0.00005;
+                // linesMesh.rotation.y -= 0.0002;
                 renderer.render(scene, camera);
             };
 
@@ -313,8 +606,8 @@ const ApplicationsPage = () => {
                 renderer.dispose();
                 particlesGeometry.dispose();
                 particlesMaterial.dispose();
-                linesGeometry.dispose();
-                linesMaterial.dispose();
+                // linesGeometry.dispose();
+                // linesMaterial.dispose();
             };
         })();
     }, [theme]);
@@ -506,46 +799,37 @@ const ApplicationsPage = () => {
                     </p>
                 </div>
             </div>
-            {/* Real-Time Monitoring Header */}
+            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden"
+                className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
             >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl -z-10" />
-                
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                            <motion.div
-                                className="w-3 h-3 rounded-full bg-green-500"
-                                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                            />
-                            <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_tracking')} • {filteredApplications.length} {t('extracted.active_applications')}</span>
-                        </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+                        <h1 className="text-3xl font-bold theme-text-primary mb-2">
                             {t('extracted.application')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
                         </h1>
-                        <p className="theme-text-secondary text-sm sm:text-base">
+                        <p className="theme-text-secondary text-base">
                             {t('extracted.realtime_application_tracking_description')}
                         </p>
                     </div>
                     
-                    <div className="flex flex-wrap gap-3 no-print">
+                    <div className="flex flex-wrap gap-3">
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border theme-border-glass flex items-center gap-2 theme-text-primary shadow-md text-sm"
-                            onClick={() => window.print()}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowExportModal(true)}
+                            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
                         >
                             <Download className="w-4 h-4" />
                             <span>{t('extracted.export_data')}</span>
                         </motion.button>
                         <motion.button
-                            whileHover={{ scale: 1.05, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-4 py-2.5 accent-gradient text-white rounded-xl flex items-center gap-2 shadow-lg text-sm font-semibold"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowNewApplicationForm(true)}
+                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
                         >
                             <Plus className="w-4 h-4" />
                             <span>{t('extracted.new_application')}</span>
@@ -554,459 +838,406 @@ const ApplicationsPage = () => {
                 </div>
             </motion.div>
 
-            {/* Innovative Chip-Style Statistics with Micro-animations */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"
-            >
-                {[
-                    { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText, status: 'active', borderColor: 'border-blue-500/30' },
-                    { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, status: 'warning', borderColor: 'border-amber-500/30' },
-                    { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye, status: 'processing', borderColor: 'border-purple-500/30' },
-                    { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check, status: 'success', borderColor: 'border-green-500/30' },
-                    { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, status: 'error', borderColor: 'border-red-500/30' },
-                    { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle, status: 'alert', borderColor: 'border-indigo-500/30' }
-                ].map((stat, idx) => (
+            {/* Main Content */}
+            {showNewApplicationForm ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
+                >
+                    <div className="p-6 border-b theme-border-glass">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.new_application')}</h2>
+                                <p className="theme-text-muted">Create a new relief application</p>
+                            </div>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowNewApplicationForm(false)}
+                                className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </motion.button>
+                        </div>
+                    </div>
+                    <NewApplicationForm onCancel={() => setShowNewApplicationForm(false)} />
+                </motion.div>
+            ) : (
+                <>
+                    {/* Statistics Cards */}
                     <motion.div
-                        key={idx}
-                        whileHover={{ y: -6, scale: 1.05, rotateY: 5 }}
-                        className={`theme-bg-card theme-border-glass border-2 ${stat.borderColor} rounded-2xl p-4 backdrop-blur-xl relative overflow-hidden group cursor-pointer`}
-                        style={{ transformStyle: 'preserve-3d' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
                     >
-                        {/* Diagonal Stripe Pattern */}
-                        <div className="absolute inset-0 opacity-5">
-                          <div className="absolute inset-0" style={{
-                            backgroundImage: `repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)`,
-                            backgroundSize: '10px 10px'
-                          }} className={stat.status === 'success' ? 'text-green-500' : stat.status === 'warning' ? 'text-amber-500' : stat.status === 'error' ? 'text-red-500' : 'text-blue-500'} />
-                        </div>
+                        {[
+                            { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText, borderColor: 'border-blue-200 dark:border-blue-800' },
+                            { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, borderColor: 'border-amber-200 dark:border-amber-800' },
+                            { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye, borderColor: 'border-purple-200 dark:border-purple-800' },
+                            { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check, borderColor: 'border-green-200 dark:border-green-800' },
+                            { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, borderColor: 'border-red-200 dark:border-red-800' },
+                            { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle, borderColor: 'border-indigo-200 dark:border-indigo-800' }
+                        ].map((stat, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className={`theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                                        <stat.icon className="w-5 h-5 text-white" />
+                                    </div>
+                                    <span className="text-lg font-bold theme-text-primary">{stat.value}</span>
+                                </div>
+                                <p className="text-sm font-medium theme-text-muted">{t(stat.labelKey)}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
 
-                        {/* Floating Badge with Count */}
-                        <motion.div
-                          className={`absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white dark:border-gray-900`}
-                          animate={{ rotate: [0, 360] }}
-                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        >
-                          {stat.value}
-                        </motion.div>
-
-                        {/* Animated Icon with Glow */}
-                        <motion.div 
-                          className="relative w-12 h-12 mb-3"
-                          animate={{ rotateY: [0, 360] }}
-                          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                        >
-                          <div className={`w-full h-full rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
-                            <stat.icon className="w-6 h-6 text-white relative z-10" />
-                          </div>
-                          {/* Pulsing Glow Ring */}
-                          <motion.div
-                            className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.color}`}
-                            animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                        </motion.div>
-
-                        {/* Value Display */}
-                        <motion.p 
-                          className="text-3xl font-black theme-text-primary mb-1"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", delay: idx * 0.05 }}
-                        >
-                          {stat.value}
-                        </motion.p>
-                        
-                        {/* Label with Truncation */}
-                        <p className="text-xs font-semibold theme-text-muted leading-tight truncate" title={t(stat.labelKey)}>
-                          {t(stat.labelKey)}
-                        </p>
-
-                        {/* Circular Progress Indicator */}
-                        <div className="mt-3 relative h-2">
-                          <div className="absolute inset-0 flex gap-0.5">
-                            {[...Array(8)].map((_, i) => (
-                              <motion.div
-                                key={i}
-                                className="flex-1 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden"
-                                initial={{ opacity: 0.3 }}
-                              >
-                                <motion.div
-                                  className={`h-full bg-gradient-to-r ${stat.color}`}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: i < Math.ceil((stat.value / stats.total) * 8) ? '100%' : '0%' }}
-                                  transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
+                    {/* Filters and Search */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm"
+                    >
+                        <div className="flex flex-col lg:flex-row gap-4">
+                            {/* Search */}
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
+                                <input
+                                    type="text"
+                                    placeholder={t('applications.search')}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                                 />
-                              </motion.div>
-                            ))}
-                          </div>
+                            </div>
+
+                            {/* View Mode Toggle */}
+                            <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`px-4 py-2 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
+                                >
+                                    {t('applications.viewMode.table')}
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('cards')}
+                                    className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
+                                >
+                                    {t('applications.viewMode.cards')}
+                                </button>
+                            </div>
+
+                            {/* Filter Toggle */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span>{t('applications.filters')}</span>
+                                {(statusFilter !== 'all' || actTypeFilter !== 'all' || priorityFilter !== 'all') && (
+                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                )}
+                            </motion.button>
                         </div>
 
-                        {/* Hover Highlight */}
-                        <motion.div
-                          className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-15 rounded-2xl transition-opacity duration-300`}
-                        />
-                      </motion.div>
-                ))}
-            </motion.div>
+                        {/* Expanded Filters */}
+                        <AnimatePresence>
+                            {showFilters && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
+                                        <div>
+                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.status')}</label>
+                                            <select
+                                                value={statusFilter}
+                                                onChange={(e) => setStatusFilter(e.target.value)}
+                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                            >
+                                                <option value="all">{t('applications.filterLabels.allStatuses')}</option>
+                                                <option value="pending">{t('applications.stats.pending')}</option>
+                                                <option value="in-review">{t('applications.stats.inReview')}</option>
+                                                <option value="approved">{t('applications.stats.approved')}</option>
+                                                <option value="rejected">{t('applications.stats.rejected')}</option>
+                                                <option value="documents-required">{t('applications.stats.docsRequired')}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.actType')}</label>
+                                            <select
+                                                value={actTypeFilter}
+                                                onChange={(e) => setActTypeFilter(e.target.value)}
+                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                            >
+                                                <option value="all">{t('applications.filterLabels.allActs')}</option>
+                                                <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                                                <option value="PoA Act">{t('extracted.poa_act')}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.priority')}</label>
+                                            <select
+                                                value={priorityFilter}
+                                                onChange={(e) => setPriorityFilter(e.target.value)}
+                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                            >
+                                                <option value="all">{t('applications.filterLabels.allPriorities')}</option>
+                                                <option value="high">{t('extracted.high')}</option>
+                                                <option value="medium">{t('extracted.medium')}</option>
+                                                <option value="low">{t('extracted.low')}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.div>
 
-            {/* Filters and Search */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl no-print"
-            >
-                <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-                        <input
-                            type="text"
-                            placeholder={t('applications.search')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                        />
-                    </div>
-
-                    {/* View Mode Toggle */}
-                    <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1 sm:p-2">
-                        <button
-                            onClick={() => setViewMode('table')}
-                            className={`px-3 py-1.5 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-                        >
-                            {t('applications.viewMode.table')}
-                        </button>
-                        <button
-                            onClick={() => setViewMode('cards')}
-                            className={`px-3 py-1.5 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted'}`}
-                        >
-                            {t('applications.viewMode.cards')}
-                        </button>
-                    </div>
-
-                    {/* Filter Toggle */}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`px-4 py-2.5 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'}`}
-                        style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
+                    {/* Applications List */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
                     >
-                        <Filter className="w-4 h-4" />
-                        <span style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filters')}</span>
-                        {(statusFilter !== 'all' || actTypeFilter !== 'all' || priorityFilter !== 'all') && (
-                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                        )}
-                    </motion.button>
-                </div>
-
-                {/* Expanded Filters */}
-                <AnimatePresence>
-                    {showFilters && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                                <div>
-                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.status')}</label>
-                                    <select
-                                        value={statusFilter}
-                                        onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                                    >
-                                        <option value="all">{t('applications.filterLabels.allStatuses')}</option>
-                                        <option value="pending">{t('applications.stats.pending')}</option>
-                                        <option value="in-review">{t('applications.stats.inReview')}</option>
-                                        <option value="approved">{t('applications.stats.approved')}</option>
-                                        <option value="rejected">{t('applications.stats.rejected')}</option>
-                                        <option value="documents-required">{t('applications.stats.docsRequired')}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.actType')}</label>
-                                    <select
-                                        value={actTypeFilter}
-                                        onChange={(e) => setActTypeFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                                    >
-                                        <option value="all">{t('applications.filterLabels.allActs')}</option>
-                                        <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                                        <option value="PoA Act">{t('extracted.poa_act')}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm theme-text-muted mb-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('applications.filterLabels.priority')}</label>
-                                    <select
-                                        value={priorityFilter}
-                                        onChange={(e) => setPriorityFilter(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                                    >
-                                        <option value="all">{t('applications.filterLabels.allPriorities')}</option>
-                                        <option value="high">{t('extracted.high')}</option>
-                                        <option value="medium">{t('extracted.medium')}</option>
-                                        <option value="low">{t('extracted.low')}</option>
-                                    </select>
+                        {loading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <p className="theme-text-secondary">{t('extracted.loading_applications')}</p>
                                 </div>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+                        ) : viewMode === 'table' ? (
+                            <div className="w-full">
+                                {/* Desktop Table */}
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <table className="w-full min-w-[700px]">
+                                        <thead className="border-b theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')}</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')}</th>
+                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')}</th>
+                                                <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')}</th>
+                                                <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')}</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')}</th>
+                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')}</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y theme-border-glass">
+                                            {paginatedApplications.map((app, idx) => (
+                                                <motion.tr
+                                                    key={app.id}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.02 }}
+                                                    className={`${idx % 2 === 0 ? 'theme-bg-glass dark:bg-gray-900/30' : 'theme-bg-glass dark:bg-gray-800/20'} hover:bg-slate-100/60 dark:hover:bg-gray-800/30 transition-colors`}
+                                                >
+                                                    <td className="px-6 py-4 text-sm font-medium theme-text-primary">{app.id}</td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                                                                {app.applicantName.split(' ').map(n => n[0]).join('')}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
+                                                                <p className="text-xs theme-text-muted">{app.phone}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="hidden sm:table-cell px-6 py-4">
+                                                        <p className="text-sm theme-text-primary">{app.district}</p>
+                                                        <p className="text-xs theme-text-muted">{app.state}</p>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-6 py-4">
+                                                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary">{app.actType}</span>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-6 py-4 text-sm font-semibold theme-text-primary">
+                                                        {formatCurrency(app.amount)}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
+                                                            {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3" /> })()}
+                                                            {app.status.replace('-', ' ')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="hidden sm:table-cell px-6 py-4">
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
+                                                            {app.priority}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex gap-2">
+                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
+                                                                <Eye className="w-4 h-4" />
+                                                            </button>
+                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors">
+                                                                <Edit className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
 
-            {/* Applications List */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
-            >
-                {viewMode === 'table' ? (
-                    <div className="w-full">
-                        {/* Desktop Table */}
-                        <div className="hidden sm:block overflow-x-auto print:block">
-                            <table className="w-full min-w-[700px] border-collapse print:min-w-full">
-                                <thead className="border-b theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')} </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')} </th>
-                                        <th className="hidden sm:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
-                                        <th className="hidden md:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                                        <th className="hidden md:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
-                                        <th className="hidden sm:table-cell print:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')} </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary no-print">{t('extracted.actions')} </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y theme-border-glass">
-                                    {paginatedApplications.map((app, idx) => (
-                                        <motion.tr
+                                {/* Mobile Card View */}
+                                <div className="sm:hidden grid grid-cols-1 gap-4 p-4">
+                                    {paginatedApplications.map((app) => (
+                                        <motion.div
                                             key={app.id}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                                            className="theme-bg-glass theme-border-glass border rounded-lg p-4"
                                         >
-                                            <td className="px-4 py-2 text-sm font-medium theme-text-primary">{app.id}</td>
-                                            <td className="px-4 py-2 flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                                                    {app.applicantName.split(' ').map(n => n[0]).join('')}
-                                                </div>
+                                            <div className="flex items-center justify-between mb-3">
                                                 <div>
                                                     <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
                                                     <p className="text-xs theme-text-muted">{app.phone}</p>
                                                 </div>
-                                            </td>
-                                            <td className="hidden sm:table-cell print:table-cell px-4 py-2">
-                                                <p className="text-sm theme-text-primary">{app.district}</p>
-                                                <p className="text-xs theme-text-muted">{app.state}</p>
-                                            </td>
-                                            <td className="hidden md:table-cell print:table-cell px-4 py-2">
-                                                <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary" style={{ background: theme === 'light' ? 'rgba(241, 245, 249, 0.8)' : undefined }}>{app.actType}</span>
-                                            </td>
-                                            <td className="hidden md:table-cell print:table-cell px-4 py-2 text-sm font-semibold theme-text-primary">
-                                                {formatCurrency(app.amount)}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                                    {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3" /> })()}
-                                                    {app.status.replace('-', ' ')}
-                                                </span>
-                                            </td>
-                                            <td className="hidden sm:table-cell print:table-cell px-4 py-2">
-                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
                                                     {app.priority}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-2 flex gap-2 no-print">
-                                                <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)} />
-                                                <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
-                                            </td>
-                                        </motion.tr>
+                                            </div>
+
+                                            <div className="space-y-1 text-sm theme-text-secondary mb-3">
+                                                <div><strong>ID:</strong> {app.id}</div>
+                                                <div><strong>{t('extracted.district_1')}</strong> {app.district}, {app.state}</div>
+                                                <div><strong>{t('extracted.act_type_1')}</strong> {app.actType}</div>
+                                                <div><strong>{t('extracted.amount_1')}</strong> {formatCurrency(app.amount)}</div>
+                                                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
+                                                    {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3 mr-1" /> })()}
+                                                    {app.status.replace('-', ' ')}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </motion.div>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Mobile Card View */}
-                        <div className="sm:hidden grid grid-cols-1 gap-4">
-                            {paginatedApplications.map((app) => (
-                                <motion.div
-                                    key={app.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="theme-bg-glass theme-border-glass border rounded-xl p-4"
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div>
-                                            <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
-                                            <p className="text-xs theme-text-muted">{app.phone}</p>
-                                        </div>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
-                                            {app.priority}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-1 text-sm theme-text-secondary">
-                                        <div><strong>ID:</strong> {app.id}</div>
-                                        <div><strong>{t('extracted.district_1')} </strong> {app.district}, {app.state}</div>
-                                        <div><strong>{t('extracted.act_type_1')} </strong> {app.actType}</div>
-                                        <div><strong>{t('extracted.amount_1')} </strong> {formatCurrency(app.amount)}</div>
-                                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                            {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3 mr-1" /> })()}
-                                            {app.status.replace('-', ' ')}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 mt-2">
-                                        <Eye className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)} />
-                                        <Edit className="w-4 h-4 cursor-pointer theme-text-muted hover:text-blue-500 transition-colors" />
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                        {paginatedApplications.map((app, idx) => (
-                            <motion.div
-                                key={app.id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.05 }}
-                                whileHover={{ y: -4 }}
-                                className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
-                                onClick={() => setSelectedApplication(app)}
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                                            {app.applicantName.split(' ').map(n => n[0]).join('')}
-                                        </div>
-                                        <div>
-                                            <p className="font-medium theme-text-primary">{app.applicantName}</p>
-                                            <p className="text-xs theme-text-muted">{app.id}</p>
-                                        </div>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
-                                        {app.priority}
-                                    </span>
                                 </div>
-                                <div className="space-y-2 mb-3">
-                                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                        <MapPin className="w-4 h-4" />
-                                        <span>{app.district}, {app.state}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                        <FileText className="w-4 h-4" />
-                                        <span>{app.actType}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                        <DollarSign className="w-4 h-4" />
-                                        <span className="font-semibold">{formatCurrency(app.amount)}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                        {(() => {
-                                            const Icon = getStatusIcon(app.status);
-                                            return <Icon className="w-3 h-3" />;
-                                        })()}
-                                        {app.status.replace('-', ' ')}
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); }}>
-                                            <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
-                                        </button>
-                                        <button className="p-1.5 rounded-lg hover:theme-bg-card transition-colors">
-                                            <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
+                            </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass no-print" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : undefined }}>
-                    <p className="text-sm theme-text-muted">
-                        {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredApplications.length)} {t('extracted.of')} {filteredApplications.length}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        {isMobile ? (
-                            <>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage((p: number) => p - 1)}
-                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                                >
-                                    {t('extracted.prev')}
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage((p: number) => p + 1)}
-                                    className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                                >
-                                    {t('extracted.next')}
-                                </motion.button>
-                            </>
                         ) : (
-                            <>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                                {paginatedApplications.map((app, idx) => (
+                                    <motion.div
+                                        key={app.id}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: idx * 0.02 }}
+                                        whileHover={{ y: -2 }}
+                                        className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+                                        onClick={() => setSelectedApplication(app)}
+                                    >
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full accent-gradient flex items-center justify-center text-white font-bold">
+                                                    {app.applicantName.split(' ').map(n => n[0]).join('')}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium theme-text-primary">{app.applicantName}</p>
+                                                    <p className="text-xs theme-text-muted">{app.id}</p>
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
+                                                {app.priority}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-2 mb-3">
+                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                                                <MapPin className="w-4 h-4" />
+                                                <span>{app.district}, {app.state}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                                                <FileText className="w-4 h-4" />
+                                                <span>{app.actType}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                                                <DollarSign className="w-4 h-4" />
+                                                <span className="font-semibold">{formatCurrency(app.amount)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
+                                                {(() => {
+                                                    const Icon = getStatusIcon(app.status);
+                                                    return <Icon className="w-3 h-3" />;
+                                                })()}
+                                                {app.status.replace('-', ' ')}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); }}>
+                                                    <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
+                                                </button>
+                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors">
+                                                    <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between px-6 py-4 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
+                            <p className="text-sm theme-text-muted">
+                                {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredApplications.length)} {t('extracted.of')} {filteredApplications.length}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
                                     disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage((p: number) => p - 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                                    onClick={() => setCurrentPage((p) => p - 1)}
+                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
-                                </motion.button>
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                                    <motion.button
-                                        key={i}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setCurrentPage(i + 1)}
-                                        className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
-                                        style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
-                                    >
-                                        {i + 1}
-                                    </motion.button>
-                                ))}
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                </button>
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    const pageNum = i + Math.max(1, currentPage - 2);
+                                    if (pageNum > totalPages) return null;
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`px-3 py-1.5 rounded-lg ${currentPage === pageNum ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700'} transition-colors`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                                <button
                                     disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage((p: number) => p + 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                                    onClick={() => setCurrentPage((p) => p + 1)}
+                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
                                 >
                                     <ChevronRight className="w-4 h-4" />
-                                </motion.button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </motion.div>
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </>
+            )}
 
             {/* Application Detail Modal */}
             <AnimatePresence>
@@ -1216,6 +1447,117 @@ const ApplicationsPage = () => {
                                     </motion.button>
                                 </div>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Export Modal */}
+            <AnimatePresence>
+                {showExportModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowExportModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="export-modal theme-bg-card theme-border-glass border rounded-2xl max-w-md w-full p-6"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                                    <Download className="w-8 h-8 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-bold theme-text-primary mb-2">Export Applications</h2>
+                                <p className="theme-text-secondary">Choose your preferred export format</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        exportApplicationsData(filteredApplications);
+                                        setShowExportModal(false);
+                                    }}
+                                    className="w-full p-4 theme-bg-glass theme-border-glass border rounded-xl flex items-center gap-4 hover:shadow-md transition-all"
+                                >
+                                    <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-green-600" />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <h3 className="font-semibold theme-text-primary">Export as CSV</h3>
+                                        <p className="text-sm theme-text-muted">Spreadsheet format with all application details</p>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 theme-text-muted" />
+                                </motion.button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        exportApplicationsPDF(filteredApplications);
+                                        setShowExportModal(false);
+                                    }}
+                                    className="w-full p-4 theme-bg-glass theme-border-glass border rounded-xl flex items-center gap-4 hover:shadow-md transition-all"
+                                >
+                                    <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-red-600" />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <h3 className="font-semibold theme-text-primary">Export as PDF</h3>
+                                        <p className="text-sm theme-text-muted">Professional report format</p>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 theme-text-muted" />
+                                </motion.button>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t theme-border-glass">
+                                <p className="text-xs theme-text-muted text-center">
+                                    {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''} will be exported
+                                </p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* New Application Modal */}
+            <AnimatePresence>
+                {showNewApplicationModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowNewApplicationModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="theme-bg-card theme-border-glass border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}>
+                                <div>
+                                    <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.new_application')}</h2>
+                                    <p className="theme-text-muted">Create a new relief application</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowNewApplicationModal(false)}
+                                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <NewApplicationForm onClose={() => setShowNewApplicationModal(false)} />
                         </motion.div>
                     </motion.div>
                 )}
