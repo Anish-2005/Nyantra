@@ -47,6 +47,7 @@ const Dashboard = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const mousePositionRef = useRef({ x: 0, y: 0 });
+  const notifButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Scroll progress for progress bar
   const { scrollYProgress } = useScroll();

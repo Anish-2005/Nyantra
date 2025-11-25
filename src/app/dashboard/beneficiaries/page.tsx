@@ -12,7 +12,7 @@ import {
   Shield, Award, Heart, Scale, BadgeCheck,
   Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
   Activity, Target, Globe, Layers, Star,
-  CheckCircle, Tag, Grid3X3, Layout
+  CheckCircle, Tag
 } from 'lucide-react';
 
 // Mock data for beneficiaries
@@ -636,341 +636,56 @@ const BeneficiariesPage = () => {
         ))}
       </motion.div>
 
-      {/* Premium Financial Dashboard Cards */}
+      {/* Financial Overview Cards */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
       >
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ y: -4, scale: 1.02 }}
-          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
-        >
-          {/* Animated Background Gradient */}
+        {[
+          {
+            labelKey: 'extracted.total_relief_amount',
+            value: formatCurrency(stats.totalAmount),
+            color: 'from-green-500 to-emerald-500',
+            icon: DollarSign,
+            subtitle: 'Disbursed +12.5% this month'
+          },
+          {
+            labelKey: 'extracted.pcr_act_disbursements',
+            value: formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + b.reliefAmount, 0)),
+            color: 'from-blue-500 to-cyan-500',
+            icon: Scale,
+            subtitle: `${mockBeneficiaries.filter(b => b.actType === 'PCR Act').length} beneficiaries • 70% success rate`
+          },
+          {
+            labelKey: 'extracted.poa_act_disbursements',
+            value: formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + b.reliefAmount, 0)),
+            color: 'from-purple-500 to-pink-500',
+            icon: Heart,
+            subtitle: `${mockBeneficiaries.filter(b => b.actType === 'PoA Act').length} beneficiaries • Verified 70%`
+          }
+        ].map((card, idx) => (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent"
-            animate={{ 
-              backgroundPosition: ['0% 0%', '100% 100%'],
-            }}
-            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
-            style={{ backgroundSize: '200% 200%' }}
-          />
-          
-          {/* Floating Particles */}
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-green-500/20 rounded-full"
-              animate={{
-                x: [0, 100, 0],
-                y: [0, -50, 0],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                delay: i * 1.5
-              }}
-              style={{ left: `${20 + i * 30}%`, top: '50%' }}
-            />
-          ))}
-
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <motion.div 
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-2xl"
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <DollarSign className="w-8 h-8 text-white" />
-              </motion.div>
-              
-              {/* Live Update Indicator */}
-              <motion.div
-                className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 rounded-full"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <motion.div 
-                  className="w-2 h-2 bg-green-500 rounded-full"
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <span className="text-xs font-semibold text-green-600 dark:text-green-400">Live</span>
-              </motion.div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.total_relief_amount')}</p>
-              <motion.p 
-                className="text-4xl font-black theme-text-primary"
-                initial={{ scale: 0.5 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.3 }}
-              >
-                {formatCurrency(stats.totalAmount)}
-              </motion.p>
-            </div>
-
-            {/* Animated Progress Bar with Gradient */}
-            <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 rounded-full relative"
-                initial={{ width: 0 }}
-                animate={{ width: '85%' }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
-              >
-                {/* Shine effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  animate={{ x: ['-100%', '100%'] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                />
-              </motion.div>
-            </div>
-
-            {/* Stats Footer */}
-            <div className="mt-4 flex items-center justify-between text-xs">
-              <span className="theme-text-muted font-medium">Disbursed</span>
-              <span className="font-bold text-green-600 dark:text-green-400">+12.5% this month</span>
-            </div>
-          </div>
-
-          {/* Corner Decoration */}
-          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors duration-500" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ y: -4, scale: 1.02 }}
-          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
-        >
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <svg className="w-full h-full">
-              <defs>
-                <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="10" r="1.5" fill="currentColor" className="text-blue-500" />
-                </pattern>
-              </defs>
-              <rect x="0" y="0" width="100%" height="100%" fill="url(#dots)" />
-            </svg>
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <motion.div 
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-2xl"
-                whileHover={{ rotate: -360, scale: 1.1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <Scale className="w-8 h-8 text-white" />
-              </motion.div>
-              
-              <div className="text-right">
-                <p className="text-xs theme-text-muted mb-1">PCR Act</p>
-                <p className="text-2xl font-black theme-text-primary">{mockBeneficiaries.filter(b => b.actType === 'PCR Act').length}</p>
+            key={idx}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + idx * 0.1 }}
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${card.color} flex items-center justify-center`}>
+                <card.icon className="w-5 h-5 text-white" />
               </div>
+              <span className="text-lg font-bold theme-text-primary">{card.value}</span>
             </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.pcr_act_disbursements')}</p>
-              <motion.p 
-                className="text-4xl font-black theme-text-primary"
-                initial={{ scale: 0.5 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.4 }}
-              >
-                {formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + b.reliefAmount, 0))}
-              </motion.p>
-            </div>
-
-            {/* Circular Progress */}
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16">
-                <svg className="transform -rotate-90 w-16 h-16">
-                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-gray-200 dark:text-gray-700" />
-                  <motion.circle 
-                    cx="32" cy="32" r="28" 
-                    stroke="url(#blueGradient)" 
-                    strokeWidth="4" 
-                    fill="none" 
-                    strokeLinecap="round"
-                    initial={{ strokeDashoffset: 175.93 }}
-                    animate={{ strokeDashoffset: 175.93 * 0.3 }}
-                    transition={{ duration: 1.5, delay: 0.5 }}
-                    style={{ strokeDasharray: 175.93 }}
-                  />
-                  <defs>
-                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#6366f1" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold theme-text-primary">70%</span>
-                </div>
-              </div>
-              
-              <div className="flex-1">
-                <p className="text-xs theme-text-muted">Success Rate</p>
-                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">Above Target</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute -top-8 -left-8 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors duration-500" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ y: -4, scale: 1.02 }}
-          className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group cursor-pointer"
-        >
-          {/* Wave Pattern Background */}
-          <div className="absolute inset-0 opacity-5">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0,50 Q25,25 50,50 T100,50 T150,50 T200,50 T250,50" stroke="currentColor" strokeWidth="2" fill="none" className="text-purple-500" />
-              <path d="M0,70 Q25,45 50,70 T100,70 T150,70 T200,70 T250,70" stroke="currentColor" strokeWidth="2" fill="none" className="text-purple-500" />
-            </svg>
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <motion.div 
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl"
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <Heart className="w-8 h-8 text-white" />
-              </motion.div>
-              
-              <div className="text-right">
-                <p className="text-xs theme-text-muted mb-1">PoA Act</p>
-                <p className="text-2xl font-black theme-text-primary">{mockBeneficiaries.filter(b => b.actType === 'PoA Act').length}</p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium theme-text-muted mb-2">{t('extracted.poa_act_disbursements')}</p>
-              <motion.p 
-                className="text-4xl font-black theme-text-primary"
-                initial={{ scale: 0.5 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.5 }}
-              >
-                {formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + b.reliefAmount, 0))}
-              </motion.p>
-            </div>
-
-            {/* Stacked Progress Bars */}
-            <div className="space-y-2">
-              {['Verified', 'Pending', 'Processing'].map((status, idx) => (
-                <div key={status} className="flex items-center gap-3">
-                  <span className="text-xs theme-text-muted w-20">{status}</span>
-                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${
-                        idx === 0 ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
-                        idx === 1 ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
-                        'bg-gradient-to-r from-blue-500 to-cyan-500'
-                      }`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${70 - idx * 20}%` }}
-                      transition={{ duration: 1, delay: 0.6 + idx * 0.1 }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold theme-text-primary w-8">{70 - idx * 20}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors duration-500" />
-        </motion.div>
+            <p className="text-sm font-medium theme-text-muted mb-1">{t(card.labelKey)}</p>
+            <p className="text-xs theme-text-secondary">{card.subtitle}</p>
+          </motion.div>
+        ))}
       </motion.div>
 
-      {/* Keep rest of Financial Overview section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="hidden"
-      >
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">{t('extracted.total_relief_amount')} </p>
-              <p className="text-2xl font-bold theme-text-primary">{formatCurrency(stats.totalAmount)}</p>
-            </div>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" 
-              style={{ width: `${(stats.disbursedAmount / stats.totalAmount) * 100}%` }}
-            ></div>
-          </div>
-            <div className="flex justify-between text-xs theme-text-muted mt-2">
-            <span>{t('extracted.disbursed')}: {formatCurrency(stats.disbursedAmount)}</span>
-            <span>{t('extracted.pending')}: {formatCurrency(stats.pendingAmount)}</span>
-          </div>
-        </motion.div>
 
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Scale className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">{t('extracted.pcr_act_beneficiaries')} </p>
-              <p className="text-2xl font-bold theme-text-primary">
-                {mockBeneficiaries.filter(b => b.actType === 'PCR Act').length}
-              </p>
-            </div>
-          </div>
-          <p className="text-sm theme-text-secondary">
-            {t('extracted.protection_of_civil_rights_act_cases')}
-          </p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm theme-text-muted">{t('extracted.poa_act_beneficiaries')} </p>
-              <p className="text-2xl font-bold theme-text-primary">
-                {mockBeneficiaries.filter(b => b.actType === 'PoA Act').length}
-              </p>
-            </div>
-          </div>
-          <p className="text-sm theme-text-secondary">
-            {t('extracted.prevention_of_atrocities_act_cases')}
-          </p>
-        </motion.div>
-      </motion.div>
 
       {/* Enhanced Filters and Search Section */}
       <motion.div
@@ -1076,97 +791,38 @@ const BeneficiariesPage = () => {
 
           {/* Enhanced Controls Row */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            {/* View Mode Toggle with Enhanced Design */}
+            {/* View Mode Toggle */}
             <div className="flex items-center gap-4">
               <span className="text-sm font-semibold theme-text-muted uppercase tracking-wide">View Mode</span>
-              <div className="flex items-center gap-1 theme-bg-glass rounded-2xl p-1 border-2 theme-border-glass">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
+                <button
                   onClick={() => setViewMode('table')}
-                  className={`relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                    viewMode === 'table'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                      : 'theme-text-muted hover:theme-text-primary'
-                  }`}
+                  className={`px-4 py-2 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Grid3X3 className="w-4 h-4" />
-                    <span>{t('extracted.table')}</span>
-                  </div>
-                  {viewMode === 'table' && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl"
-                      initial={false}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  {t('extracted.table')}
+                </button>
+                <button
                   onClick={() => setViewMode('cards')}
-                  className={`relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                    viewMode === 'cards'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                      : 'theme-text-muted hover:theme-text-primary'
-                  }`}
+                  className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Layout className="w-4 h-4" />
-                    <span>{t('extracted.cards')}</span>
-                  </div>
-                  {viewMode === 'cards' && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl"
-                      initial={false}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </motion.button>
+                  {t('extracted.cards')}
+                </button>
               </div>
             </div>
 
-            {/* Enhanced Filter Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowFilters(!showFilters)}
-              className={`group relative px-6 py-3 rounded-2xl font-semibold flex items-center gap-3 shadow-xl overflow-hidden ${
-                showFilters
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'
-                  : 'theme-bg-glass theme-border-glass border-2 theme-text-primary'
-              }`}
-              style={!showFilters && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative flex items-center gap-3">
-                <motion.div
-                  animate={{ rotate: showFilters ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Filter className="w-5 h-5" />
-                </motion.div>
-                <span>{t('extracted.filters')}</span>
-                {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                  >
-                    !
-                  </motion.div>
-                )}
-              </div>
-              <motion.div
-                className="absolute inset-0 bg-white/20 rounded-2xl"
-                initial={{ x: '-100%' }}
-                whileHover={{ x: '100%' }}
-                transition={{ duration: 0.6 }}
-              />
-            </motion.button>
+                            {/* Filter Toggle */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span>{t('extracted.filters')}</span>
+                                {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                )}
+                            </motion.button>
           </div>
 
           {/* Enhanced Expandable Filters */}
