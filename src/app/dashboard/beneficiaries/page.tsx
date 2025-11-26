@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useTheme } from '@/context/ThemeContext';
-import { useLocale } from '@/context/LocaleContext';
+import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
+import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -248,6 +249,15 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
             </select>
           </div>
           <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.category_1') || 'Category'}</label>
+            <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+              <option value="SC">SC</option>
+              <option value="ST">ST</option>
+              <option value="OBC">OBC</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.marital_status')}</label>
             <select value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
               <option value="">{t('extracted.select_marital_status')}</option>
@@ -308,6 +318,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 const BeneficiariesPage = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
+  const { profile, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
@@ -327,9 +338,12 @@ const BeneficiariesPage = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [fullBeneficiaries, setFullBeneficiaries] = useState<Record<string, any>>({});
   const [selectedBeneficiaryLoading, setSelectedBeneficiaryLoading] = useState(false);
+  const [manualFetchLoading, setManualFetchLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Toasts
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
   const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setToasts(prev => [...prev, { id, type, message }]);
@@ -477,6 +491,65 @@ const BeneficiariesPage = () => {
     return null;
   };
 
+  const fetchBeneficiariesManually = async () => {
+    setManualFetchLoading(true);
+    try {
+      const beneficiariesRef = collection(db, 'beneficiaries');
+      const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const items: any[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const toIso = (val: any) => {
+          if (!val) return '';
+          if (val.toDate && typeof val.toDate === 'function') {
+            try { return val.toDate().toISOString(); } catch { return String(val); }
+          }
+          return typeof val === 'string' ? val : String(val);
+        };
+
+        items.push({
+          id: doc.id,
+          name: data.name || '',
+          aadhaarNumber: data.aadhaarNumber || data.aadhaar || '',
+          district: data.district || '',
+          state: data.state || '',
+          actType: data.actType || '',
+          reliefAmount: data.reliefAmount || 0,
+          disbursedAmount: data.disbursedAmount || 0,
+          status: data.status || 'pending-verification',
+          verificationStatus: data.verificationStatus || 'pending',
+          category: data.category || 'SC',
+          registrationDate: toIso(data.registrationDate),
+          priority: data.priority || 'medium',
+          assignedOfficer: data.assignedOfficer || '',
+          age: data.age || null,
+          gender: data.gender || null,
+          maritalStatus: data.maritalStatus || null,
+          bankAccount: data.bankAccount || null,
+          ifsc: data.ifsc || null
+        });
+      });
+      setBeneficiaries(items);
+      setLoading(false);
+      // Reset filters/search so manual fetch shows results immediately
+      setSearchQuery('');
+      setStatusFilter('all');
+      setActTypeFilter('all');
+      setCategoryFilter('all');
+      setVerificationFilter('all');
+      setCurrentPage(1);
+      setViewMode('table');
+      setRefreshKey(prev => prev + 1);
+      showToast('success', `Fetched ${items.length} beneficiaries`);
+    } catch (error) {
+      console.error('Error fetching beneficiaries manually:', error);
+      showToast('error', 'Failed to fetch beneficiaries');
+    } finally {
+      setManualFetchLoading(false);
+    }
+  };
+
   // Filter and sort beneficiaries
   const filteredBeneficiaries = useMemo(() => {
     let filtered = [...beneficiaries];
@@ -536,7 +609,7 @@ const BeneficiariesPage = () => {
     });
 
     return filtered;
-  }, [searchQuery, statusFilter, actTypeFilter, categoryFilter, verificationFilter, sortBy, sortOrder]);
+  }, [beneficiaries, searchQuery, statusFilter, actTypeFilter, categoryFilter, verificationFilter, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredBeneficiaries.length / itemsPerPage);
@@ -574,11 +647,20 @@ const BeneficiariesPage = () => {
   // Subscribe to beneficiaries collection in Firestore
   useEffect(() => {
     const beneficiariesRef = collection(db, 'beneficiaries');
-    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'), limit(100));
-    const unsubscribe = onSnapshot(q, (snap) => {
+    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const items: any[] = [];
-      snap.forEach(doc => {
-        const data = doc.data() as any;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const toIso = (val: any) => {
+          if (!val) return '';
+          if (val.toDate && typeof val.toDate === 'function') {
+            try { return val.toDate().toISOString(); } catch { return String(val); }
+          }
+          return typeof val === 'string' ? val : String(val);
+        };
+
         items.push({
           id: doc.id,
           name: data.name || '',
@@ -591,7 +673,7 @@ const BeneficiariesPage = () => {
           status: data.status || 'pending-verification',
           verificationStatus: data.verificationStatus || 'pending',
           category: data.category || 'SC',
-          registrationDate: data.registrationDate || '',
+          registrationDate: toIso(data.registrationDate),
           priority: data.priority || 'medium',
           assignedOfficer: data.assignedOfficer || '',
           age: data.age || null,
@@ -603,8 +685,8 @@ const BeneficiariesPage = () => {
       });
       setBeneficiaries(items);
       setLoading(false);
-    }, (err) => {
-      console.error('Error loading beneficiaries:', err);
+    }, (error) => {
+      console.error('Error fetching beneficiaries:', error);
       setLoading(false);
     });
 
@@ -870,6 +952,12 @@ const BeneficiariesPage = () => {
   const endItem = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems);
   const noPages = totalPages === 0;
 
+  if (authLoading) return (
+    <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
+      <div className="theme-bg-card theme-border-glass border rounded-xl p-6">Loading...</div>
+    </div>
+  );
+
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
       {/* Three.js Canvas Background (theme-aware) */}
@@ -964,11 +1052,25 @@ const BeneficiariesPage = () => {
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => exportBeneficiariesData(beneficiaries)}
+                          onClick={() => setShowExportModal(true)}
                           className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
                         >
                           <Download className="w-4 h-4" />
                           <span>{t('extracted.export_data')}</span>
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={fetchBeneficiariesManually}
+                          disabled={manualFetchLoading}
+                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow disabled:opacity-50"
+                        >
+                          {manualFetchLoading ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Activity className="w-4 h-4" />
+                          )}
+                          <span>{manualFetchLoading ? 'Fetching...' : 'Fetch Data'}</span>
                         </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -1004,6 +1106,84 @@ const BeneficiariesPage = () => {
           );
         })}
       </div>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('beneficiary.exportDescription') || 'Export beneficiaries as CSV or a printable PDF report.'}</p>
+                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full beneficiaries dataset in the chosen format.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{beneficiaries.length} {t('beneficiary_lowercase') || 'beneficiaries'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportBeneficiariesData(beneficiaries); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportBeneficiariesPDF(beneficiaries); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{filteredBeneficiaries.length} {t('beneficiary_lowercase') || 'beneficiaries'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesData(filteredBeneficiaries); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesPDF(filteredBeneficiaries); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Statistics Cards */}
       <motion.div
@@ -1518,6 +1698,7 @@ const BeneficiariesPage = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
+        key={refreshKey}
       >
         {viewMode === 'table' ? (
           isMobile ? (
