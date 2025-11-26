@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
-import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Grievance type definition (minimal fields used in this page)
@@ -85,7 +85,7 @@ const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Gr
 };
 
 // New Grievance Form (client-side modal)
-const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreated?: (g: Grievance) => void }) => {
+const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => void; onCreated?: (g: Grievance) => void; initialData?: Grievance | null }) => {
   const { theme } = useTheme();
   const { t } = useLocale();
   const [beneficiaryId, setBeneficiaryId] = useState('');
@@ -128,6 +128,19 @@ const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreat
     }
   };
 
+  // Prefill when editing
+  useEffect(() => {
+    if (!initialData) return;
+    setBeneficiaryId(initialData.beneficiaryId || '');
+    setBeneficiaryName(initialData.beneficiaryName || '');
+    setPhone(initialData.phone || '');
+    setEmail(initialData.email || '');
+    setCategory(initialData.category || 'disbursement-delay');
+    setSubCategory(initialData.subCategory || '');
+    setPriority((initialData.priority as any) || 'medium');
+    setDescription(initialData.description || '');
+  }, [initialData]);
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setError(null);
@@ -142,7 +155,7 @@ const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreat
         return;
       }
 
-      const payload: any = {
+      const base: any = {
         beneficiaryId,
         beneficiaryName: beneficiaryName || (snap.data() as any).name || '',
         phone: phone || (snap.data() as any).phone || null,
@@ -151,37 +164,47 @@ const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreat
         subCategory: subCategory || null,
         priority,
         description: description || null,
-        status: 'open',
-        createdDate: serverTimestamp(),
+        status: initialData ? (initialData.status || 'open') : 'open',
         lastUpdated: serverTimestamp(),
-        attachments: 0,
-        communication: [],
-        escalationLevel: 0,
-        followUpRequired: false
+        attachments: initialData ? (initialData.attachments || 0) : 0,
+        communication: initialData ? (initialData.communication || []) : [],
+        escalationLevel: initialData ? (initialData.escalationLevel || 0) : 0,
+        followUpRequired: initialData ? (initialData.followUpRequired || false) : false
       };
 
-      const ref = await addDoc(collection(db, 'grievances'), payload);
-      const created: Grievance = {
-        id: ref.id,
-        beneficiaryId: payload.beneficiaryId,
-        beneficiaryName: payload.beneficiaryName,
-        phone: payload.phone,
-        email: payload.email,
-        category: payload.category,
-        subCategory: payload.subCategory,
-        priority: payload.priority,
-        description: payload.description,
-        status: payload.status,
-        attachments: 0,
-        communication: [],
-        escalationLevel: 0,
-        followUpRequired: false,
-        createdDate: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-      };
+      if (initialData && initialData.id) {
+        // update existing grievance
+        await updateDoc(doc(db, 'grievances', initialData.id), { ...base, lastUpdated: serverTimestamp() });
+        const updated: Grievance = { ...initialData, ...base, lastUpdated: new Date().toISOString() } as Grievance;
+        onCreated?.(updated);
+        onClose();
+      } else {
+        // create with deterministic id: GRV-<timestamp>
+        const newId = `GRV-${Date.now()}`;
+        const payload = { ...base, createdDate: serverTimestamp() };
+        await setDoc(doc(db, 'grievances', newId), payload);
+        const created: Grievance = {
+          id: newId,
+          beneficiaryId: payload.beneficiaryId,
+          beneficiaryName: payload.beneficiaryName,
+          phone: payload.phone,
+          email: payload.email,
+          category: payload.category,
+          subCategory: payload.subCategory,
+          priority: payload.priority,
+          description: payload.description,
+          status: payload.status,
+          attachments: payload.attachments || 0,
+          communication: payload.communication || [],
+          escalationLevel: payload.escalationLevel || 0,
+          followUpRequired: payload.followUpRequired || false,
+          createdDate: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        };
 
-      onCreated?.(created);
-      onClose();
+        onCreated?.(created);
+        onClose();
+      }
     } catch (err) {
       console.error('Create grievance failed', err);
       setError(t('extracted.create_failed') || 'Failed to create grievance');
@@ -191,48 +214,50 @@ const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreat
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-4 w-full max-w-2xl">
-      <h3 className="text-xl font-semibold theme-text-primary">{t('extracted.new_case') || 'New Case'}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.beneficiary_id') || 'Beneficiary ID'}</label>
-          <input value={beneficiaryId} onChange={(e) => setBeneficiaryId(e.target.value)} onBlur={() => handleLookupBeneficiary(beneficiaryId)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" required />
+    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        
+
+        <div className="md:col-span-2">
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.beneficiary_id') || 'Beneficiary ID'}</label>
+          <input placeholder={t('extracted.beneficiary_id') || 'Beneficiary ID'} value={beneficiaryId} onChange={(e) => setBeneficiaryId(e.target.value)} onBlur={() => handleLookupBeneficiary(beneficiaryId)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" required />
           {beneficiaryName && <p className="text-xs theme-text-muted mt-1">{beneficiaryName}</p>}
         </div>
+
         <div>
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.phone_number') || 'Phone (optional)'}</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.phone_number') || 'Phone Number'}</label>
+          <input placeholder={t('extracted.phone_number') || 'Phone Number'} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
         </div>
 
         <div>
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.email') || 'Email (optional)'}</label>
-          <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.email') || 'Email'}</label>
+          <input placeholder={t('extracted.email') || 'Email'} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
         </div>
 
         <div>
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.category_1') || 'Category'}</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.category_1') || 'Category'}</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30">
             {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
 
         <div className="md:col-span-2">
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.sub_category') || 'Sub-category'}</label>
-          <input value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.sub_category') || 'Sub-category'}</label>
+          <input placeholder={t('extracted.sub_category') || 'Sub-category'} value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
         </div>
 
         <div className="md:col-span-2">
-          <label className="text-sm theme-text-muted block mb-1">{t('extracted.description') || 'Description'}</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.description') || 'Description'}</label>
+          <textarea placeholder={t('extracted.description') || 'Description'} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
         </div>
       </div>
 
       {error && <div className="text-sm text-red-500">{error}</div>}
 
-      <div className="flex items-center justify-end gap-3 pt-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border">{t('extracted.cancel')}</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold">
-          {isSubmitting ? 'Creating...' : (t('extracted.create') || 'Create')}
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <button type="button" onClick={onClose} className="btn-cancel">{t('extracted.cancel')}</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold shadow">
+          {isSubmitting ? (t('extracted.saving') || 'Saving...') : (initialData ? (t('extracted.save') || 'Save') : (t('extracted.create') || 'Create'))}
         </button>
       </div>
     </form>
@@ -256,9 +281,11 @@ const GrievancePage = () => {
   const [grievances, setGrievances] = useState<Grievance[]>([]);
   const [selectedGrievance, setSelectedGrievance] = useState<Grievance | null>(null);
   const [showNewCaseModal, setShowNewCaseModal] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'dashboard' | 'list'>('dashboard');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [newMessage, setNewMessage] = useState('');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // subscribe to Firestore grievances collection
@@ -495,6 +522,35 @@ const GrievancePage = () => {
     return icons[category as keyof typeof icons] || AlertCircle;
   };
 
+  const statuses = ['open', 'in-progress', 'pending', 'resolved', 'closed', 'escalated'];
+
+  const updateGrievanceStatus = async (id: string, status: string) => {
+    try {
+      setStatusUpdating(id);
+      await updateDoc(doc(db, 'grievances', id), { status, lastUpdated: serverTimestamp() });
+    } catch (err) {
+      console.error('Failed to update status', err);
+    } finally {
+      setStatusUpdating(null);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!selectedGrievance?.id) return;
+    const text = newMessage.trim();
+    if (!text) return;
+    try {
+      // Use client timestamp for arrayUnion element (serverTimestamp cannot be nested inside arrayUnion)
+      await updateDoc(doc(db, 'grievances', selectedGrievance.id), {
+        communication: arrayUnion({ user: 'You', text, createdAt: new Date().toISOString() }),
+        lastUpdated: serverTimestamp()
+      });
+      setNewMessage('');
+    } catch (err) {
+      console.error('Failed to send message', err);
+    }
+  };
+
 
  
 
@@ -565,6 +621,43 @@ const GrievancePage = () => {
           backdrop-filter: blur(16px) saturate(180%);
           -webkit-backdrop-filter: blur(16px) saturate(180%);
         }
+        .btn-cancel {
+          background: transparent;
+          border: 1px solid var(--glass-border);
+          color: var(--text-muted);
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        [data-theme="light"] .btn-cancel:hover {
+          background: rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .btn-cancel:hover {
+          background: rgba(255,255,255,0.03);
+        }
+        .action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.6rem 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid var(--glass-border);
+          background: var(--glass-bg);
+          color: var(--text-primary);
+          font-weight: 600;
+        }
+        .action-btn svg { color: inherit; }
+        [data-theme="light"] .action-btn:hover { background: rgba(0,0,0,0.04); }
+        [data-theme="dark"] .action-btn:hover { background: rgba(255,255,255,0.02); }
+
+        .action-btn-accent {
+          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+          border-color: transparent;
+          color: white;
+        }
+        .action-btn-accent svg { color: rgba(255,255,255,0.95); }
       `}</style>
 
       {/* Header Section - Real-time Monitoring */}
@@ -635,15 +728,277 @@ const GrievancePage = () => {
         >
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.new_case') || 'New Case'}</h3>
-              <p className="text-sm theme-text-muted">{t('extracted.new_case_description') || 'Create a new grievance and link it to a beneficiary.'}</p>
+              <h3 className="text-xl font-semibold theme-text-primary">{selectedGrievance ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}</h3>
+              <p className="text-sm theme-text-muted">{selectedGrievance ? (t('extracted.edit_case_description') || 'Edit the grievance details and save changes.') : (t('extracted.new_case_description') || 'Create a new grievance and link it to a beneficiary.')}</p>
             </div>
-            <button onClick={() => setShowNewCaseModal(false)} className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:bg-red-500/10">
-              <X className="w-5 h-5 theme-text-primary" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowNewCaseModal(false)} className="btn-cancel text-sm">
+                <X className="w-4 h-4 inline-block" /> <span>{t('extracted.cancel')}</span>
+              </button>
+            </div>
           </div>
-          <NewGrievanceForm onClose={() => setShowNewCaseModal(false)} onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }} />
+          <NewGrievanceForm
+            initialData={selectedGrievance}
+            onClose={() => { setShowNewCaseModal(false); setSelectedGrievance(null); }}
+            onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }}
+          />
         </motion.div>
+      )}
+
+      {/* Inline Grievance Detail Section (appears in-page for view/edit) - moved above grid/table */}
+      {selectedGrievance && (
+        <motion.section
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start gap-4 flex-1">
+              <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                <Shield className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
+                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
+                    {selectedGrievance.priority.toUpperCase()} PRIORITY
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <p className="theme-text-muted text-lg">{selectedGrievance.beneficiaryName}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <p className="theme-text-muted">{selectedGrievance.actType}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <p className="theme-text-muted">Created: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleDateString() : '—'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSelectedGrievance(null)} className="btn-cancel">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-b theme-border-glass mb-4">
+            <div className="flex overflow-x-auto">
+              {[
+                { id: 'overview', label: 'Overview', icon: Eye },
+                { id: 'communication', label: 'Communication', icon: MessageCircle },
+                { id: 'timeline', label: 'Timeline', icon: Clock },
+                { id: 'documents', label: 'Documents', icon: FileText },
+                { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600 theme-text-primary'
+                      : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-2">
+            {activeTab === 'overview' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')}</h4>
+                    <p className="text-sm theme-text-muted">{selectedGrievance.beneficiaryName || '—'}</p>
+                    <p className="text-xs theme-text-muted mt-1">ID: {selectedGrievance.beneficiaryId || '—'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Contact</h4>
+                    <p className="text-sm theme-text-muted">{selectedGrievance.phone || '-'}</p>
+                    <p className="text-sm theme-text-muted">{selectedGrievance.email || '-'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Location</h4>
+                    <p className="text-sm theme-text-muted">{selectedGrievance.district || '-'}, {selectedGrievance.state || '-'}</p>
+                    <p className="text-xs theme-text-muted mt-1">Act: {selectedGrievance.actType || '-'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Identification</h4>
+                    <p className="text-sm theme-text-muted">Application ID: {selectedGrievance.applicationId || '—'}</p>
+                    <p className="text-sm theme-text-muted">Grievance ID: {selectedGrievance.id}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Case Details</h4>
+                    <p className="text-sm theme-text-muted"><strong>Category:</strong> {selectedGrievance.category || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>Sub-category:</strong> {selectedGrievance.subCategory || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>Priority:</strong> {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>Status:</strong> {selectedGrievance.status || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>Assigned To:</strong> {selectedGrievance.assignedTo || '-'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Timestamps</h4>
+                    <p className="text-sm theme-text-muted">Created: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">Last updated: {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">Expected resolution: {selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">Resolution date: {selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '—'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                    <h4 className="text-sm font-semibold theme-text-primary">Attachments & Communication</h4>
+                    <p className="text-sm theme-text-muted">Attachments: {selectedGrievance.attachments ?? 0}</p>
+                    <p className="text-sm theme-text-muted">Messages: {selectedGrievance.communication?.length ?? 0}</p>
+                    {selectedGrievance.communication && selectedGrievance.communication.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {selectedGrievance.communication.slice(0,3).map((c, i) => (
+                          <div key={i} className="text-xs theme-text-muted">
+                            <strong>{c.user || 'User'}:</strong> {String(c.text || c.message || c.body || '—')}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'communication' && (
+              <div className="space-y-4">
+                <div className="max-h-64 overflow-auto p-2 space-y-3 border theme-border-glass rounded-lg theme-bg-glass">
+                  {(selectedGrievance.communication ?? []).length === 0 ? (
+                    <p className="theme-text-muted">No messages yet.</p>
+                  ) : (
+                    (selectedGrievance.communication ?? []).slice().reverse().map((c, i) => (
+                      <div key={i} className="p-2 rounded-md bg-white/5">
+                        <p className="text-sm font-semibold theme-text-primary">{c.user || 'User'}</p>
+                        <p className="text-sm theme-text-muted">{String(c.text || c.message || c.body || '')}</p>
+                        <p className="text-xs theme-text-muted mt-1">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Write a message..." className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+                  <button onClick={sendMessage} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold" disabled={!newMessage.trim()}>Send</button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'timeline' && (
+              <div className="space-y-3">
+                <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
+                  <p className="text-sm theme-text-muted"><strong>Created:</strong> {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
+                  <p className="text-sm theme-text-muted"><strong>Last updated:</strong> {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
+                </div>
+                <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Activity</h4>
+                  {(selectedGrievance.communication ?? []).length === 0 ? <p className="theme-text-muted">No activity recorded.</p> : (
+                    <ul className="list-disc pl-5 space-y-2">
+                      {(selectedGrievance.communication ?? []).map((c, i) => (
+                        <li key={i} className="text-sm theme-text-muted">{c.user || 'User'} — {String(c.text || c.message || c.body || '')} <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span></li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'documents' && (
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Attachments</h4>
+                  <p className="text-sm theme-text-muted">Count: {selectedGrievance.attachments ?? 0}</p>
+                  <p className="text-xs theme-text-muted">(Upload / download integration can be implemented separately.)</p>
+                </div>
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <label className="text-sm theme-text-muted">Add document (not implemented)</label>
+                  <input type="file" disabled className="mt-2" />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
+                  <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.communication?.length ?? 0}</div>
+                  <div className="text-sm theme-text-muted">Messages</div>
+                </div>
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
+                  <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.attachments ?? 0}</div>
+                  <div className="text-sm theme-text-muted">Attachments</div>
+                </div>
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
+                  <div className="text-2xl font-bold theme-text-primary">{(() => {
+                    const created = selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).getTime() : Date.now();
+                    const diff = Date.now() - created;
+                    return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                  })()}</div>
+                  <div className="text-sm theme-text-muted">Days Open</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="action-btn">
+                <CheckCircle className="w-4 h-4" />
+                {t('extracted.resolve_case')}
+              </motion.button>
+              {selectedGrievance?.phone ? (
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={`tel:${selectedGrievance.phone.trim()}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="action-btn"
+                  aria-label={t('extracted.call_now')}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  {t('extracted.call_now')}
+                </motion.a>
+              ) : (
+                <motion.button whileHover={{}} whileTap={{}} className="action-btn opacity-50 cursor-not-allowed" aria-disabled>
+                  <PhoneCall className="w-4 h-4" />
+                  {t('extracted.call_now')}
+                </motion.button>
+              )}
+
+              {selectedGrievance?.email ? (
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={`mailto:${selectedGrievance.email.trim()}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="action-btn"
+                  aria-label={t('extracted.send_email')}
+                >
+                  <Mail className="w-4 h-4" />
+                  {t('extracted.send_email')}
+                </motion.a>
+              ) : (
+                <motion.button whileHover={{}} whileTap={{}} className="action-btn opacity-50 cursor-not-allowed" aria-disabled>
+                  <Mail className="w-4 h-4" />
+                  {t('extracted.send_email')}
+                </motion.button>
+              )}
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="action-btn action-btn-accent">
+                <AlertOctagon className="w-4 h-4" />
+                {t('extracted.escalate_case')}
+              </motion.button>
+          </div>
+        </motion.section>
       )}
 
       {/* Dashboard Grid - New Layout */}
@@ -732,7 +1087,7 @@ const GrievancePage = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
           className="xl:col-span-3 space-y-6"
-        >
+          >
           {/* View Controls */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -808,12 +1163,7 @@ const GrievancePage = () => {
                       <span className={`px-3 py-1 ${getPriorityColor(grievance.priority)} text-xs font-bold rounded-full`}>
                         {grievance.priority.toUpperCase()}
                       </span>
-                      <button 
-                        className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass"
-                        style={{
-                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                        }}
-                      >
+                      <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass">
                         <MoreVertical className="w-4 h-4 theme-text-primary" />
                       </button>
                     </div>
@@ -842,22 +1192,24 @@ const GrievancePage = () => {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getStatusColor(grievance.status)}`}>
-                      {(() => {
-                        const Icon = getStatusIcon(grievance.status);
-                        return <Icon className="w-3 h-3" />;
-                      })()}
-                      {grievance.status.replace('-', ' ').toUpperCase()}
-                    </span>
+                      <div>
+                        <select
+                          onClick={(e) => e.stopPropagation()}
+                          value={grievance.status}
+                          onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(grievance.id, e.target.value); }}
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'light' ? 'bg-white border' : 'theme-bg-glass theme-border-glass'} ${getStatusColor(grievance.status)}`}
+                        >
+                          {statuses.map(s => (
+                            <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>
+                          ))}
+                        </select>
+                      </div>
                     <div className="flex items-center gap-2">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
                         className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors border theme-border-glass"
-                        style={{
-                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                        }}
                         aria-label={`View ${grievance.id}`}
                       >
                         <Eye className="w-4 h-4 theme-text-primary" />
@@ -865,11 +1217,17 @@ const GrievancePage = () => {
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); setShowNewCaseModal(true); }}
+                        className="p-2 rounded-lg theme-bg-glass hover:bg-yellow-500/20 transition-colors border theme-border-glass"
+                        aria-label={`Edit ${grievance.id}`}
+                      >
+                        <Edit className="w-4 h-4 theme-text-primary" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); /* placeholder for call action */ }}
                         className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors border theme-border-glass"
-                        style={{
-                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                        }}
                         aria-label={`Call ${grievance.id}`}
                       >
                         <PhoneCall className="w-4 h-4 theme-text-primary" />
@@ -894,15 +1252,15 @@ const GrievancePage = () => {
                         <div className="text-right">
                           <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span>
                           <div className="mt-2 flex items-center justify-end gap-2">
-                            <button 
-                              onClick={() => setSelectedGrievance(g)} 
-                              className="p-2 rounded-lg theme-bg-glass border theme-border-glass"
-                              style={{
-                                background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                              }}
-                            >
-                              <Eye className="w-4 h-4 theme-text-primary" />
-                            </button>
+                                <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className="px-2 py-1 rounded-md text-sm theme-bg-glass theme-border-glass border">
+                                  {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                                </select>
+                                <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass">
+                                  <Edit className="w-4 h-4 theme-text-primary" />
+                                </button>
+                                <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass">
+                                  <Eye className="w-4 h-4 theme-text-primary" />
+                                </button>
                           </div>
                         </div>
                       </div>
@@ -930,11 +1288,18 @@ const GrievancePage = () => {
                             <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
                             <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
                             <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span></td>
-                            <td className="px-4 py-3 text-sm theme-text-muted">{g.status}</td>
+                            <td className="px-4 py-3 text-sm theme-text-muted">
+                              <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className="px-2 py-1 rounded-md text-sm theme-bg-glass theme-border-glass border">
+                                {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                              </select>
+                            </td>
                             <td className="px-4 py-3 text-sm text-right">
                               <div className="inline-flex items-center gap-2">
-                                <button onClick={() => setSelectedGrievance(g)} className={`p-2 rounded-lg ${theme === 'light' ? 'bg-white/70 hover:bg-gray-100' : 'theme-bg-glass'}`} aria-label={`View ${g.id}`}>
-                                  <Eye className={`w-4 h-4 ${theme === 'light' ? 'text-gray-800' : ''}`} />
+                                <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`Edit ${g.id}`}>
+                                  <Edit className="w-4 h-4 theme-text-primary" />
+                                </button>
+                                <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`View ${g.id}`}>
+                                  <Eye className="w-4 h-4 theme-text-primary" />
                                 </button>
                               </div>
                             </td>
@@ -1085,166 +1450,7 @@ const GrievancePage = () => {
         </motion.div>
       </div>
 
-      {/* Enhanced Grievance Detail Modal */}
-      <AnimatePresence>
-        {selectedGrievance && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-            style={{ zIndex: 9999 }}
-            onClick={() => setSelectedGrievance(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="theme-bg-card theme-border-glass border rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-hidden glass-effect shadow-2xl"
-              style={{
-                background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
-              }}
-            >
-              {/* Enhanced Header */}
-              <div 
-                className="sticky top-0 theme-bg-card backdrop-blur-xl border-b theme-border-glass p-8"
-                style={{
-                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
-                      <Shield className="w-8 h-8" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-3xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
-                        <span className="px-4 py-2 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
-                          {selectedGrievance.priority.toUpperCase()} PRIORITY
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 flex-wrap">
-                        <p className="theme-text-muted text-lg">{selectedGrievance.beneficiaryName}</p>
-                        <span className="text-sm theme-text-muted">•</span>
-                        <p className="theme-text-muted">{selectedGrievance.actType}</p>
-                        <span className="text-sm theme-text-muted">•</span>
-                        <p className="theme-text-muted">Created: {new Date(selectedGrievance.createdDate).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedGrievance(null)}
-                    className="p-3 rounded-xl theme-bg-glass hover:bg-red-500/20 transition-colors border theme-border-glass"
-                    style={{
-                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                    }}
-                  >
-                    <X className="w-6 h-6 theme-text-primary" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Enhanced Tabs */}
-              <div className="border-b theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent">
-                <div className="flex overflow-x-auto px-8">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: Eye },
-                    { id: 'communication', label: 'Communication', icon: MessageCircle },
-                    { id: 'timeline', label: 'Timeline', icon: Clock },
-                    { id: 'documents', label: 'Documents', icon: FileText },
-                    { id: 'analytics', label: 'Analytics', icon: BarChart3 }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-3 px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600 theme-text-primary'
-                          : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
-                      }`}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-8 space-y-8 max-h-[calc(95vh-200px)] overflow-y-auto">
-                {/* Content would go here based on active tab */}
-                <div className="text-center py-12">
-                  <Users className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.case_management')}</h3>
-                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_manage_different_aspects_of_this_case')}</p>
-                </div>
-              </div>
-
-              {/* Enhanced Action Buttons */}
-              <div 
-                className="sticky bottom-0 theme-bg-card backdrop-blur-xl border-t theme-border-glass p-8"
-                style={{
-                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined
-                }}
-              >
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
-                    style={{
-                      background: theme === 'light' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                      borderColor: theme === 'light' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(34, 197, 94, 0.3)',
-                      color: theme === 'light' ? '#15803d' : '#86efac'
-                    }}
-                  >
-                    <CheckCircle className="w-5 h-5" />
-                    {t('extracted.resolve_case')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
-                    style={{
-                      background: theme === 'light' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.2)',
-                      borderColor: theme === 'light' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(168, 85, 247, 0.3)',
-                      color: theme === 'light' ? '#7e22ce' : '#d8b4fe'
-                    }}
-                  >
-                    <PhoneCall className="w-5 h-5" />
-                    {t('extracted.call_now')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors"
-                    style={{
-                      background: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
-                      borderColor: theme === 'light' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)',
-                      color: theme === 'light' ? '#1d4ed8' : '#93c5fd'
-                    }}
-                  >
-                    <Mail className="w-5 h-5" />
-                    {t('extracted.send_email')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-4 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-3 hover:theme-bg-card transition-colors"
-                    style={{
-                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-                    }}
-                  >
-                    <AlertOctagon className="w-5 h-5 theme-text-primary" />
-                    {t('extracted.escalate_case')}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
     </div>
   );
 };
