@@ -5,7 +5,9 @@ import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit } from 'firebase/firestore';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Search, Filter, Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X, Check,
@@ -17,157 +19,10 @@ import {
   CheckCircle, Tag
 } from 'lucide-react';
 
-// Mock data for beneficiaries
-const mockBeneficiaries = [
-  {
-    id: 'BEN-2024-001234',
-    aadhaarNumber: '****-****-1234',
-    name: 'Rajesh Kumar',
-    fatherName: 'Suresh Kumar',
-    phone: '+91 98765-43210',
-    email: 'rajesh.k@example.com',
-    district: 'Patna',
-    state: 'Bihar',
-    address: 'House No. 123, Ram Nagar, Patna - 800001',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-001',
-    incidentDate: '2024-02-15',
-    registrationDate: '2024-02-20',
-    status: 'verified',
-    reliefAmount: 40000,
-    disbursedAmount: 40000,
-    priority: 'high',
-    assignedOfficer: 'Officer Sharma',
-    documents: 4,
-    lastUpdate: '2024-03-15 14:30',
-    bankAccount: 'XXXXXX1234',
-    ifsc: 'SBIN0000123',
-    verificationStatus: 'verified',
-    category: 'SC',
-    age: 32,
-    gender: 'Male',
-    maritalStatus: 'Married'
-  },
-  {
-    id: 'BEN-2024-001235',
-    aadhaarNumber: '****-****-5678',
-    name: 'Priya Singh',
-    fatherName: 'Rajesh Singh',
-    phone: '+91 98765-43211',
-    email: 'priya.s@example.com',
-    district: 'Lucknow',
-    state: 'Uttar Pradesh',
-    address: 'House No. 456, Gandhi Road, Lucknow - 226001',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-002',
-    incidentDate: '2024-02-10',
-    registrationDate: '2024-02-18',
-    status: 'pending-verification',
-    reliefAmount: 35000,
-    disbursedAmount: 0,
-    priority: 'medium',
-    assignedOfficer: 'Officer Verma',
-    documents: 5,
-    lastUpdate: '2024-03-14 10:15',
-    bankAccount: 'XXXXXX5678',
-    ifsc: 'SBIN0000567',
-    verificationStatus: 'pending',
-    category: 'ST',
-    age: 28,
-    gender: 'Female',
-    maritalStatus: 'Single'
-  },
-  {
-    id: 'BEN-2024-001236',
-    aadhaarNumber: '****-****-9012',
-    name: 'Amit Verma',
-    fatherName: 'Ramesh Verma',
-    phone: '+91 98765-43212',
-    email: 'amit.v@example.com',
-    district: 'Jaipur',
-    state: 'Rajasthan',
-    address: 'House No. 789, Jawahar Nagar, Jaipur - 302001',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-003',
-    incidentDate: '2024-01-25',
-    registrationDate: '2024-02-05',
-    status: 'disbursed',
-    reliefAmount: 45000,
-    disbursedAmount: 45000,
-    priority: 'medium',
-    assignedOfficer: 'Officer Kapoor',
-    documents: 6,
-    lastUpdate: '2024-03-10 16:45',
-    bankAccount: 'XXXXXX9012',
-    ifsc: 'SBIN0000901',
-    verificationStatus: 'verified',
-    category: 'SC',
-    age: 35,
-    gender: 'Male',
-    maritalStatus: 'Married'
-  },
-  {
-    id: 'BEN-2024-001237',
-    aadhaarNumber: '****-****-3456',
-    name: 'Sunita Devi',
-    fatherName: 'Mohan Lal',
-    phone: '+91 98765-43213',
-    email: 'sunita.d@example.com',
-    district: 'Bhopal',
-    state: 'Madhya Pradesh',
-    address: 'House No. 321, Arera Colony, Bhopal - 462001',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-004',
-    incidentDate: '2024-02-28',
-    registrationDate: '2024-03-05',
-    status: 'documents-required',
-    reliefAmount: 38000,
-    disbursedAmount: 0,
-    priority: 'high',
-    assignedOfficer: 'Officer Gupta',
-    documents: 3,
-    lastUpdate: '2024-03-13 09:20',
-    bankAccount: 'XXXXXX3456',
-    ifsc: 'SBIN0000345',
-    verificationStatus: 'documents-required',
-    category: 'OBC',
-    age: 42,
-    gender: 'Female',
-    maritalStatus: 'Widowed'
-  },
-  {
-    id: 'BEN-2024-001238',
-    aadhaarNumber: '****-****-7890',
-    name: 'Ramesh Yadav',
-    fatherName: 'Shyam Yadav',
-    phone: '+91 98765-43214',
-    email: 'ramesh.y@example.com',
-    district: 'Ranchi',
-    state: 'Jharkhand',
-    address: 'House No. 654, Harmu Road, Ranchi - 834001',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-005',
-    incidentDate: '2024-03-01',
-    registrationDate: '2024-03-08',
-    status: 'rejected',
-    reliefAmount: 42000,
-    disbursedAmount: 0,
-    priority: 'low',
-    assignedOfficer: 'Officer Mishra',
-    documents: 4,
-    lastUpdate: '2024-03-12 11:30',
-    bankAccount: 'XXXXXX7890',
-    ifsc: 'SBIN0000789',
-    verificationStatus: 'rejected',
-    category: 'SC',
-    age: 29,
-    gender: 'Male',
-    maritalStatus: 'Single'
-  }
-];
+// All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
 
 // New Beneficiary Form Component (client-side)
-const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
+const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: any | null, onSaved?: ((saved?: any) => void) | undefined }) => {
   const { theme } = useTheme();
   const { t } = useLocale();
   const [formData, setFormData] = useState({
@@ -186,7 +41,12 @@ const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
     reliefAmount: '',
     priority: 'medium',
     assignedOfficer: '',
-    category: 'SC'
+    category: 'SC',
+    age: '',
+    gender: '',
+    maritalStatus: '',
+    bankAccount: '',
+    ifsc: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -199,43 +59,116 @@ const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
     setIsSubmitting(true);
     try {
       const beneficiariesRef = collection(db, 'beneficiaries');
-      const newBeneficiary = {
-        name: formData.name,
-        fatherName: formData.fatherName,
-        aadhaarNumber: formData.aadhaarNumber,
-        phone: formData.phone,
-        email: formData.email,
-        district: formData.district,
-        state: formData.state,
-        address: formData.address,
-        actType: formData.actType,
-        caseNumber: formData.caseNumber,
-        incidentDate: formData.incidentDate,
-        registrationDate: formData.registrationDate || new Date().toISOString(),
-        status: 'pending-verification',
-        reliefAmount: parseFloat(formData.reliefAmount) || 0,
-        disbursedAmount: 0,
-        priority: formData.priority,
-        assignedOfficer: formData.assignedOfficer,
-        documents: 0,
-        lastUpdate: new Date().toISOString(),
-        verificationStatus: 'pending',
-        category: formData.category,
-        age: null,
-        gender: null,
-        maritalStatus: null,
-        bankAccount: null,
-        ifsc: null
-      };
+      if (initialData && initialData.id) {
+        // update existing beneficiary
+        const regDate = formData.registrationDate
+          ? Timestamp.fromDate(new Date(formData.registrationDate))
+          : (initialData?.registrationDate && typeof initialData.registrationDate.toDate === 'function'
+            ? initialData.registrationDate
+            : (initialData?.registrationDate ? Timestamp.fromDate(new Date(initialData.registrationDate)) : Timestamp.fromDate(new Date())));
 
-      await addDoc(beneficiariesRef, newBeneficiary);
-      onCancel();
+        const updated = {
+          name: formData.name,
+          fatherName: formData.fatherName,
+          aadhaarNumber: formData.aadhaarNumber,
+          phone: formData.phone,
+          email: formData.email,
+          district: formData.district,
+          state: formData.state,
+          address: formData.address,
+          actType: formData.actType,
+          caseNumber: formData.caseNumber,
+          incidentDate: formData.incidentDate,
+          registrationDate: regDate,
+          reliefAmount: parseFloat(formData.reliefAmount) || 0,
+          priority: formData.priority,
+          assignedOfficer: formData.assignedOfficer,
+          category: formData.category,
+          age: parseInt(formData.age) || null,
+          gender: formData.gender || null,
+          maritalStatus: formData.maritalStatus || null,
+          bankAccount: formData.bankAccount || null,
+          ifsc: formData.ifsc || null,
+          lastUpdate: Timestamp.fromDate(new Date())
+        };
+
+        await updateDoc(doc(db, 'beneficiaries', initialData.id), updated);
+        const saved = { id: initialData.id, ...updated };
+        onSaved?.(saved);
+        onCancel();
+      } else {
+        const newBeneficiary = {
+          name: formData.name,
+          fatherName: formData.fatherName,
+          aadhaarNumber: formData.aadhaarNumber,
+          phone: formData.phone,
+          email: formData.email,
+          district: formData.district,
+          state: formData.state,
+          address: formData.address,
+          actType: formData.actType,
+          caseNumber: formData.caseNumber,
+          incidentDate: formData.incidentDate,
+          registrationDate: formData.registrationDate ? Timestamp.fromDate(new Date(formData.registrationDate)) : Timestamp.fromDate(new Date()),
+          status: 'pending-verification',
+          reliefAmount: parseFloat(formData.reliefAmount) || 0,
+          disbursedAmount: 0,
+          priority: formData.priority,
+          assignedOfficer: formData.assignedOfficer,
+          documents: 0,
+          lastUpdate: Timestamp.fromDate(new Date()),
+          verificationStatus: 'pending',
+          category: formData.category,
+          age: parseInt(formData.age) || null,
+          gender: formData.gender || null,
+          maritalStatus: formData.maritalStatus || null,
+          bankAccount: formData.bankAccount || null,
+          ifsc: formData.ifsc || null
+        };
+
+        // Generate deterministic beneficiary id starting with BEN
+        const newId = `BEN${Date.now()}`;
+        const ref = doc(db, 'beneficiaries', newId);
+        await setDoc(ref, { ...newBeneficiary, id: newId });
+        const saved = { id: newId, ...newBeneficiary };
+        onSaved?.(saved);
+        onCancel();
+      }
     } catch (err) {
-      console.error('Error adding beneficiary:', err);
+      console.error('Error adding/updating beneficiary:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Prefill form when editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        fatherName: initialData.fatherName || '',
+        aadhaarNumber: initialData.aadhaarNumber || '',
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        district: initialData.district || '',
+        state: initialData.state || '',
+        address: initialData.address || '',
+        actType: initialData.actType || '',
+        caseNumber: initialData.caseNumber || '',
+        incidentDate: initialData.incidentDate || '',
+        registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
+        reliefAmount: initialData.reliefAmount ? String(initialData.reliefAmount) : '',
+        priority: initialData.priority || 'medium',
+        assignedOfficer: initialData.assignedOfficer || '',
+        category: initialData.category || 'SC',
+        age: initialData.age ? String(initialData.age) : '',
+        gender: initialData.gender || '',
+        maritalStatus: initialData.maritalStatus || '',
+        bankAccount: initialData.bankAccount || '',
+        ifsc: initialData.ifsc || ''
+      });
+    }
+  }, [initialData]);
 
   return (
     <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -278,7 +211,10 @@ const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
-            <input value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+              <option value="PCR Act">{t('extracted.pcr_act') || 'PCR Act'}</option>
+              <option value="PoA Act">{t('extracted.poa_act') || 'PoA Act'}</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.case_number')}</label>
@@ -295,9 +231,75 @@ const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-        <motion.button type="button" onClick={onCancel} className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary">{t('extracted.cancel')}</motion.button>
-        <motion.button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50">{isSubmitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Plus className="w-5 h-5" />{t('extracted.create')}</>}</motion.button>
+      <div>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.personal_details')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.age')}</label>
+            <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.gender')}</label>
+            <select value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+              <option value="">{t('extracted.select_gender')}</option>
+              <option value="Male">{t('extracted.male')}</option>
+              <option value="Female">{t('extracted.female')}</option>
+              <option value="Other">{t('extracted.other')}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.marital_status')}</label>
+            <select value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+              <option value="">{t('extracted.select_marital_status')}</option>
+              <option value="Single">{t('extracted.single')}</option>
+              <option value="Married">{t('extracted.married')}</option>
+              <option value="Divorced">{t('extracted.divorced')}</option>
+              <option value="Widowed">{t('extracted.widowed')}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>
+            <input value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.ifsc_code')}</label>
+            <input value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-4 pt-6 border-t theme-border-glass">
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onCancel}
+          className="px-6 py-2.5 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-red-500/10 transition-colors"
+          disabled={isSubmitting}
+        >
+          {t('extracted.cancel')}
+        </motion.button>
+        <motion.button
+          type="submit"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : initialData ? (
+            <>
+              <Edit className="w-4 h-4" />
+              {t('extracted.save')}
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              {t('extracted.create')}
+            </>
+          )}
+        </motion.button>
       </div>
     </form>
   );
@@ -316,13 +318,164 @@ const BeneficiariesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedBeneficiary, setSelectedBeneficiary] = useState<typeof mockBeneficiaries[0] | null>(null);
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [beneficiaries, setBeneficiaries] = useState<typeof mockBeneficiaries>(mockBeneficiaries);
+  const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [fullBeneficiaries, setFullBeneficiaries] = useState<Record<string, any>>({});
+  const [selectedBeneficiaryLoading, setSelectedBeneficiaryLoading] = useState(false);
+
+  // Toasts
+  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
+  const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setToasts(prev => [...prev, { id, type, message }]);
+    window.setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
+  };
+
+  // Export helpers
+  const exportBeneficiariesData = (items: any[]) => {
+    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'Case Number', 'Incident Date', 'Registration Date', 'Status', 'Verification', 'Relief (INR)', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
+    const rows = items.map(b => {
+      const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
+        ? b.registrationDate.toDate().toISOString()
+        : (b.registrationDate || '');
+      return [
+        b.id,
+        b.name,
+        b.aadhaarNumber,
+        b.phone,
+        b.district,
+        b.state,
+        b.actType,
+        b.caseNumber,
+        b.incidentDate,
+        reg,
+        b.status || '',
+        b.verificationStatus || '',
+        (b.reliefAmount != null ? String(b.reliefAmount) : '0'),
+        (b.disbursedAmount != null ? String(b.disbursedAmount) : '0'),
+        b.priority || '',
+        b.assignedOfficer || '',
+        String(b.documents || 0),
+        b.lastUpdate || '',
+        b.age || '',
+        b.gender || '',
+        b.maritalStatus || '',
+        b.bankAccount || '',
+        b.ifsc || ''
+      ];
+    });
+
+    const csv = [headers, ...rows].map(r => r.map(f => `"${(f ?? '')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `beneficiaries_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportBeneficiariesPDF = (items: any[]) => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Beneficiaries Report', margin, 36);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [['ID', 'Name', 'District', 'Act', 'Relief', 'Status', 'Verification', 'Assigned']];
+    const body: any[] = [];
+    items.forEach(b => {
+      body.push([
+        b.id,
+        `${b.name}\n${b.phone}`,
+        `${b.district}${b.state ? ', ' + b.state : ''}`,
+        b.actType,
+        b.reliefAmount != null ? `₹${b.reliefAmount.toLocaleString('en-IN')}` : '',
+        (b.status || '').toString().replace(/-/g, ' '),
+        (b.verificationStatus || '').toString().replace(/-/g, ' '),
+        b.assignedOfficer || ''
+      ]);
+    });
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      margin: { left: margin, right: margin, top: 70 },
+      tableWidth: 'auto'
+    });
+
+    doc.save(`beneficiaries_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  // Detail controlled fields
+  const [detailStatus, setDetailStatus] = useState<string>('');
+  const [detailVerification, setDetailVerification] = useState<string>('');
+
+  useEffect(() => {
+    setDetailStatus(selectedBeneficiary?.status || 'pending-verification');
+    setDetailVerification(selectedBeneficiary?.verificationStatus || 'pending');
+  }, [selectedBeneficiary]);
+
+  const updateBeneficiaryStatus = async (id: string, status: string) => {
+    if (!id) return;
+    try {
+      await updateDoc(doc(db, 'beneficiaries', id), { status, lastUpdate: Timestamp.fromDate(new Date()) });
+      setBeneficiaries(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+      setFullBeneficiaries(prev => prev[id] ? { ...prev, [id]: { ...prev[id], status } } : prev);
+      setSelectedBeneficiary((prev: any) => prev ? { ...prev, status } : prev);
+      showToast('success', `Updated status for ${id} to ${status}`);
+    } catch (err) {
+      showToast('error', `Failed to update status: ${(err as any)?.message || String(err)}`);
+    }
+  };
+
+  const updateBeneficiaryVerification = async (id: string, verification: string) => {
+    if (!id) return;
+    try {
+      await updateDoc(doc(db, 'beneficiaries', id), { verificationStatus: verification, lastUpdate: Timestamp.fromDate(new Date()) });
+      setBeneficiaries(prev => prev.map(b => b.id === id ? { ...b, verificationStatus: verification } : b));
+      setFullBeneficiaries(prev => prev[id] ? { ...prev, [id]: { ...prev[id], verificationStatus: verification } } : prev);
+      setSelectedBeneficiary((prev: any) => prev ? { ...prev, verificationStatus: verification } : prev);
+      showToast('success', `Updated verification for ${id} to ${verification}`);
+    } catch (err) {
+      showToast('error', `Failed to update verification: ${(err as any)?.message || String(err)}`);
+    }
+  };
+
+  const fetchFullBeneficiary = async (id: string) => {
+    if (fullBeneficiaries[id]) return fullBeneficiaries[id];
+    try {
+      const docSnap = await getDoc(doc(db, 'beneficiaries', id));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const full = {
+          id: docSnap.id,
+          ...data
+        };
+        setFullBeneficiaries(prev => ({ ...prev, [id]: full }));
+        return full;
+      }
+    } catch (err) {
+      console.error('Error fetching full beneficiary:', err);
+    }
+    return null;
+  };
 
   // Filter and sort beneficiaries
   const filteredBeneficiaries = useMemo(() => {
@@ -358,16 +511,28 @@ const BeneficiariesPage = () => {
       filtered = filtered.filter(beneficiary => beneficiary.verificationStatus === verificationFilter);
     }
 
-    // Sort
-    filtered.sort((a, b) => {
-      const aVal = a[sortBy as keyof typeof a];
-      const bVal = b[sortBy as keyof typeof b];
-      
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
+    // Sort (normalize registrationDate/Timestamp/string numbers so ordering is consistent)
+    const getComparable = (val: any) => {
+      if (val == null) return -Infinity;
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        const t = Date.parse(val);
+        if (!Number.isNaN(t)) return t;
+        return val;
       }
+      if (typeof val === 'object' && typeof val.toDate === 'function') {
+        return val.toDate().getTime();
+      }
+      return String(val);
+    };
+
+    filtered.sort((a, b) => {
+      const aVal = getComparable(a[sortBy as keyof typeof a]);
+      const bVal = getComparable(b[sortBy as keyof typeof b]);
+
+      if (aVal === bVal) return 0;
+      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
     });
 
     return filtered;
@@ -389,14 +554,13 @@ const BeneficiariesPage = () => {
       total: beneficiaries.length,
       verified: beneficiaries.filter(b => b.verificationStatus === 'verified').length,
       pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
-      disbursed: beneficiaries.filter(b => b.status === 'disbursed').length,
       rejected: beneficiaries.filter(b => b.status === 'rejected').length,
       documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length,
       totalAmount,
       disbursedAmount,
       pendingAmount: totalAmount - disbursedAmount
     };
-  }, []);
+  }, [beneficiaries]);
 
   // Category distribution
   const categoryStats = useMemo(() => {
@@ -410,42 +574,34 @@ const BeneficiariesPage = () => {
   // Subscribe to beneficiaries collection in Firestore
   useEffect(() => {
     const beneficiariesRef = collection(db, 'beneficiaries');
-    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
+    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'), limit(100));
     const unsubscribe = onSnapshot(q, (snap) => {
-      const items: typeof mockBeneficiaries = [];
+      const items: any[] = [];
       snap.forEach(doc => {
         const data = doc.data() as any;
         items.push({
           id: doc.id,
-          aadhaarNumber: data.aadhaarNumber || data.aadhaar || '',
           name: data.name || '',
-          fatherName: data.fatherName || '',
-          phone: data.phone || '',
-          email: data.email || '',
+          aadhaarNumber: data.aadhaarNumber || data.aadhaar || '',
           district: data.district || '',
           state: data.state || '',
-          address: data.address || '',
           actType: data.actType || '',
-          caseNumber: data.caseNumber || '',
-          incidentDate: data.incidentDate || '',
-          registrationDate: data.registrationDate || '',
-          status: data.status || 'pending-verification',
           reliefAmount: data.reliefAmount || 0,
           disbursedAmount: data.disbursedAmount || 0,
-          priority: data.priority || 'medium',
-          assignedOfficer: data.assignedOfficer || '',
-          documents: data.documents || 0,
-          lastUpdate: data.lastUpdate || '',
-          bankAccount: data.bankAccount || null,
-          ifsc: data.ifsc || null,
+          status: data.status || 'pending-verification',
           verificationStatus: data.verificationStatus || 'pending',
           category: data.category || 'SC',
+          registrationDate: data.registrationDate || '',
+          priority: data.priority || 'medium',
+          assignedOfficer: data.assignedOfficer || '',
           age: data.age || null,
           gender: data.gender || null,
-          maritalStatus: data.maritalStatus || null
+          maritalStatus: data.maritalStatus || null,
+          bankAccount: data.bankAccount || null,
+          ifsc: data.ifsc || null
         });
       });
-      setBeneficiaries(items.length ? items : mockBeneficiaries);
+      setBeneficiaries(items);
       setLoading(false);
     }, (err) => {
       console.error('Error loading beneficiaries:', err);
@@ -678,6 +834,14 @@ const BeneficiariesPage = () => {
     return icons[status as keyof typeof icons] || Clock;
   };
 
+  const formatActType = (val?: string) => {
+    if (!val) return '—';
+    const v = String(val).toLowerCase();
+    if (v.includes('pcr')) return t('extracted.pcr_act') || 'PCR Act';
+    if (v.includes('poa') || v.includes('poa')) return t('extracted.poa_act') || 'PoA Act';
+    return val;
+  };
+
   // Deterministic formatting helpers to avoid SSR/client hydration mismatches
   
 
@@ -688,8 +852,23 @@ const BeneficiariesPage = () => {
 
   const formatDate = (s?: string | null) => {
     if (!s) return '—';
-    try { const d = new Date(s); return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d); } catch { return s; }
+    try {
+      // Handle Firestore Timestamp
+      if (typeof (s as any)?.toDate === 'function') {
+        const d = (s as any).toDate();
+        return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+      }
+      const d = new Date(s as any);
+      if (Number.isNaN(d.getTime())) return String(s);
+      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    } catch { return String(s); }
   };
+
+  // Pagination helpers
+  const totalItems = filteredBeneficiaries.length;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems);
+  const noPages = totalPages === 0;
 
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
@@ -783,12 +962,13 @@ const BeneficiariesPage = () => {
                     
                     <div className="flex flex-wrap gap-3">
                         <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => exportBeneficiariesData(beneficiaries)}
+                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
                         >
-                            <Download className="w-4 h-4" />
-                            <span>{t('extracted.export_data')}</span>
+                          <Download className="w-4 h-4" />
+                          <span>{t('extracted.export_data')}</span>
                         </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -803,39 +983,39 @@ const BeneficiariesPage = () => {
                 </div>
             </motion.div>
 
-      {/* New Beneficiary Form */}
-      {showNewBeneficiaryForm && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
-        >
-          <div className="p-6 border-b theme-border-glass flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.create_new_beneficiary')}</h2>
-              <p className="theme-text-muted">{t('extracted.create_new_beneficiary_description')}</p>
+      {/* New Beneficiary Form (moved below stats) - will render under statistics/cards when opened */}
+
+      {/* Toast container (top-right) */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {toasts.map(tst => {
+          const toastClass = tst.type === 'success'
+            ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
+            : tst.type === 'error'
+              ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
+              : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
+
+          return (
+            <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
+              <div className="flex items-center justify-between">
+                <div className="text-sm">{tst.message}</div>
+                <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
+              </div>
             </div>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowNewBeneficiaryForm(false)} className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors">
-              <X className="w-5 h-5" />
-            </motion.button>
-          </div>
-          <NewBeneficiaryForm onCancel={() => setShowNewBeneficiaryForm(false)} />
-        </motion.div>
-      )}
+          );
+        })}
+      </div>
 
       {/* Statistics Cards */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4"
       >
         {[
           { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
           { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
           { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { labelKey: 'extracted.disbursed', value: stats.disbursed, color: 'from-emerald-500 to-teal-500', icon: Banknote },
           { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
           { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
           { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
@@ -876,17 +1056,17 @@ const BeneficiariesPage = () => {
           },
           {
             labelKey: 'extracted.pcr_act_disbursements',
-            value: formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + b.reliefAmount, 0)),
+            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
             color: 'from-blue-500 to-cyan-500',
             icon: Scale,
-            subtitle: `${mockBeneficiaries.filter(b => b.actType === 'PCR Act').length} beneficiaries • 70% success rate`
+            subtitle: `${beneficiaries.filter(b => b.actType === 'PCR Act').length} beneficiaries • 70% success rate`
           },
           {
             labelKey: 'extracted.poa_act_disbursements',
-            value: formatCurrency(mockBeneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + b.reliefAmount, 0)),
+            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
             color: 'from-purple-500 to-pink-500',
             icon: Heart,
-            subtitle: `${mockBeneficiaries.filter(b => b.actType === 'PoA Act').length} beneficiaries • Verified 70%`
+            subtitle: `${beneficiaries.filter(b => b.actType === 'PoA Act').length} beneficiaries • Verified 70%`
           }
         ].map((card, idx) => (
           <motion.div
@@ -1097,7 +1277,6 @@ const BeneficiariesPage = () => {
                         <option value="all">{t('extracted.all_statuses')}</option>
                         <option value="verified">{t('extracted.verified')}</option>
                         <option value="pending-verification">{t('extracted.pending_verification')}</option>
-                        <option value="disbursed">{t('extracted.disbursed')}</option>
                         <option value="rejected">{t('extracted.rejected')}</option>
                         <option value="documents-required">{t('extracted.documents_required')}</option>
                       </select>
@@ -1285,8 +1464,55 @@ const BeneficiariesPage = () => {
         />
       </motion.div>
 
+      {/* Inline New Beneficiary Form (under stats) */}
+      {showNewBeneficiaryForm && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4 backdrop-blur-sm shadow-sm overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-lg font-semibold theme-text-primary">{selectedBeneficiary ? t('extracted.edit_beneficiary') : t('extracted.create_new_beneficiary')}</h3>
+              <p className="text-sm theme-text-muted">{selectedBeneficiary ? t('extracted.edit_beneficiary_description') : t('extracted.create_new_beneficiary_description')}</p>
+            </div>
+            <button onClick={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }} className="p-2 rounded-lg theme-bg-card theme-border-glass border hover:bg-red-500/20 theme-text-primary">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <NewBeneficiaryForm
+            onCancel={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }}
+            initialData={selectedBeneficiary}
+            onSaved={(saved) => {
+              if (saved) {
+                setBeneficiaries(prev => {
+                  const exists = prev.some(b => b.id === saved.id);
+                  if (exists) return prev.map(b => b.id === saved.id ? { ...b, ...saved } : b);
+                  return [saved, ...prev];
+                });
+                setFullBeneficiaries(prev => ({ ...prev, [saved.id]: saved }));
+                // Ensure user sees the new/updated record immediately
+                setCurrentPage(1);
+                setViewMode('table');
+                // Reset filters to show the new beneficiary
+                setSearchQuery('');
+                setStatusFilter('all');
+                setActTypeFilter('all');
+                setCategoryFilter('all');
+                setVerificationFilter('all');
+              }
+              setSelectedBeneficiary(null);
+              showToast('success', 'Beneficiary saved');
+              setShowNewBeneficiaryForm(false);
+            }}
+          />
+        </motion.div>
+      )}
+
+      {/* Inline detail moved below the list (see below) */}
+
       {/* Beneficiaries List */}
-    {/* Beneficiaries List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1308,13 +1534,13 @@ const BeneficiariesPage = () => {
                     transition={{ delay: idx * 0.03 }}
                     whileTap={{ scale: 0.995 }}
                     className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
-                    onClick={() => setSelectedBeneficiary(beneficiary)}
+                    onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
                   >
                     {/* Header Row */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                          {beneficiary.name.split(' ').map(n => n[0]).join('')}
+                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
@@ -1349,7 +1575,7 @@ const BeneficiariesPage = () => {
                           <Scale className="w-3.5 h-3.5" />
                           {t('extracted.act_type')}
                         </span>
-                        <span className="theme-text-primary font-medium">{beneficiary.actType}</span>
+                        <span className="theme-text-primary font-medium">{formatActType(beneficiary.actType)}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-xs">
@@ -1392,14 +1618,14 @@ const BeneficiariesPage = () => {
                     {/* Action Buttons */}
                     <div className="grid grid-cols-3 gap-2">
                       <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiary(beneficiary); }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
                         className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>{t('extracted.view')} </span>
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
                         className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
                       >
                         <Edit className="w-3.5 h-3.5" />
@@ -1446,7 +1672,7 @@ const BeneficiariesPage = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                            {beneficiary.name.split(' ').map(n => n[0]).join('')}
+                            {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                           </div>
                           <div>
                             <p className="text-sm font-medium theme-text-primary">{beneficiary.name}</p>
@@ -1465,7 +1691,7 @@ const BeneficiariesPage = () => {
                       </td>
                       <td className="hidden md:table-cell px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
-                          {beneficiary.actType}
+                          {formatActType(beneficiary.actType)}
                         </span>
                       </td>
                       <td className="hidden lg:table-cell px-4 py-3">
@@ -1499,7 +1725,7 @@ const BeneficiariesPage = () => {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setSelectedBeneficiary(beneficiary)}
+                            onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
                             className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
                             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
@@ -1508,6 +1734,7 @@ const BeneficiariesPage = () => {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
+                            onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
                             className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
                             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                           >
@@ -1544,12 +1771,12 @@ const BeneficiariesPage = () => {
                   whileHover={isMobile ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
-                  onClick={() => setSelectedBeneficiary(beneficiary)}
+                  onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white font-bold flex-shrink-0">
-                        {beneficiary.name.split(' ').map(n => n[0]).join('')}
+                        {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium theme-text-primary truncate">{beneficiary.name}</p>
@@ -1572,7 +1799,7 @@ const BeneficiariesPage = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm theme-text-secondary">
                       <Scale className="w-4 h-4 flex-shrink-0" />
-                      <span>{beneficiary.actType}</span>
+                      <span>{formatActType(beneficiary.actType)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm theme-text-secondary">
                       <DollarSign className="w-4 h-4 flex-shrink-0" />
@@ -1595,14 +1822,14 @@ const BeneficiariesPage = () => {
                         className="p-1.5 rounded-lg hover:theme-bg-card"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedBeneficiary(beneficiary);
+                          setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); });
                         }}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button 
                         className="p-1.5 rounded-lg hover:theme-bg-card"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -1616,7 +1843,7 @@ const BeneficiariesPage = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
           <p className="text-sm theme-text-muted">
-            {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredBeneficiaries.length)} {t('extracted.of')} {filteredBeneficiaries.length}
+            {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
           </p>
           <div className="flex items-center gap-2">
             {isMobile ? (
@@ -1624,7 +1851,7 @@ const BeneficiariesPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || noPages}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
                   className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
@@ -1634,7 +1861,7 @@ const BeneficiariesPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || noPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
                   className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
@@ -1647,7 +1874,7 @@ const BeneficiariesPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || noPages}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
                   className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
@@ -1669,7 +1896,7 @@ const BeneficiariesPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || noPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
                   className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
@@ -1682,258 +1909,65 @@ const BeneficiariesPage = () => {
         </div>
       </motion.div>
 
-      {/* Beneficiary Detail Modal */}
+      {/* Inline Beneficiary View (rendered under the table) */}
       <AnimatePresence>
         {selectedBeneficiary && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedBeneficiary(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className={`${isMobile ? 'theme-bg-card theme-border-glass border rounded-tl-none rounded-tr-none w-full h-full max-h-none overflow-y-auto' : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'}`}
-              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : undefined }}
-            >
-              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-6 flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="theme-bg-card theme-border-glass border rounded-2xl w-full overflow-hidden mt-6">
+            <div className="p-6 border-b theme-border-glass flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold theme-text-primary">{selectedBeneficiary.name}</h2>
+                <p className="theme-text-muted">{selectedBeneficiary.id} • {formatActType(selectedBeneficiary.actType)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setSelectedBeneficiary(null); setDetailStatus(''); setDetailVerification(''); }} className="p-2 rounded-lg theme-bg-card theme-border-glass border hover:bg-red-500/20 theme-text-primary"><X className="w-5 h-5" /></button>
+                <button onClick={() => { setShowNewBeneficiaryForm(true); }} className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border theme-text-primary">{t('extracted.edit')}</button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold theme-text-primary">{selectedBeneficiary.name}</h2>
-                  <p className="theme-text-muted">{selectedBeneficiary.id} • {selectedBeneficiary.actType}</p>
+                  <p className="text-xs theme-text-muted">{t('extracted.full_name')}</p>
+                  <p className="font-medium theme-text-primary">{selectedBeneficiary.name}</p>
                 </div>
-                <button
-                  onClick={() => setSelectedBeneficiary(null)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div>
+                  <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')}</p>
+                  <p className="font-medium theme-text-primary">{selectedBeneficiary.aadhaarNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs theme-text-muted">{t('extracted.phone_number')}</p>
+                  <p className="font-medium theme-text-primary">{selectedBeneficiary.phone}</p>
+                </div>
               </div>
 
-              <div className="p-6 space-y-6">
-                {/* Personal Information */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.personal_information_1')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <User className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.full_name')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.name}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <User className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.fatheraposs_name')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.fatherName}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Fingerprint className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.aadhaarNumber}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Phone className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.phone}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Shield className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.category_1')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.category}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Calendar className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.age')}</p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.age} {t('extracted.years')}</p>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                  <p className="text-sm theme-text-muted mb-2">{t('extracted.application_status')}</p>
+                  <div className="flex items-center gap-3">
+                    <select value={detailStatus} onChange={(e) => setDetailStatus(e.target.value)} className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary flex-1">
+                      <option value="pending-verification">{t('extracted.pending_verification') || 'Pending Verification'}</option>
+                      <option value="verified">{t('extracted.verified') || 'Verified'}</option>
+                      <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
+                      <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
+                    </select>
+                    <button onClick={() => updateBeneficiaryStatus(selectedBeneficiary.id, detailStatus)} className="px-3 py-2 rounded-lg bg-blue-600 text-white">{t('extracted.save')}</button>
                   </div>
                 </div>
 
-                {/* Address Information */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.address_information_1')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <MapPin className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.district')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.district}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <MapPin className="w-5 h-5 theme-text-muted" />
-                      <div>
-                        <p className="text-xs theme-text-muted">{t('extracted.state')} </p>
-                        <p className="font-medium theme-text-primary">{selectedBeneficiary.state}</p>
-                      </div>
-                    </div>
-                    <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.complete_address')} </p>
-                      <p className="font-medium theme-text-primary">{selectedBeneficiary.address}</p>
-                    </div>
+                <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                  <p className="text-sm theme-text-muted mb-2">{t('extracted.verification_status')}</p>
+                  <div className="flex items-center gap-3">
+                    <select value={detailVerification} onChange={(e) => setDetailVerification(e.target.value)} className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary flex-1">
+                      <option value="pending">{t('extracted.pending') || 'Pending'}</option>
+                      <option value="verified">{t('extracted.verified') || 'Verified'}</option>
+                      <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
+                      <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
+                    </select>
+                    <button onClick={() => updateBeneficiaryVerification(selectedBeneficiary.id, detailVerification)} className="px-3 py-2 rounded-lg bg-green-600 text-white">{t('extracted.save')}</button>
                   </div>
-                </div>
-
-                {/* Case and Financial Details */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_financial_details')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')} </p>
-                      <p className="font-medium theme-text-primary">{selectedBeneficiary.actType}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.case_number')} </p>
-                      <p className="font-medium theme-text-primary">{selectedBeneficiary.caseNumber}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')} </p>
-                      <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.incidentDate)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
-                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.reliefAmount)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.disbursed_amount')} </p>
-                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedBeneficiary.disbursedAmount)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.registration_date')} </p>
-                      <p className="font-medium theme-text-primary">{formatDate(selectedBeneficiary.registrationDate)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bank Details */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.bank_account_details')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
-                      <p className="font-medium theme-text-primary">{selectedBeneficiary.bankAccount}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
-                      <p className="font-medium theme-text-primary">{selectedBeneficiary.ifsc}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status and Verification */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">{t('extracted.application_status')} </p>
-                    <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedBeneficiary.status)}`}>
-                      {(() => {
-                        const Icon = getStatusIcon(selectedBeneficiary.status);
-                        return <Icon className="w-4 h-4" />;
-                      })()}
-                      {selectedBeneficiary.status.replace('-', ' ').toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">{t('extracted.verification_status')} </p>
-                    <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
-                      {(() => {
-                        const Icon = getVerificationIcon(selectedBeneficiary.verificationStatus);
-                        return <Icon className="w-4 h-4" />;
-                      })()}
-                      {selectedBeneficiary.verificationStatus.replace('-', ' ').toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Documents Section */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.uploaded_documents')} </h3>
-                  <div className="space-y-2">
-                    {[
-                      'Aadhaar Card',
-                      'FIR Copy', 
-                      'Medical Certificate', 
-                      'Identity Proof', 
-                      'Caste Certificate',
-                      'Bank Passbook'
-                    ].map((doc, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass hover:theme-border-glass border transition-all" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined, borderColor: theme === 'light' ? 'rgba(226, 232, 240, 0.8)' : 'transparent' }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)' }}>
-                            <FileText className="w-5 h-5" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }} />
-                          </div>
-                          <div>
-                            <p className="font-medium theme-text-primary">{doc}</p>
-                            <p className="text-xs theme-text-muted">{t('extracted.pdf_24_mb')} </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
-                            <Download className="w-4 h-4" />
-                          </button>
-                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                    style={{
-                      backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                      color: theme === 'light' ? '#15803d' : '#86efac',
-                      border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
-                    }}
-                  >
-                    <Check className="w-5 h-5" />
-                    {t('extracted.verify_beneficiary')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                    style={{
-                      backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
-                      color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
-                      border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
-                    }}
-                  >
-                    <Banknote className="w-5 h-5" />
-                    {t('extracted.initiate_disbursement')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                    {t('extracted.request_documents')}
-                  </motion.button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
