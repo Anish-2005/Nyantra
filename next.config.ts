@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+  },
   async headers() {
     return [
       {
@@ -18,7 +30,7 @@ const nextConfig: NextConfig = {
                 https://*.googleapis.com
                 https://*.firebaseio.com
                 https://securetoken.googleapis.com;
-              img-src 'self' data: blob:;
+              img-src 'self' data: blob: https:;
               style-src 'self' 'unsafe-inline';
               font-src 'self' https://fonts.gstatic.com;
               frame-src https://*.firebaseapp.com https://apis.google.com;

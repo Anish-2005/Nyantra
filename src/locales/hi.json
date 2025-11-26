@@ -833,6 +833,7 @@
     "within_sla": "SLA के भीतर",
     "near_sla": "SLA के करीब",
     "breached_sla": "SLA का उल्लंघन",
+    "case_updated": "मामला अपडेट किया गया",
     "case_resolved": "मामला हल हुआ",
     "new_escalation": "नया एस्केलेशन",
     "document_uploaded": "दस्तावेज़ अपलोड किया गया",

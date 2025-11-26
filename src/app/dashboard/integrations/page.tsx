@@ -21,6 +21,8 @@ import {
   Lock,
   Key
 } from 'lucide-react';
+import { collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Real government platform logos (using SVG components)
 const PlatformLogos = {
@@ -90,361 +92,8 @@ const PlatformLogos = {
   )
 };
 
-// Mock data with real platform references
-// Mock data for government integrations
-const mockIntegrations = [
-  {
-    id: 'AADHAAR-001',
-    name: 'Aadhaar Authentication',
-    provider: 'UIDAI',
-    category: 'identity-verification',
-    status: 'active',
-    health: 'excellent',
-    lastSync: '2024-03-18 14:30:25',
-    nextSync: '2024-03-18 15:30:00',
-    syncFrequency: 'real-time',
-    successRate: 99.8,
-    responseTime: '1.2s',
-    apiVersion: '2.5',
-    endpoints: 3,
-    description: 'Real-time Aadhaar authentication and e-KYC services for beneficiary verification',
-    documentation: 'https://uidai.gov.in/apis',
-    apiKey: '•••••••••a1b2c3',
-    security: 'ISO 27001 Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['DPDPA', 'IT Act'],
-    usage: {
-      monthly: 12500,
-      daily: 450,
-      errors: 12
-    },
-    config: {
-      authType: 'OAuth 2.0',
-      rateLimit: '1000/hour',
-      timeout: '30s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 14:30:25', status: 'success', message: 'Authentication successful' },
-      { timestamp: '2024-03-18 14:25:10', status: 'success', message: 'KYC verification completed' },
-      { timestamp: '2024-03-18 14:20:45', status: 'warning', message: 'High latency detected' }
-    ]
-  },
-  {
-    id: 'DIGILOCKER-002',
-    name: 'DigiLocker Integration',
-    provider: 'MeitY',
-    category: 'document-verification',
-    status: 'active',
-    health: 'good',
-    lastSync: '2024-03-18 13:45:10',
-    nextSync: '2024-03-18 14:45:00',
-    syncFrequency: 'hourly',
-    successRate: 98.5,
-    responseTime: '2.1s',
-    apiVersion: '1.8',
-    endpoints: 5,
-    description: 'Secure document fetching and verification from DigiLocker repository',
-    documentation: 'https://digilocker.gov.in/developers',
-    apiKey: '•••••••••d4e5f6',
-    security: 'ISO 27001 Certified',
-    dataEncryption: 'RSA-2048',
-    compliance: ['DPDPA', 'IT Act'],
-    usage: {
-      monthly: 8900,
-      daily: 320,
-      errors: 25
-    },
-    config: {
-      authType: 'API Key',
-      rateLimit: '500/hour',
-      timeout: '45s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 13:45:10', status: 'success', message: 'Document retrieval successful' },
-      { timestamp: '2024-03-18 13:30:22', status: 'success', message: 'Document verification completed' }
-    ]
-  },
-  {
-    id: 'CCTNS-003',
-    name: 'CCTNS Integration',
-    provider: 'MHA',
-    category: 'crime-records',
-    status: 'active',
-    health: 'good',
-    lastSync: '2024-03-18 12:15:30',
-    nextSync: '2024-03-18 13:15:00',
-    syncFrequency: 'hourly',
-    successRate: 96.2,
-    responseTime: '3.5s',
-    apiVersion: '3.2',
-    endpoints: 8,
-    description: 'Crime and Criminal Tracking Network System integration for case verification',
-    documentation: 'https://cctns.gov.in/apis',
-    apiKey: '•••••••••g7h8i9',
-    security: 'MHA Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['IT Act', 'CrPC'],
-    usage: {
-      monthly: 6700,
-      daily: 240,
-      errors: 18
-    },
-    config: {
-      authType: 'Certificate-based',
-      rateLimit: '200/hour',
-      timeout: '60s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 12:15:30', status: 'success', message: 'Case data synchronized' },
-      { timestamp: '2024-03-18 11:45:15', status: 'error', message: 'Temporary connection timeout' }
-    ]
-  },
-  {
-    id: 'ECOURTS-004',
-    name: 'eCourts Integration',
-    provider: 'eCommittee, SC',
-    category: 'court-records',
-    status: 'active',
-    health: 'fair',
-    lastSync: '2024-03-18 11:30:45',
-    nextSync: '2024-03-18 12:30:00',
-    syncFrequency: 'hourly',
-    successRate: 94.7,
-    responseTime: '4.2s',
-    apiVersion: '2.1',
-    endpoints: 6,
-    description: 'Integration with eCourts for case status and hearing information',
-    documentation: 'https://ecourts.gov.in/apis',
-    apiKey: '•••••••••j0k1l2',
-    security: 'Supreme Court Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['IT Act', 'Evidence Act'],
-    usage: {
-      monthly: 5400,
-      daily: 190,
-      errors: 32
-    },
-    config: {
-      authType: 'OAuth 2.0',
-      rateLimit: '300/hour',
-      timeout: '45s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 11:30:45', status: 'success', message: 'Case status updated' },
-      { timestamp: '2024-03-18 10:15:20', status: 'warning', message: 'Partial data received' }
-    ]
-  },
-  {
-    id: 'NSDL-005',
-    name: 'NSDL Banking',
-    provider: 'NSDL',
-    category: 'banking-services',
-    status: 'active',
-    health: 'excellent',
-    lastSync: '2024-03-18 10:45:15',
-    nextSync: '2024-03-18 11:45:00',
-    syncFrequency: 'real-time',
-    successRate: 99.9,
-    responseTime: '0.8s',
-    apiVersion: '4.0',
-    endpoints: 12,
-    description: 'National Securities Depository Limited integration for DBT payments and banking',
-    documentation: 'https://nsdl.co.in/apis',
-    apiKey: '•••••••••m3n4o5',
-    security: 'RBI Certified',
-    dataEncryption: 'AES-256 + TLS 1.3',
-    compliance: ['RBI Guidelines', 'FEMA'],
-    usage: {
-      monthly: 21500,
-      daily: 780,
-      errors: 5
-    },
-    config: {
-      authType: 'Mutual TLS',
-      rateLimit: '5000/hour',
-      timeout: '15s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 10:45:15', status: 'success', message: 'Payment processed successfully' },
-      { timestamp: '2024-03-18 10:30:10', status: 'success', message: 'Account verification completed' }
-    ]
-  },
-  {
-    id: 'NPCI-006',
-    name: 'NPCI UPI & IMPS',
-    provider: 'NPCI',
-    category: 'payment-services',
-    status: 'active',
-    health: 'excellent',
-    lastSync: '2024-03-18 09:20:30',
-    nextSync: '2024-03-18 09:21:00',
-    syncFrequency: 'real-time',
-    successRate: 99.7,
-    responseTime: '1.1s',
-    apiVersion: '3.5',
-    endpoints: 15,
-    description: 'National Payments Corporation of India integration for UPI and IMPS transactions',
-    documentation: 'https://www.npci.org.in/apis',
-    apiKey: '•••••••••p6q7r8',
-    security: 'PCI DSS Certified',
-    dataEncryption: 'AES-256 + RSA-4096',
-    compliance: ['RBI Guidelines', 'PCI DSS'],
-    usage: {
-      monthly: 32800,
-      daily: 1150,
-      errors: 15
-    },
-    config: {
-      authType: 'Certificate-based',
-      rateLimit: '10000/hour',
-      timeout: '10s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 09:20:30', status: 'success', message: 'UPI transaction completed' },
-      { timestamp: '2024-03-18 09:15:45', status: 'success', message: 'IMPS transfer successful' }
-    ]
-  },
-  {
-    id: 'INCOME-TAX-007',
-    name: 'Income Tax Database',
-    provider: 'CBDT',
-    category: 'financial-verification',
-    status: 'inactive',
-    health: 'offline',
-    lastSync: '2024-03-17 18:30:00',
-    nextSync: '2024-03-19 09:00:00',
-    syncFrequency: 'daily',
-    successRate: 92.3,
-    responseTime: '5.8s',
-    apiVersion: '2.0',
-    endpoints: 4,
-    description: 'Central Board of Direct Taxes integration for income verification and PAN validation',
-    documentation: 'https://incometaxindia.gov.in/apis',
-    apiKey: '•••••••••s9t0u1',
-    security: 'CBDT Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['Income Tax Act'],
-    usage: {
-      monthly: 3200,
-      daily: 120,
-      errors: 28
-    },
-    config: {
-      authType: 'API Key + IP Whitelist',
-      rateLimit: '100/hour',
-      timeout: '90s'
-    },
-    logs: [
-      { timestamp: '2024-03-17 18:30:00', status: 'error', message: 'Scheduled maintenance' },
-      { timestamp: '2024-03-17 17:45:15', status: 'success', message: 'PAN verification completed' }
-    ]
-  },
-  {
-    id: 'NSAP-008',
-    name: 'NSAP Database',
-    provider: 'Ministry of Rural Development',
-    category: 'social-welfare',
-    status: 'active',
-    health: 'good',
-    lastSync: '2024-03-18 08:15:20',
-    nextSync: '2024-03-18 09:15:00',
-    syncFrequency: 'hourly',
-    successRate: 95.8,
-    responseTime: '2.8s',
-    apiVersion: '1.5',
-    endpoints: 7,
-    description: 'National Social Assistance Programme integration for beneficiary cross-verification',
-    documentation: 'https://nsap.gov.in/apis',
-    apiKey: '•••••••••v2w3x4',
-    security: 'Ministry Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['NSAP Guidelines'],
-    usage: {
-      monthly: 4800,
-      daily: 170,
-      errors: 22
-    },
-    config: {
-      authType: 'OAuth 2.0',
-      rateLimit: '400/hour',
-      timeout: '30s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 08:15:20', status: 'success', message: 'Beneficiary data synchronized' },
-      { timestamp: '2024-03-18 07:30:45', status: 'success', message: 'Eligibility check completed' }
-    ]
-  },
-  {
-    id: 'STATE-PORTALS-009',
-    name: 'State Welfare Portals',
-    provider: 'Various State Governments',
-    category: 'state-integrations',
-    status: 'active',
-    health: 'fair',
-    lastSync: '2024-03-18 07:45:30',
-    nextSync: '2024-03-18 08:45:00',
-    syncFrequency: 'hourly',
-    successRate: 91.4,
-    responseTime: '6.5s',
-    apiVersion: 'Multiple',
-    endpoints: 28,
-    description: 'Integration with state-level social welfare and SC/ST development portals',
-    documentation: 'Various state portals',
-    apiKey: '•••••••••y5z6a7',
-    security: 'State Certified',
-    dataEncryption: 'AES-256',
-    compliance: ['State IT Policies'],
-    usage: {
-      monthly: 15200,
-      daily: 540,
-      errors: 145
-    },
-    config: {
-      authType: 'Mixed (OAuth/API Key)',
-      rateLimit: 'Varies by state',
-      timeout: '60s'
-    },
-    logs: [
-      { timestamp: '2024-03-18 07:45:30', status: 'warning', message: 'Partial sync - Bihar portal timeout' },
-      { timestamp: '2024-03-18 07:30:15', status: 'success', message: 'UP portal synchronized successfully' }
-    ]
-  },
-  {
-    id: 'CLOUD-INFRA-010',
-    name: 'MeghRaj Cloud',
-    provider: 'MeitY',
-    category: 'cloud-services',
-    status: 'active',
-    health: 'excellent',
-    lastSync: '2024-03-18 06:30:00',
-    nextSync: 'Continuous',
-    syncFrequency: 'continuous',
-    successRate: 99.95,
-    responseTime: '0.3s',
-    apiVersion: 'N/A',
-    endpoints: 0,
-    description: 'Government of India MeghRaj Cloud infrastructure hosting and services',
-    documentation: 'https://meghraj.gov.in',
-    apiKey: 'Infrastructure',
-    security: 'STQC Certified',
-    dataEncryption: 'Multiple layers',
-    compliance: ['Cloud Security Guidelines'],
-    usage: {
-      monthly: 'Continuous',
-      daily: 'Continuous',
-      errors: 2
-    },
-    config: {
-      authType: 'IAM',
-      rateLimit: 'N/A',
-      timeout: 'N/A'
-    },
-    logs: [
-      { timestamp: '2024-03-18 06:30:00', status: 'success', message: 'Infrastructure healthy' },
-      { timestamp: '2024-03-18 05:45:15', status: 'success', message: 'Auto-scaling activated' }
-    ]
-  }
-];
+
+
 
 const IntegrationsPage = () => {
   const { theme } = useTheme();
@@ -457,14 +106,92 @@ const IntegrationsPage = () => {
   const [sortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [selectedIntegration, setSelectedIntegration] = useState<typeof mockIntegrations[0] | null>(null);
+  const [selectedIntegration, setSelectedIntegration] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
   const [activeTab, setActiveTab] = useState('overview');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Firestore-backed integrations state
+  const [integrations, setIntegrations] = useState<any[]>([]);
+  const [loadingIntegrations, setLoadingIntegrations] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedIntegration, setEditedIntegration] = useState<any | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
-  // Filter and sort integrations
+  // Subscribe to Firestore 'integrations' collection
+  useEffect(() => {
+    const q = query(collection(db, 'integrations'), orderBy('name'));
+    const unsub = onSnapshot(q, (snap) => {
+      const items: any[] = snap.docs.map(d => {
+        const data = d.data() as any;
+        console.log('Firebase document:', d.id, data); // Debug log
+        return {
+          id: d.id,
+          name: data.name || 'Unnamed Integration',
+          provider: data.provider || 'Unknown Provider',
+          category: data.category || 'identity-verification',
+          status: data.status || 'active',
+          health: data.health || 'good',
+          description: data.description || 'No description available',
+          imageUrl: data.imageUrl || '',
+          successRate: data.successRate || 100,
+          responseTime: data.responseTime || '1s',
+          endpoints: data.endpoints || 1,
+          apiVersion: data.apiVersion || '1.0',
+          lastSync: data.lastSync || '',
+          nextSync: data.nextSync || '',
+          syncFrequency: data.syncFrequency || 'hourly',
+          apiKey: data.apiKey || '',
+          security: data.security || '',
+          dataEncryption: data.dataEncryption || '',
+          documentation: data.documentation || '',
+          compliance: data.compliance || [],
+          usage: data.usage || { monthly: 0, daily: 0, errors: 0 },
+          config: data.config || { authType: '', rateLimit: '', timeout: '' },
+          logs: data.logs || [],
+          createdAt: data.createdAt,
+          lastModified: data.lastModified
+        };
+      });
+      console.log('Processed integrations:', items); // Debug log
+      setIntegrations(items);
+      setLoadingIntegrations(false);
+    }, (err) => {
+      console.error('Integrations snapshot error', err);
+      setLoadingIntegrations(false);
+    });
+
+    return () => unsub();
+  }, []);
+
+  const saveIntegration = async (id: string, updates: any) => {
+    try {
+      const updateData: any = { lastModified: serverTimestamp() };
+      Object.keys(updates).forEach(key => {
+        if (updates[key] !== undefined && key !== 'id' && key !== 'createdAt') {
+          updateData[key] = updates[key];
+        }
+      });
+      await updateDoc(doc(db, 'integrations', id), updateData);
+    } catch (e) {
+      console.error('Failed to save integration', e);
+      throw e;
+    }
+  };
+
+  const addIntegration = async (integration: any) => {
+    try {
+      await addDoc(collection(db, 'integrations'), { ...integration, createdAt: serverTimestamp() });
+    } catch (e) {
+      console.error('Failed to add integration', e);
+      throw e;
+    }
+  };
+
+  // Filter and sort integrations (use live Firestore data)
+  const dataSource = integrations;
+
   const filteredIntegrations = useMemo(() => {
-    let filtered = [...mockIntegrations];
+    let filtered = [...dataSource];
 
     if (searchQuery) {
       filtered = filtered.filter(integration =>
@@ -510,16 +237,16 @@ const IntegrationsPage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const total = mockIntegrations.length;
-    const active = mockIntegrations.filter(i => i.status === 'active').length;
-    const inactive = mockIntegrations.filter(i => i.status === 'inactive').length;
-    const excellent = mockIntegrations.filter(i => i.health === 'excellent').length;
-    const good = mockIntegrations.filter(i => i.health === 'good').length;
-    const fair = mockIntegrations.filter(i => i.health === 'fair').length;
-    const offline = mockIntegrations.filter(i => i.health === 'offline').length;
-    
-    const totalEndpoints = mockIntegrations.reduce((sum, i) => sum + i.endpoints, 0);
-    const avgSuccessRate = mockIntegrations.reduce((sum, i) => sum + i.successRate, 0) / total;
+    const total = dataSource.length;
+    const active = dataSource.filter(i => i.status === 'active').length;
+    const inactive = dataSource.filter(i => i.status === 'inactive').length;
+    const excellent = dataSource.filter(i => i.health === 'excellent').length;
+    const good = dataSource.filter(i => i.health === 'good').length;
+    const fair = dataSource.filter(i => i.health === 'fair').length;
+    const offline = dataSource.filter(i => i.health === 'offline').length;
+
+    const totalEndpoints = dataSource.reduce((sum: number, i: any) => sum + (i.endpoints || 0), 0);
+    const avgSuccessRate = dataSource.reduce((sum: number, i: any) => sum + (Number(i.successRate) || 0), 0) / Math.max(1, total);
     
     return {
       total,
@@ -537,19 +264,19 @@ const IntegrationsPage = () => {
   // Category distribution
   const categoryStats = useMemo(() => {
     const categories = {
-      'identity-verification': mockIntegrations.filter(i => i.category === 'identity-verification').length,
-      'document-verification': mockIntegrations.filter(i => i.category === 'document-verification').length,
-      'crime-records': mockIntegrations.filter(i => i.category === 'crime-records').length,
-      'court-records': mockIntegrations.filter(i => i.category === 'court-records').length,
-      'banking-services': mockIntegrations.filter(i => i.category === 'banking-services').length,
-      'payment-services': mockIntegrations.filter(i => i.category === 'payment-services').length,
-      'financial-verification': mockIntegrations.filter(i => i.category === 'financial-verification').length,
-      'social-welfare': mockIntegrations.filter(i => i.category === 'social-welfare').length,
-      'state-integrations': mockIntegrations.filter(i => i.category === 'state-integrations').length,
-      'cloud-services': mockIntegrations.filter(i => i.category === 'cloud-services').length
+      'identity-verification': dataSource.filter(i => i.category === 'identity-verification').length,
+      'document-verification': dataSource.filter(i => i.category === 'document-verification').length,
+      'crime-records': dataSource.filter(i => i.category === 'crime-records').length,
+      'court-records': dataSource.filter(i => i.category === 'court-records').length,
+      'banking-services': dataSource.filter(i => i.category === 'banking-services').length,
+      'payment-services': dataSource.filter(i => i.category === 'payment-services').length,
+      'financial-verification': dataSource.filter(i => i.category === 'financial-verification').length,
+      'social-welfare': dataSource.filter(i => i.category === 'social-welfare').length,
+      'state-integrations': dataSource.filter(i => i.category === 'state-integrations').length,
+      'cloud-services': dataSource.filter(i => i.category === 'cloud-services').length
     };
     return categories;
-  }, []);
+  }, [integrations]);
 
   // mobile detection removed (isMobile unused) — viewMode can be toggled manually
 
@@ -822,6 +549,10 @@ const IntegrationsPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
+              setIsAdding(true);
+            }}
             className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-xl text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
@@ -964,6 +695,23 @@ const IntegrationsPage = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Clear Filters Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setCategoryFilter('all');
+                  setHealthFilter('all');
+                  setCurrentPage(1);
+                }}
+                className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="font-semibold">{t('extracted.clear_filters')}</span>
+              </motion.button>
             </div>
           </div>
 
@@ -1002,123 +750,226 @@ const IntegrationsPage = () => {
           transition={{ delay: 0.3 }}
           className="xl:col-span-3 space-y-6"
         >
-          {/* View Controls */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold theme-text-primary">
-                {t('extracted.government_integrations')} <span className="theme-text-muted text-lg">({filteredIntegrations.length})</span>
-              </h2>
+          {/* Action Buttons - Bottom of Grid */}
+          <div className={`border-t p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
+                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
+              >
+                <Wifi className="w-5 h-5" />
+                <span className="hidden sm:inline">{t('extracted.test_connection')}</span>
+                <span className="inline sm:hidden">{t('extracted.test')}</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
+                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span className="hidden sm:inline">{t('extracted.sync_now')}</span>
+                <span className="inline sm:hidden">{t('extracted.sync')}</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  if (selectedIntegration) {
+                    setEditedIntegration({ ...selectedIntegration });
+                    setIsEditing(true);
+                  }
+                }}
+                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
+              >
+                <Edit className="w-5 h-5" />
+                <span className="hidden sm:inline">{t('extracted.edit_config')}</span>
+                <span className="inline sm:hidden">{t('extracted.edit')}</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
+              >
+                <X className="w-5 h-5" />
+                <span className="hidden sm:inline">{t('extracted.disable')}</span>
+                <span className="inline sm:hidden">Off</span>
+              </motion.button>
+            </div>
+          </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {loadingIntegrations ? (
+                // Loading state
+                Array.from({ length: 6 }, (_, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="p-6 rounded-2xl theme-bg-card theme-border-glass border animate-pulse"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-4 w-2/3"></div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      </div>
+                      <div className="text-center">
+                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      </div>
+                      <div className="text-center">
+                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                      <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : paginatedIntegrations.length === 0 ? (
+                // Empty state
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-full flex flex-col items-center justify-center py-16 px-4"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                    <Database className="w-8 h-8 theme-text-muted" />
+                  </div>
+                  <h3 className="text-lg font-semibold theme-text-primary mb-2">No integrations found</h3>
+                  <p className="text-sm theme-text-muted text-center mb-6 max-w-md">
+                    {filteredIntegrations.length === 0 && integrations.length > 0
+                      ? "No integrations match your current filters. Try adjusting your search or filter criteria."
+                      : "Get started by adding your first integration to monitor and manage your API connections."}
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
+                      setIsAdding(true);
+                    }}
+                    className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-xl"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span className="font-semibold">Add First Integration</span>
+                  </motion.button>
+                </motion.div>
+              ) : (
+                // Actual integrations
+                paginatedIntegrations.map((integration, idx) => (
+                  <motion.div
+                    key={integration.id || idx}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    className="p-6 rounded-2xl theme-bg-card theme-border-glass border"
+                    onClick={() => setSelectedIntegration(integration)}
+                  >
+                    {/* Header with Image/Logo */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                        {integration.imageUrl ? (
+                          <img
+                            src={integration.imageUrl}
+                            alt={integration.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-full h-full flex items-center justify-center ${integration.imageUrl ? 'hidden' : ''}`}>
+                          {getPlatformLogo(integration.provider)}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold theme-text-primary truncate">{integration.name}</h3>
+                        <p className="text-sm theme-text-muted truncate">{integration.provider}</p>
+                      </div>
+                    </div>
+
+                  {/* Description */}
+                    <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
+                    {integration.description}
+                  </p>
+
+                  {/* Stats */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
+                        <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
+                        <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
+                        <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
+                      </div>
+                    </div>
+
+                  {/* Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getHealthColor(integration.health)}`}>
+                        {(() => {
+                          const Icon = getHealthIcon(integration.health);
+                          return <Icon className="w-3 h-3" />;
+                        })()}
+                        {integration.health}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestConnection(integration.id);
+                          }}
+                          className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors touch-manipulation"
+                        >
+                          <Wifi className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSyncNow(integration.id);
+                          }}
+                          className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors touch-manipulation"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2 theme-bg-glass rounded-xl p-1">
-              {['grid', 'list', 'compact'].map((mode) => (
-                <motion.button
-                  key={mode}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode(mode as 'grid' | 'list' | 'compact')}
-                  className={`px-3 sm:px-4 py-2 rounded-lg capitalize ${
-                    viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
-                  }`}
-                >
-                  {mode}
-                </motion.button>
-              ))}
-            </div>
-          </div>
 
-          {/* Integrations Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
-            {paginatedIntegrations.map((integration, idx) => (
-              <motion.div
-                key={integration.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer group"
-                onClick={() => setSelectedIntegration(integration)}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
-                      {getPlatformLogo(integration.provider)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold theme-text-primary group-hover:text-accent-gradient transition-colors">
-                        {integration.name}
-                      </h3>
-                      <p className="theme-text-muted text-sm">{integration.provider}</p>
-                    </div>
-                  </div>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getStatusColor(integration.status)}`}>
-                    {integration.status === 'active' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                    {integration.status}
-                  </span>
-                </div>
-
-                {/* Description */}
-                  <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
-                  {integration.description}
-                </p>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getHealthColor(integration.health)}`}>
-                    {(() => {
-                      const Icon = getHealthIcon(integration.health);
-                      return <Icon className="w-3 h-3" />;
-                    })()}
-                    {integration.health}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTestConnection(integration.id);
-                      }}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors touch-manipulation"
-                    >
-                      <Wifi className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSyncNow(integration.id);
-                      }}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors touch-manipulation"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between pt-4 sm:pt-6 border-t theme-border-glass flex-wrap gap-3">
+            {/* Pagination */}
+            <div className="flex items-center justify-between pt-4 sm:pt-6 border-t theme-border-glass flex-wrap gap-3">
             <p className="theme-text-muted text-sm">
               {t('extracted.showing')} {((currentPage - 1) * itemsPerPage) + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredIntegrations.length)} {t('extracted.of')} {filteredIntegrations.length} {t('extracted.integrations')}
             </p>
@@ -1162,14 +1013,14 @@ const IntegrationsPage = () => {
       {/* Integration Detail Modal - Enhanced */}
      {/* Integration Detail Modal - Enhanced */}
 <AnimatePresence>
-  {selectedIntegration && (
+  { (selectedIntegration || isAdding) && (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{ zIndex: 9999 }}
       className={`fixed inset-0 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto ${theme === 'light' ? 'bg-black/40' : 'bg-black/60'}`}
-      onClick={() => setSelectedIntegration(null)}
+      onClick={() => { setSelectedIntegration(null); setIsAdding(false); setIsEditing(false); setEditedIntegration(null); }}
     >
       <motion.div
         initial={{ scale: 0.98, opacity: 0 }}
@@ -1182,28 +1033,49 @@ const IntegrationsPage = () => {
         <div className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 sm:gap-4 flex-1">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
-                {getPlatformLogo(selectedIntegration.provider)}
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-lg">
+                {(isEditing || isAdding) && editedIntegration && editedIntegration.imageUrl ? (
+                  <img
+                    src={editedIntegration.imageUrl}
+                    alt={editedIntegration.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full flex items-center justify-center accent-gradient text-white ${(isEditing || isAdding) && editedIntegration && editedIntegration.imageUrl ? 'hidden' : ''}`}>
+                  {getPlatformLogo((isEditing || isAdding) && editedIntegration ? editedIntegration.provider : selectedIntegration.provider)}
+                </div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">{selectedIntegration.name}</h2>
-                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${getStatusColor(selectedIntegration.status)}`}>
-                    {selectedIntegration.status === 'active' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    {selectedIntegration.status.toUpperCase()}
+                  {(isEditing || isAdding) && editedIntegration ? (
+                    <input
+                      value={editedIntegration.name}
+                      onChange={(e) => setEditedIntegration({ ...editedIntegration, name: e.target.value })}
+                      className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary bg-transparent border-b focus:outline-none"
+                    />
+                  ) : (
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">{selectedIntegration.name}</h2>
+                  )}
+                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${getStatusColor((isEditing || isAdding) && editedIntegration ? editedIntegration.status : selectedIntegration.status)}`}>
+                    {((isEditing || isAdding) && editedIntegration ? editedIntegration.status : selectedIntegration.status) === 'active' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                    {((isEditing || isAdding) && editedIntegration ? editedIntegration.status : selectedIntegration.status).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 flex-wrap">
-                  <p className="theme-text-muted text-lg">{selectedIntegration.provider}</p>
+                  <p className="theme-text-muted text-lg">{(isEditing || isAdding) && editedIntegration ? editedIntegration.provider : selectedIntegration.provider}</p>
                   <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted font-mono">{selectedIntegration.id}</p>
+                  <p className="theme-text-muted font-mono">{(isEditing || isAdding) && editedIntegration ? editedIntegration.id : selectedIntegration.id}</p>
                   <span className="text-sm theme-text-muted">•</span>
-                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold border ${getHealthColor(selectedIntegration.health)}`}>
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold border ${getHealthColor((isEditing || isAdding) && editedIntegration ? editedIntegration.health : selectedIntegration.health)}`}>
                     {(() => {
-                      const Icon = getHealthIcon(selectedIntegration.health);
+                      const Icon = getHealthIcon((isEditing || isAdding) && editedIntegration ? editedIntegration.health : selectedIntegration.health);
                       return <Icon className="w-4 h-4" />;
                     })()}
-                    {selectedIntegration.health.toUpperCase()}
+                    {((isEditing || isAdding) && editedIntegration ? editedIntegration.health : selectedIntegration.health).toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -1252,89 +1124,177 @@ const IntegrationsPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                   <h3 className="text-2xl font-bold theme-text-primary mb-4">{t('extracted.integration_overview')}</h3>
-                  <p className="theme-text-primary text-lg leading-relaxed">{selectedIntegration.description}</p>
-                </div>
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <div className="flex items-center gap-3 mb-4">
-                    <FileText className="w-6 h-6 theme-text-primary" />
-                    <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.documentation')} </h4>
-                  </div>
-                  <a 
-                    href={selectedIntegration.documentation} 
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span className="font-semibold">{t('extracted.view_api_documentation')} </span>
-                  </a>
-                </div>
-              </div>
-
-              {/* Key Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[
-                  { labelKey: 'extracted.success_rate', value: `${selectedIntegration.successRate}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-                  { labelKey: 'extracted.response', value: selectedIntegration.responseTime, icon: Zap, color: 'from-blue-500 to-cyan-500' },
-                  { labelKey: 'extracted.endpoints', value: selectedIntegration.endpoints, icon: Network, color: 'from-purple-500 to-pink-500' },
-                  { labelKey: 'extracted.api_version', value: selectedIntegration.apiVersion, icon: Code, color: 'from-orange-500 to-red-500' }
-                ].map((metric, idx) => (
-                  <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}>
-                      <metric.icon className="w-6 h-6 text-white" />
+                  {(isEditing || isAdding) && editedIntegration ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Name</label>
+                        <input
+                          value={editedIntegration.name}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, name: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Provider</label>
+                        <input
+                          value={editedIntegration.provider}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, provider: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Category</label>
+                        <select
+                          value={editedIntegration.category}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, category: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                        >
+                          <option value="identity-verification">Identity Verification</option>
+                          <option value="document-verification">Document Verification</option>
+                          <option value="payment-services">Payment Services</option>
+                          <option value="banking-services">Banking Services</option>
+                          <option value="crime-records">Crime Records</option>
+                          <option value="court-records">Court Records</option>
+                          <option value="financial-verification">Financial Verification</option>
+                          <option value="social-welfare">Social Welfare</option>
+                          <option value="state-integrations">State Integrations</option>
+                          <option value="cloud-services">Cloud Services</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Status</label>
+                        <select
+                          value={editedIntegration.status}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, status: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="pending">Pending</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Health</label>
+                        <select
+                          value={editedIntegration.health}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, health: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                        >
+                          <option value="excellent">Excellent</option>
+                          <option value="good">Good</option>
+                          <option value="fair">Fair</option>
+                          <option value="offline">Offline</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Image URL</label>
+                        <input
+                          value={editedIntegration.imageUrl || ''}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, imageUrl: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                          placeholder="https://example.com/image.png"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Description</label>
+                        <textarea
+                          value={editedIntegration.description}
+                          onChange={(e) => setEditedIntegration({ ...editedIntegration, description: e.target.value })}
+                          className="w-full p-3 rounded-lg border theme-bg-card theme-text-primary text-sm"
+                          rows={5}
+                        />
+                      </div>
                     </div>
-                    <p className="text-2xl font-bold theme-text-primary mb-1">{metric.value}</p>
-                    <p className="text-sm theme-text-muted">{t(metric.labelKey)}</p>
+                  ) : (
+                    <p className="theme-text-primary text-lg leading-relaxed">{selectedIntegration.description}</p>
+                  )}
+                </div>
+                {selectedIntegration && (
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-4">
+                      <FileText className="w-6 h-6 theme-text-primary" />
+                      <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.documentation')} </h4>
+                    </div>
+                    <a 
+                      href={selectedIntegration.documentation} 
+                      className="inline-flex items-center gap-2 px-4 py-3 rounded-xl theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="font-semibold">{t('extracted.view_api_documentation')} </span>
+                    </a>
                   </div>
-                ))}
+                )}
               </div>
 
-              {/* Sync Information */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Clock className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.last_sync')} </h4>
-                  </div>
-                  <p className="text-lg theme-text-primary font-mono">{selectedIntegration.lastSync}</p>
-                </div>
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <div className="flex items-center gap-3 mb-3">
-                    <RefreshCw className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.next_sync')} </h4>
-                  </div>
-                  <p className="text-lg theme-text-primary font-mono">{selectedIntegration.nextSync}</p>
-                </div>
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Timer className="w-5 h-5 theme-text-primary" />
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.frequency')} </h4>
-                  </div>
-                  <p className="text-lg theme-text-primary font-semibold capitalize">{selectedIntegration.syncFrequency}</p>
-                </div>
-              </div>
-
-              {/* Usage Statistics */}
-              <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.usage_statistics_1')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {selectedIntegration && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {[
-                    { labelKey: 'extracted.monthly_requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
-                    { labelKey: 'extracted.daily_average', value: selectedIntegration.usage.daily.toLocaleString(), icon: Activity },
-                    { labelKey: 'extracted.error_count', value: selectedIntegration.usage.errors, icon: AlertCircle }
-                  ].map((stat, idx) => (
+                    { labelKey: 'extracted.success_rate', value: `${selectedIntegration.successRate}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                    { labelKey: 'extracted.response', value: selectedIntegration.responseTime, icon: Zap, color: 'from-blue-500 to-cyan-500' },
+                    { labelKey: 'extracted.endpoints', value: selectedIntegration.endpoints, icon: Network, color: 'from-purple-500 to-pink-500' },
+                    { labelKey: 'extracted.api_version', value: selectedIntegration.apiVersion, icon: Code, color: 'from-orange-500 to-red-500' }
+                  ].map((metric, idx) => (
                     <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
-                      <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
-                      <p className="text-3xl font-bold theme-text-primary mb-2">{stat.value}</p>
-                      <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}>
+                        <metric.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="text-2xl font-bold theme-text-primary mb-1">{metric.value}</p>
+                      <p className="text-sm theme-text-muted">{t(metric.labelKey)}</p>
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
+
+              {selectedIntegration && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Clock className="w-5 h-5 theme-text-primary" />
+                      <h4 className="font-semibold theme-text-primary">{t('extracted.last_sync')} </h4>
+                    </div>
+                    <p className="text-lg theme-text-primary font-mono">{selectedIntegration.lastSync}</p>
+                  </div>
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-3">
+                      <RefreshCw className="w-5 h-5 theme-text-primary" />
+                      <h4 className="font-semibold theme-text-primary">{t('extracted.next_sync')} </h4>
+                    </div>
+                    <p className="text-lg theme-text-primary font-mono">{selectedIntegration.nextSync}</p>
+                  </div>
+                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Timer className="w-5 h-5 theme-text-primary" />
+                      <h4 className="font-semibold theme-text-primary">{t('extracted.frequency')} </h4>
+                    </div>
+                    <p className="text-lg theme-text-primary font-semibold capitalize">{selectedIntegration.syncFrequency}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedIntegration && (
+                <div>
+                  <h3 className="text-2xl font-bold theme-text-primary mb-6">{t('extracted.usage_statistics_1')}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { labelKey: 'extracted.monthly_requests', value: selectedIntegration.usage.monthly.toLocaleString(), icon: Calendar },
+                      { labelKey: 'extracted.daily_average', value: selectedIntegration.usage.daily.toLocaleString(), icon: Activity },
+                      { labelKey: 'extracted.error_count', value: selectedIntegration.usage.errors, icon: AlertCircle }
+                    ].map((stat, idx) => (
+                      <div key={idx} className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center">
+                        <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
+                        <p className="text-3xl font-bold theme-text-primary mb-2">{stat.value}</p>
+                        <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === 'configuration' && (
+          {activeTab === 'configuration' && selectedIntegration && (
             <div className="space-y-8">
               {/* API Configuration */}
               <div>
@@ -1416,7 +1376,7 @@ const IntegrationsPage = () => {
             </div>
           )}
 
-          {activeTab === 'performance' && (
+          {activeTab === 'performance' && selectedIntegration && (
             <div className="space-y-8">
               {/* Performance Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1463,7 +1423,7 @@ const IntegrationsPage = () => {
             </div>
           )}
 
-          {activeTab === 'security' && (
+          {activeTab === 'security' && selectedIntegration && (
             <div className="space-y-8">
               {/* Security Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1533,7 +1493,7 @@ const IntegrationsPage = () => {
             </div>
           )}
 
-          {activeTab === 'logs' && (
+          {activeTab === 'logs' && selectedIntegration && (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold theme-text-primary">{t('extracted.recent_activity_logs')} </h3>
@@ -1576,7 +1536,7 @@ const IntegrationsPage = () => {
             </div>
           )}
 
-          {activeTab === 'analytics' && (
+          {activeTab === 'analytics' && selectedIntegration && (
             <div className="space-y-8">
               {/* Analytics Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1630,44 +1590,118 @@ const IntegrationsPage = () => {
         {/* Enhanced Action Buttons */}
         <div className={`sticky bottom-0 backdrop-blur-xl border-t p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
-              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
-            >
-              <Wifi className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.test_connection')}</span>
-              <span className="inline sm:hidden">{t('extracted.test')}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
-              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
-            >
-              <RefreshCw className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.sync_now')}</span>
-              <span className="inline sm:hidden">{t('extracted.sync')}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
-            >
-              <Edit className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.edit_config')}</span>
-              <span className="inline sm:hidden">{t('extracted.edit')}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
-            >
-              <X className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('extracted.disable')}</span>
-              <span className="inline sm:hidden">Off</span>
-            </motion.button>
+            {isAdding && editedIntegration ? (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={async () => {
+                    try {
+                      await addIntegration(editedIntegration);
+                      setIsAdding(false);
+                      setEditedIntegration(null);
+                      setSelectedIntegration(null);
+                    } catch (e) {
+                      console.error('Add failed', e);
+                    }
+                  }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="hidden sm:inline">Add Integration</span>
+                  <span className="inline sm:hidden">Add</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setIsAdding(false); setEditedIntegration(null); setSelectedIntegration(null); }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="hidden sm:inline">Cancel</span>
+                  <span className="inline sm:hidden">No</span>
+                </motion.button>
+              </>
+            ) : isEditing && editedIntegration ? (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={async () => {
+                    try {
+                      await saveIntegration(editedIntegration.id, editedIntegration);
+                      setIsEditing(false);
+                      setEditedIntegration(null);
+                      setSelectedIntegration(editedIntegration);
+                    } catch (e) {
+                      console.error('Save failed', e);
+                    }
+                  }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="hidden sm:inline">Save Changes</span>
+                  <span className="inline sm:hidden">Save</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setIsEditing(false); setEditedIntegration(null); }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="hidden sm:inline">Cancel</span>
+                  <span className="inline sm:hidden">No</span>
+                </motion.button>
+              </>
+            ) : (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
+                >
+                  <Wifi className="w-5 h-5" />
+                  <span className="hidden sm:inline">{t('extracted.test_connection')}</span>
+                  <span className="inline sm:hidden">{t('extracted.test')}</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  <span className="hidden sm:inline">{t('extracted.sync_now')}</span>
+                  <span className="inline sm:hidden">{t('extracted.sync')}</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    if (selectedIntegration) {
+                      setEditedIntegration({ ...selectedIntegration });
+                      setIsEditing(true);
+                    }
+                  }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
+                >
+                  <Edit className="w-5 h-5" />
+                  <span className="hidden sm:inline">{t('extracted.edit_config')}</span>
+                  <span className="inline sm:hidden">{t('extracted.edit')}</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="hidden sm:inline">{t('extracted.disable')}</span>
+                  <span className="inline sm:hidden">Off</span>
+                </motion.button>
+              </>
+            )}
           </div>
         </div>
       </motion.div>

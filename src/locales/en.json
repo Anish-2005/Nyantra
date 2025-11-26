@@ -836,6 +836,7 @@
     "within_sla": "Within SLA",
     "near_sla": "Near SLA",
     "breached_sla": "Breached SLA",
+    "case_updated": "Case Updated",
     "case_resolved": "Case Resolved",
     "new_escalation": "New Escalation",
     "document_uploaded": "Document Uploaded",
