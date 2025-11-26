@@ -21,6 +21,8 @@ import {
   Lock,
   Key
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -116,6 +118,7 @@ const IntegrationsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedIntegration, setEditedIntegration] = useState<any | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Subscribe to Firestore 'integrations' collection
   useEffect(() => {
@@ -187,47 +190,152 @@ const IntegrationsPage = () => {
     }
   };
 
-  // Filter and sort integrations (use live Firestore data)
-  const dataSource = integrations;
+  // Export helpers (CSV + PDF) for integrations
+  const exportIntegrationsData = (items: any[]) => {
+    const headers = [
+      'ID', 'Name', 'Provider', 'Category', 'Status', 'Health', 'Success Rate', 'Response Time', 'Endpoints', 'API Version', 'Last Sync', 'Next Sync', 'Documentation'
+    ];
 
-  const filteredIntegrations = useMemo(() => {
-    let filtered = [...dataSource];
+    const rows = items.map(i => [
+      i.id,
+      i.name,
+      i.provider,
+      i.category,
+      i.status,
+      i.health,
+      i.successRate != null ? String(i.successRate) : '',
+      i.responseTime || '',
+      i.endpoints != null ? String(i.endpoints) : '',
+      i.apiVersion || '',
+      i.lastSync || '',
+      i.nextSync || '',
+      i.documentation || ''
+    ]);
 
-    if (searchQuery) {
-      filtered = filtered.filter(integration =>
-        integration.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        integration.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        integration.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        integration.id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(integration => integration.status === statusFilter);
-    }
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `integrations_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(integration => integration.category === categoryFilter);
-    }
+  const exportIntegrationsPDF = (items: any[]) => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    if (healthFilter !== 'all') {
-      filtered = filtered.filter(integration => integration.health === healthFilter);
-    }
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
 
-    filtered.sort((a, b) => {
-      const aVal = a[sortBy as keyof typeof a];
-      const bVal = b[sortBy as keyof typeof b];
-      
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Integrations Report', margin, 36);
+
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [[ 'ID', 'Name', 'Provider', 'Category', 'Status', 'Health', 'Success Rate', 'Response Time' ]];
+
+    const body: any[] = [];
+    items.forEach(i => {
+      body.push([
+        i.id,
+        i.name,
+        i.provider,
+        i.category,
+        i.status,
+        i.health,
+        i.successRate != null ? String(i.successRate) + '%' : '',
+        i.responseTime || ''
+      ]);
+    });
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak', cellWidth: 'wrap' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      margin: { left: margin, right: margin, top: 70 },
+      tableWidth: 'auto',
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 180 },
+        2: { cellWidth: 120 },
+        3: { cellWidth: 100 },
+        4: { cellWidth: 70 },
+        5: { cellWidth: 70 },
+        6: { cellWidth: 80 },
+        7: { cellWidth: 80 }
       }
     });
 
-    return filtered;
-  }, [searchQuery, statusFilter, categoryFilter, healthFilter, sortBy, sortOrder]);
+    doc.save(`integrations_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
+  // Filter and sort integrations (use live Firestore data)
+  const dataSource = integrations;
+
+ const filteredIntegrations = useMemo(() => {
+  let filtered = [...dataSource];
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter((integration) =>
+      integration.name.toLowerCase().includes(q) ||
+      integration.provider.toLowerCase().includes(q) ||
+      integration.category.toLowerCase().includes(q) ||
+      String(integration.id).toLowerCase().includes(q)
+    );
+  }
+
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter((integration) => integration.status === statusFilter);
+  }
+
+  if (categoryFilter !== 'all') {
+    filtered = filtered.filter((integration) => integration.category === categoryFilter);
+  }
+
+  if (healthFilter !== 'all') {
+    filtered = filtered.filter((integration) => integration.health === healthFilter);
+  }
+
+  filtered.sort((a, b) => {
+    const aVal = a[sortBy as keyof typeof a];
+    const bVal = b[sortBy as keyof typeof b];
+
+    // simple fallback to avoid weird comparisons
+    if (aVal === bVal) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+
+    if (sortOrder === 'asc') {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
+  return filtered;
+}, [
+  dataSource,            // 🔥 IMPORTANT
+  searchQuery,
+  statusFilter,
+  categoryFilter,
+  healthFilter,
+  sortBy,
+  sortOrder,
+]);
   // Pagination
   const totalPages = Math.ceil(filteredIntegrations.length / itemsPerPage);
   const paginatedIntegrations = filteredIntegrations.slice(
@@ -235,32 +343,38 @@ const IntegrationsPage = () => {
     currentPage * itemsPerPage
   );
 
-  // Statistics
-  const stats = useMemo(() => {
-    const total = dataSource.length;
-    const active = dataSource.filter(i => i.status === 'active').length;
-    const inactive = dataSource.filter(i => i.status === 'inactive').length;
-    const excellent = dataSource.filter(i => i.health === 'excellent').length;
-    const good = dataSource.filter(i => i.health === 'good').length;
-    const fair = dataSource.filter(i => i.health === 'fair').length;
-    const offline = dataSource.filter(i => i.health === 'offline').length;
+ // Statistics
+const stats = useMemo(() => {
+  const total = dataSource.length;
+  const active = dataSource.filter((i) => i.status === 'active').length;
+  const inactive = dataSource.filter((i) => i.status === 'inactive').length;
+  const excellent = dataSource.filter((i) => i.health === 'excellent').length;
+  const good = dataSource.filter((i) => i.health === 'good').length;
+  const fair = dataSource.filter((i) => i.health === 'fair').length;
+  const offline = dataSource.filter((i) => i.health === 'offline').length;
 
-    const totalEndpoints = dataSource.reduce((sum: number, i: any) => sum + (i.endpoints || 0), 0);
-    const avgSuccessRate = dataSource.reduce((sum: number, i: any) => sum + (Number(i.successRate) || 0), 0) / Math.max(1, total);
-    
-    return {
-      total,
-      active,
-      inactive,
-      excellent,
-      good,
-      fair,
-      offline,
-      totalEndpoints,
-      avgSuccessRate: Math.round(avgSuccessRate * 10) / 10
-    };
-  }, []);
+  const totalEndpoints = dataSource.reduce(
+    (sum: number, i: any) => sum + (i.endpoints || 0),
+    0
+  );
+  const avgSuccessRate =
+    dataSource.reduce(
+      (sum: number, i: any) => sum + (Number(i.successRate) || 0),
+      0
+    ) / Math.max(1, total);
 
+  return {
+    total,
+    active,
+    inactive,
+    excellent,
+    good,
+    fair,
+    offline,
+    totalEndpoints,
+    avgSuccessRate: Math.round(avgSuccessRate * 10) / 10,
+  };
+}, [dataSource]);      
   // Category distribution
   const categoryStats = useMemo(() => {
     const categories = {
@@ -422,7 +536,9 @@ const IntegrationsPage = () => {
 
   const getPlatformLogo = (provider: string) => {
     const LogoComponent = PlatformLogos[provider as keyof typeof PlatformLogos];
-    return LogoComponent ? <LogoComponent /> : <Database className="w-6 h-6" />;
+    const colorClass = theme === 'light' ? 'text-black' : 'text-white';
+    const sizeClass = 'w-6 h-6';
+    return LogoComponent ? <LogoComponent className={`${sizeClass} ${colorClass}`} /> : <Database className={`${sizeClass} ${colorClass}`} />;
   };
 
   const handleTestConnection = (integrationId: string) => {
@@ -537,10 +653,26 @@ const IntegrationsPage = () => {
         </div>
         
         <div className="relative z-10 flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
+          {/* View mode toggle */}
+          <div className="hidden sm:flex items-center gap-2 mr-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-2 rounded-xl text-sm font-semibold ${viewMode === 'grid' ? 'accent-gradient text-white' : (theme === 'light' ? 'bg-white/90 text-black border border-gray-200' : 'theme-bg-glass theme-text-primary')}`}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 rounded-xl text-sm font-semibold ${viewMode === 'list' ? 'accent-gradient text-white' : (theme === 'light' ? 'bg-white/90 text-black border border-gray-200' : 'theme-bg-glass theme-text-primary')}`}
+            >
+              List
+            </button>
+          </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label={t('extracted.export_report_1')}
+            onClick={() => setShowExportModal(true)}
             className={`w-full sm:w-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl border glass-effect focus:outline-none focus:ring-2 focus:ring-offset-2 ${theme === 'light' ? 'theme-bg-glass theme-border-glass text-black focus:ring-black/40' : 'theme-bg-glass theme-border-glass theme-text-primary focus:ring-white/20'}`}
           >
             <Download className={`w-5 h-5 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
@@ -579,15 +711,8 @@ const IntegrationsPage = () => {
             whileHover={{ y: -4, scale: 1.02 }}
             className="relative theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer overflow-hidden group"
           >
-            {/* Status indicator dot */}
-            <motion.div
-              className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.6, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-            />
+            {/* Status indicator dot (static) */}
+            <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`} />
             
             <div className="flex items-center justify-between">
               <div>
@@ -598,25 +723,12 @@ const IntegrationsPage = () => {
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
                   <stat.icon className="w-6 h-6 text-white relative z-10" />
                 </div>
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-white"
-                  animate={{
-                    scale: [1, 1.5],
-                    opacity: [0.6, 0]
-                  }}
-                  transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.15 }}
-                />
               </div>
             </div>
             
             {/* Progress bar */}
             <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-3">
-              <motion.div
-                className={`h-full bg-gradient-to-r ${stat.color}`}
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 1, delay: idx * 0.1 }}
-              />
+              <div className={`h-full bg-gradient-to-r ${stat.color} w-full`} />
             </div>
             
             {/* Hover glow effect */}
@@ -707,7 +819,7 @@ const IntegrationsPage = () => {
                   setHealthFilter('all');
                   setCurrentPage(1);
                 }}
-                className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
+                className={`w-full px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border ${theme === 'light' ? 'bg-white/90 border-gray-200 text-black hover:bg-blue-50' : 'theme-bg-glass theme-border-glass hover:bg-blue-500/20'}`}
               >
                 <RefreshCw className="w-4 h-4" />
                 <span className="font-semibold">{t('extracted.clear_filters')}</span>
@@ -800,170 +912,235 @@ const IntegrationsPage = () => {
             </div>
           </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {loadingIntegrations ? (
-                // Loading state
-                Array.from({ length: 6 }, (_, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="p-6 rounded-2xl theme-bg-card theme-border-glass border animate-pulse"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-                      </div>
-                    </div>
-                    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-4 w-2/3"></div>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="text-center">
-                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                      <div className="text-center">
-                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                      <div className="text-center">
-                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                      <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              ) : paginatedIntegrations.length === 0 ? (
-                // Empty state
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="col-span-full flex flex-col items-center justify-center py-16 px-4"
-                >
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <Database className="w-8 h-8 theme-text-muted" />
-                  </div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-2">No integrations found</h3>
-                  <p className="text-sm theme-text-muted text-center mb-6 max-w-md">
-                    {filteredIntegrations.length === 0 && integrations.length > 0
-                      ? "No integrations match your current filters. Try adjusting your search or filter criteria."
-                      : "Get started by adding your first integration to monitor and manage your API connections."}
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
-                      setIsAdding(true);
-                    }}
-                    className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-xl"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span className="font-semibold">Add First Integration</span>
-                  </motion.button>
-                </motion.div>
-              ) : (
-                // Actual integrations
-                paginatedIntegrations.map((integration, idx) => (
-                  <motion.div
-                    key={integration.id || idx}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    className="p-6 rounded-2xl theme-bg-card theme-border-glass border"
-                    onClick={() => setSelectedIntegration(integration)}
-                  >
-                    {/* Header with Image/Logo */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                        {integration.imageUrl ? (
-                          <img
-                            src={integration.imageUrl}
-                            alt={integration.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div className={`w-full h-full flex items-center justify-center ${integration.imageUrl ? 'hidden' : ''}`}>
-                          {getPlatformLogo(integration.provider)}
+            <div>
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {loadingIntegrations ? (
+                    // Loading state (grid)
+                    Array.from({ length: 6 }, (_, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="p-6 rounded-2xl theme-bg-card theme-border-glass border animate-pulse"
+                      >
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                          </div>
                         </div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-4 w-2/3"></div>
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          <div className="text-center">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          </div>
+                          <div className="text-center">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          </div>
+                          <div className="text-center">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                          <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : paginatedIntegrations.length === 0 ? (
+                    // Empty state (grid)
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="col-span-full flex flex-col items-center justify-center py-16 px-4"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                        <Database className="w-8 h-8 theme-text-muted" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold theme-text-primary truncate">{integration.name}</h3>
-                        <p className="text-sm theme-text-muted truncate">{integration.provider}</p>
-                      </div>
-                    </div>
+                      <h3 className="text-lg font-semibold theme-text-primary mb-2">No integrations found</h3>
+                      <p className="text-sm theme-text-muted text-center mb-6 max-w-md">
+                        {filteredIntegrations.length === 0 && integrations.length > 0
+                          ? "No integrations match your current filters. Try adjusting your search or filter criteria."
+                          : "Get started by adding your first integration to monitor and manage your API connections."}
+                      </p>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
+                          setIsAdding(true);
+                        }}
+                        className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-xl"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span className="font-semibold">Add First Integration</span>
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    // Actual integrations (grid)
+                    paginatedIntegrations.map((integration, idx) => (
+                      <motion.div
+                        key={integration.id || idx}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="p-6 rounded-2xl theme-bg-card theme-border-glass border"
+                        onClick={() => setSelectedIntegration(integration)}
+                      >
+                        {/* Header with Image/Logo */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                            {integration.imageUrl ? (
+                              <img
+                                src={integration.imageUrl}
+                                alt={integration.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center ${integration.imageUrl ? 'hidden' : ''}`}>
+                              {getPlatformLogo(integration.provider)}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold theme-text-primary truncate">{integration.name}</h3>
+                            <p className="text-sm theme-text-muted truncate">{integration.provider}</p>
+                          </div>
+                        </div>
 
-                  {/* Description */}
-                    <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
-                    {integration.description}
-                  </p>
+                      {/* Description */}
+                        <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
+                        {integration.description}
+                      </p>
 
-                  {/* Stats */}
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
-                        <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
-                        <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
-                        <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
-                      </div>
-                    </div>
+                      {/* Stats */}
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
+                            <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
+                            <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
+                            <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
+                          </div>
+                        </div>
 
-                  {/* Footer */}
-                    <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getHealthColor(integration.health)}`}>
-                        {(() => {
-                          const Icon = getHealthIcon(integration.health);
-                          return <Icon className="w-3 h-3" />;
-                        })()}
-                        {integration.health}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTestConnection(integration.id);
-                          }}
-                          className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors touch-manipulation"
-                        >
-                          <Wifi className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSyncNow(integration.id);
-                          }}
-                          className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors touch-manipulation"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </motion.button>
+                      {/* Footer */}
+                        <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${getHealthColor(integration.health)}`}>
+                            {(() => {
+                              const Icon = getHealthIcon(integration.health);
+                              return <Icon className="w-3 h-3" />;
+                            })()}
+                            {integration.health}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTestConnection(integration.id);
+                              }}
+                              className={`p-2 rounded-lg transition-colors touch-manipulation ${theme === 'light' ? 'bg-white/90 text-black border-gray-200 hover:bg-green-50' : 'theme-bg-glass hover:bg-green-500/20'}`}
+                            >
+                              <Wifi className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSyncNow(integration.id);
+                              }}
+                              className={`p-2 rounded-lg transition-colors touch-manipulation ${theme === 'light' ? 'bg-white/90 text-black border-gray-200 hover:bg-blue-50' : 'theme-bg-glass hover:bg-blue-500/20'}`}
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                // List view
+                <div className="space-y-4">
+                  {loadingIntegrations ? (
+                    Array.from({ length: 6 }, (_, idx) => (
+                      <motion.div key={idx} className="p-4 rounded-2xl theme-bg-card theme-border-glass border animate-pulse" />
+                    ))
+                  ) : paginatedIntegrations.length === 0 ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-16 px-4">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                        <Database className="w-8 h-8 theme-text-muted" />
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                      <h3 className="text-lg font-semibold theme-text-primary mb-2">No integrations found</h3>
+                      <p className="text-sm theme-text-muted text-center mb-6 max-w-md">
+                        {filteredIntegrations.length === 0 && integrations.length > 0
+                          ? "No integrations match your current filters. Try adjusting your search or filter criteria."
+                          : "Get started by adding your first integration to monitor and manage your API connections."}
+                      </p>
+                    </motion.div>
+                  ) : (
+                    paginatedIntegrations.map((integration, idx) => (
+                      <motion.div
+                        key={integration.id || idx}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="p-4 rounded-2xl theme-bg-card theme-border-glass border flex items-center justify-between"
+                        onClick={() => setSelectedIntegration(integration)}
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                            {integration.imageUrl ? (
+                              <img src={integration.imageUrl} alt={integration.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">{getPlatformLogo(integration.provider)}</div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-lg font-semibold theme-text-primary truncate">{integration.name}</h3>
+                            <p className="text-sm theme-text-muted truncate">{integration.provider} • <span className="font-mono">{integration.id}</span></p>
+                            <p className="text-sm theme-text-secondary truncate mt-1">{integration.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 ml-4">
+                          <div className="text-center">
+                            <p className="text-lg font-bold theme-text-primary">{integration.successRate}%</p>
+                            <p className="text-xs theme-text-muted">{t('extracted.success')}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold theme-text-primary">{integration.responseTime}</p>
+                            <p className="text-xs theme-text-muted">{t('extracted.response')}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <motion.button onClick={(e) => { e.stopPropagation(); handleTestConnection(integration.id); }} className={`p-2 rounded-lg ${theme === 'light' ? 'bg-white/90 text-black border border-gray-200' : 'theme-bg-glass'}`}><Wifi className="w-4 h-4"/></motion.button>
+                            <motion.button onClick={(e) => { e.stopPropagation(); handleSyncNow(integration.id); }} className={`p-2 rounded-lg ${theme === 'light' ? 'bg-white/90 text-black border border-gray-200' : 'theme-bg-glass'}`}><RefreshCw className="w-4 h-4"/></motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
               )}
             </div>
             
@@ -1012,6 +1189,83 @@ const IntegrationsPage = () => {
 
       {/* Integration Detail Modal - Enhanced */}
      {/* Integration Detail Modal - Enhanced */}
+     {/* Export Modal */}
+<AnimatePresence>
+  {showExportModal && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
+      <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+      <motion.div
+        initial={{ scale: 0.98, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.98, opacity: 0 }}
+        className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+        style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+      >
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+              <Download className="w-5 h-5 text-accent-gradient" />
+              {t('extracted.export_report') || 'Export Data'}
+            </h3>
+            <p className="text-sm theme-text-muted mt-1">{t('extracted.export') || 'Export integrations as CSV or a printable PDF report.'}</p>
+          </div>
+          <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+            <X className="w-5 h-5 theme-text-primary" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                    <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full integrations dataset in the chosen format.'}</p>
+                  </div>
+                </div>
+                <p className="text-sm theme-text-muted">{integrations.length} {t('extracted.integrations')}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <button onClick={() => { exportIntegrationsData(integrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                <button onClick={() => { exportIntegrationsPDF(integrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+              </div>
+            </div>
+          </div>
+
+          <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                    <Download className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                    <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                  </div>
+                </div>
+                <p className="text-sm theme-text-muted">{filteredIntegrations.length} {t('extracted.integrations')}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsData(filteredIntegrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsPDF(filteredIntegrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 <AnimatePresence>
   { (selectedIntegration || isAdding) && (
     <motion.div
