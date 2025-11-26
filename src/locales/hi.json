@@ -357,6 +357,7 @@
     "exportFilteredDescription": "केवल वर्तमान फ़िल्टर के साथ मेल खाने वाले परिणाम डाउनलोड करें।"
   },
   "extracted": {
+    "grievance": "शिकायत",
     "theme_variables": "{/* थीम वेरिएबल्स */}",
     "enhanced_gradient_orbs": "{/* उन्नत ग्रेडिएंट ऑर्ब्स */}",
     "main_content": "{/* मुख्य सामग्री */}",
@@ -2657,8 +2658,6 @@
     "beneficiary": {
       "management": "प्रबंधन",
       "comprehensive_oversight_of_dbt_beneficiaries": "DBT लाभार्थियों की व्यापक निगरानी",
-      "advanced_search": "एडवांस्ड सर्च",
-      "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
       "access_benefits_and_services_as_a_beneficiary": "लाभार्थी के रूप में लाभ और सेवाओं तक पहुंचें",
       "for_beneficiaries_receiving_services_and_benefits": "सेवाओं और लाभों को प्राप्त करने वाले लाभार्थियों के लिए",
       "beneficiary_categories": "लाभार्थी श्रेणियाँ",
@@ -2996,7 +2995,9 @@
     "beneficiary": "लाभार्थी",
     "management": "प्रबंधन",
     "comprehensive_oversight_of_dbt_beneficiaries": "डीबीटी लाभार्थियों की संपूर्ण निगरानी एवं पर्यवेक्षण",
-    "exportDescription": "लाभार्थियों का डेटा डाउनलोड करें या रिपोर्ट निर्यात करें"
+    "exportDescription": "लाभार्थियों का डेटा डाउनलोड करें या रिपोर्ट निर्यात करें",
+    "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
+    "advanced_search": "एडवांस्ड सर्च"
   },
 
   "beneficiary_lowercase": "लाभार्थी",

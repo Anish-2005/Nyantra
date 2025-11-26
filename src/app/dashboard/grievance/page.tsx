@@ -4,60 +4,241 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-// Mock data for grievances (expanded list for testing and pagination)
-const mockGrievances = [
-  {
-    id: 'GRV-2024-001234',
-    beneficiaryId: 'BEN-2024-001234',
-    beneficiaryName: 'Rajesh Kumar',
-    phone: '+91 98765-43210',
-    email: 'rajesh.k@example.com',
-    district: 'Patna',
-    state: 'Bihar',
-    actType: 'PCR Act',
-    applicationId: 'APP-2024-001234',
-    category: 'disbursement-delay',
-    subCategory: 'payment-not-received',
-    priority: 'high',
-    status: 'open',
-    assignedTo: 'Officer Sharma',
-    assignedDate: '2024-03-15',
-    createdDate: '2024-03-10',
-    lastUpdated: '2024-03-18 14:30',
-    resolutionDate: null,
-    expectedResolution: '2024-03-25',
-    description: 'Relief amount not received despite application approval 3 weeks ago. No communication regarding disbursement status.',
-    attachments: 3,
-    communication: [],
-    escalationLevel: 1,
-    satisfactionRating: null,
-    followUpRequired: true,
-    relatedGrievances: []
-  },
-  { id: 'GRV-2024-001235', beneficiaryId: 'BEN-2024-001235', beneficiaryName: 'Sunita Devi', phone: '+91 91234-56789', email: 'sunita.d@example.com', district: 'Gaya', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001235', category: 'document-issues', subCategory: 'missing-documents', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Verma', assignedDate: '2024-03-12', createdDate: '2024-03-11', lastUpdated: '2024-03-17 09:10', resolutionDate: null, expectedResolution: '2024-03-22', description: 'Applicant missing identity proof, needs assistance to upload documents.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001236', beneficiaryId: 'BEN-2024-001236', beneficiaryName: 'Mohammed Ali', phone: '+91 99876-54321', email: 'm.ali@example.com', district: 'Muzaffarpur', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001236', category: 'application-status', subCategory: 'processing-delay', priority: 'low', status: 'resolved', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-08', createdDate: '2024-03-05', lastUpdated: '2024-03-14 11:00', resolutionDate: '2024-03-14', expectedResolution: '2024-03-12', description: 'Application processing delayed due to backlog; resolved after manual intervention.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 4, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001237', beneficiaryId: 'BEN-2024-001237', beneficiaryName: 'Anita Sharma', phone: '+91 90123-45678', email: 'anita.s@example.com', district: 'Patna', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001237', category: 'officer-behavior', subCategory: 'rude-staff', priority: 'high', status: 'escalated', assignedTo: 'Officer Rao', assignedDate: '2024-03-16', createdDate: '2024-03-15', lastUpdated: '2024-03-18 16:00', resolutionDate: null, expectedResolution: '2024-03-28', description: 'Complainant reported rude behaviour from local officer during verification.', attachments: 2, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001238', beneficiaryId: 'BEN-2024-001238', beneficiaryName: 'Ramesh Thakur', phone: '+91 98987-65432', email: 'r.thakur@example.com', district: 'Ara', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001238', category: 'information-correction', subCategory: 'name-mismatch', priority: 'medium', status: 'pending', assignedTo: 'Officer Singh', assignedDate: '2024-03-14', createdDate: '2024-03-13', lastUpdated: '2024-03-14 08:20', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Applicant requests correction of name spelling in records.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001239', beneficiaryId: 'BEN-2024-001239', beneficiaryName: 'Seema K', phone: '+91 97654-32109', email: 'seema.k@example.com', district: 'Bhagalpur', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001239', category: 'technical-issues', subCategory: 'portal-error', priority: 'medium', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-18', createdDate: '2024-03-18', lastUpdated: '2024-03-18 12:00', resolutionDate: null, expectedResolution: '2024-03-23', description: 'Error encountered during submission on portal.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001240', beneficiaryId: 'BEN-2024-001240', beneficiaryName: 'Vijay Patel', phone: '+91 91234-00011', email: 'v.patel@example.com', district: 'Gaya', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001240', category: 'disbursement-delay', subCategory: 'bank-issue', priority: 'high', status: 'in-progress', assignedTo: 'Officer Sharma', assignedDate: '2024-03-10', createdDate: '2024-03-09', lastUpdated: '2024-03-16 10:00', resolutionDate: null, expectedResolution: '2024-03-22', description: 'Funds returned by bank due to incorrect account details; beneficiary needs re-verification.', attachments: 2, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001241', beneficiaryId: 'BEN-2024-001241', beneficiaryName: 'Poonam Devi', phone: '+91 99881-23456', email: 'poonam.d@example.com', district: 'Muzaffarpur', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001241', category: 'document-issues', subCategory: 'invalid-aadhaar', priority: 'low', status: 'resolved', assignedTo: 'Officer Verma', assignedDate: '2024-03-05', createdDate: '2024-03-02', lastUpdated: '2024-03-10', resolutionDate: '2024-03-10', expectedResolution: '2024-03-08', description: 'Aadhaar mismatch resolved after re-submission.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001242', beneficiaryId: 'BEN-2024-001242', beneficiaryName: 'Kamal Kumar', phone: '+91 99777-33322', email: 'kamal.k@example.com', district: 'Patna', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001242', category: 'application-status', subCategory: 'pending-approval', priority: 'medium', status: 'pending', assignedTo: 'Officer Rao', assignedDate: '2024-03-11', createdDate: '2024-03-10', lastUpdated: '2024-03-12', resolutionDate: null, expectedResolution: '2024-03-19', description: 'Application awaiting managerial approval.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001243', beneficiaryId: 'BEN-2024-001243', beneficiaryName: 'Laxmi Devi', phone: '+91 94444-11122', email: 'laxmi.d@example.com', district: 'Gopalganj', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001243', category: 'officer-behavior', subCategory: 'delay-in-verification', priority: 'high', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-17', createdDate: '2024-03-16', lastUpdated: '2024-03-17 18:00', resolutionDate: null, expectedResolution: '2024-03-27', description: 'Officer delayed verification causing hardship to beneficiary.', attachments: 0, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001244', beneficiaryId: 'BEN-2024-001244', beneficiaryName: 'Rajiv Singh', phone: '+91 93333-22211', email: 'rajiv.s@example.com', district: 'Buxar', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001244', category: 'information-correction', subCategory: 'address-change', priority: 'low', status: 'resolved', assignedTo: 'Officer Singh', assignedDate: '2024-03-01', createdDate: '2024-02-28', lastUpdated: '2024-03-04', resolutionDate: '2024-03-04', expectedResolution: '2024-03-03', description: 'Address updated successfully.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001245', beneficiaryId: 'BEN-2024-001245', beneficiaryName: 'Meera Patil', phone: '+91 91111-22233', email: 'meera.p@example.com', district: 'Begusarai', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001245', category: 'technical-issues', subCategory: 'otp-failure', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-09', createdDate: '2024-03-08', lastUpdated: '2024-03-15', resolutionDate: null, expectedResolution: '2024-03-20', description: 'OTP not received for verification step.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001246', beneficiaryId: 'BEN-2024-001246', beneficiaryName: 'Suresh Kumar', phone: '+91 92222-33344', email: 'suresh.k@example.com', district: 'Munger', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001246', category: 'disbursement-delay', subCategory: 'verification-hold', priority: 'medium', status: 'open', assignedTo: 'Officer Sharma', assignedDate: '2024-03-14', createdDate: '2024-03-13', lastUpdated: '2024-03-14', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Verification pending for bank details.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001247', beneficiaryId: 'BEN-2024-001247', beneficiaryName: 'Radha Rani', phone: '+91 97777-44455', email: 'radha.r@example.com', district: 'Darbhanga', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001247', category: 'document-issues', subCategory: 'photo-mismatch', priority: 'low', status: 'resolved', assignedTo: 'Officer Verma', assignedDate: '2024-03-03', createdDate: '2024-02-28', lastUpdated: '2024-03-05', resolutionDate: '2024-03-05', expectedResolution: '2024-03-04', description: 'Profile photo mismatch corrected.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: 4, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001248', beneficiaryId: 'BEN-2024-001248', beneficiaryName: 'Amit Rao', phone: '+91 96666-55544', email: 'amit.r@example.com', district: 'Saharsa', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001248', category: 'application-status', subCategory: 'returned-docs', priority: 'high', status: 'in-progress', assignedTo: 'Officer Rao', assignedDate: '2024-03-02', createdDate: '2024-03-01', lastUpdated: '2024-03-10', resolutionDate: null, expectedResolution: '2024-03-18', description: 'Documents returned for correction; beneficiary needs guidance.', attachments: 2, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001249', beneficiaryId: 'BEN-2024-001249', beneficiaryName: 'Geeta Kumari', phone: '+91 95555-66633', email: 'geeta.k@example.com', district: 'Vaishali', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001249', category: 'officer-behavior', subCategory: 'negligence', priority: 'high', status: 'open', assignedTo: 'Officer Mehta', assignedDate: '2024-03-18', createdDate: '2024-03-17', lastUpdated: '2024-03-18', resolutionDate: null, expectedResolution: '2024-03-29', description: 'Officer negligence reported during field visit.', attachments: 0, communication: [], escalationLevel: 1, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001250', beneficiaryId: 'BEN-2024-001250', beneficiaryName: 'Nisha Patel', phone: '+91 93322-11100', email: 'nisha.p@example.com', district: 'Bhagalpur', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001250', category: 'information-correction', subCategory: 'dob-correction', priority: 'low', status: 'resolved', assignedTo: 'Officer Singh', assignedDate: '2024-02-25', createdDate: '2024-02-20', lastUpdated: '2024-02-28', resolutionDate: '2024-02-28', expectedResolution: '2024-02-27', description: 'DOB corrected after verification.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001251', beneficiaryId: 'BEN-2024-001251', beneficiaryName: 'Manoj Kumar', phone: '+91 94488-77766', email: 'manoj.k@example.com', district: 'Gaya', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001251', category: 'technical-issues', subCategory: 'server-timeout', priority: 'medium', status: 'in-progress', assignedTo: 'Officer Kapoor', assignedDate: '2024-03-12', createdDate: '2024-03-11', lastUpdated: '2024-03-16', resolutionDate: null, expectedResolution: '2024-03-21', description: 'Server timeout while processing application.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001252', beneficiaryId: 'BEN-2024-001252', beneficiaryName: 'Preeti Sharma', phone: '+91 91122-33344', email: 'preeti.s@example.com', district: 'Munger', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001252', category: 'disbursement-delay', subCategory: 'wrong-bank', priority: 'high', status: 'open', assignedTo: 'Officer Sharma', assignedDate: '2024-03-17', createdDate: '2024-03-16', lastUpdated: '2024-03-17', resolutionDate: null, expectedResolution: '2024-03-27', description: 'Disbursed to wrong bank account; needs reversal.', attachments: 1, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001253', beneficiaryId: 'BEN-2024-001253', beneficiaryName: 'Alok Verma', phone: '+91 97700-11122', email: 'alok.v@example.com', district: 'Darbhanga', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001253', category: 'document-issues', subCategory: 'signature-mismatch', priority: 'medium', status: 'pending', assignedTo: 'Officer Verma', assignedDate: '2024-03-13', createdDate: '2024-03-12', lastUpdated: '2024-03-13', resolutionDate: null, expectedResolution: '2024-03-20', description: 'Signature mismatch on submitted documents.', attachments: 1, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001254', beneficiaryId: 'BEN-2024-001254', beneficiaryName: 'Sanjay Yadav', phone: '+91 96600-22233', email: 'sanjay.y@example.com', district: 'Buxar', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001254', category: 'application-status', subCategory: 'awaiting-docs', priority: 'low', status: 'open', assignedTo: 'Officer Singh', assignedDate: '2024-03-18', createdDate: '2024-03-18', lastUpdated: '2024-03-18', resolutionDate: null, expectedResolution: '2024-03-24', description: 'Pending documents from applicant.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: null, followUpRequired: false, relatedGrievances: [] },
-  { id: 'GRV-2024-001255', beneficiaryId: 'BEN-2024-001255', beneficiaryName: 'Kiran Rai', phone: '+91 98888-33344', email: 'kiran.r@example.com', district: 'Begusarai', state: 'Bihar', actType: 'PCR Act', applicationId: 'APP-2024-001255', category: 'officer-behavior', subCategory: 'bribe-request', priority: 'high', status: 'escalated', assignedTo: 'Officer Mehta', assignedDate: '2024-03-15', createdDate: '2024-03-14', lastUpdated: '2024-03-16', resolutionDate: null, expectedResolution: '2024-03-30', description: 'Allegation of bribe request during application processing.', attachments: 2, communication: [], escalationLevel: 2, satisfactionRating: null, followUpRequired: true, relatedGrievances: [] },
-  { id: 'GRV-2024-001256', beneficiaryId: 'BEN-2024-001256', beneficiaryName: 'Ritu Singh', phone: '+91 97788-44455', email: 'ritu.s@example.com', district: 'Vaishali', state: 'Bihar', actType: 'PoA Act', applicationId: 'APP-2024-001256', category: 'information-correction', subCategory: 'mobile-update', priority: 'low', status: 'resolved', assignedTo: 'Officer Rao', assignedDate: '2024-02-20', createdDate: '2024-02-18', lastUpdated: '2024-02-25', resolutionDate: '2024-02-25', expectedResolution: '2024-02-23', description: 'Mobile number updated in records.', attachments: 0, communication: [], escalationLevel: 0, satisfactionRating: 5, followUpRequired: false, relatedGrievances: [] }
-];
+// Grievance type definition (minimal fields used in this page)
+type Grievance = {
+  id: string;
+  beneficiaryId?: string;
+  beneficiaryName: string;
+  phone?: string;
+  email?: string;
+  district?: string;
+  state?: string;
+  actType?: string;
+  applicationId?: string;
+  category?: string;
+  subCategory?: string;
+  priority?: string;
+  status?: string;
+  assignedTo?: string;
+  assignedDate?: string;
+  createdDate?: string | null;
+  lastUpdated?: string;
+  resolutionDate?: string | null;
+  expectedResolution?: string;
+  description?: string;
+  attachments?: number;
+  communication?: any[];
+  escalationLevel?: number;
+  satisfactionRating?: number | null;
+  followUpRequired?: boolean;
+  relatedGrievances?: string[];
+};
+
+// Firestore-backed grievances: hook-like function to subscribe and set state
+const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Grievance[]>>) => {
+  useEffect(() => {
+    const q = query(collection(db, 'grievances'), orderBy('createdDate', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const items: Grievance[] = snapshot.docs.map((d) => {
+        const data = d.data() as any;
+        const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
+        const created = toIso(data?.createdDate);
+        const lastUpdated = toIso(data?.lastUpdated);
+        const resolutionDate = toIso(data?.resolutionDate);
+        const expectedResolution = toIso(data?.expectedResolution);
+        return {
+          id: d.id,
+          beneficiaryName: data.beneficiaryName || data.name || '—',
+          beneficiaryId: data.beneficiaryId,
+          phone: data.phone,
+          email: data.email,
+          district: data.district,
+          state: data.state,
+          actType: data.actType,
+          applicationId: data.applicationId,
+          category: data.category,
+          subCategory: data.subCategory,
+          priority: data.priority,
+          status: data.status,
+          assignedTo: data.assignedTo,
+          assignedDate: data.assignedDate,
+          createdDate: created,
+          lastUpdated: lastUpdated,
+          resolutionDate: resolutionDate,
+          expectedResolution: expectedResolution,
+          description: data.description,
+          attachments: data.attachments || 0,
+          communication: data.communication || [],
+          escalationLevel: data.escalationLevel || 0,
+          satisfactionRating: data.satisfactionRating ?? null,
+          followUpRequired: data.followUpRequired || false,
+          relatedGrievances: data.relatedGrievances || []
+        };
+      });
+      setState(items);
+    });
+    return () => unsub();
+  }, [setState]);
+};
+
+// New Grievance Form (client-side modal)
+const NewGrievanceForm = ({ onClose, onCreated }: { onClose: () => void; onCreated?: (g: Grievance) => void }) => {
+  const { theme } = useTheme();
+  const { t } = useLocale();
+  const [beneficiaryId, setBeneficiaryId] = useState('');
+  const [beneficiaryName, setBeneficiaryName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [category, setCategory] = useState('disbursement-delay');
+  const [subCategory, setSubCategory] = useState('');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const categories = [
+    { value: 'disbursement-delay', label: 'Disbursement Delay' },
+    { value: 'document-issues', label: 'Document Issues' },
+    { value: 'application-status', label: 'Application Status' },
+    { value: 'officer-behavior', label: 'Officer Behavior' },
+    { value: 'information-correction', label: 'Information Correction' },
+    { value: 'technical-issues', label: 'Technical Issues' }
+  ];
+
+  const handleLookupBeneficiary = async (id: string) => {
+    setBeneficiaryName('');
+    if (!id) return;
+    try {
+      const snap = await getDoc(doc(db, 'beneficiaries', id));
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        setBeneficiaryName(data.name || '');
+        setPhone(data.phone || '');
+        setEmail(data.email || '');
+        setError(null);
+      } else {
+        setError(t('extracted.beneficiary_not_found') || 'Beneficiary not found');
+      }
+    } catch (err) {
+      console.error('Lookup beneficiary error', err);
+      setError(t('extracted.lookup_failed') || 'Lookup failed');
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setError(null);
+    if (!beneficiaryId) return setError(t('extracted.enter_beneficiary_id') || 'Enter a beneficiary ID');
+    setIsSubmitting(true);
+    try {
+      // validate beneficiary exists
+      const snap = await getDoc(doc(db, 'beneficiaries', beneficiaryId));
+      if (!snap.exists()) {
+        setError(t('extracted.beneficiary_not_found') || 'Beneficiary not found');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const payload: any = {
+        beneficiaryId,
+        beneficiaryName: beneficiaryName || (snap.data() as any).name || '',
+        phone: phone || (snap.data() as any).phone || null,
+        email: email || (snap.data() as any).email || null,
+        category,
+        subCategory: subCategory || null,
+        priority,
+        description: description || null,
+        status: 'open',
+        createdDate: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
+        attachments: 0,
+        communication: [],
+        escalationLevel: 0,
+        followUpRequired: false
+      };
+
+      const ref = await addDoc(collection(db, 'grievances'), payload);
+      const created: Grievance = {
+        id: ref.id,
+        beneficiaryId: payload.beneficiaryId,
+        beneficiaryName: payload.beneficiaryName,
+        phone: payload.phone,
+        email: payload.email,
+        category: payload.category,
+        subCategory: payload.subCategory,
+        priority: payload.priority,
+        description: payload.description,
+        status: payload.status,
+        attachments: 0,
+        communication: [],
+        escalationLevel: 0,
+        followUpRequired: false,
+        createdDate: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+
+      onCreated?.(created);
+      onClose();
+    } catch (err) {
+      console.error('Create grievance failed', err);
+      setError(t('extracted.create_failed') || 'Failed to create grievance');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 space-y-4 w-full max-w-2xl">
+      <h3 className="text-xl font-semibold theme-text-primary">{t('extracted.new_case') || 'New Case'}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.beneficiary_id') || 'Beneficiary ID'}</label>
+          <input value={beneficiaryId} onChange={(e) => setBeneficiaryId(e.target.value)} onBlur={() => handleLookupBeneficiary(beneficiaryId)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" required />
+          {beneficiaryName && <p className="text-xs theme-text-muted mt-1">{beneficiaryName}</p>}
+        </div>
+        <div>
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.phone_number') || 'Phone (optional)'}</label>
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+        </div>
+
+        <div>
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.email') || 'Email (optional)'}</label>
+          <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+        </div>
+
+        <div>
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.category_1') || 'Category'}</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.sub_category') || 'Sub-category'}</label>
+          <input value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-sm theme-text-muted block mb-1">{t('extracted.description') || 'Description'}</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+        </div>
+      </div>
+
+      {error && <div className="text-sm text-red-500">{error}</div>}
+
+      <div className="flex items-center justify-end gap-3 pt-4">
+        <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border">{t('extracted.cancel')}</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold">
+          {isSubmitting ? 'Creating...' : (t('extracted.create') || 'Create')}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 
 const GrievancePage = () => {
   const { theme } = useTheme();
@@ -72,21 +253,27 @@ const GrievancePage = () => {
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [selectedGrievance, setSelectedGrievance] = useState<typeof mockGrievances[0] | null>(null);
+  const [grievances, setGrievances] = useState<Grievance[]>([]);
+  const [selectedGrievance, setSelectedGrievance] = useState<Grievance | null>(null);
+  const [showNewCaseModal, setShowNewCaseModal] = useState(false);
   const [viewMode, setViewMode] = useState<'dashboard' | 'list'>('dashboard');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('overview');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // subscribe to Firestore grievances collection
+  useFirestoreGrievances(setGrievances);
+
   // Filter and sort grievances (same logic as before)
   const filteredGrievances = useMemo(() => {
-    let filtered = [...mockGrievances];
+    let filtered = [...grievances];
     if (searchQuery) {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter(grievance =>
-        grievance.beneficiaryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        grievance.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        grievance.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        grievance.applicationId.toLowerCase().includes(searchQuery.toLowerCase())
+        (grievance.beneficiaryName || '').toLowerCase().includes(q) ||
+        (grievance.id || '').toLowerCase().includes(q) ||
+        (grievance.district || '').toLowerCase().includes(q) ||
+        (grievance.applicationId || '').toLowerCase().includes(q)
       );
     }
     if (statusFilter !== 'all') filtered = filtered.filter(g => g.status === statusFilter);
@@ -117,7 +304,7 @@ const GrievancePage = () => {
       return sortOrder === 'asc' ? (aStr > bStr ? 1 : -1) : (aStr < bStr ? 1 : -1);
     });
     return filtered;
-  }, [searchQuery, statusFilter, categoryFilter, priorityFilter, actTypeFilter, assignedToFilter, sortBy, sortOrder]);
+  }, [grievances, searchQuery, statusFilter, categoryFilter, priorityFilter, actTypeFilter, assignedToFilter, sortBy, sortOrder]);
 
   // Pagination
   const paginatedGrievances = filteredGrievances.slice(
@@ -127,38 +314,39 @@ const GrievancePage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const total = mockGrievances.length;
-    const resolved = mockGrievances.filter(g => g.status === 'resolved' || g.status === 'closed').length;
-    const inProgress = mockGrievances.filter(g => g.status === 'in-progress').length;
-    const escalated = mockGrievances.filter(g => g.status === 'escalated').length;
+    const total = grievances.length;
+    const resolved = grievances.filter(g => g.status === 'resolved' || g.status === 'closed').length;
+    const inProgress = grievances.filter(g => g.status === 'in-progress').length;
+    const escalated = grievances.filter(g => g.status === 'escalated').length;
     const avgResolutionTime = 5.2;
-    const satisfactionRate = Math.round((mockGrievances.filter(g => g.satisfactionRating && g.satisfactionRating >= 4).length / resolved) * 100);
-    
+    const satisfiedCount = grievances.filter(g => g.satisfactionRating && g.satisfactionRating >= 4).length;
+    const satisfactionRate = resolved > 0 ? Math.round((satisfiedCount / resolved) * 100) : 0;
+
     return {
       total,
-      open: mockGrievances.filter(g => g.status === 'open').length,
+      open: grievances.filter(g => g.status === 'open').length,
       inProgress,
       resolved,
       escalated,
-      closed: mockGrievances.filter(g => g.status === 'closed').length,
-      pending: mockGrievances.filter(g => g.status === 'pending').length,
+      closed: grievances.filter(g => g.status === 'closed').length,
+      pending: grievances.filter(g => g.status === 'pending').length,
       avgResolutionTime,
       satisfactionRate,
-      highPriority: mockGrievances.filter(g => g.priority === 'high').length
+      highPriority: grievances.filter(g => g.priority === 'high').length
     };
-  }, []);
+  }, [grievances]);
 
   // Category distribution
   const categoryStats = useMemo(() => {
     return {
-      'disbursement-delay': mockGrievances.filter(g => g.category === 'disbursement-delay').length,
-      'document-issues': mockGrievances.filter(g => g.category === 'document-issues').length,
-      'application-status': mockGrievances.filter(g => g.category === 'application-status').length,
-      'officer-behavior': mockGrievances.filter(g => g.category === 'officer-behavior').length,
-      'information-correction': mockGrievances.filter(g => g.category === 'information-correction').length,
-      'technical-issues': mockGrievances.filter(g => g.category === 'technical-issues').length
+      'disbursement-delay': grievances.filter(g => g.category === 'disbursement-delay').length,
+      'document-issues': grievances.filter(g => g.category === 'document-issues').length,
+      'application-status': grievances.filter(g => g.category === 'application-status').length,
+      'officer-behavior': grievances.filter(g => g.category === 'officer-behavior').length,
+      'information-correction': grievances.filter(g => g.category === 'information-correction').length,
+      'technical-issues': grievances.filter(g => g.category === 'technical-issues').length
     };
-  }, []);
+  }, [grievances]);
 
   // Mobile detection
   useEffect(() => {
@@ -428,6 +616,7 @@ const GrievancePage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => setShowNewCaseModal(true)}
             className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
           >
             <Plus className="w-5 h-5" />
@@ -435,6 +624,27 @@ const GrievancePage = () => {
           </motion.button>
         </div>
       </motion.div>
+
+      {/* Inline New Case Section (appears above grid/table) */}
+      {showNewCaseModal && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.new_case') || 'New Case'}</h3>
+              <p className="text-sm theme-text-muted">{t('extracted.new_case_description') || 'Create a new grievance and link it to a beneficiary.'}</p>
+            </div>
+            <button onClick={() => setShowNewCaseModal(false)} className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:bg-red-500/10">
+              <X className="w-5 h-5 theme-text-primary" />
+            </button>
+          </div>
+          <NewGrievanceForm onClose={() => setShowNewCaseModal(false)} onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }} />
+        </motion.div>
+      )}
 
       {/* Dashboard Grid - New Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -745,29 +955,54 @@ const GrievancePage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
+                          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
                 <Target className="w-5 h-5 theme-text-muted" />
               </div>
-              <div className="space-y-4">
-                {[
-                  { labelKey: 'extracted.within_sla', value: 78, color: 'bg-green-500' },
-                  { labelKey: 'extracted.near_sla', value: 15, color: 'bg-amber-500' },
-                  { labelKey: 'extracted.breached_sla', value: 7, color: 'bg-red-500' }
-                ].map((metric) => (
-                  <div key={metric.labelKey} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{t(metric.labelKey)}</span>
-                      <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
-                    </div>
-                    <div className={`w-full rounded-full h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
-                      <div 
-                        className={`h-2 rounded-full ${metric.color} transition-all duration-1000`}
-                        style={{ width: `${metric.value}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        <div className="space-y-4">
+                          {/* Compute SLA buckets dynamically */}
+                          {(() => {
+                            const totalWithExpected = grievances.filter(g => g.expectedResolution).length || grievances.length || 1;
+                            const now = new Date();
+                            let within = 0, near = 0, breached = 0;
+                            grievances.forEach(g => {
+                              const exp = g.expectedResolution ? new Date(g.expectedResolution) : null;
+                              const res = g.resolutionDate ? new Date(g.resolutionDate) : null;
+                              if (exp) {
+                                if (res) {
+                                  if (res <= exp) within += 1; else breached += 1;
+                                } else {
+                                  if (exp < now) breached += 1;
+                                  else {
+                                    const daysLeft = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                                    if (daysLeft <= 2) near += 1; else within += 1;
+                                  }
+                                }
+                              }
+                            });
+                            const withinPct = Math.round((within / totalWithExpected) * 100);
+                            const nearPct = Math.round((near / totalWithExpected) * 100);
+                            const breachedPct = 100 - withinPct - nearPct;
+                            const metrics = [
+                              { label: t('extracted.within_sla'), value: withinPct, color: 'bg-green-500' },
+                              { label: t('extracted.near_sla'), value: nearPct, color: 'bg-amber-500' },
+                              { label: t('extracted.breached_sla'), value: breachedPct, color: 'bg-red-500' }
+                            ];
+                            return metrics.map((metric) => (
+                              <div key={metric.label} className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
+                                  <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
+                                </div>
+                                <div className={`w-full rounded-full h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
+                                  <div 
+                                    className={`h-2 rounded-full ${metric.color} transition-all duration-1000`}
+                                    style={{ width: `${metric.value}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
             </motion.div>
 
             {/* Recent Activity */}
@@ -780,25 +1015,70 @@ const GrievancePage = () => {
                 <Activity className="w-5 h-5 theme-text-muted" />
               </div>
               <div className="space-y-4">
-                {[
-                  { actionKey: 'extracted.case_resolved', userKey: 'extracted.officer_sharma', timeKey: 'extracted.min_ago_2', status: 'success' },
-                  { actionKey: 'extracted.new_escalation', userKey: 'extracted.system', timeKey: 'extracted.min_ago_5', status: 'warning' },
-                  { actionKey: 'extracted.document_uploaded', userKey: 'extracted.beneficiary_user', timeKey: 'extracted.min_ago_10', status: 'info' },
-                  { actionKey: 'extracted.followup_required', userKey: 'extracted.officer_verma', timeKey: 'extracted.min_ago_15', status: 'error' }
-                ].map((activity, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.status === 'success' ? 'bg-green-500' :
-                      activity.status === 'warning' ? 'bg-amber-500' :
-                      activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
-                      <p className="text-xs theme-text-muted truncate">{t(activity.userKey)} • {t(activity.timeKey)}</p>
+                {(() => {
+                  // Build recent activities from grievances
+                  const now = new Date();
+                  const recent: { action: string; user: string; time: string; status: 'success' | 'warning' | 'info' | 'error' }[] = [];
+                  const seen = new Set<string>();
+                  const items = [...grievances].sort((a, b) => {
+                    const aTime = new Date(a.lastUpdated || a.createdDate || '').getTime() || 0;
+                    const bTime = new Date(b.lastUpdated || b.createdDate || '').getTime() || 0;
+                    return bTime - aTime;
+                  });
+                  const withinWindowMs = 1000 * 60 * 60 * 24 * 7; // 7 days
+                  for (const g of items) {
+                    if (recent.length >= 4) break;
+                    const lu = new Date(g.lastUpdated || g.createdDate || now.toISOString());
+                    if (now.getTime() - lu.getTime() > withinWindowMs) continue;
+                    const timeLabel = (() => {
+                      const mins = Math.round((now.getTime() - lu.getTime()) / 60000);
+                      if (mins < 60) return `${mins} min ago`;
+                      const hrs = Math.round(mins / 60);
+                      if (hrs < 24) return `${hrs} hr ago`;
+                      const days = Math.round(hrs / 24);
+                      return `${days} day${days > 1 ? 's' : ''} ago`;
+                    })();
+
+                    if (g.status === 'resolved' && !seen.has('resolved')) {
+                      recent.push({ action: t('extracted.case_resolved') || 'Case Resolved', user: g.assignedTo || g.beneficiaryName || 'System', time: timeLabel, status: 'success' });
+                      seen.add('resolved');
+                      continue;
+                    }
+                    if ((g.escalationLevel || 0) > 0 && !seen.has('escalation')) {
+                      recent.push({ action: t('extracted.new_escalation') || 'New Escalation', user: 'System', time: timeLabel, status: 'warning' });
+                      seen.add('escalation');
+                      continue;
+                    }
+                    if ((g.attachments || 0) > 0 && !seen.has('document')) {
+                      recent.push({ action: t('extracted.document_uploaded') || 'Document Uploaded', user: t('extracted.beneficiary_user') || g.beneficiaryName || 'Beneficiary', time: timeLabel, status: 'info' });
+                      seen.add('document');
+                      continue;
+                    }
+                    if (g.followUpRequired && !seen.has('followup')) {
+                      recent.push({ action: t('extracted.followup_required') || 'Follow-up Required', user: g.assignedTo || 'Officer', time: timeLabel, status: 'error' });
+                      seen.add('followup');
+                      continue;
+                    }
+                  }
+                  // Fallback: if no recent activities found, show some placeholders based on latest items
+                  if (recent.length === 0 && items.length) {
+                    recent.push({ action: t('extracted.new_escalation') || 'New Escalation', user: 'System', time: 'just now', status: 'warning' });
+                  }
+                  return recent.map((activity, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
+                      <div className={`w-2 h-2 rounded-full ${
+                        activity.status === 'success' ? 'bg-green-500' :
+                        activity.status === 'warning' ? 'bg-amber-500' :
+                        activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
+                        <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 theme-text-muted flex-shrink-0" />
                     </div>
-                    <ArrowUpRight className="w-4 h-4 theme-text-muted flex-shrink-0" />
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </motion.div>
           </div>

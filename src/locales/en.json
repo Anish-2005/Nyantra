@@ -357,6 +357,7 @@
     "exportFilteredDescription": "Download only the results matching your current filters."
   },
   "extracted": {
+    "grievance": "Grievance",
     "theme_variables": "{/* Theme Variables */}",
     "enhanced_gradient_orbs": "{/* Enhanced Gradient Orbs */}",
     "main_content": "{/* Main Content */}",
@@ -2723,8 +2724,6 @@
       "selected_beneficiary_details": "{/* Selected Beneficiary Details */}",
       "beneficiary_details": "Beneficiary Details",
       "search_beneficiaries": "Search beneficiaries...",
-      "advanced_search": "Advanced Search",
-      "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location",
       "edit_beneficiary": "Edit beneficiary",
       "remove_beneficiary": "Remove beneficiary",
       "txbeneficiary": "{tx.beneficiary}",
@@ -2991,8 +2990,10 @@
   "beneficiary": {
     "beneficiary": "Beneficiary",
     "management": "Management",
+     "advanced_search": "Advanced Search",
     "comprehensive_oversight_of_dbt_beneficiaries": "Comprehensive Oversight Of Dbt Beneficiaries",
-    "exportDescription": "Export Description"
+    "exportDescription": "Export Description",
+    "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location"
   },
   "beneficiary_lowercase": "Beneficiary Lowercase",
   " ": ""
