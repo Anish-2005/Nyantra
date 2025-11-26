@@ -63,7 +63,7 @@ export default function UserSidebar({
               <Image src={logoSrc} alt={t('extracted.nyantra')} fill className="object-contain" />
             </div>
             <div>
-        <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'theme-text-primary'}`}>
+        <div className="text-lg font-bold theme-text-primary">
           {t('extracted.applicant')}
         </div>
         <div className="text-xs theme-text-muted">{t('extracted.your_portal')}</div>
@@ -150,8 +150,8 @@ export default function UserSidebar({
                 <Image src={logoSrc} alt={t('extracted.nyantra')} width={30} height={30} className="object-contain" />
               </div>
                 <div>
-                <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'theme-text-primary'}`}>
-                    {t('extracted.applicant')}
+                <div className="text-lg font-bold theme-text-primary">
+                  {t('extracted.applicant')}
                 </div>
                 <div className="text-xs theme-text-muted">{t('extracted.portal')}</div>
               </div>

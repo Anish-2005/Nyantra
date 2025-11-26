@@ -1,21 +1,22 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import {
     Search, Filter, Download, Plus, Eye, Edit, ChevronLeft, ChevronRight, X, Check,
     Clock, AlertCircle, FileText, User, Phone, MapPin,
-    DollarSign, MessageSquare, AlertTriangle, ChevronDown
+    DollarSign, MessageSquare, AlertTriangle, ChevronDown, Trash
 } from 'lucide-react';
 
 // New Application Form Component
-const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
+const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: Application | null, onSaved?: () => void }) => {
     const { theme } = useTheme();
     const { t } = useLocale();
     const [formData, setFormData] = useState({
@@ -37,26 +38,56 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
         setIsSubmitting(true);
 
         try {
-            const applicationsRef = collection(db, 'applications');
-            const newApplication = {
-                applicantName: formData.applicantName,
-                aadhaar: formData.aadhaar,
-                phone: formData.phone,
-                district: formData.district,
-                state: formData.state,
-                actType: formData.actType,
-                incidentDate: formData.incidentDate,
-                applicationDate: new Date().toISOString(),
-                status: 'pending',
-                amount: parseFloat(formData.amount) || 0,
-                priority: formData.priority,
-                assignedOfficer: formData.assignedOfficer,
-                documents: 0,
-                lastUpdate: new Date().toISOString()
-            };
+            if (initialData && initialData.id) {
+                // Editing existing application
+                const ref = doc(db, 'applications', initialData.id);
+                const updatedApplication = {
+                    applicantName: formData.applicantName,
+                    aadhaar: formData.aadhaar,
+                    phone: formData.phone,
+                    district: formData.district,
+                    state: formData.state,
+                    actType: formData.actType,
+                    incidentDate: formData.incidentDate,
+                    // keep original applicationDate if present
+                    lastUpdate: Timestamp.fromDate(new Date()),
+                    status: initialData.status || 'pending',
+                    amount: parseFloat(formData.amount) || 0,
+                    priority: formData.priority,
+                    assignedOfficer: formData.assignedOfficer,
+                    documents: initialData.documents || 0,
+                };
 
-            await addDoc(applicationsRef, newApplication);
-            onCancel(); // Hide form after successful creation
+                await updateDoc(ref, updatedApplication);
+                onSaved?.();
+                onCancel();
+            } else {
+                const applicationsRef = collection(db, 'applications');
+                // Generate numeric-only suffix ID prefixed with 'APP'
+                const newId = `APP${Date.now()}`;
+                const newApplication = {
+                    applicantName: formData.applicantName,
+                    aadhaar: formData.aadhaar,
+                    phone: formData.phone,
+                    district: formData.district,
+                    state: formData.state,
+                    actType: formData.actType,
+                    incidentDate: formData.incidentDate,
+                    applicationDate: Timestamp.fromDate(new Date()),
+                    status: 'pending',
+                    amount: parseFloat(formData.amount) || 0,
+                    priority: formData.priority,
+                    assignedOfficer: formData.assignedOfficer,
+                    documents: 0,
+                    lastUpdate: Timestamp.fromDate(new Date()),
+                    id: newId
+                };
+
+                // Create the document with the generated numeric ID (prefixed with APP)
+                const ref = doc(db, 'applications', newId);
+                await setDoc(ref, newApplication);
+                onCancel(); // Hide form after successful creation
+            }
         } catch (error) {
             console.error('Error creating application:', error);
             // You could add error handling here
@@ -68,6 +99,24 @@ const NewApplicationForm = ({ onCancel }: { onCancel: () => void }) => {
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
+
+    // Prefill form when editing
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                applicantName: initialData.applicantName || '',
+                aadhaar: initialData.aadhaar || '',
+                phone: initialData.phone || '',
+                district: initialData.district || '',
+                state: initialData.state || '',
+                actType: initialData.actType || '',
+                incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
+                amount: String(initialData.amount || ''),
+                priority: initialData.priority || 'medium',
+                assignedOfficer: initialData.assignedOfficer || ''
+            });
+        }
+    }, [initialData]);
 
     return (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -306,59 +355,91 @@ const exportApplicationsData = (applications: Application[]) => {
     document.body.removeChild(link);
 };
 
-// Function to export applications data as PDF
+// Function to export applications data as PDF (compact professional report)
 const exportApplicationsPDF = (applications: Application[]) => {
-    const doc = new jsPDF();
+    // Keep landscape to be safe for slightly wider tables but use fewer columns
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
 
-    // Add title
-    doc.setFontSize(20);
-    doc.text('Applications Report', 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 32);
-    doc.text(`Total Applications: ${applications.length}`, 14, 38);
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Prepare table data
-    const headers = [
-        ['Application ID', 'Applicant Name', 'District', 'Act Type', 'Amount', 'Status', 'Priority']
-    ];
+    // Header band
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
 
-    const rows = applications.map(app => [
-        app.id,
-        app.applicantName,
-        `${app.district}, ${app.state}`,
-        app.actType,
-        `₹${app.amount.toLocaleString('en-IN')}`,
-        app.status.replace('-', ' '),
-        app.priority
-    ]);
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Applications Report', margin, 36);
 
-    // Add table
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${applications.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [[
+        'Application ID', 'Applicant', 'District', 'Act Type', 'Amount (INR)', 'Status', 'Priority', 'Actions'
+    ]];
+
+    const fmtCurrency = (n?: number) => {
+        if (n == null) return '';
+        try { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n); } catch { return String(n); }
+    };
+
+    const body: any[] = [];
+    applications.forEach(app => {
+        // Applicant cell: initials, full name, phone (multiline)
+        const initials = (app.applicantName || '').split(' ').map(n => n[0] || '').join('');
+        const applicantCell = `${initials}\n${app.applicantName}\n${app.phone}`;
+
+        body.push([
+            app.id,
+            applicantCell,
+            `${app.district}${app.state ? ', ' + app.state : ''}`,
+            app.actType,
+            fmtCurrency(app.amount),
+            app.status.replace('-', ' '),
+            app.priority,
+            '—'
+        ]);
+    });
+
     autoTable(doc, {
-        head: headers,
-        body: rows,
-        startY: 45,
+        head,
+        body,
+        startY: 70,
         styles: {
-            fontSize: 8,
-            cellPadding: 3,
+            fontSize: 9,
+            cellPadding: 6,
+            overflow: 'linebreak',
+            cellWidth: 'wrap'
         },
         headStyles: {
             fillColor: [59, 130, 246],
             textColor: 255,
-            fontStyle: 'bold',
+            fontStyle: 'bold'
         },
-        alternateRowStyles: {
-            fillColor: [248, 250, 252],
-        },
-        margin: { top: 45 },
+        alternateRowStyles: { fillColor: [250, 250, 251] },
+        margin: { left: margin, right: margin, top: 70 },
+        tableWidth: 'auto',
+        columnStyles: {
+            0: { cellWidth: 80 },   // Application ID
+            1: { cellWidth: 180 },  // Applicant (multiline)
+            2: { cellWidth: 100 },  // District
+            3: { cellWidth: 100 },  // Act Type
+            4: { cellWidth: 80 },   // Amount
+            5: { cellWidth: 80 },   // Status
+            6: { cellWidth: 60 },   // Priority
+            7: { cellWidth: 50 }    // Actions
+        }
     });
 
-    // Save the PDF
     doc.save(`applications_report_${new Date().toISOString().split('T')[0]}.pdf`);
 };
 
 const ApplicationsPage = () => {
     const { theme } = useTheme();
     const { t } = useLocale();
+    const { profile, loading: authLoading } = useAuth();
+    const isOfficer = !!profile && profile.role === 'officer';
     // Deterministic formatting helpers to avoid SSR/client hydration mismatches
     const formatDate = (d?: string | Date) => {
         if (!d) return '';
@@ -392,6 +473,8 @@ const ApplicationsPage = () => {
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(true);
     const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
+    const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
+    const [confirmModal, setConfirmModal] = useState<{ open: boolean; id?: string; message?: string }>({ open: false });
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Filter and sort applications
@@ -483,6 +566,14 @@ const ApplicationsPage = () => {
             const apps: Application[] = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
+                const toIso = (val: any) => {
+                    if (!val) return '';
+                    if (val.toDate && typeof val.toDate === 'function') {
+                        try { return val.toDate().toISOString(); } catch { return String(val); }
+                    }
+                    return typeof val === 'string' ? val : String(val);
+                };
+
                 apps.push({
                     id: doc.id,
                     applicantName: data.applicantName || '',
@@ -492,13 +583,13 @@ const ApplicationsPage = () => {
                     state: data.state || '',
                     actType: data.actType || '',
                     incidentDate: data.incidentDate || '',
-                    applicationDate: data.applicationDate || '',
+                    applicationDate: toIso(data.applicationDate),
                     status: data.status || 'pending',
                     amount: data.amount || 0,
                     priority: data.priority || 'medium',
                     assignedOfficer: data.assignedOfficer || '',
                     documents: data.documents || 0,
-                    lastUpdate: data.lastUpdate || ''
+                    lastUpdate: toIso(data.lastUpdate)
                 });
             });
             setApplications(apps);
@@ -603,7 +694,11 @@ const ApplicationsPage = () => {
                 cancelled = true;
                 window.removeEventListener('resize', handleResize);
                 if (animationId !== null) cancelAnimationFrame(animationId);
-                renderer.dispose();
+                try {
+                    // Force context loss to ensure programs/uniforms aren't reused across renderers
+                    (renderer as any).forceContextLoss?.();
+                } catch {}
+                try { renderer.dispose(); } catch {}
                 particlesGeometry.dispose();
                 particlesMaterial.dispose();
                 // linesGeometry.dispose();
@@ -663,6 +758,87 @@ const ApplicationsPage = () => {
         return icons[status as keyof typeof icons] || Clock;
     };
 
+    // Toast helpers
+    const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setToasts(prev => [...prev, { id, type, message }]);
+        window.setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, ttl);
+    };
+
+    // Request delete: open confirm modal
+    const requestDeleteApplication = (id?: string) => {
+        if (!id) return;
+        setConfirmModal({ open: true, id, message: `Delete application ${id}? This action cannot be undone.` });
+    };
+
+    const cancelConfirmDelete = () => setConfirmModal({ open: false });
+
+    const confirmDeleteApplication = async () => {
+        const id = confirmModal.id;
+        if (!id) return;
+        setConfirmModal({ open: false });
+        try {
+            await deleteDoc(doc(db, 'applications', id));
+            // Optimistically update local state; onSnapshot will also reflect this change
+            setApplications(prev => prev.filter(a => a.id !== id));
+            setSelectedApplication(prev => (prev && prev.id === id ? null : prev));
+            showToast('success', `Deleted application ${id}`);
+        } catch (err) {
+            // Show error, include message if available
+            const message = (err as any)?.message || String(err);
+            showToast('error', `Failed to delete ${id}: ${message}`);
+
+            // Try soft-delete fallback (update status) in case deletes are blocked by rules
+            try {
+                await updateDoc(doc(db, 'applications', id), { status: 'deleted', deletedAt: Timestamp.fromDate(new Date()) });
+                // update local list to reflect status change
+                setApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'deleted' } : a));
+                showToast('success', `Soft-deleted application ${id} (status set to deleted)`);
+            } catch (err2) {
+                const m2 = (err2 as any)?.message || String(err2);
+                showToast('error', `Also failed to update status: ${m2}`);
+            }
+        }
+    };
+
+    // Selected application detail status state (keeps the inline selector controlled)
+    const [detailStatus, setDetailStatus] = useState<string>('');
+
+    useEffect(() => {
+        setDetailStatus(selectedApplication?.status || 'pending');
+    }, [selectedApplication]);
+
+    // Allow officers to update application status
+    const updateApplicationStatus = async (id: string, status: string) => {
+        if (!id) return;
+        try {
+            await updateDoc(doc(db, 'applications', id), { status, lastUpdate: Timestamp.fromDate(new Date()) });
+            setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+            setSelectedApplication(prev => prev ? { ...prev, status } : prev);
+            showToast('success', `Updated status for ${id} to ${status}`);
+        } catch (err) {
+            const m = (err as any)?.message || String(err);
+            showToast('error', `Failed to update status: ${m}`);
+        }
+    };
+
+    if (authLoading) return (
+        <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
+            <div className="theme-bg-card theme-border-glass border rounded-xl p-6">Loading...</div>
+        </div>
+    );
+
+    if (!isOfficer) return (
+        <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
+            <div className="theme-bg-card theme-border-glass border rounded-xl p-6">
+                <h2 className="text-xl font-semibold theme-text-primary">Access restricted</h2>
+                <p className="theme-text-muted">This page is restricted to officers only. If you believe this is an error, contact your administrator.</p>
+            </div>
+        </div>
+    );
+
     return (
         <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
             {/* Three.js Canvas Background (theme-aware) */}
@@ -689,21 +865,22 @@ const ApplicationsPage = () => {
           --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        [data-theme="light"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
-          --nav-bg: rgba(255, 255, 255, 0.95);
-          --text-primary: #0f172a;
-          --text-secondary: #475569;
-          --text-muted: #64748b;
-          --accent-primary: #fb7185;
-          --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.6);
-          --glass-border: rgba(0, 0, 0, 0.08);
-        }
+                [data-theme="light"] {
+                    --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.06), transparent 8%), 
+                                                 radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.04), transparent 8%), 
+                                                 linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
+                    /* Make cards and glass backgrounds more opaque in light mode for better contrast */
+                    --card-bg: rgba(255, 255, 255, 1);
+                    --card-border: rgba(0, 0, 0, 0.08);
+                    --nav-bg: rgba(255, 255, 255, 1);
+                    --text-primary: #0f172a;
+                    --text-secondary: #475569;
+                    --text-muted: #64748b;
+                    --accent-primary: #fb7185;
+                    --accent-secondary: #fb923c;
+                    --glass-bg: rgba(255, 255, 255, 0.95);
+                    --glass-border: rgba(0, 0, 0, 0.12);
+                }
 
         .theme-text-primary { color: var(--text-primary) !important; }
         .theme-text-secondary { color: var(--text-secondary) !important; }
@@ -838,6 +1015,123 @@ const ApplicationsPage = () => {
                 </div>
             </motion.div>
 
+            {/* Toast container (top-right) */}
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toasts.map(t => {
+                    const toastClass = t.type === 'success'
+                        ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
+                        : t.type === 'error'
+                            ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
+                            : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
+
+                    return (
+                        <div key={t.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm">{t.message}</div>
+                                <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Confirm delete modal */}
+            <AnimatePresence>
+                {confirmModal.open && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-60 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/50" onClick={cancelConfirmDelete} />
+                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="relative w-full max-w-md p-6 rounded-xl theme-border-glass border shadow-lg theme-bg-card">
+                            <h3 className="text-lg font-semibold theme-text-primary mb-3">Confirm delete</h3>
+                            <p className="text-sm theme-text-muted mb-6">{confirmModal.message}</p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={cancelConfirmDelete} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">Cancel</button>
+                                <button onClick={confirmDeleteApplication} className={`px-4 py-2 rounded-lg text-white ${theme === 'light' ? 'bg-red-600' : 'bg-red-500'}`}>Delete</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Export Modal */}
+            <AnimatePresence>
+                {showExportModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center"
+                    >
+                        <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+                        <motion.div
+                            initial={{ scale: 0.98, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.98, opacity: 0 }}
+                            className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+                            style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+                        >
+                            <div className="flex items-start justify-between mb-6">
+                                <div>
+                                    <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                                        <Download className="w-5 h-5 text-accent-gradient" />
+                                        {t('applications.export') || 'Export Data'}
+                                    </h3>
+                                    <p className="text-sm theme-text-muted mt-1">{t('applications.exportDescription') || 'Export applications as CSV or a printable PDF report.'}</p>
+                                </div>
+                                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                                    <X className="w-5 h-5 theme-text-primary" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {/* Export All Card */}
+                                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                                                    <FileText className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-semibold theme-text-primary">{t('applications.exportAll') || 'Export All'}</h4>
+                                                    <p className="text-xs theme-text-muted">{t('applications.exportAllDescription') || 'Download the full applications dataset in the chosen format.'}</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm theme-text-muted">{applications.length} {t('applications_lowercase') || 'applications'}</p>
+                                        </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                            <button onClick={() => { exportApplicationsData(applications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                                            <button onClick={() => { exportApplicationsPDF(applications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Export Filtered Card */}
+                                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                                                    <Download className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-semibold theme-text-primary">{t('applications.exportFiltered') || 'Export Filtered'}</h4>
+                                                    <p className="text-xs theme-text-muted">{t('applications.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm theme-text-muted">{filteredApplications.length} {t('applications_lowercase') || 'applications'}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <button disabled={filteredApplications.length === 0} onClick={() => { exportApplicationsData(filteredApplications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                                            <button disabled={filteredApplications.length === 0} onClick={() => { exportApplicationsPDF(filteredApplications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Main Content */}
             {showNewApplicationForm ? (
                 <motion.div
@@ -849,55 +1143,64 @@ const ApplicationsPage = () => {
                     <div className="p-6 border-b theme-border-glass">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold theme-text-primary">{t('applications.createANewReliefApplication')}</h2>
-                                <p className="theme-text-muted">Create a new relief application</p>
+                                <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication ? t('applications.editANewReliefApplication') : t('applications.createANewReliefApplication')}</h2>
+                                <p className="theme-text-muted">{selectedApplication ? t('applications.editingApplicationDescription') : (t('applications.createANewReliefApplicationDescription') || 'Create a new relief application')}</p>
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setShowNewApplicationForm(false)}
-                                className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors"
+                                className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-primary transition-colors"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-5 h-5 theme-text-primary" />
                             </motion.button>
                         </div>
                     </div>
-                    <NewApplicationForm onCancel={() => setShowNewApplicationForm(false)} />
+                    <NewApplicationForm
+                        onCancel={() => setShowNewApplicationForm(false)}
+                        initialData={selectedApplication}
+                        onSaved={() => {
+                            // Clear selection after save and refresh UI if needed
+                            setSelectedApplication(null);
+                        }}
+                    />
                 </motion.div>
             ) : (
                 <>
-                    {/* Statistics Cards */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
-                    >
-                        {[
-                            { labelKey: 'applications.stats.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: FileText, borderColor: 'border-blue-200 dark:border-blue-800' },
-                            { labelKey: 'applications.stats.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, borderColor: 'border-amber-200 dark:border-amber-800' },
-                            { labelKey: 'applications.stats.inReview', value: stats.inReview, color: 'from-purple-500 to-pink-500', icon: Eye, borderColor: 'border-purple-200 dark:border-purple-800' },
-                            { labelKey: 'applications.stats.approved', value: stats.approved, color: 'from-green-500 to-emerald-500', icon: Check, borderColor: 'border-green-200 dark:border-green-800' },
-                            { labelKey: 'applications.stats.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X, borderColor: 'border-red-200 dark:border-red-800' },
-                            { labelKey: 'applications.stats.docsRequired', value: stats.documentsRequired, color: 'from-indigo-500 to-purple-500', icon: AlertCircle, borderColor: 'border-indigo-200 dark:border-indigo-800' }
-                        ].map((stat, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className={`theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow`}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                                        <stat.icon className="w-5 h-5 text-white" />
-                                    </div>
-                                    <span className="text-lg font-bold theme-text-primary">{stat.value}</span>
+                    {/* Statistics Cards (total + dynamic per-status cards) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
+                        <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
+                                    <User className="w-5 h-5" />
                                 </div>
-                                <p className="text-sm font-medium theme-text-muted">{t(stat.labelKey)}</p>
-                            </motion.div>
-                        ))}
-                    </motion.div>
+                                <span className="text-lg font-bold theme-text-primary">{stats.total}</span>
+                            </div>
+                            <p className="text-sm font-medium theme-text-muted">{t('applications.stats.total')}</p>
+                        </div>
+
+                        {(() => {
+                            const list = [
+                                { status: 'pending', label: t('applications.stats.pending'), count: stats.pending, Icon: Clock },
+                                { status: 'in-review', label: t('applications.stats.inReview'), count: stats.inReview, Icon: Eye },
+                                { status: 'approved', label: t('applications.stats.approved'), count: stats.approved, Icon: Check },
+                                { status: 'rejected', label: t('applications.stats.rejected'), count: stats.rejected, Icon: X },
+                                { status: 'documents-required', label: t('applications.stats.docsRequired') || t('applications.stats.documentsrequired'), count: stats.documentsRequired, Icon: AlertCircle }
+                            ];
+
+                            return list.map((s) => (
+                                <div key={s.status} className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${theme === 'light' ? (s.status === 'approved' ? 'bg-green-500' : s.status === 'pending' ? 'bg-amber-400' : s.status === 'in-review' ? 'bg-blue-400' : s.status === 'rejected' ? 'bg-red-400' : 'bg-purple-400') : 'bg-opacity-80'}`}>
+                                            <s.Icon className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-lg font-bold theme-text-primary">{s.count}</span>
+                                    </div>
+                                    <p className="text-sm font-medium theme-text-muted">{s.label}</p>
+                                </div>
+                            ));
+                        })()}
+                    </div>
 
                     {/* Filters and Search */}
                     <motion.div
@@ -1084,8 +1387,11 @@ const ApplicationsPage = () => {
                                                             <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
                                                                 <Eye className="w-4 h-4" />
                                                             </button>
-                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors">
+                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
                                                                 <Edit className="w-4 h-4" />
+                                                            </button>
+                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
+                                                                <Trash className="w-4 h-4" />
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1129,8 +1435,11 @@ const ApplicationsPage = () => {
                                                 <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors">
+                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
                                                     <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
+                                                    <Trash className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </motion.div>
@@ -1190,8 +1499,11 @@ const ApplicationsPage = () => {
                                                 <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); }}>
                                                     <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                                                 </button>
-                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors">
+                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
                                                     <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
+                                                </button>
+                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
+                                                    <Trash className="w-4 h-4 theme-text-muted hover:text-red-500" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1237,6 +1549,107 @@ const ApplicationsPage = () => {
                         </div>
                     </motion.div>
                 </>
+            )}
+
+            {/* Application Detail Inline Section (appears below the list) */}
+            {selectedApplication && (
+                <div className="theme-bg-card theme-border-glass border rounded-2xl w-full mt-6 overflow-hidden" aria-live="polite">
+                    <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b theme-border-glass">
+                        <div>
+                            <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication.applicantName}</h2>
+                            <p className="theme-text-muted">{selectedApplication.id} • {selectedApplication.actType}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => { setSelectedApplication(null); }} className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/10 theme-text-primary transition-colors" aria-label={t('extracted.close_sidebar') || 'Close'}>
+                                <X className="w-5 h-5 theme-text-primary" />
+                            </button>
+                            <button onClick={() => { setShowNewApplicationForm(true); }} className="px-3 py-2 rounded-lg accent-gradient text-white">
+                                <Edit className="w-4 h-4 inline-block mr-2" /> {t('applications.edit') || 'Edit'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                        <div>
+                            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.details') || 'Application Details'}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.applicant')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
+                                </div>
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.aadhaar_number')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
+                                </div>
+
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.phone_number')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
+                                </div>
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.location')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.district}, {selectedApplication.state}</p>
+                                </div>
+
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
+                                </div>
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')}</p>
+                                    <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
+                                </div>
+
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.application_date')}</p>
+                                    <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
+                                </div>
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.amount_1') || 'Amount'}</p>
+                                    <p className="font-semibold theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
+                                </div>
+
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.status')}</p>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={detailStatus}
+                                            onChange={(e) => setDetailStatus(e.target.value)}
+                                            className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                        >
+                                            <option value="pending">Pending</option>
+                                            <option value="in-review">In Review</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                            <option value="documents-required">Documents Required</option>
+                                        </select>
+                                        <button
+                                            onClick={() => { if (selectedApplication) updateApplicationStatus(selectedApplication.id, detailStatus); }}
+                                            disabled={!selectedApplication || detailStatus === selectedApplication.status}
+                                            className={`px-3 py-2 rounded-lg text-white ${theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'}`}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.priority')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.priority}</p>
+                                </div>
+
+                                <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.assigned_officer')}</p>
+                                    <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer || '—'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => { setShowExportModal(true); }} className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-glass theme-text-primary">{t('extracted.export')}</button>
+                            <button onClick={() => { setSelectedApplication(null); }} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass theme-text-primary">{t('extracted.close')}</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
         </div>

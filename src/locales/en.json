@@ -289,6 +289,8 @@
     "enterDistrict": "Enter district",
     "enterState": "Enter state",
     "applicationDetails": "Application Details",
+    "details": "Application Details",
+    "edit": "Edit",
     "selectActType": "Select act type",
     "reliefAmountINR": "Relief Amount (₹)",
     "enterReliefAmount": "Enter relief amount",
@@ -300,9 +302,11 @@
       "total": "Total",
       "pending": "Pending",
       "inReview": "In Review",
+      "inreview": "In Review",
       "approved": "Approved",
       "rejected": "Rejected",
-      "docsRequired": "Docs Required"
+      "docsRequired": "Docs Required",
+      "documentsrequired": "Documents Required"
     },
     "search": "Search by name, ID, or district...",
     "viewMode": {
@@ -318,6 +322,18 @@
       "priority": "Priority",
       "allPriorities": "All Priorities"
     }
+    ,
+    "editANewReliefApplication": "Edit Relief Application",
+    "editingApplicationDescription": "Edit the application details and update the record in the database.",
+    "updateApplication": "Update Application"
+    ,
+    "createANewReliefApplicationDescription": "Fill in the applicant and application details to create a new relief application."
+    ,
+    "exportDescription": "Export applications as CSV or a printable PDF report.",
+    "exportAll": "Export All",
+    "exportAllDescription": "Download the full applications dataset in the chosen format.",
+    "exportFiltered": "Export Filtered",
+    "exportFilteredDescription": "Download only the results matching your current filters."
   },
   "extracted": {
     "theme_variables": "{/* Theme Variables */}",
@@ -328,6 +344,10 @@
     "role_selection_card": "{/* Role Selection Card */}",
     "background_accent": "{/* Background Accent */}",
     "header": "{/* Header */}",
+    "comprehensive_oversight_of_dbt_beneficiaries": "Comprehensive oversight of DBT beneficiaries",
+    "create_new_beneficiary": "Create a new beneficiary",
+    "create_new_beneficiary_description": "Create a new beneficiary record to link with applications and manage disbursements.",
+    "create": "Create",
     "choose_your_role": "Choose your role",
     "select_how_youaposll_use_the_platform": "Select how you'll use the platform",
     "verify_your_identity": "Verify your identity",
@@ -2770,6 +2790,8 @@
       "beneficiaryverificationstatusreplace": "{beneficiary.verificationStatus.replace('-', ' ')}",
       "beneficiary_id": "Beneficiary ID",
       "beneficiary": "Beneficiary",
+      "management": "Management",
+      "comprehensive_oversight_of_dbt_beneficiaries": "Comprehensive oversight of DBT beneficiaries",
       "beneficiarydistrict": "{beneficiary.district}",
       "beneficiarystate": "{beneficiary.state}",
       "disbursed_formatcurrencybeneficiarydisbursedamount": "Disbursed: {formatCurrency(beneficiary.disbursedAmount)}",

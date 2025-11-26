@@ -4,6 +4,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type * as THREE from 'three';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, addDoc } from 'firebase/firestore';
 import {
   Search, Filter, Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X, Check,
@@ -164,6 +166,143 @@ const mockBeneficiaries = [
   }
 ];
 
+// New Beneficiary Form Component (client-side)
+const NewBeneficiaryForm = ({ onCancel }: { onCancel: () => void }) => {
+  const { theme } = useTheme();
+  const { t } = useLocale();
+  const [formData, setFormData] = useState({
+    name: '',
+    fatherName: '',
+    aadhaarNumber: '',
+    phone: '',
+    email: '',
+    district: '',
+    state: '',
+    address: '',
+    actType: '',
+    caseNumber: '',
+    incidentDate: '',
+    registrationDate: '',
+    reliefAmount: '',
+    priority: 'medium',
+    assignedOfficer: '',
+    category: 'SC'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const beneficiariesRef = collection(db, 'beneficiaries');
+      const newBeneficiary = {
+        name: formData.name,
+        fatherName: formData.fatherName,
+        aadhaarNumber: formData.aadhaarNumber,
+        phone: formData.phone,
+        email: formData.email,
+        district: formData.district,
+        state: formData.state,
+        address: formData.address,
+        actType: formData.actType,
+        caseNumber: formData.caseNumber,
+        incidentDate: formData.incidentDate,
+        registrationDate: formData.registrationDate || new Date().toISOString(),
+        status: 'pending-verification',
+        reliefAmount: parseFloat(formData.reliefAmount) || 0,
+        disbursedAmount: 0,
+        priority: formData.priority,
+        assignedOfficer: formData.assignedOfficer,
+        documents: 0,
+        lastUpdate: new Date().toISOString(),
+        verificationStatus: 'pending',
+        category: formData.category,
+        age: null,
+        gender: null,
+        maritalStatus: null,
+        bankAccount: null,
+        ifsc: null
+      };
+
+      await addDoc(beneficiariesRef, newBeneficiary);
+      onCancel();
+    } catch (err) {
+      console.error('Error adding beneficiary:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.add_beneficiary')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
+            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.fatheraposs_name')}</label>
+            <input value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')}</label>
+            <input value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')}</label>
+            <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
+            <input value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')}</label>
+            <input value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
+            <input value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_financial_details')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
+            <input value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.case_number')}</label>
+            <input value={formData.caseNumber} onChange={(e) => handleInputChange('caseNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')}</label>
+            <input type="date" value={formData.incidentDate} onChange={(e) => handleInputChange('incidentDate', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')}</label>
+            <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
+        <motion.button type="button" onClick={onCancel} className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary">{t('extracted.cancel')}</motion.button>
+        <motion.button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50">{isSubmitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Plus className="w-5 h-5" />{t('extracted.create')}</>}</motion.button>
+      </div>
+    </form>
+  );
+};
+
 const BeneficiariesPage = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
@@ -179,12 +318,15 @@ const BeneficiariesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<typeof mockBeneficiaries[0] | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [beneficiaries, setBeneficiaries] = useState<typeof mockBeneficiaries>(mockBeneficiaries);
+  const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Filter and sort beneficiaries
   const filteredBeneficiaries = useMemo(() => {
-    let filtered = [...mockBeneficiaries];
+    let filtered = [...beneficiaries];
 
     // Search filter
     if (searchQuery) {
@@ -240,16 +382,16 @@ const BeneficiariesPage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const totalAmount = mockBeneficiaries.reduce((sum, b) => sum + b.reliefAmount, 0);
-    const disbursedAmount = mockBeneficiaries.reduce((sum, b) => sum + b.disbursedAmount, 0);
+    const totalAmount = beneficiaries.reduce((sum, b) => sum + (b.reliefAmount || 0), 0);
+    const disbursedAmount = beneficiaries.reduce((sum, b) => sum + (b.disbursedAmount || 0), 0);
     
     return {
-      total: mockBeneficiaries.length,
-      verified: mockBeneficiaries.filter(b => b.verificationStatus === 'verified').length,
-      pendingVerification: mockBeneficiaries.filter(b => b.verificationStatus === 'pending').length,
-      disbursed: mockBeneficiaries.filter(b => b.status === 'disbursed').length,
-      rejected: mockBeneficiaries.filter(b => b.status === 'rejected').length,
-      documentsRequired: mockBeneficiaries.filter(b => b.status === 'documents-required').length,
+      total: beneficiaries.length,
+      verified: beneficiaries.filter(b => b.verificationStatus === 'verified').length,
+      pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
+      disbursed: beneficiaries.filter(b => b.status === 'disbursed').length,
+      rejected: beneficiaries.filter(b => b.status === 'rejected').length,
+      documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length,
       totalAmount,
       disbursedAmount,
       pendingAmount: totalAmount - disbursedAmount
@@ -259,10 +401,58 @@ const BeneficiariesPage = () => {
   // Category distribution
   const categoryStats = useMemo(() => {
     return {
-      SC: mockBeneficiaries.filter(b => b.category === 'SC').length,
-      ST: mockBeneficiaries.filter(b => b.category === 'ST').length,
-      OBC: mockBeneficiaries.filter(b => b.category === 'OBC').length
+      SC: beneficiaries.filter(b => b.category === 'SC').length,
+      ST: beneficiaries.filter(b => b.category === 'ST').length,
+      OBC: beneficiaries.filter(b => b.category === 'OBC').length
     };
+  }, [beneficiaries]);
+
+  // Subscribe to beneficiaries collection in Firestore
+  useEffect(() => {
+    const beneficiariesRef = collection(db, 'beneficiaries');
+    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const items: typeof mockBeneficiaries = [];
+      snap.forEach(doc => {
+        const data = doc.data() as any;
+        items.push({
+          id: doc.id,
+          aadhaarNumber: data.aadhaarNumber || data.aadhaar || '',
+          name: data.name || '',
+          fatherName: data.fatherName || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          district: data.district || '',
+          state: data.state || '',
+          address: data.address || '',
+          actType: data.actType || '',
+          caseNumber: data.caseNumber || '',
+          incidentDate: data.incidentDate || '',
+          registrationDate: data.registrationDate || '',
+          status: data.status || 'pending-verification',
+          reliefAmount: data.reliefAmount || 0,
+          disbursedAmount: data.disbursedAmount || 0,
+          priority: data.priority || 'medium',
+          assignedOfficer: data.assignedOfficer || '',
+          documents: data.documents || 0,
+          lastUpdate: data.lastUpdate || '',
+          bankAccount: data.bankAccount || null,
+          ifsc: data.ifsc || null,
+          verificationStatus: data.verificationStatus || 'pending',
+          category: data.category || 'SC',
+          age: data.age || null,
+          gender: data.gender || null,
+          maritalStatus: data.maritalStatus || null
+        });
+      });
+      setBeneficiaries(items.length ? items : mockBeneficiaries);
+      setLoading(false);
+    }, (err) => {
+      console.error('Error loading beneficiaries:', err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Detect small screens and adjust UI defaults for better mobile UX
@@ -562,6 +752,17 @@ const BeneficiariesPage = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+        /* Icon improvements: ensure lucide SVGs inherit text color and use stroke=currentColor */
+        svg {
+          vertical-align: middle;
+          stroke: currentColor;
+          fill: none;
+        }
+
+        /* Small icon helper sizes (use with class 'icon-sm' etc if needed) */
+        .icon-sm { width: 0.875rem; height: 0.875rem; }
+        .icon-md { width: 1rem; height: 1rem; }
+        .icon-lg { width: 1.25rem; height: 1.25rem; }
       `}</style>
       
             {/* Header */}
@@ -573,10 +774,10 @@ const BeneficiariesPage = () => {
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold theme-text-primary mb-2">
-                            {t('extracted.beneficiary')} <span className="text-accent-gradient">{t('extracted.management')}</span>
+                            {t('beneficiary.beneficiary')} <span className="text-accent-gradient">{t('beneficiary.management')}</span>
                         </h1>
                         <p className="theme-text-secondary text-base">
-                            {t('extracted.comprehensive_oversight_of_dbt_beneficiaries')}
+                            {t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
                         </p>
                     </div>
                     
@@ -592,6 +793,7 @@ const BeneficiariesPage = () => {
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowNewBeneficiaryForm(true)}
                             className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
                         >
                             <Plus className="w-4 h-4" />
@@ -600,6 +802,27 @@ const BeneficiariesPage = () => {
                     </div>
                 </div>
             </motion.div>
+
+      {/* New Beneficiary Form */}
+      {showNewBeneficiaryForm && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
+        >
+          <div className="p-6 border-b theme-border-glass flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.create_new_beneficiary')}</h2>
+              <p className="theme-text-muted">{t('extracted.create_new_beneficiary_description')}</p>
+            </div>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowNewBeneficiaryForm(false)} className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-muted transition-colors">
+              <X className="w-5 h-5" />
+            </motion.button>
+          </div>
+          <NewBeneficiaryForm onCancel={() => setShowNewBeneficiaryForm(false)} />
+        </motion.div>
+      )}
 
       {/* Statistics Cards */}
       <motion.div

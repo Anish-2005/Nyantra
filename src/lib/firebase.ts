@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 // Read config from NEXT_PUBLIC_* environment variables so keys are not hard-coded.
 // These variables are exposed to the browser by Next.js when prefixed with NEXT_PUBLIC_.
@@ -40,3 +41,20 @@ try {
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Development convenience: automatically sign in anonymously so local dev can access
+// Firestore rules that require `request.auth != null`. This is only enabled in
+// development to avoid inadvertently creating anonymous sessions in production.
+if (process.env.NODE_ENV === 'development') {
+  try {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        signInAnonymously(auth).catch(() => {
+          // ignore errors — rules/deployment may not allow anonymous sign-in
+        });
+      }
+    });
+  } catch (e) {
+    // noop
+  }
+}

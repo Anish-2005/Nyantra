@@ -289,6 +289,8 @@
     "enterDistrict": "जिला दर्ज करें",
     "enterState": "राज्य दर्ज करें",
     "applicationDetails": "आवेदन विवरण",
+    "details": "आवेदन विवरण",
+    "edit": "संपादित करें",
     "selectActType": "अधिनियम प्रकार चुनें",
     "reliefAmountINR": "राहत राशि (₹)",
     "enterReliefAmount": "राहत राशि दर्ज करें",
@@ -300,9 +302,11 @@
       "total": "कुल",
       "pending": "लंबित",
       "inReview": "समीक्षा में",
+      "inreview": "समीक्षा में",
       "approved": "स्वीकृत",
       "rejected": "अस्वीकृत",
-      "docsRequired": "दस्तावेज़ आवश्यक"
+      "docsRequired": "दस्तावेज़ आवश्यक",
+      "documentsrequired": "दस्तावेज़ आवश्यक"
     },
     "search": "नाम, आईडी या जिले से खोजें...",
     "viewMode": {
@@ -318,6 +322,18 @@
       "priority": "प्राथमिकता",
       "allPriorities": "सभी प्राथमिकताएँ"
     }
+    ,
+    "editANewReliefApplication": "राहत आवेदन संपादित करें",
+    "editingApplicationDescription": "आवेदन विवरण संपादित करें और डेटाबेस में रिकॉर्ड अपडेट करें।",
+    "updateApplication": "आवेदन अपडेट करें"
+    ,
+    "createANewReliefApplicationDescription": "नया राहत आवेदन बनाने के लिए आवेदक और आवेदन विवरण भरें।"
+    ,
+    "exportDescription": "आवेदन को CSV या प्रिंटेबल PDF रिपोर्ट के रूप में निर्यात करें।",
+    "exportAll": "सभी निर्यात करें",
+    "exportAllDescription": "चयनित फ़ॉर्मेट में पूरा आवेदन सेटडाउनलोड करें।",
+    "exportFiltered": "फ़िल्टर्ड निर्यात",
+    "exportFilteredDescription": "केवल वर्तमान फ़िल्टर के साथ मेल खाने वाले परिणाम डाउनलोड करें।"
   },
   "extracted": {
     "theme_variables": "{/* थीम वेरिएबल्स */}",
@@ -325,6 +341,10 @@
     "main_content": "{/* मुख्य सामग्री */}",
     "theme_toggle": "{/* थीम टॉगल */}",
     "theme_dark": "{theme === 'dark' ?",
+    "comprehensive_oversight_of_dbt_beneficiaries": "DBT लाभार्थियों की व्यापक निगरानी",
+    "create_new_beneficiary": "नया लाभार्थी बनाएं",
+    "create_new_beneficiary_description": "आवेदन से लिंक करने और वितरण प्रबंधन के लिए एक नया लाभार्थी रिकॉर्ड बनाएं।",
+    "create": "बनाएं",
     "role_selection_card": "{/* भूमिका चयन कार्ड */}",
     "background_accent": "{/* पृष्ठभूमि एक्सेंट */}",
     "header": "{/* हेडर */}",
@@ -2781,6 +2801,10 @@
     "promise": "वादा"
   },
   "beneficiary": {
+      "management": "प्रबंधन",
+      "comprehensive_oversight_of_dbt_beneficiaries": "DBT लाभार्थियों की व्यापक निगरानी",
+      "advanced_search": "एडवांस्ड सर्च",
+      "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
     "access_benefits_and_services_as_a_beneficiary": "लाभार्थी के रूप में लाभ और सेवाओं तक पहुंचें",
     "for_beneficiaries_receiving_services_and_benefits": "सेवाओं और लाभों को प्राप्त करने वाले लाभार्थियों के लिए",
     "beneficiary_categories": "लाभार्थी श्रेणियाँ",
