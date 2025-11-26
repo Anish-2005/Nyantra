@@ -480,7 +480,7 @@ const GrievancePage = () => {
     })();
   }, [theme]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     const colors = {
       resolved: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100',
       closed: theme === 'dark' ? 'text-emerald-300 bg-emerald-900/30' : 'text-emerald-700 bg-emerald-100',
@@ -489,16 +489,18 @@ const GrievancePage = () => {
       pending: theme === 'dark' ? 'text-yellow-300 bg-yellow-900/30' : 'text-yellow-700 bg-yellow-100',
       escalated: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100'
     };
-    return colors[status as keyof typeof colors] || 'text-gray-300 bg-gray-800';
+    const key = (status || '').toLowerCase() as keyof typeof colors;
+    return colors[key] || 'text-gray-300 bg-gray-800';
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority?: string) => {
     const colors = {
       high: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100',
       medium: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
       low: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100'
     };
-    return colors[priority as keyof typeof colors] || 'text-gray-300 bg-gray-800';
+    const key = (priority || '').toLowerCase() as keyof typeof colors;
+    return colors[key] || 'text-gray-300 bg-gray-800';
   };
 
   const getStatusIcon = (status: string) => {
@@ -1062,9 +1064,9 @@ const GrievancePage = () => {
                     <h4 className="text-sm font-semibold theme-text-primary">Attachments & Communication</h4>
                     <p className="text-sm theme-text-muted">Attachments: {selectedGrievance.attachments ?? 0}</p>
                     <p className="text-sm theme-text-muted">Messages: {selectedGrievance.communication?.length ?? 0}</p>
-                    {selectedGrievance.communication && selectedGrievance.communication.length > 0 && (
+                    {(selectedGrievance.communication?.length ?? 0) > 0 && (
                       <div className="mt-2 space-y-1">
-                        {selectedGrievance.communication.slice(0,3).map((c, i) => (
+                        {(selectedGrievance.communication ?? []).slice(0,3).map((c, i) => (
                           <div key={i} className="text-xs theme-text-muted">
                             <strong>{c.user || 'User'}:</strong> {String(c.text || c.message || c.body || '—')}
                           </div>
@@ -1372,7 +1374,7 @@ const GrievancePage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`px-3 py-1 ${getPriorityColor(grievance.priority)} text-xs font-bold rounded-full`}>
-                        {grievance.priority.toUpperCase()}
+                        {grievance.priority ? grievance.priority.toUpperCase() : '-'}
                       </span>
                       <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass">
                         <MoreVertical className="w-4 h-4 theme-text-primary" />
@@ -1392,7 +1394,7 @@ const GrievancePage = () => {
                       <p className="theme-text-muted text-xs">{t('extracted.files')} </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold theme-text-primary">{grievance.communication.length}</p>
+                      <p className="text-lg font-bold theme-text-primary">{grievance.communication?.length ?? 0}</p>
                       <p className="theme-text-muted text-xs">{t('extracted.messages')} </p>
                     </div>
                     <div className="text-center">
@@ -1461,7 +1463,7 @@ const GrievancePage = () => {
                           <p className="text-xs theme-text-muted">{g.id} • {g.district}</p>
                         </div>
                         <div className="text-right">
-                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span>
+                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
                           <div className="mt-2 flex items-center justify-end gap-2">
                                 <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
                                   {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
@@ -1498,7 +1500,7 @@ const GrievancePage = () => {
                             <td className="px-4 py-3 text-sm theme-text-primary">{g.id}</td>
                             <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
                             <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
-                            <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span></td>
+                            <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
                             <td className="px-4 py-3 text-sm theme-text-muted">
                               <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
                                 {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
@@ -1664,7 +1666,7 @@ const GrievancePage = () => {
                     } else if (latest.followUpRequired) {
                       action = t('extracted.followup_required') || 'Follow-up Required';
                       statusLabel = 'error';
-                    } else if (latest.communication && latest.communication.length > 0) {
+                    } else if ((latest.communication?.length ?? 0) > 0) {
                       action = t('extracted.new_message') || 'New Message';
                       statusLabel = 'info';
                     }

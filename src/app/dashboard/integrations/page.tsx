@@ -28,64 +28,64 @@ import { db } from '@/lib/firebase';
 
 // Real government platform logos (using SVG components)
 const PlatformLogos = {
-  UIDAI: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  UIDAI: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <circle cx="50" cy="50" r="45" fill="#FF9933" />
       <circle cx="50" cy="50" r="35" fill="#FFFFFF" />
       <circle cx="50" cy="50" r="25" fill="#138808" />
       <path d="M50 25 L50 75 M35 50 L65 50" stroke="#000080" strokeWidth="3" />
     </svg>
   ),
-  MeitY: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  MeitY: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <rect x="20" y="20" width="60" height="60" rx="10" fill="#1E40AF" />
       <path d="M40 35 L60 50 L40 65 Z" fill="#FFFFFF" />
     </svg>
   ),
-  MHA: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  MHA: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <rect x="25" y="25" width="50" height="50" fill="#DC2626" />
       <path d="M45 40 L55 50 L45 60 Z M55 40 L45 50 L55 60 Z" fill="#FFFFFF" />
     </svg>
   ),
-  'eCommittee, SC': () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  'eCommittee, SC': (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <path d="M50 20 L80 40 L80 80 L20 80 L20 40 Z" fill="#7C3AED" />
       <circle cx="50" cy="50" r="15" fill="#FFFFFF" />
       <path d="M50 40 L50 60 M40 50 L60 50" stroke="#7C3AED" strokeWidth="3" />
     </svg>
   ),
-  NSDL: () => {
+  NSDL: (props: React.SVGProps<SVGSVGElement>) => {
     const { t } = useLocale();
     return (
-      <svg viewBox="0 0 100 100" className="w-6 h-6">
+      <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
         <rect x="20" y="20" width="60" height="60" rx="5" fill="#059669" />
         <text x="50" y="55" textAnchor="middle" fill="#FFFFFF" fontSize="20" fontWeight="bold">{t('extracted.nsdl')} </text>
       </svg>
     );
   },
-  NPCI: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  NPCI: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <circle cx="50" cy="50" r="40" fill="#2563EB" />
       <path d="M35 40 L65 40 L50 70 Z" fill="#FFFFFF" />
     </svg>
   ),
-  CBDT: () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  CBDT: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <rect x="25" y="25" width="50" height="50" fill="#D97706" />
       <path d="M40 40 L60 40 L60 60 L40 60 Z" fill="#FFFFFF" />
       <path d="M45 45 L55 45 L55 55 L45 55 Z" fill="#D97706" />
     </svg>
   ),
-  'Ministry of Rural Development': () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  'Ministry of Rural Development': (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <path d="M30 30 L70 30 L70 70 L30 70 Z" fill="#16A34A" />
       <circle cx="50" cy="50" r="15" fill="#FFFFFF" />
       <path d="M45 45 L55 45 L55 55 L45 55 Z" fill="#16A34A" />
     </svg>
   ),
-  'Various State Governments': () => (
-    <svg viewBox="0 0 100 100" className="w-6 h-6">
+  'Various State Governments': (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
       <path d="M35 35 L65 35 L65 65 L35 65 Z" fill="#9333EA" />
       <circle cx="40" cy="40" r="5" fill="#FFFFFF" />
       <circle cx="60" cy="40" r="5" fill="#FFFFFF" />
@@ -1006,9 +1006,10 @@ const stats = useMemo(() => {
                                 alt={integration.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling.style.display = 'flex';
-                                }}
+                                      e.currentTarget.style.display = 'none';
+                                      const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
+                                      if (sib) sib.style.display = 'flex';
+                                    }}
                               />
                             ) : null}
                             <div className={`w-full h-full flex items-center justify-center ${integration.imageUrl ? 'hidden' : ''}`}>
@@ -1295,7 +1296,8 @@ const stats = useMemo(() => {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                      const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (sib) sib.style.display = 'flex';
                     }}
                   />
                 ) : null}
@@ -1598,7 +1600,7 @@ const stats = useMemo(() => {
                       <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.compliance')} </h4>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {selectedIntegration.compliance.map((comp, idx) => (
+                      {(selectedIntegration.compliance ?? []).map((comp: string, idx: number) => (
                         <span key={idx} className="px-3 py-2 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg">
                           {comp}
                         </span>
@@ -1716,8 +1718,8 @@ const stats = useMemo(() => {
                     <Scale className="w-6 h-6 theme-text-primary" />
                     <h4 className="text-lg font-semibold theme-text-primary">{t('extracted.compliance')} </h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedIntegration.compliance.map((comp, idx) => (
+                    <div className="grid grid-cols-2 gap-3">
+                    {(selectedIntegration.compliance ?? []).map((comp: string, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 p-3 rounded-lg theme-bg-card">
                         <CheckCircle className="w-4 h-4 text-green-400" />
                         <span className="text-sm theme-text-primary">{comp}</span>
@@ -1760,7 +1762,7 @@ const stats = useMemo(() => {
                 </div>
               </div>
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {selectedIntegration.logs.map((log, idx) => (
+                {(selectedIntegration.logs ?? []).map((log: { message: string; timestamp: string; status: string }, idx: number) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, x: -20 }}
