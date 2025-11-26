@@ -967,7 +967,7 @@ const GrievancePage = () => {
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
                   <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
-                    {selectedGrievance.priority.toUpperCase()} PRIORITY
+                    {selectedGrievance.priority ? `${selectedGrievance.priority.toUpperCase()} PRIORITY` : '-'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 flex-wrap">
