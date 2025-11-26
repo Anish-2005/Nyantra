@@ -78,8 +78,32 @@ export default function NotificationDropdown({ anchorRef, triggerRef, isOpen, on
   const borderVar = styleRoot.getPropertyValue('--card-border')?.trim();
   const textVar = styleRoot.getPropertyValue('--text-primary')?.trim();
 
+  // Determine if the current context is dark by inspecting the computed background
+  // of the anchor (if available) or the document body. This helps when theme is
+  // applied to a wrapper div instead of document.documentElement.
+  const getComputedBg = () => {
+    try {
+      const refEl = (ref && ref.current) || document.body;
+      const cs = getComputedStyle(refEl as Element);
+      return cs.backgroundColor || cs.getPropertyValue('--bg') || '';
+    } catch (e) {
+      return getComputedStyle(document.documentElement).backgroundColor || '';
+    }
+  };
+
+  const parseRgb = (s: string) => {
+    const m = s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if (!m) return null;
+    return [Number(m[1]), Number(m[2]), Number(m[3])];
+  };
+
+  const rgb = parseRgb(dropdownBgVar || getComputedBg());
+  const luminance = rgb
+    ? (0.2126 * (rgb[0] / 255) + 0.7152 * (rgb[1] / 255) + 0.0722 * (rgb[2] / 255))
+    : null;
+  const isDark = luminance !== null ? luminance < 0.5 : ((document.documentElement.getAttribute('data-theme') || '').trim() === 'dark');
+
   // Fallbacks when CSS vars are missing or too transparent
-  const isDark = (document.documentElement.getAttribute('data-theme') || '').trim() === 'dark';
   const bgFallback = isDark ? 'rgba(15, 23, 42, 0.98)' : 'rgba(255,255,255,0.98)';
   const borderFallback = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const textFallback = isDark ? '#f1f5f9' : '#0f172a';

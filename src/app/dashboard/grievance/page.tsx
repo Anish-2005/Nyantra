@@ -5,6 +5,8 @@ import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 
 // Grievance type definition (minimal fields used in this page)
@@ -236,7 +238,7 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
 
         <div>
           <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.category_1') || 'Category'}</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30">
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
             {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
@@ -286,6 +288,7 @@ const GrievancePage = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [newMessage, setNewMessage] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // subscribe to Firestore grievances collection
@@ -551,6 +554,130 @@ const GrievancePage = () => {
     }
   };
 
+  const resolveCase = async () => {
+    if (!selectedGrievance?.id) return;
+    const id = selectedGrievance.id;
+    try {
+      await updateGrievanceStatus(id, 'closed');
+      // Optimistically update selectedGrievance so UI reflects resolved state immediately
+      setSelectedGrievance(prev => prev ? { ...prev, status: 'closed', lastUpdated: new Date().toISOString() } : prev);
+    } catch (err) {
+      console.error('Failed to resolve case', err);
+    }
+  };
+
+  // Export utilities (CSV + PDF) for grievances
+  const exportGrievancesData = (items: Grievance[]) => {
+    const headers = [
+      'Grievance ID',
+      'Beneficiary Name',
+      'Beneficiary ID',
+      'Phone',
+      'Email',
+      'District',
+      'State',
+      'Category',
+      'Sub-category',
+      'Priority',
+      'Status',
+      'Assigned To',
+      'Created Date',
+      'Last Updated',
+      'Attachments',
+      'Messages Count'
+    ];
+
+    const rows = items.map(g => [
+      g.id,
+      g.beneficiaryName,
+      g.beneficiaryId || '',
+      g.phone || '',
+      g.email || '',
+      g.district || '',
+      g.state || '',
+      g.category || '',
+      g.subCategory || '',
+      g.priority || '',
+      g.status || '',
+      g.assignedTo || '',
+      g.createdDate || '',
+      g.lastUpdated || '',
+      String(g.attachments ?? 0),
+      String((g.communication || []).length)
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${(field ?? '')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `grievances_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportGrievancesPDF = (items: Grievance[]) => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Grievances Report', margin, 36);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [[
+      'Grievance ID', 'Beneficiary', 'District', 'Category', 'Priority', 'Status', 'Assigned', 'Messages'
+    ]];
+
+    const body: any[] = [];
+    items.forEach(g => {
+      const beneficiaryCell = `${g.beneficiaryName || ''}\n${g.phone || ''}`;
+      body.push([
+        g.id,
+        beneficiaryCell,
+        `${g.district || ''}${g.state ? ', ' + g.state : ''}`,
+        g.category || '',
+        g.priority || '',
+        (g.status || '').toString().replace('-', ' '),
+        g.assignedTo || '',
+        String((g.communication || []).length)
+      ]);
+    });
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak', cellWidth: 'wrap' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [250, 250, 251] },
+      margin: { left: margin, right: margin, top: 70 },
+      tableWidth: 'auto',
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 160 },
+        2: { cellWidth: 100 },
+        3: { cellWidth: 100 },
+        4: { cellWidth: 60 },
+        5: { cellWidth: 80 },
+        6: { cellWidth: 100 },
+        7: { cellWidth: 50 }
+      }
+    });
+
+    doc.save(`grievances_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
 
  
 
@@ -700,6 +827,7 @@ const GrievancePage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => setShowExportModal(true)}
             aria-label={t('extracted.export_data_1')}
             className={`px-6 py-3 rounded-xl border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
           >
@@ -719,6 +847,83 @@ const GrievancePage = () => {
       </motion.div>
 
       {/* Inline New Case Section (appears above grid/table) */}
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export grievances as CSV or a printable PDF report.'}</p>
+                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full grievances dataset in the chosen format.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{grievances.length} {t('extracted.grievances') || 'grievances'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportGrievancesData(grievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportGrievancesPDF(grievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{filteredGrievances.length} {t('extracted.grievances') || 'grievances'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesData(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesPDF(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {showNewCaseModal && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -950,9 +1155,15 @@ const GrievancePage = () => {
           </div>
 
           <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="action-btn">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={async (e) => { e.stopPropagation(); await resolveCase(); }}
+                disabled={statusUpdating === selectedGrievance?.id || selectedGrievance?.status === 'closed'}
+                className={`action-btn ${statusUpdating === selectedGrievance?.id ? 'opacity-60 cursor-wait' : ''} ${selectedGrievance?.status === 'closed' ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
                 <CheckCircle className="w-4 h-4" />
-                {t('extracted.resolve_case')}
+                {selectedGrievance?.status === 'closed' ? (t('extracted.resolved') || 'Resolved') : (t('extracted.resolve_case') || 'Resolve')}
               </motion.button>
               {selectedGrievance?.phone ? (
                 <motion.a
@@ -1252,7 +1463,7 @@ const GrievancePage = () => {
                         <div className="text-right">
                           <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span>
                           <div className="mt-2 flex items-center justify-end gap-2">
-                                <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className="px-2 py-1 rounded-md text-sm theme-bg-glass theme-border-glass border">
+                                <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
                                   {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
                                 </select>
                                 <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass">
@@ -1289,7 +1500,7 @@ const GrievancePage = () => {
                             <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
                             <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority.toUpperCase()}</span></td>
                             <td className="px-4 py-3 text-sm theme-text-muted">
-                              <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className="px-2 py-1 rounded-md text-sm theme-bg-glass theme-border-glass border">
+                              <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
                                 {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
                               </select>
                             </td>
@@ -1425,9 +1636,40 @@ const GrievancePage = () => {
                       continue;
                     }
                   }
-                  // Fallback: if no recent activities found, show some placeholders based on latest items
+                  // Fallback: if no recent activities found, synthesize a dynamic event from the latest item
                   if (recent.length === 0 && items.length) {
-                    recent.push({ action: t('extracted.new_escalation') || 'New Escalation', user: 'System', time: 'just now', status: 'warning' });
+                    const latest = items[0];
+                    const lu = new Date(latest.lastUpdated || latest.createdDate || new Date().toISOString());
+                    const timeLabel = (() => {
+                      const mins = Math.round((now.getTime() - lu.getTime()) / 60000);
+                      if (mins < 1) return 'just now';
+                      if (mins < 60) return `${mins} min ago`;
+                      const hrs = Math.round(mins / 60);
+                      if (hrs < 24) return `${hrs} hr ago`;
+                      const days = Math.round(hrs / 24);
+                      return `${days} day${days > 1 ? 's' : ''} ago`;
+                    })();
+
+                    let action = t('extracted.case_updated') || 'Updated';
+                    let statusLabel: 'success' | 'warning' | 'info' | 'error' = 'info';
+                    if (latest.status === 'resolved' || latest.status === 'closed') {
+                      action = t('extracted.case_resolved') || 'Case Resolved';
+                      statusLabel = 'success';
+                    } else if ((latest.escalationLevel || 0) > 0) {
+                      action = t('extracted.new_escalation') || 'New Escalation';
+                      statusLabel = 'warning';
+                    } else if ((latest.attachments || 0) > 0) {
+                      action = t('extracted.document_uploaded') || 'Document Uploaded';
+                      statusLabel = 'info';
+                    } else if (latest.followUpRequired) {
+                      action = t('extracted.followup_required') || 'Follow-up Required';
+                      statusLabel = 'error';
+                    } else if (latest.communication && latest.communication.length > 0) {
+                      action = t('extracted.new_message') || 'New Message';
+                      statusLabel = 'info';
+                    }
+
+                    recent.push({ action, user: latest.assignedTo || latest.beneficiaryName || 'System', time: timeLabel, status: statusLabel });
                   }
                   return recent.map((activity, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
