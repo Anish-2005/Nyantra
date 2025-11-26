@@ -12,6 +12,7 @@ import autoTable from 'jspdf-autotable';
 import {
   Search, Filter, Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X, Check,
+  Trash,
   Clock, AlertCircle, FileText, User, Phone, MapPin,
   Calendar, DollarSign, MessageSquare, MoreVertical,
   Shield, Award, Heart, Scale, BadgeCheck,
@@ -339,6 +340,9 @@ const BeneficiariesPage = () => {
   const [fullBeneficiaries, setFullBeneficiaries] = useState<Record<string, any>>({});
   const [selectedBeneficiaryLoading, setSelectedBeneficiaryLoading] = useState(false);
   const [manualFetchLoading, setManualFetchLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Toasts
@@ -469,6 +473,41 @@ const BeneficiariesPage = () => {
       showToast('success', `Updated verification for ${id} to ${verification}`);
     } catch (err) {
       showToast('error', `Failed to update verification: ${(err as any)?.message || String(err)}`);
+    }
+  };
+
+  // Open a UI confirmation modal (instead of window.confirm)
+  const confirmDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setShowDeleteModal(true);
+  };
+
+  const performDelete = async (id: string | null) => {
+    if (!id) return;
+    try {
+      setDeletingId(id);
+      // perform deletion
+      await deleteDoc(doc(db, 'beneficiaries', id));
+      setBeneficiaries(prev => prev.filter(b => b.id !== id));
+      setFullBeneficiaries(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+      if (selectedBeneficiary?.id === id) setSelectedBeneficiary(null);
+      showToast('success', t('deleted_success') || `Deleted ${id}`);
+    } catch (err) {
+      console.error('Failed to delete beneficiary:', err);
+      const errCode = (err as any)?.code || (err && (err as any).message && String(err).toLowerCase().includes('permission') ? 'permission-denied' : undefined);
+      if (errCode === 'permission-denied') {
+        showToast('error', t('no_permission_delete') || 'Insufficient permissions to delete beneficiary. Contact your administrator.');
+      } else {
+        showToast('error', t('deleted_failed') || `Failed to delete: ${(err as any)?.message || String(err)}`);
+      }
+    } finally {
+      setDeletingId(null);
+      setShowDeleteModal(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -1070,7 +1109,7 @@ const BeneficiariesPage = () => {
                           ) : (
                             <Activity className="w-4 h-4" />
                           )}
-                          <span>{manualFetchLoading ? 'Fetching...' : 'Fetch Data'}</span>
+                          <span>{manualFetchLoading ? (t('extracted.fetching') || 'Fetching...') : (t('extracted.fetch_data') || 'Fetch Data')}</span>
                         </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -1179,6 +1218,45 @@ const BeneficiariesPage = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal (UI based, theme-aware, i18n) */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => { if (!deletingId) { setShowDeleteModal(false); setDeleteTargetId(null); } }} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-lg mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold theme-text-primary">{t('confirm_delete_beneficiary_title') || t('confirm_delete_beneficiary')}</h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('confirm_delete_beneficiary') || 'Are you sure you want to delete this beneficiary? This action cannot be undone.'}</p>
+                </div>
+                <button onClick={() => { if (!deletingId) { setShowDeleteModal(false); setDeleteTargetId(null); } }} aria-label="Close" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => { setShowDeleteModal(false); setDeleteTargetId(null); }} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">{t('extracted.cancel')}</button>
+                <button disabled={!deleteTargetId || deletingId === deleteTargetId} onClick={() => performDelete(deleteTargetId)} className="px-4 py-2 rounded-lg bg-red-600 text-white flex items-center gap-2">
+                  {deletingId === deleteTargetId ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash className="w-4 h-4" />}
+                  <span>{t('extracted.delete')}</span>
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -1327,8 +1405,8 @@ const BeneficiariesPage = () => {
                 <Search className="w-5 h-5 text-white" />
               </motion.div>
               <div>
-                <h3 className="text-lg font-bold theme-text-primary">Advanced Search</h3>
-                <p className="text-sm theme-text-muted">Find beneficiaries by name, ID, or location</p>
+                <h3 className="text-lg font-bold theme-text-primary">{t('beneficiary.advanced_search')}</h3>
+                <p className="text-sm theme-text-muted">{t('beneficiary.find_beneficiaries_by_name_id_or_location')}</p>
               </div>
             </div>
 
@@ -1813,11 +1891,17 @@ const BeneficiariesPage = () => {
                         <span>{t('extracted.edit')} </span>
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all"
+                        onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
+                        disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
+                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
+                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 hover:text-red-500 active:scale-95 transition-all disabled:opacity-50"
                       >
-                        <MoreVertical className="w-3.5 h-3.5" />
-                        <span>{t('extracted.more')} </span>
+                        {deletingId === beneficiary.id ? (
+                          <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash className="w-3.5 h-3.5 text-red-600" />
+                        )}
+                        <span>{t('extracted.delete') || 'Delete'}</span>
                       </button>
                     </div>
                   </motion.div>
@@ -1926,8 +2010,15 @@ const BeneficiariesPage = () => {
                             whileTap={{ scale: 0.9 }}
                             className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
                             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                          onClick={() => confirmDelete(beneficiary.id)}
+                          disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
+                          title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
                           >
-                            <MoreVertical className="w-4 h-4" />
+                            {deletingId === beneficiary.id ? (
+                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Trash className="w-4 h-4 text-red-600" />
+                            )}
                           </motion.button>
                         </div>
                       </td>
@@ -1999,8 +2090,9 @@ const BeneficiariesPage = () => {
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button 
-                        className="p-1.5 rounded-lg hover:theme-bg-card"
+                      <button
+                        aria-label="View beneficiary"
+                        className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); });
@@ -2008,11 +2100,25 @@ const BeneficiariesPage = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button 
-                        className="p-1.5 rounded-lg hover:theme-bg-card"
+                      <button
+                        aria-label="Edit beneficiary"
+                        className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
                         onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
                       >
                         <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        aria-label="Delete beneficiary"
+                        onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
+                        disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
+                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
+                        className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/10 hover:text-red-500 transition-colors theme-text-primary disabled:opacity-50"
+                      >
+                        {deletingId === beneficiary.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash className="w-4 h-4 text-red-600" />
+                        )}
                       </button>
                     </div>
                   </div>
