@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
 import type * as THREE from 'three';
 import {
   Search, Filter, Download, Plus, Eye, ChevronLeft, ChevronRight, X,
@@ -14,7 +14,7 @@ import {
    Heart, Scale,
   Banknote, Receipt, Fingerprint, CreditCard,
    CheckCircle, XCircle, PlayCircle,
-  RotateCcw
+  RotateCcw, Check, Edit
 } from 'lucide-react';
 
 // Disbursements state — generated from approved applications
@@ -38,6 +38,13 @@ const DisbursementsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Edit disbursement form states
+  const [isEditingDisbursement, setIsEditingDisbursement] = useState(false);
+  const [editStatus, setEditStatus] = useState('pending');
+  const [editTransactionId, setEditTransactionId] = useState('');
+  const [editUtrNumber, setEditUtrNumber] = useState('');
+  const [editPaymentMethod, setEditPaymentMethod] = useState('');
 
   // Manual disbursement form states
   const [showManualForm, setShowManualForm] = useState(false);
@@ -258,6 +265,33 @@ const DisbursementsPage: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  // Fetch applications for manual beneficiary ID
+  useEffect(() => {
+    if (!manualBeneficiaryId.trim()) {
+      setAvailableApplications([]);
+      setManualApplicationId('');
+      return;
+    }
+
+    const fetchApplications = async () => {
+      try {
+        const q = query(collection(db, 'applications'), where('beneficiaryId', '==', manualBeneficiaryId.trim()));
+        const snap = await getDocs(q);
+        const apps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setAvailableApplications(apps);
+        if (apps.length === 0) {
+          setManualApplicationId('');
+        }
+      } catch (err) {
+        console.error('Error fetching applications for beneficiary:', err);
+        setAvailableApplications([]);
+        setManualApplicationId('');
+      }
+    };
+
+    fetchApplications();
+  }, [manualBeneficiaryId]);
 
   // Detect small screens and adjust UI defaults for better mobile UX
   useEffect(() => {
@@ -484,6 +518,22 @@ const DisbursementsPage: React.FC = () => {
       return;
     }
 
+    // Validate required fields for completed status
+    if (manualStatus === 'completed') {
+      const requiredFieldsFilled =
+        manualBeneficiaryId.trim() &&
+        manualApplicationId &&
+        manualReliefAmount.trim() &&
+        manualActType &&
+        manualTransactionId.trim() &&
+        manualPaymentMethod;
+
+      if (!requiredFieldsFilled) {
+        alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
+        return;
+      }
+    }
+
     try {
       const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
       if (!selectedApp) {
@@ -533,6 +583,65 @@ const DisbursementsPage: React.FC = () => {
       console.error('Error adding manual disbursement:', err);
       alert(t('extracted.error_adding_disbursement'));
     }
+  };
+
+  // Handle editing disbursement
+  const handleEditDisbursement = () => {
+    if (!selectedDisbursement) return;
+
+    setEditStatus(selectedDisbursement.status);
+    setEditTransactionId(selectedDisbursement.transactionId || '');
+    setEditUtrNumber(selectedDisbursement.utrNumber || '');
+    setEditPaymentMethod(selectedDisbursement.paymentMethod || '');
+    setIsEditingDisbursement(true);
+  };
+
+  // Handle saving edited disbursement
+  const handleSaveEditDisbursement = async () => {
+    if (!selectedDisbursement) return;
+
+    // Validate required fields for completed status
+    if (editStatus === 'completed') {
+      const requiredFieldsFilled =
+        editTransactionId.trim() &&
+        editPaymentMethod;
+
+      if (!requiredFieldsFilled) {
+        alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
+        return;
+      }
+    }
+
+    try {
+      const disbursementRef = doc(db, 'disbursements', selectedDisbursement.id);
+      const updateData: any = {
+        status: editStatus,
+        transactionId: editTransactionId.trim() || null,
+        utrNumber: editUtrNumber.trim() || null,
+        paymentMethod: editPaymentMethod.trim() || null,
+        lastUpdated: new Date().toISOString()
+      };
+
+      // If status changed to completed, set disbursedAmount
+      if (editStatus === 'completed' && selectedDisbursement.status !== 'completed') {
+        updateData.disbursedAmount = selectedDisbursement.reliefAmount;
+        updateData.completedDate = new Date().toISOString();
+      }
+
+      await updateDoc(disbursementRef, updateData);
+
+      setIsEditingDisbursement(false);
+      setSelectedDisbursement(null);
+      alert(t('extracted.disbursement_updated_successfully') || 'Disbursement updated successfully');
+    } catch (err) {
+      console.error('Error updating disbursement:', err);
+      alert(t('extracted.error_updating_disbursement') || 'Error updating disbursement');
+    }
+  };
+
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setIsEditingDisbursement(false);
   };
 
   return (
@@ -677,6 +786,16 @@ const DisbursementsPage: React.FC = () => {
                     type="text"
                     value={manualBeneficiaryId}
                     onChange={(e) => setManualBeneficiaryId(e.target.value)}
+                    onBlur={(e) => {
+                      const id = e.target.value.trim();
+                      if (id) {
+                        // Trigger fetch by updating state, which will trigger the useEffect
+                        setManualBeneficiaryId(id);
+                      } else {
+                        setAvailableApplications([]);
+                        setManualApplicationId('');
+                      }
+                    }}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
                     placeholder={t('extracted.enter_beneficiary_id')}
                   />
@@ -688,7 +807,26 @@ const DisbursementsPage: React.FC = () => {
                   </label>
                   <select
                     value={manualApplicationId}
-                    onChange={(e) => setManualApplicationId(e.target.value)}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setManualApplicationId(selectedId);
+                      // Auto-fill form fields from selected application
+                      if (selectedId) {
+                        const selectedApp = availableApplications.find(app => app.id === selectedId);
+                        if (selectedApp) {
+                          // Auto-fill all relevant fields from the application
+                          setManualReliefAmount(selectedApp.amount ? selectedApp.amount.toString() : '');
+                          setManualActType(selectedApp.actType || selectedApp.caseType || 'relief');
+                          // Keep status as pending for new disbursements
+                          setManualStatus('pending');
+                        }
+                      } else {
+                        // Clear auto-filled fields when no application is selected
+                        setManualReliefAmount('');
+                        setManualActType('relief');
+                        setManualStatus('pending');
+                      }
+                    }}
                     disabled={availableApplications.length === 0}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50"
                   >
@@ -724,7 +862,25 @@ const DisbursementsPage: React.FC = () => {
                   </label>
                   <select
                     value={manualStatus}
-                    onChange={(e) => setManualStatus(e.target.value)}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      if (newStatus === 'completed') {
+                        // Validate that all required fields are filled for completed status
+                        const isValidForCompletion =
+                          manualBeneficiaryId.trim() &&
+                          manualApplicationId &&
+                          manualReliefAmount.trim() &&
+                          manualActType &&
+                          manualTransactionId.trim() &&
+                          manualPaymentMethod;
+
+                        if (!isValidForCompletion) {
+                          alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
+                          return;
+                        }
+                      }
+                      setManualStatus(newStatus);
+                    }}
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
                   >
                     <option value="pending">{t('extracted.pending')}</option>
@@ -1752,12 +1908,22 @@ const DisbursementsPage: React.FC = () => {
                     Disbursement Details • {selectedDisbursement.actType}
                   </p>
                 </div>
-                <button
-                  onClick={() => setSelectedDisbursement(null)}
-                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0" // -> Prevents button from shrinking
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {!isEditingDisbursement && (
+                    <button
+                      onClick={handleEditDisbursement}
+                      className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 flex-shrink-0"
+                    >
+                      <Edit className="w-5 h-5 theme-text-primary" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedDisbursement(null)}
+                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0" // -> Prevents button from shrinking
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 sm:p-6 space-y-6"> {/* -> Responsive padding */}
@@ -1799,21 +1965,95 @@ const DisbursementsPage: React.FC = () => {
                 {/* Transaction Details */}
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.transaction_details_1')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
-                      <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
+                  {isEditingDisbursement ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium theme-text-primary mb-2">
+                          {t('extracted.status')} *
+                        </label>
+                        <select
+                          value={editStatus}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            if (newStatus === 'completed') {
+                              // Validate that all required fields are filled for completed status
+                              const isValidForCompletion =
+                                editTransactionId.trim() &&
+                                editPaymentMethod;
+
+                              if (!isValidForCompletion) {
+                                alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
+                                return;
+                              }
+                            }
+                            setEditStatus(newStatus);
+                          }}
+                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                        >
+                          <option value="pending">{t('extracted.pending')}</option>
+                          <option value="in_progress">{t('extracted.in_progress')}</option>
+                          <option value="completed">{t('extracted.completed')}</option>
+                          <option value="failed">{t('extracted.failed')}</option>
+                          <option value="cancelled">{t('extracted.cancelled')}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-primary mb-2">
+                          {t('extracted.transaction_id')} {editStatus === 'completed' ? '*' : ''}
+                        </label>
+                        <input
+                          type="text"
+                          value={editTransactionId}
+                          onChange={(e) => setEditTransactionId(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                          placeholder={t('extracted.optional')}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-primary mb-2">
+                          {t('extracted.utr_number')}
+                        </label>
+                        <input
+                          type="text"
+                          value={editUtrNumber}
+                          onChange={(e) => setEditUtrNumber(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                          placeholder={t('extracted.optional')}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium theme-text-primary mb-2">
+                          {t('extracted.payment_method')} {editStatus === 'completed' ? '*' : ''}
+                        </label>
+                        <select
+                          value={editPaymentMethod}
+                          onChange={(e) => setEditPaymentMethod(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                        >
+                          <option value="">{t('extracted.select_payment_method')}</option>
+                          <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
+                          <option value="upi">{t('extracted.upi')}</option>
+                          <option value="cash">{t('extracted.cash')}</option>
+                          <option value="cheque">{t('extracted.cheque')}</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
-                      <p className="font-medium theme-text-primary font-mono break-all">
-                        {selectedDisbursement.utrNumber || 'Not Available'}
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
-                      <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
-                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
+                        <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
+                      </div>
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
+                        <p className="font-medium theme-text-primary font-mono break-all">
+                          {selectedDisbursement.utrNumber || 'Not Available'}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
+                        <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
+                      </div>
                     <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
                       <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
@@ -1848,19 +2088,29 @@ const DisbursementsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
                     <p className="text-sm theme-text-muted mb-2">{t('extracted.disbursement_status')} </p>
-                    <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
-                      {(() => {
-                        const Icon = getStatusIcon(selectedDisbursement.status);
-                        return <Icon className="w-4 h-4" />;
-                      })()}
-                      {selectedDisbursement.status.replace('-', ' ').toUpperCase()}
-                    </span>
-                    {selectedDisbursement.failureReason && (
+                    {isEditingDisbursement ? (
+                      <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(editStatus)}`}>
+                        {(() => {
+                          const Icon = getStatusIcon(editStatus);
+                          return <Icon className="w-4 h-4" />;
+                        })()}
+                        {editStatus.replace('-', ' ').toUpperCase()}
+                      </span>
+                    ) : (
+                      <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
+                        {(() => {
+                          const Icon = getStatusIcon(selectedDisbursement.status);
+                          return <Icon className="w-4 h-4" />;
+                        })()}
+                        {selectedDisbursement.status.replace('-', ' ').toUpperCase()}
+                      </span>
+                    )}
+                    {selectedDisbursement.failureReason && !isEditingDisbursement && (
                       <p className="text-sm theme-text-muted mt-2">
                         <strong>{t('extracted.failure_reason')} </strong> {selectedDisbursement.failureReason}
                       </p>
                     )}
-                    {selectedDisbursement.retryCount > 0 && (
+                    {selectedDisbursement.retryCount > 0 && !isEditingDisbursement && (
                       <p className="text-sm theme-text-muted mt-1">
                         <strong>{t('extracted.retry_attempts')} </strong> {selectedDisbursement.retryCount}
                       </p>
@@ -1908,58 +2158,89 @@ const DisbursementsPage: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-                  {selectedDisbursement.status === 'failed' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                      style={{
-                        backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                        color: theme === 'light' ? '#15803d' : '#86efac',
-                        border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
-                      }}
-                    >
-                      <RotateCcw className="w-5 h-5" />
-                      {t('extracted.retry_disbursement')}
-                    </motion.button>
+                  {isEditingDisbursement ? (
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleSaveEditDisbursement}
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                        style={{
+                          backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                          color: theme === 'light' ? '#15803d' : '#86efac',
+                          border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                        }}
+                      >
+                        <Check className="w-5 h-5" />
+                        {t('extracted.save_changes') || 'Save Changes'}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleCancelEdit}
+                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <X className="w-5 h-5" />
+                        {t('extracted.cancel') || 'Cancel'}
+                      </motion.button>
+                    </>
+                  ) : (
+                    <>
+                      {selectedDisbursement.status === 'failed' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                            color: theme === 'light' ? '#15803d' : '#86efac',
+                            border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                          }}
+                        >
+                          <RotateCcw className="w-5 h-5" />
+                          {t('extracted.retry_disbursement')}
+                        </motion.button>
+                      )}
+                      {selectedDisbursement.status === 'pending' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
+                            color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
+                            border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+                          }}
+                        >
+                          <PlayCircle className="w-5 h-5" />
+                          {t('extracted.initiate_payment')}
+                        </motion.button>
+                      )}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                      >
+                        <Download className="w-5 h-5" />
+                        {t('extracted.download_receipt')}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                        style={{
+                          backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
+                          color: theme === 'light' ? '#dc2626' : '#fca5a5',
+                          border: theme === 'light' ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
+                        }}
+                      >
+                        <X className="w-5 h-5" />
+                        {t('extracted.cancel_disbursement')}
+                      </motion.button>
+                    </>
                   )}
-                  {selectedDisbursement.status === 'pending' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                      style={{
-                        backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
-                        color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
-                        border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
-                      }}
-                    >
-                      <PlayCircle className="w-5 h-5" />
-                      {t('extracted.initiate_payment')}
-                    </motion.button>
-                  )}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                  >
-                    <Download className="w-5 h-5" />
-                    {t('extracted.download_receipt')}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                    style={{
-                      backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
-                      color: theme === 'light' ? '#dc2626' : '#fca5a5',
-                      border: theme === 'light' ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
-                    }}
-                  >
-                    <X className="w-5 h-5" />
-                    {t('extracted.cancel_disbursement')}
-                  </motion.button>
                 </div>
               </div>
                </div>
