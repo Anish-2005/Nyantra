@@ -354,7 +354,8 @@
     "exportAll": "Export All",
     "exportAllDescription": "Download the full applications dataset in the chosen format.",
     "exportFiltered": "Export Filtered",
-    "exportFilteredDescription": "Download only the results matching your current filters."
+    "exportFilteredDescription": "Download only the results matching your current filters.",
+    "selectBeneficiary": "Select Beneficiary"
   },
   "extracted": {
     "grievance": "Grievance",

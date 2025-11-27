@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import type * as THREE from 'three';
 import {
   Search, Filter, Download, Plus, Eye, ChevronLeft, ChevronRight, X,
@@ -39,9 +39,27 @@ const DisbursementsPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Manual disbursement form states
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualBeneficiaryId, setManualBeneficiaryId] = useState('');
+  const [manualApplicationId, setManualApplicationId] = useState('');
+  const [availableApplications, setAvailableApplications] = useState<any[]>([]);
+  const [manualReliefAmount, setManualReliefAmount] = useState('');
+  const [manualStatus, setManualStatus] = useState('pending');
+  const [manualActType, setManualActType] = useState('relief');
+  const [manualTransactionId, setManualTransactionId] = useState('');
+  const [manualUtrNumber, setManualUtrNumber] = useState('');
+  const [manualPaymentMethod, setManualPaymentMethod] = useState('');
+
+  // Manual disbursements from Firestore
+  const [manualDisbursements, setManualDisbursements] = useState<any[]>([]);
+
+  // Combine auto-generated and manual disbursements
+  const allDisbursements = useMemo(() => [...disbursements, ...manualDisbursements], [disbursements, manualDisbursements]);
+
   // Filter and sort disbursements
   const filteredDisbursements = useMemo(() => {
-    let filtered = [...disbursements];
+    let filtered = [...allDisbursements];
 
     // Search filter
     if (searchQuery) {
@@ -108,7 +126,7 @@ const DisbursementsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [searchQuery, statusFilter, actTypeFilter, dateFilter, priorityFilter, sortBy, sortOrder]);
+  }, [allDisbursements, searchQuery, statusFilter, actTypeFilter, dateFilter, priorityFilter, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredDisbursements.length / itemsPerPage);
@@ -133,7 +151,7 @@ const DisbursementsPage: React.FC = () => {
     const completed = Array(monthsCount).fill(0);
     const failed = Array(monthsCount).fill(0);
 
-    disbursements.forEach(d => {
+    allDisbursements.forEach(d => {
       const s = d.initiatedDate || d.applicationDate || d.initiatedOn || null;
       let dtLocal: Date | null = null;
       try {
@@ -159,7 +177,22 @@ const DisbursementsPage: React.FC = () => {
       completed,
       failed
     };
-  }, [disbursements]);
+  }, [allDisbursements]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = allDisbursements.length;
+    const completed = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'completed').length;
+    const pending = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'pending').length;
+    const inProgress = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'in_progress').length;
+    const failed = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'failed').length;
+    const cancelled = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'cancelled').length;
+    const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const disbursedAmount = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
+    const totalAmount = allDisbursements.reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
+    const pendingAmount = allDisbursements.filter(d => (d.status || '').toLowerCase() === 'pending').reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
+    return { total, completed, pending, inProgress, failed, cancelled, successRate, disbursedAmount, totalAmount, pendingAmount };
+  }, [allDisbursements]);
 
   // Listen for approved applications and generate disbursements in realtime
   useEffect(() => {
@@ -201,6 +234,26 @@ const DisbursementsPage: React.FC = () => {
       }
     }, (err) => {
       console.error('onSnapshot error for approved applications:', err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Listen for manual disbursements in realtime
+  useEffect(() => {
+    const q = collection(db, 'disbursements');
+    const unsubscribe = onSnapshot(q, (snap) => {
+      try {
+        const items = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data()
+        })) as any[];
+        setManualDisbursements(items);
+      } catch (err) {
+        console.error('Error processing snapshot for disbursements', err);
+      }
+    }, (err) => {
+      console.error('onSnapshot error for disbursements:', err);
     });
 
     return () => unsubscribe();
@@ -419,7 +472,68 @@ const DisbursementsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
- 
+  const handleManualSubmit = async () => {
+    if (!manualBeneficiaryId.trim() || !manualApplicationId.trim()) {
+      alert(t('extracted.beneficiary_and_application_required'));
+      return;
+    }
+
+    const amount = parseFloat(manualReliefAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert(t('extracted.valid_amount_required'));
+      return;
+    }
+
+    try {
+      const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
+      if (!selectedApp) {
+        alert(t('extracted.application_not_found'));
+        return;
+      }
+
+      const disId = `DIS${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
+      await addDoc(collection(db, 'disbursements'), {
+        id: disId,
+        beneficiaryId: manualBeneficiaryId.trim(),
+        beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
+        district: selectedApp.district || '',
+        state: selectedApp.state || '',
+        transactionId: manualTransactionId.trim() || null,
+        utrNumber: manualUtrNumber.trim() || null,
+        paymentMethod: manualPaymentMethod.trim() || null,
+        reliefAmount: amount,
+        transactionFee: 0,
+        netAmount: amount,
+        disbursedAmount: manualStatus === 'completed' ? amount : 0,
+        status: manualStatus,
+        initiatedDate: new Date().toISOString(),
+        actType: manualActType,
+        retryCount: 0,
+        failureReason: null,
+        initiatedBy: 'manual', // or current user
+        verifiedBy: null,
+        applicationId: manualApplicationId,
+        isManual: true
+      });
+
+      // Reset form
+      setManualBeneficiaryId('');
+      setManualApplicationId('');
+      setAvailableApplications([]);
+      setManualReliefAmount('');
+      setManualStatus('pending');
+      setManualActType('relief');
+      setManualTransactionId('');
+      setManualUtrNumber('');
+      setManualPaymentMethod('');
+      setShowManualForm(false);
+
+      alert(t('extracted.disbursement_added_successfully'));
+    } catch (err) {
+      console.error('Error adding manual disbursement:', err);
+      alert(t('extracted.error_adding_disbursement'));
+    }
+  };
 
   return (
     <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
@@ -521,12 +635,183 @@ const DisbursementsPage: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
+            onClick={() => setShowManualForm(true)}
           >
             <Plus className="w-4 h-4" />
             <span>{t('extracted.new_disbursement')}</span>
           </motion.button>
         </div>
       </motion.div>
+
+      {/* Manual Disbursement Form */}
+      <AnimatePresence>
+        {showManualForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <motion.div
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl mb-6"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.add_manual_disbursement')}</h2>
+                <button
+                  onClick={() => setShowManualForm(false)}
+                  className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:shadow-md transition-shadow"
+                >
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.beneficiary_id')} *
+                  </label>
+                  <input
+                    type="text"
+                    value={manualBeneficiaryId}
+                    onChange={(e) => setManualBeneficiaryId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder={t('extracted.enter_beneficiary_id')}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.application_id')} *
+                  </label>
+                  <select
+                    value={manualApplicationId}
+                    onChange={(e) => setManualApplicationId(e.target.value)}
+                    disabled={availableApplications.length === 0}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50"
+                  >
+                    <option value="">
+                      {availableApplications.length === 0 ? t('extracted.no_applications_found') : t('extracted.select_application')}
+                    </option>
+                    {availableApplications.map((app) => (
+                      <option key={app.id} value={app.id}>
+                        {app.id} - {app.actType || app.caseType} - {formatCurrency(app.amount)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.relief_amount')} *
+                  </label>
+                  <input
+                    type="number"
+                    value={manualReliefAmount}
+                    onChange={(e) => setManualReliefAmount(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.status')}
+                  </label>
+                  <select
+                    value={manualStatus}
+                    onChange={(e) => setManualStatus(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                  >
+                    <option value="pending">{t('extracted.pending')}</option>
+                    <option value="in_progress">{t('extracted.in_progress')}</option>
+                    <option value="completed">{t('extracted.completed')}</option>
+                    <option value="failed">{t('extracted.failed')}</option>
+                    <option value="cancelled">{t('extracted.cancelled')}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.act_type')}
+                  </label>
+                  <select
+                    value={manualActType}
+                    onChange={(e) => setManualActType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                  >
+                    <option value="relief">{t('extracted.relief')}</option>
+                    <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                    <option value="PoA Act">{t('extracted.poa_act')}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.transaction_id')}
+                  </label>
+                  <input
+                    type="text"
+                    value={manualTransactionId}
+                    onChange={(e) => setManualTransactionId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder={t('extracted.optional')}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.utr_number')}
+                  </label>
+                  <input
+                    type="text"
+                    value={manualUtrNumber}
+                    onChange={(e) => setManualUtrNumber(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder={t('extracted.optional')}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium theme-text-primary mb-2">
+                    {t('extracted.payment_method')}
+                  </label>
+                  <select
+                    value={manualPaymentMethod}
+                    onChange={(e) => setManualPaymentMethod(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                  >
+                    <option value="">{t('extracted.select_payment_method')}</option>
+                    <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
+                    <option value="upi">{t('extracted.upi')}</option>
+                    <option value="cash">{t('extracted.cash')}</option>
+                    <option value="cheque">{t('extracted.cheque')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => setShowManualForm(false)}
+                  className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:shadow-md transition-shadow"
+                >
+                  {t('extracted.cancel')}
+                </button>
+                <button
+                  onClick={handleManualSubmit}
+                  className="px-4 py-2 rounded-lg accent-gradient text-white shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  {t('extracted.add_disbursement')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Statistics Cards - Enhanced with Real-time Indicators */}
       <motion.div
@@ -1433,73 +1718,7 @@ const DisbursementsPage: React.FC = () => {
         </div>
       </motion.div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
-          <p className="text-sm theme-text-muted">
-            {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredDisbursements.length)} {t('extracted.of')} {filteredDisbursements.length}
-          </p>
-          <div className="flex items-center gap-2">
-            {isMobile ? (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  {t('extracted.prev')}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  {t('extracted.next')}
-                </motion.button>
-              </>
-            ) : (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </motion.button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <motion.button
-                    key={i}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
-                    style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
-                  >
-                    {i + 1}
-                  </motion.button>
-                ))}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </motion.button>
-              </>
-            )}
-          </div>
-        </div>
+      
 
       {/* Disbursement Detail Modal */}
       <AnimatePresence>

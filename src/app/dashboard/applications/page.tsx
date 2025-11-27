@@ -35,6 +35,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
     const [beneficiaryAutoFilled, setBeneficiaryAutoFilled] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,16 +44,21 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         try {
             // Ensure beneficiary id exists in Firestore before creating/updating
             if (!formData.beneficiaryId) {
-                alert(t('applications.beneficiaryIdRequired') || 'Beneficiary ID is required and must exist in records.');
+                alert(t('applications.beneficiaryIdRequired') || 'Beneficiary is required.');
                 setIsSubmitting(false);
                 return;
             }
-            const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
-            const beneficiarySnap = await getDoc(beneficiaryRef);
-            if (!beneficiarySnap.exists()) {
-                alert(t('applications.beneficiaryNotFound') || 'Beneficiary ID not found in database.');
-                setIsSubmitting(false);
-                return;
+
+            // For new applications, beneficiary is selected from dropdown so it exists
+            // For editing, validate if the beneficiary still exists
+            if (initialData && initialData.id) {
+                const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
+                const beneficiarySnap = await getDoc(beneficiaryRef);
+                if (!beneficiarySnap.exists()) {
+                    alert(t('applications.beneficiaryNotFound') || 'Beneficiary not found in database.');
+                    setIsSubmitting(false);
+                    return;
+                }
             }
             if (initialData && initialData.id) {
                 // Editing existing application
@@ -207,6 +213,25 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         }
     }, [initialData]);
 
+    // Fetch beneficiaries for dropdown
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            query(collection(db, 'beneficiaries'), orderBy('name')),
+            (snapshot) => {
+                const beneficiariesData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setBeneficiaries(beneficiariesData);
+            },
+            (error) => {
+                console.error('Error fetching beneficiaries:', error);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
+
     return (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Applicant Information */}
@@ -247,20 +272,44 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId') || 'Beneficiary ID'} *</label>
-                        <div className="flex items-center gap-2">
-                          <input
-                              type="text"
-                              required
-                              value={formData.beneficiaryId}
-                              onChange={(e) => handleInputChange('beneficiaryId', e.target.value)}
-                              onBlur={(e) => checkBeneficiaryExists(e.currentTarget.value)}
-                              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                              placeholder={t('applications.enterBeneficiaryId') || 'Enter beneficiary ID'}
-                          />
-                          {beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound') || 'Found'}</span>}
-                          {beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound') || 'Not found'}</span>}
-                        </div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId') || 'Beneficiary'} *</label>
+                        <select
+                            required
+                            value={formData.beneficiaryId}
+                            onChange={(e) => {
+                                const selectedId = e.target.value;
+                                handleInputChange('beneficiaryId', selectedId);
+                                // Auto-fill form with beneficiary data
+                                if (selectedId) {
+                                    const selectedBeneficiary = beneficiaries.find(b => b.id === selectedId);
+                                    if (selectedBeneficiary) {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            beneficiaryId: selectedId,
+                                            applicantName: selectedBeneficiary.name || prev.applicantName,
+                                            aadhaar: selectedBeneficiary.aadhaarNumber || prev.aadhaar,
+                                            phone: selectedBeneficiary.phone || prev.phone,
+                                            district: selectedBeneficiary.district || prev.district,
+                                            state: selectedBeneficiary.state || prev.state,
+                                            actType: selectedBeneficiary.actType || prev.actType
+                                        }));
+                                        setBeneficiaryExists(true);
+                                    }
+                                } else {
+                                    setBeneficiaryExists(null);
+                                }
+                            }}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        >
+                            <option value="">{t('applications.selectBeneficiary') || 'Select Beneficiary'}</option>
+                            {beneficiaries.map((beneficiary) => (
+                                <option key={beneficiary.id} value={beneficiary.id}>
+                                    {beneficiary.id} - {beneficiary.name} ({beneficiary.aadhaarNumber})
+                                </option>
+                            ))}
+                        </select>
+                        {initialData && beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound') || 'Selected'}</span>}
+                        {initialData && beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound') || 'Not found'}</span>}
                     </div>
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
@@ -413,6 +462,7 @@ const exportApplicationsData = (applications: Application[]) => {
     const headers = [
         'Application ID',
         'Applicant Name',
+        'Beneficiary ID',
         'Aadhaar Number',
         'Phone Number',
         'District',
@@ -431,6 +481,7 @@ const exportApplicationsData = (applications: Application[]) => {
     const rows = applications.map(app => [
         app.id,
         app.applicantName,
+        app.beneficiaryId || '',
         app.aadhaar,
         app.phone,
         app.district,
@@ -482,7 +533,7 @@ const exportApplicationsPDF = (applications: Application[]) => {
     doc.text(`Total: ${applications.length}`, pageWidth - margin, 44, { align: 'right' });
 
     const head = [[
-        'Application ID', 'Applicant', 'District', 'Act Type', 'Amount (INR)', 'Status', 'Priority', 'Actions'
+        'Application ID', 'Applicant', 'Beneficiary ID', 'District', 'Act Type', 'Amount (INR)', 'Status', 'Priority', 'Actions'
     ]];
 
     const fmtCurrency = (n?: number) => {
@@ -499,6 +550,7 @@ const exportApplicationsPDF = (applications: Application[]) => {
         body.push([
             app.id,
             applicantCell,
+            app.beneficiaryId || '-',
             `${app.district}${app.state ? ', ' + app.state : ''}`,
             app.actType,
             fmtCurrency(app.amount),
@@ -529,12 +581,13 @@ const exportApplicationsPDF = (applications: Application[]) => {
         columnStyles: {
             0: { cellWidth: 80 },   // Application ID
             1: { cellWidth: 180 },  // Applicant (multiline)
-            2: { cellWidth: 100 },  // District
-            3: { cellWidth: 100 },  // Act Type
-            4: { cellWidth: 80 },   // Amount
-            5: { cellWidth: 80 },   // Status
-            6: { cellWidth: 60 },   // Priority
-            7: { cellWidth: 50 }    // Actions
+            2: { cellWidth: 80 },   // Beneficiary ID
+            3: { cellWidth: 100 },  // District
+            4: { cellWidth: 100 },  // Act Type
+            5: { cellWidth: 80 },   // Amount
+            6: { cellWidth: 80 },   // Status
+            7: { cellWidth: 60 },   // Priority
+            8: { cellWidth: 50 }    // Actions
         }
     });
 
@@ -692,6 +745,7 @@ const ApplicationsPage = () => {
                     district: data.district || '',
                     state: data.state || '',
                     actType: data.actType || '',
+                    beneficiaryId: data.beneficiaryId || '',
                     incidentDate: data.incidentDate || '',
                     applicationDate: toIso(data.applicationDate),
                     status: data.status || 'pending',
@@ -1442,6 +1496,7 @@ const ApplicationsPage = () => {
                                             <tr>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')}</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')}</th>
+                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('applications.beneficiaryId') || 'Beneficiary ID'}</th>
                                                 <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')}</th>
                                                 <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')}</th>
                                                 <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')}</th>
@@ -1471,6 +1526,7 @@ const ApplicationsPage = () => {
                                                             </div>
                                                         </div>
                                                     </td>
+                                                    <td className="hidden sm:table-cell px-6 py-4 text-sm theme-text-primary">{app.beneficiaryId || '-'}</td>
                                                     <td className="hidden sm:table-cell px-6 py-4">
                                                         <p className="text-sm theme-text-primary">{app.district}</p>
                                                         <p className="text-xs theme-text-muted">{app.state}</p>
@@ -1532,6 +1588,7 @@ const ApplicationsPage = () => {
 
                                             <div className="space-y-1 text-sm theme-text-secondary mb-3">
                                                 <div><strong>ID:</strong> {app.id}</div>
+                                                <div><strong>{t('applications.beneficiaryId') || 'Beneficiary ID'}:</strong> {app.beneficiaryId || '-'}</div>
                                                 <div><strong>{t('extracted.district_1')}</strong> {app.district}, {app.state}</div>
                                                 <div><strong>{t('extracted.act_type_1')}</strong> {app.actType}</div>
                                                 <div><strong>{t('extracted.amount_1')}</strong> {formatCurrency(app.amount)}</div>

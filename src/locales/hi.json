@@ -354,7 +354,8 @@
     "exportAll": "सभी निर्यात करें",
     "exportAllDescription": "चयनित फ़ॉर्मेट में पूरा आवेदन सेटडाउनलोड करें।",
     "exportFiltered": "फ़िल्टर्ड निर्यात",
-    "exportFilteredDescription": "केवल वर्तमान फ़िल्टर के साथ मेल खाने वाले परिणाम डाउनलोड करें।"
+    "exportFilteredDescription": "केवल वर्तमान फ़िल्टर के साथ मेल खाने वाले परिणाम डाउनलोड करें।",
+    "selectBeneficiary": "लाभार्थी चुनें"
   },
   "extracted": {
     "grievance": "शिकायत",
