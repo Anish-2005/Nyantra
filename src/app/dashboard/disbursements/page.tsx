@@ -7,14 +7,14 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
 import type * as THREE from 'three';
 import {
-  Search, Filter, Download, Plus, Eye, ChevronLeft, ChevronRight, X,
+  Search, Plus, Eye, ChevronLeft, ChevronRight, X,
   Clock, User, Phone, MapPin,
   Calendar, DollarSign,
-   MoreVertical, TrendingUp, AlertTriangle,
-   Heart, Scale,
-  Banknote, Receipt, Fingerprint, CreditCard,
+   MoreVertical, TrendingUp,
+   Scale,
+  Banknote, CreditCard,
    CheckCircle, XCircle, PlayCircle,
-  RotateCcw, Check, Edit
+  RotateCcw, Edit, Heart, Filter
 } from 'lucide-react';
 
 // Disbursements state — generated from approved applications
@@ -26,7 +26,6 @@ const DisbursementsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
-  const [showExportModal, setShowExportModal] = useState(false);
   const [dateFilter, setDateFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [sortBy] = useState('initiatedDate');
@@ -40,11 +39,7 @@ const DisbursementsPage: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Edit disbursement form states
-  const [isEditingDisbursement, setIsEditingDisbursement] = useState(false);
-  const [editStatus, setEditStatus] = useState('pending');
-  const [editTransactionId, setEditTransactionId] = useState('');
-  const [editUtrNumber, setEditUtrNumber] = useState('');
-  const [editPaymentMethod, setEditPaymentMethod] = useState('');
+  const [editingDisbursementId, setEditingDisbursementId] = useState<string | null>(null);
 
   // Manual disbursement form states
   const [showManualForm, setShowManualForm] = useState(false);
@@ -535,38 +530,60 @@ const DisbursementsPage: React.FC = () => {
     }
 
     try {
-      const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
-      if (!selectedApp) {
-        alert(t('extracted.application_not_found'));
-        return;
+      if (editingDisbursementId) {
+        // Update existing disbursement
+        const disbursementRef = doc(db, 'disbursements', editingDisbursementId);
+        const updateData: any = {
+          transactionId: manualTransactionId.trim() || null,
+          utrNumber: manualUtrNumber.trim() || null,
+          paymentMethod: manualPaymentMethod.trim() || null,
+          status: manualStatus,
+          lastUpdated: new Date().toISOString()
+        };
+
+        // If status changed to completed, set disbursedAmount
+        if (manualStatus === 'completed') {
+          updateData.disbursedAmount = amount;
+          updateData.completedDate = new Date().toISOString();
+        }
+
+        await updateDoc(disbursementRef, updateData);
+      } else {
+        // Create new disbursement
+        const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
+        if (!selectedApp) {
+          alert(t('extracted.application_not_found'));
+          return;
+        }
+
+        const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
+        await addDoc(collection(db, 'disbursements'), {
+          id: disId,
+          beneficiaryId: manualBeneficiaryId.trim(),
+          beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
+          district: selectedApp.district || '',
+          state: selectedApp.state || '',
+          transactionId: manualTransactionId.trim() || null,
+          utrNumber: manualUtrNumber.trim() || null,
+          paymentMethod: manualPaymentMethod.trim() || null,
+          reliefAmount: amount,
+          transactionFee: 0,
+          netAmount: amount,
+          disbursedAmount: manualStatus === 'completed' ? amount : 0,
+          status: manualStatus,
+          initiatedDate: new Date().toISOString(),
+          actType: manualActType,
+          retryCount: 0,
+          failureReason: null,
+          initiatedBy: 'manual', // or current user
+          verifiedBy: null,
+          applicationId: manualApplicationId,
+          isManual: true
+        });
       }
 
-      const disId = `DIS${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
-      await addDoc(collection(db, 'disbursements'), {
-        id: disId,
-        beneficiaryId: manualBeneficiaryId.trim(),
-        beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
-        district: selectedApp.district || '',
-        state: selectedApp.state || '',
-        transactionId: manualTransactionId.trim() || null,
-        utrNumber: manualUtrNumber.trim() || null,
-        paymentMethod: manualPaymentMethod.trim() || null,
-        reliefAmount: amount,
-        transactionFee: 0,
-        netAmount: amount,
-        disbursedAmount: manualStatus === 'completed' ? amount : 0,
-        status: manualStatus,
-        initiatedDate: new Date().toISOString(),
-        actType: manualActType,
-        retryCount: 0,
-        failureReason: null,
-        initiatedBy: 'manual', // or current user
-        verifiedBy: null,
-        applicationId: manualApplicationId,
-        isManual: true
-      });
-
       // Reset form
+      setEditingDisbursementId(null);
       setManualBeneficiaryId('');
       setManualApplicationId('');
       setAvailableApplications([]);
@@ -578,10 +595,9 @@ const DisbursementsPage: React.FC = () => {
       setManualPaymentMethod('');
       setShowManualForm(false);
 
-      alert(t('extracted.disbursement_added_successfully'));
     } catch (err) {
-      console.error('Error adding manual disbursement:', err);
-      alert(t('extracted.error_adding_disbursement'));
+      console.error('Error saving disbursement:', err);
+      alert(editingDisbursementId ? (t('extracted.error_updating_disbursement') || 'Error updating disbursement') : t('extracted.error_adding_disbursement'));
     }
   };
 
@@ -594,54 +610,6 @@ const DisbursementsPage: React.FC = () => {
     setEditUtrNumber(selectedDisbursement.utrNumber || '');
     setEditPaymentMethod(selectedDisbursement.paymentMethod || '');
     setIsEditingDisbursement(true);
-  };
-
-  // Handle saving edited disbursement
-  const handleSaveEditDisbursement = async () => {
-    if (!selectedDisbursement) return;
-
-    // Validate required fields for completed status
-    if (editStatus === 'completed') {
-      const requiredFieldsFilled =
-        editTransactionId.trim() &&
-        editPaymentMethod;
-
-      if (!requiredFieldsFilled) {
-        alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
-        return;
-      }
-    }
-
-    try {
-      const disbursementRef = doc(db, 'disbursements', selectedDisbursement.id);
-      const updateData: any = {
-        status: editStatus,
-        transactionId: editTransactionId.trim() || null,
-        utrNumber: editUtrNumber.trim() || null,
-        paymentMethod: editPaymentMethod.trim() || null,
-        lastUpdated: new Date().toISOString()
-      };
-
-      // If status changed to completed, set disbursedAmount
-      if (editStatus === 'completed' && selectedDisbursement.status !== 'completed') {
-        updateData.disbursedAmount = selectedDisbursement.reliefAmount;
-        updateData.completedDate = new Date().toISOString();
-      }
-
-      await updateDoc(disbursementRef, updateData);
-
-      setIsEditingDisbursement(false);
-      setSelectedDisbursement(null);
-      alert(t('extracted.disbursement_updated_successfully') || 'Disbursement updated successfully');
-    } catch (err) {
-      console.error('Error updating disbursement:', err);
-      alert(t('extracted.error_updating_disbursement') || 'Error updating disbursement');
-    }
-  };
-
-  // Handle canceling edit
-  const handleCancelEdit = () => {
-    setIsEditingDisbursement(false);
   };
 
   return (
@@ -733,16 +701,6 @@ const DisbursementsPage: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            onClick={() => setShowExportModal(true)}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('extracted.export_data')}</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
             onClick={() => setShowManualForm(true)}
           >
@@ -768,9 +726,14 @@ const DisbursementsPage: React.FC = () => {
               className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl mb-6"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold theme-text-primary">{t('extracted.add_manual_disbursement')}</h2>
+                <h2 className="text-2xl font-bold theme-text-primary">
+                  {editingDisbursementId ? t('extracted.edit_disbursement') || 'Edit Disbursement' : t('extracted.add_manual_disbursement')}
+                </h2>
                 <button
-                  onClick={() => setShowManualForm(false)}
+                  onClick={() => {
+                    setShowManualForm(false);
+                    setEditingDisbursementId(null);
+                  }}
                   className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:shadow-md transition-shadow"
                 >
                   <X className="w-5 h-5 theme-text-primary" />
@@ -796,7 +759,8 @@ const DisbursementsPage: React.FC = () => {
                         setManualApplicationId('');
                       }
                     }}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={!!editingDisbursementId}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder={t('extracted.enter_beneficiary_id')}
                   />
                 </div>
@@ -827,8 +791,8 @@ const DisbursementsPage: React.FC = () => {
                         setManualStatus('pending');
                       }
                     }}
-                    disabled={availableApplications.length === 0}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50"
+                    disabled={availableApplications.length === 0 || !!editingDisbursementId}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {availableApplications.length === 0 ? t('extracted.no_applications_found') : t('extracted.select_application')}
@@ -849,7 +813,8 @@ const DisbursementsPage: React.FC = () => {
                     type="number"
                     value={manualReliefAmount}
                     onChange={(e) => setManualReliefAmount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={!!editingDisbursementId}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -898,7 +863,8 @@ const DisbursementsPage: React.FC = () => {
                   <select
                     value={manualActType}
                     onChange={(e) => setManualActType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={!!editingDisbursementId}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="relief">{t('extracted.relief')}</option>
                     <option value="PCR Act">{t('extracted.pcr_act')}</option>
@@ -952,7 +918,10 @@ const DisbursementsPage: React.FC = () => {
 
               <div className="flex justify-end gap-4 mt-6">
                 <button
-                  onClick={() => setShowManualForm(false)}
+                  onClick={() => {
+                    setShowManualForm(false);
+                    setEditingDisbursementId(null);
+                  }}
                   className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:shadow-md transition-shadow"
                 >
                   {t('extracted.cancel')}
@@ -961,7 +930,7 @@ const DisbursementsPage: React.FC = () => {
                   onClick={handleManualSubmit}
                   className="px-4 py-2 rounded-lg accent-gradient text-white shadow-lg hover:shadow-xl transition-shadow"
                 >
-                  {t('extracted.add_disbursement')}
+                  {editingDisbursementId ? (t('extracted.update_disbursement') || 'Update Disbursement') : t('extracted.add_disbursement')}
                 </button>
               </div>
             </motion.div>
@@ -1874,11 +1843,240 @@ const DisbursementsPage: React.FC = () => {
         </div>
       </motion.div>
 
-      
+      {/* Disbursement Details Section */}
+      {selectedDisbursement && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mt-6 theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
+        >
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold theme-text-primary">
+                  {selectedDisbursement.id}
+                </h2>
+                <p className="theme-text-muted">
+                  Disbursement Details • {selectedDisbursement.actType}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    // Populate the manual form with selected disbursement data for editing
+                    setEditingDisbursementId(selectedDisbursement.id);
+                    setManualBeneficiaryId(selectedDisbursement.beneficiaryId || '');
+                    setManualApplicationId(selectedDisbursement.applicationId || '');
+                    // Fetch applications for this beneficiary
+                    if (selectedDisbursement.beneficiaryId) {
+                      const fetchApplications = async () => {
+                        try {
+                          const q = query(collection(db, 'applications'), where('beneficiaryId', '==', selectedDisbursement.beneficiaryId));
+                          const snap = await getDocs(q);
+                          const apps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                          setAvailableApplications(apps);
+                        } catch (err) {
+                          console.error('Error fetching applications for beneficiary:', err);
+                        }
+                      };
+                      fetchApplications();
+                    }
+                    setManualReliefAmount(selectedDisbursement.reliefAmount?.toString() || '');
+                    setManualStatus(selectedDisbursement.status || 'pending');
+                    setManualActType(selectedDisbursement.actType || 'relief');
+                    setManualTransactionId(selectedDisbursement.transactionId || '');
+                    setManualUtrNumber(selectedDisbursement.utrNumber || '');
+                    setManualPaymentMethod(selectedDisbursement.paymentMethod || '');
+                    setShowManualForm(true);
+                    setSelectedDisbursement(null); // Close details
+                  }}
+                  className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20"
+                >
+                  <Edit className="w-5 h-5 theme-text-primary" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedDisbursement(null)}
+                  className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </div>
 
-      {/* Disbursement Detail Modal */}
-      <AnimatePresence>
-        {selectedDisbursement && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Beneficiary Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold theme-text-primary">Beneficiary Information</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs theme-text-muted">Beneficiary Name</p>
+                      <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs theme-text-muted">Aadhaar Number</p>
+                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs theme-text-muted">Phone Number</p>
+                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs theme-text-muted">Location</p>
+                      <p className="font-medium theme-text-primary break-words">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold theme-text-primary">Transaction Details</h3>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-xs theme-text-muted mb-1">Transaction ID</p>
+                    <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p>
+                  </div>
+                  <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-xs theme-text-muted mb-1">UTR Number</p>
+                    <p className="font-medium theme-text-primary font-mono break-all">
+                      {selectedDisbursement.utrNumber || 'Not Available'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-xs theme-text-muted mb-1">Payment Method</p>
+                    <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
+                  </div>
+                  <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-xs theme-text-muted mb-1">Relief Amount</p>
+                    <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status and Timeline */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold theme-text-primary">Status & Timeline</h3>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-sm theme-text-muted mb-2">Disbursement Status</p>
+                    <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
+                      {(() => {
+                        const Icon = getStatusIcon(selectedDisbursement.status);
+                        return <Icon className="w-4 h-4" />;
+                      })()}
+                      {selectedDisbursement.status.replace('-', ' ').toUpperCase()}
+                    </span>
+                    {selectedDisbursement.failureReason && (
+                      <p className="text-sm theme-text-muted mt-2">
+                        <strong>Failure Reason: </strong> {selectedDisbursement.failureReason}
+                      </p>
+                    )}
+                    {selectedDisbursement.retryCount > 0 && (
+                      <p className="text-sm theme-text-muted mt-1">
+                        <strong>Retry Attempts: </strong> {selectedDisbursement.retryCount}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
+                    <p className="text-sm theme-text-muted mb-2">Timeline</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="theme-text-primary">Initiated</span>
+                        <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
+                      </div>
+                      {selectedDisbursement.completedDate && (
+                        <div className="flex justify-between text-sm">
+                          <span className="theme-text-primary">Completed</span>
+                          <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
+                        </div>
+                      )}
+                      {selectedDisbursement.disbursementDate && (
+                        <div className="flex justify-between text-sm">
+                          <span className="theme-text-primary">Disbursed</span>
+                          <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t theme-border-glass">
+              {selectedDisbursement.status === 'failed' && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
+                    color: theme === 'light' ? '#15803d' : '#86efac',
+                    border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                  }}
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  Retry Disbursement
+                </motion.button>
+              )}
+              {selectedDisbursement.status === 'pending' && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
+                    color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
+                    border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+                  }}
+                >
+                  <PlayCircle className="w-5 h-5" />
+                  Initiate Payment
+                </motion.button>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+              >
+                <Download className="w-5 h-5" />
+                Download Receipt
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
+                  color: theme === 'light' ? '#dc2626' : '#fca5a5',
+                  border: theme === 'light' ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
+                }}
+              >
+                <X className="w-5 h-5" />
+                Cancel Disbursement
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
           <>
             {/* Overlay for desktop when drawer open */}
             {!isMobile && (
@@ -2039,10 +2237,10 @@ const DisbursementsPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                         <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
-                        <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p> {/* -> Handles long IDs */}
+                        <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p>
                       </div>
                       <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                         <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
@@ -2054,19 +2252,20 @@ const DisbursementsPage: React.FC = () => {
                         <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
                         <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
                       </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
-                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
+                        <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_fee')} </p>
+                        <p className="font-medium theme-text-primary">{formatCurrency(selectedDisbursement.transactionFee)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <p className="text-xs theme-text-muted mb-1">{t('extracted.net_amount')} </p>
+                        <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.netAmount)}</p>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_fee')} </p>
-                      <p className="font-medium theme-text-primary">{formatCurrency(selectedDisbursement.transactionFee)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.net_amount')} </p>
-                      <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.netAmount)}</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Bank Details */}
@@ -2075,7 +2274,7 @@ const DisbursementsPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
-                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p> {/* -> Handles long account numbers */}
+                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p>
                     </div>
                     <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
                       <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
@@ -2246,8 +2445,7 @@ const DisbursementsPage: React.FC = () => {
                </div>
             </motion.div>
           </>
-        )}
-      </AnimatePresence>
+      
     </div>
   );
 };
