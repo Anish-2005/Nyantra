@@ -3,8 +3,10 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import type * as THREE from 'three';
 import {
   Search, Plus, Eye, ChevronLeft, ChevronRight, X,
@@ -14,7 +16,7 @@ import {
    Scale,
   Banknote, CreditCard,
    CheckCircle, XCircle, PlayCircle,
-  RotateCcw, Edit, Heart, Filter
+  RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText
 } from 'lucide-react';
 
 // Disbursements state — generated from approved applications
@@ -33,6 +35,7 @@ const DisbursementsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedDisbursement, setSelectedDisbursement] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -150,8 +153,8 @@ const DisbursementsPage: React.FC = () => {
       months.push({ label: MONTH_SHORT[d.getMonth()], year: d.getFullYear(), month: d.getMonth() });
     }
 
+    const added = Array(monthsCount).fill(0);
     const completed = Array(monthsCount).fill(0);
-    const failed = Array(monthsCount).fill(0);
 
     allDisbursements.forEach(d => {
       const s = d.initiatedDate || d.applicationDate || d.initiatedOn || null;
@@ -167,8 +170,8 @@ const DisbursementsPage: React.FC = () => {
       for (let idx = 0; idx < months.length; idx++) {
         const m = months[idx];
         if (dtLocal.getFullYear() === m.year && dtLocal.getMonth() === m.month) {
+          added[idx] += 1; // Count all disbursements added
           if ((d.status || '').toLowerCase() === 'completed') completed[idx] += 1;
-          else if ((d.status || '').toLowerCase() === 'failed') failed[idx] += 1;
           break;
         }
       }
@@ -176,8 +179,8 @@ const DisbursementsPage: React.FC = () => {
 
     return {
       labels: months.map(m => m.label),
-      completed,
-      failed
+      added,
+      completed
     };
   }, [allDisbursements]);
 
@@ -246,10 +249,13 @@ const DisbursementsPage: React.FC = () => {
     const q = collection(db, 'disbursements');
     const unsubscribe = onSnapshot(q, (snap) => {
       try {
-        const items = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data()
-        })) as any[];
+        const items = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            firestoreId: d.id,  // Store Firestore document ID separately
+            ...data  // Spread the document data (includes custom 'id' field)
+          };
+        }) as any[];
         setManualDisbursements(items);
       } catch (err) {
         console.error('Error processing snapshot for disbursements', err);
@@ -501,6 +507,100 @@ const DisbursementsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // Function to export disbursements data as PDF
+  const exportDisbursementsPDF = (items: any[]) => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header band
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
+
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Disbursements Report', margin, 36);
+
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [[
+      'Disbursement ID', 'Beneficiary', 'District', 'Act Type', 'Relief Amount', 'Status', 'Transaction ID', 'Initiated Date'
+    ]];
+
+    const body: any[] = [];
+    items.forEach(d => {
+      const beneficiaryCell = `${d.beneficiaryName}\n${d.phone || ''}`;
+
+      body.push([
+        d.id || '',
+        beneficiaryCell,
+        d.district || '',
+        d.actType || '',
+        formatCurrency(d.reliefAmount || 0),
+        d.status || '',
+        d.transactionId || '',
+        formatDate(d.initiatedDate)
+      ]);
+    });
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      styles: {
+        fontSize: 8,
+        cellPadding: 4,
+      },
+      headStyles: {
+        fillColor: [30, 64, 175],
+        textColor: 255,
+        fontSize: 9,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 100 },
+        2: { cellWidth: 60 },
+        3: { cellWidth: 60 },
+        4: { cellWidth: 70 },
+        5: { cellWidth: 60 },
+        6: { cellWidth: 80 },
+        7: { cellWidth: 70 },
+      },
+      margin: { top: 70 },
+      didDrawPage: (data: any) => {
+        // Footer
+        const pageCount = doc.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Page ${data.pageNumber} of ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 20, { align: 'right' });
+      }
+    });
+
+    doc.save(`disbursements_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const handleDeleteDisbursement = async (disbursement: any) => {
+    if (!confirm(`Are you sure you want to delete disbursement ${disbursement.id}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const docId = disbursement.firestoreId || disbursement.id;
+      await deleteDoc(doc(db, 'disbursements', docId));
+      // The real-time listener will automatically update the UI
+    } catch (error) {
+      console.error('Error deleting disbursement:', error);
+      alert('Failed to delete disbursement. Please try again.');
+    }
+  };
+
   const handleManualSubmit = async () => {
     if (!manualBeneficiaryId.trim() || !manualApplicationId.trim()) {
       alert(t('extracted.beneficiary_and_application_required'));
@@ -530,8 +630,10 @@ const DisbursementsPage: React.FC = () => {
     }
 
     try {
+      console.log('Submitting form. Editing ID:', editingDisbursementId);
       if (editingDisbursementId) {
         // Update existing disbursement
+        console.log('Updating disbursement with ID:', editingDisbursementId);
         const disbursementRef = doc(db, 'disbursements', editingDisbursementId);
         const updateData: any = {
           transactionId: manualTransactionId.trim() || null,
@@ -550,6 +652,7 @@ const DisbursementsPage: React.FC = () => {
         await updateDoc(disbursementRef, updateData);
       } else {
         // Create new disbursement
+        console.log('Creating new disbursement');
         const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
         if (!selectedApp) {
           alert(t('extracted.application_not_found'));
@@ -706,6 +809,16 @@ const DisbursementsPage: React.FC = () => {
           >
             <Plus className="w-4 h-4" />
             <span>{t('extracted.new_disbursement')}</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowExportModal(true)}
+            className="px-4 py-2 rounded-xl theme-border-glass border flex items-center gap-2 theme-bg-glass theme-text-primary shadow-lg"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+          >
+            <Download className="w-4 h-4" />
+            <span>{t('extracted.export_data')}</span>
           </motion.button>
         </div>
       </motion.div>
@@ -943,7 +1056,7 @@ const DisbursementsPage: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"
       >
         {[
           { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote, statusColor: 'bg-cyan-500' },
@@ -951,9 +1064,7 @@ const DisbursementsPage: React.FC = () => {
           { labelKey: 'extracted.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, statusColor: 'bg-amber-500' },
           { labelKey: 'extracted.in_progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle, statusColor: 'bg-purple-500' },
           { labelKey: 'extracted.failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle, statusColor: 'bg-red-500' },
-          { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X, statusColor: 'bg-gray-500' },
-          { labelKey: 'extracted.success_rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp, statusColor: 'bg-teal-500' },
-          { labelKey: 'extracted.retry_needed', value: disbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw, statusColor: 'bg-orange-500' }
+          { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X, statusColor: 'bg-gray-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -1035,12 +1146,12 @@ const DisbursementsPage: React.FC = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.pcr_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {disbursements.filter(d => d.actType === 'PCR Act').length}
+                {allDisbursements.filter(d => d.actType === 'PCR Act').length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(disbursements.filter(d => d.actType === 'PCR Act').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
+            {formatCurrency(allDisbursements.filter(d => d.actType === 'PCR Act' && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
 
@@ -1055,12 +1166,12 @@ const DisbursementsPage: React.FC = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.poa_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {disbursements.filter(d => d.actType === 'PoA Act').length}
+                {allDisbursements.filter(d => d.actType === 'PoA Act').length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(disbursements.filter(d => d.actType === 'PoA Act').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
+            {formatCurrency(allDisbursements.filter(d => d.actType === 'PoA Act' && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
       </motion.div>
@@ -1079,12 +1190,12 @@ const DisbursementsPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-xs theme-text-muted">{t('extracted.completed')} </span>
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-xs theme-text-muted">{t('extracted.added')} </span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-xs theme-text-muted">{t('extracted.failed')} </span>
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-xs theme-text-muted">{t('extracted.completed')} </span>
             </div>
           </div>
         </div>
@@ -1093,12 +1204,12 @@ const DisbursementsPage: React.FC = () => {
             <div key={month} className="flex flex-col items-center flex-1">
               <div className="flex items-end justify-center w-full h-20 gap-1 mb-2">
                 <div
-                  className="w-3/4 bg-green-500 rounded-t transition-all duration-500"
-                  style={{ height: `${(monthlyTrend.completed[index] / Math.max(...monthlyTrend.completed)) * 80}%` }}
+                  className="w-1/2 bg-blue-500 rounded-t transition-all duration-500"
+                  style={{ height: `${(monthlyTrend.added[index] / Math.max(...monthlyTrend.added, 1)) * 80}%` }}
                 ></div>
                 <div
-                  className="w-1/4 bg-red-500 rounded-t transition-all duration-500"
-                  style={{ height: `${(monthlyTrend.failed[index] / Math.max(...monthlyTrend.completed, ...monthlyTrend.failed, 1)) * 80}%` }}
+                  className="w-1/2 bg-green-500 rounded-t transition-all duration-500"
+                  style={{ height: `${(monthlyTrend.completed[index] / Math.max(...monthlyTrend.added, 1)) * 80}%` }}
                 ></div>
               </div>
               <span className="text-xs theme-text-muted">{month}</span>
@@ -1391,23 +1502,24 @@ const DisbursementsPage: React.FC = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-1">
                       <button
                         onClick={e => {
                           e.stopPropagation();
                           setSelectedDisbursement(disbursement);
                         }}
-                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                        className="px-2 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
+                        title={t('extracted.view')}
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        <span>{t('extracted.view')} </span>
+                        <span className="hidden sm:inline">{t('extracted.view')} </span>
                       </button>
                       {disbursement.status === 'failed' ? (
                         <button
                           onClick={e => {
                             e.stopPropagation();
                           }}
-                          className="px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                          className="px-2 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-all"
                           style={{
                             backgroundColor:
                               theme === 'light'
@@ -1420,41 +1532,61 @@ const DisbursementsPage: React.FC = () => {
                                 ? '1px solid rgba(22, 163, 74, 0.3)'
                                 : '1px solid rgba(34, 197, 94, 0.3)'
                           }}
+                          title={t('extracted.retry')}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>{t('extracted.retry')} </span>
+                          <span className="hidden sm:inline">{t('extracted.retry')} </span>
                         </button>
                       ) : (
                         <button
                           onClick={e => {
                             e.stopPropagation();
                           }}
-                          className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all theme-text-primary"
+                          className="px-2 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1 hover:bg-blue-500/10 active:scale-95 transition-all theme-text-primary"
                           style={{
                             background:
                               theme === 'light'
                                 ? 'rgba(255, 255, 255, 0.95)'
                                 : undefined
                           }}
+                          title={t('extracted.receipt')}
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span>{t('extracted.receipt')} </span>
+                          <span className="hidden sm:inline">{t('extracted.receipt')} </span>
                         </button>
                       )}
                       <button
                         onClick={e => {
                           e.stopPropagation();
+                          handleDeleteDisbursement(disbursement);
                         }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all theme-text-primary"
+                        className="px-2 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1 hover:bg-red-500/10 active:scale-95 transition-all theme-text-primary"
                         style={{
                           background:
                             theme === 'light'
                               ? 'rgba(255, 255, 255, 0.95)'
                               : undefined
                         }}
+                        title={t('extracted.delete')}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{t('extracted.delete')} </span>
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                        }}
+                        className="px-2 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1 hover:bg-gray-500/10 active:scale-95 transition-all theme-text-primary"
+                        style={{
+                          background:
+                            theme === 'light'
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : undefined
+                        }}
+                        title={t('extracted.more')}
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
-                        <span>{t('extracted.more')} </span>
+                        <span className="hidden sm:inline">{t('extracted.more')} </span>
                       </button>
                     </div>
                   </motion.div>
@@ -1611,6 +1743,23 @@ const DisbursementsPage: React.FC = () => {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDisbursement(disbursement);
+                            }}
+                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
+                            style={{
+                              background:
+                                theme === 'light'
+                                  ? 'rgba(255, 255, 255, 0.95)'
+                                  : undefined
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                             className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
                             style={{
                               background:
@@ -1736,6 +1885,26 @@ const DisbursementsPage: React.FC = () => {
                         <RotateCcw className="w-4 h-4" />
                       </button>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDisbursement(disbursement);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
+                      style={{
+                        background:
+                          theme === 'light'
+                            ? 'rgba(255, 255, 255, 0.95)'
+                            : undefined,
+                        border:
+                          theme === 'light'
+                            ? '1px solid rgba(226, 232, 240, 0.8)'
+                            : 'none'
+                      }}
+                      title={t('extracted.delete')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -1868,7 +2037,9 @@ const DisbursementsPage: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     // Populate the manual form with selected disbursement data for editing
-                    setEditingDisbursementId(selectedDisbursement.id);
+                    const docId = selectedDisbursement.firestoreId || selectedDisbursement.id;
+                    console.log('Editing disbursement:', selectedDisbursement, 'Document ID:', docId);
+                    setEditingDisbursementId(docId);
                     setManualBeneficiaryId(selectedDisbursement.beneficiaryId || '');
                     setManualApplicationId(selectedDisbursement.applicationId || '');
                     // Fetch applications for this beneficiary
@@ -2077,375 +2248,167 @@ const DisbursementsPage: React.FC = () => {
           </div>
         </motion.div>
       )}
-          <>
-            {/* Overlay for desktop when drawer open */}
-            {!isMobile && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black z-40" onClick={() => setSelectedDisbursement(null)} />
-            )}
 
-            {/* Drawer on desktop, centered modal on mobile */}
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
             <motion.div
-              initial={isMobile ? { opacity: 0 } : { x: 300 }}
-              animate={isMobile ? { opacity: 1 } : { x: 0 }}
-              exit={isMobile ? { opacity: 0 } : { x: 300 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-              className={isMobile
-                ? 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
-                : 'fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[520px] lg:w-[720px] overflow-y-auto'
-              }
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
-              <div className={isMobile ? 'theme-bg-card theme-border-glass border rounded-2xl w-full max-h-[90vh] overflow-y-auto' : 'h-full theme-bg-card theme-border-glass border-l shadow-2xl'}>
-              {/* --- MODIFIED HEADER --- */}
-              <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-4 sm:p-6 flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0"> {/* -> Allows text to truncate */}
-                  <h2 className="text-xl sm:text-2xl font-bold theme-text-primary truncate"> {/* -> Responsive text size and truncation */}
-                    {selectedDisbursement.id}
-                  </h2>
-                  <p className="theme-text-muted truncate"> {/* -> Truncation */}
-                    Disbursement Details • {selectedDisbursement.actType}
-                  </p>
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('disbursements.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {!isEditingDisbursement && (
-                    <button
-                      onClick={handleEditDisbursement}
-                      className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 flex-shrink-0"
-                    >
-                      <Edit className="w-5 h-5 theme-text-primary" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedDisbursement(null)}
-                    className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 flex-shrink-0" // -> Prevents button from shrinking
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
               </div>
 
-              <div className="p-4 sm:p-6 space-y-6"> {/* -> Responsive padding */}
-                {/* Beneficiary Information */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_information')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">{t('extracted.beneficiary_name')} </p>
-                        <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p> {/* -> Handles long names */}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')} </p>
-                        <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p> {/* -> Handles long numbers */}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">{t('extracted.phone_number')} </p>
-                        <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs theme-text-muted">{t('extracted.location')} </p>
-                        <p className="font-medium theme-text-primary break-words">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Transaction Details */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.transaction_details_1')} </h3>
-                  {isEditingDisbursement ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium theme-text-primary mb-2">
-                          {t('extracted.status')} *
-                        </label>
-                        <select
-                          value={editStatus}
-                          onChange={(e) => {
-                            const newStatus = e.target.value;
-                            if (newStatus === 'completed') {
-                              // Validate that all required fields are filled for completed status
-                              const isValidForCompletion =
-                                editTransactionId.trim() &&
-                                editPaymentMethod;
-
-                              if (!isValidForCompletion) {
-                                alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
-                                return;
-                              }
-                            }
-                            setEditStatus(newStatus);
-                          }}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                        >
-                          <option value="pending">{t('extracted.pending')}</option>
-                          <option value="in_progress">{t('extracted.in_progress')}</option>
-                          <option value="completed">{t('extracted.completed')}</option>
-                          <option value="failed">{t('extracted.failed')}</option>
-                          <option value="cancelled">{t('extracted.cancelled')}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium theme-text-primary mb-2">
-                          {t('extracted.transaction_id')} {editStatus === 'completed' ? '*' : ''}
-                        </label>
-                        <input
-                          type="text"
-                          value={editTransactionId}
-                          onChange={(e) => setEditTransactionId(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                          placeholder={t('extracted.optional')}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium theme-text-primary mb-2">
-                          {t('extracted.utr_number')}
-                        </label>
-                        <input
-                          type="text"
-                          value={editUtrNumber}
-                          onChange={(e) => setEditUtrNumber(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                          placeholder={t('extracted.optional')}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium theme-text-primary mb-2">
-                          {t('extracted.payment_method')} {editStatus === 'completed' ? '*' : ''}
-                        </label>
-                        <select
-                          value={editPaymentMethod}
-                          onChange={(e) => setEditPaymentMethod(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                        >
-                          <option value="">{t('extracted.select_payment_method')}</option>
-                          <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
-                          <option value="upi">{t('extracted.upi')}</option>
-                          <option value="cash">{t('extracted.cash')}</option>
-                          <option value="cheque">{t('extracted.cheque')}</option>
-                        </select>
-                      </div>
-                    </div>
-                  ) : (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')} </p>
-                        <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p>
-                      </div>
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')} </p>
-                        <p className="font-medium theme-text-primary font-mono break-all">
-                          {selectedDisbursement.utrNumber || 'Not Available'}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')} </p>
-                        <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
-                      </div>
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')} </p>
-                        <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_fee')} </p>
-                        <p className="font-medium theme-text-primary">{formatCurrency(selectedDisbursement.transactionFee)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                        <p className="text-xs theme-text-muted mb-1">{t('extracted.net_amount')} </p>
-                        <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.netAmount)}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bank Details */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.bank_account_details')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.bank_account_number')} </p>
-                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.bankAccount}</p>
-                    </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.ifsc_code')} </p>
-                      <p className="font-medium theme-text-primary break-all">{selectedDisbursement.ifsc}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timeline and Status */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">{t('extracted.disbursement_status')} </p>
-                    {isEditingDisbursement ? (
-                      <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(editStatus)}`}>
-                        {(() => {
-                          const Icon = getStatusIcon(editStatus);
-                          return <Icon className="w-4 h-4" />;
-                        })()}
-                        {editStatus.replace('-', ' ').toUpperCase()}
-                      </span>
-                    ) : (
-                      <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
-                        {(() => {
-                          const Icon = getStatusIcon(selectedDisbursement.status);
-                          return <Icon className="w-4 h-4" />;
-                        })()}
-                        {selectedDisbursement.status.replace('-', ' ').toUpperCase()}
-                      </span>
-                    )}
-                    {selectedDisbursement.failureReason && !isEditingDisbursement && (
-                      <p className="text-sm theme-text-muted mt-2">
-                        <strong>{t('extracted.failure_reason')} </strong> {selectedDisbursement.failureReason}
-                      </p>
-                    )}
-                    {selectedDisbursement.retryCount > 0 && !isEditingDisbursement && (
-                      <p className="text-sm theme-text-muted mt-1">
-                        <strong>{t('extracted.retry_attempts')} </strong> {selectedDisbursement.retryCount}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">{t('extracted.timeline_1')} </p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="theme-text-primary">{t('extracted.initiated')} </span>
-                        <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
-                      </div>
-                      {selectedDisbursement.completedDate && (
-                        <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">{t('extracted.completed')} </span>
-                          <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Export All Card */}
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
                         </div>
-                      )}
-                      {selectedDisbursement.disbursementDate && (
-                        <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">{t('extracted.disbursed')} </span>
-                          <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full disbursements dataset in the chosen format.'}</p>
                         </div>
-                      )}
+                      </div>
+                      <p className="text-sm theme-text-muted">{allDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
                     </div>
                   </div>
                 </div>
 
-                {/* Officer Information */}
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.officer_information_1')} </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.initiated_by')} </p>
-                      <p className="font-medium theme-text-primary">{selectedDisbursement.initiatedBy}</p>
+                {/* Export Filtered Card */}
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{filteredDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
                     </div>
-                    <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
-                      <p className="text-xs theme-text-muted mb-1">{t('extracted.verified_by')} </p>
-                      <p className="font-medium theme-text-primary">
-                        {selectedDisbursement.verifiedBy || 'Pending Verification'}
-                      </p>
+                    <div className="flex flex-col items-end gap-2">
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
                     </div>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-                  {isEditingDisbursement ? (
-                    <>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleSaveEditDisbursement}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                        style={{
-                          backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                          color: theme === 'light' ? '#15803d' : '#86efac',
-                          border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
-                        }}
-                      >
-                        <Check className="w-5 h-5" />
-                        {t('extracted.save_changes') || 'Save Changes'}
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleCancelEdit}
-                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <X className="w-5 h-5" />
-                        {t('extracted.cancel') || 'Cancel'}
-                      </motion.button>
-                    </>
-                  ) : (
-                    <>
-                      {selectedDisbursement.status === 'failed' && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                          style={{
-                            backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                            color: theme === 'light' ? '#15803d' : '#86efac',
-                            border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
-                          }}
-                        >
-                          <RotateCcw className="w-5 h-5" />
-                          {t('extracted.retry_disbursement')}
-                        </motion.button>
-                      )}
-                      {selectedDisbursement.status === 'pending' && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                          style={{
-                            backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
-                            color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
-                            border: theme === 'light' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
-                          }}
-                        >
-                          <PlayCircle className="w-5 h-5" />
-                          {t('extracted.initiate_payment')}
-                        </motion.button>
-                      )}
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <Download className="w-5 h-5" />
-                        {t('extracted.download_receipt')}
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                        style={{
-                          backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
-                          color: theme === 'light' ? '#dc2626' : '#fca5a5',
-                          border: theme === 'light' ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
-                        }}
-                      >
-                        <X className="w-5 h-5" />
-                        {t('extracted.cancel_disbursement')}
-                      </motion.button>
-                    </>
-                  )}
                 </div>
               </div>
-               </div>
             </motion.div>
-          </>
-      
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
+                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Export All Card */}
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full disbursements dataset in the chosen format.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{allDisbursements.length} {t('extracted.disbursements') || 'disbursements'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Export Filtered Card */}
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{filteredDisbursements.length} {t('extracted.disbursements') || 'disbursements'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
