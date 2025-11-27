@@ -16,7 +16,9 @@ import {
    Scale,
   Banknote, CreditCard,
    CheckCircle, XCircle, PlayCircle,
-  RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText
+  RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText,
+  AlertTriangle,
+  Receipt
 } from 'lucide-react';
 
 // Disbursements state — generated from approved applications
@@ -712,7 +714,7 @@ const DisbursementsPage: React.FC = () => {
     setEditTransactionId(selectedDisbursement.transactionId || '');
     setEditUtrNumber(selectedDisbursement.utrNumber || '');
     setEditPaymentMethod(selectedDisbursement.paymentMethod || '');
-    setIsEditingDisbursement(true);
+    setEditingDisbursementId(selectedDisbursement.firestoreId || selectedDisbursement.id || null);
   };
 
   return (
@@ -2414,3 +2416,19 @@ const DisbursementsPage: React.FC = () => {
 };
 
 export default DisbursementsPage;
+function setEditPaymentMethod(arg0: any) {
+  throw new Error('Function not implemented.');
+}
+
+function setEditStatus(status: any) {
+  throw new Error('Function not implemented.');
+}
+
+function setEditTransactionId(arg0: any) {
+  throw new Error('Function not implemented.');
+}
+
+function setEditUtrNumber(arg0: any) {
+  throw new Error('Function not implemented.');
+}
+
