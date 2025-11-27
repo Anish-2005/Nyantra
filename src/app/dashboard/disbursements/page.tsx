@@ -45,11 +45,12 @@ const DisbursementsPage: React.FC = () => {
 
     // Search filter
     if (searchQuery) {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter(disbursement =>
-        disbursement.beneficiaryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disbursement.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disbursement.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disbursement.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
+        String(disbursement.beneficiaryName ?? '').toLowerCase().includes(q) ||
+        String(disbursement.id ?? '').toLowerCase().includes(q) ||
+        String(disbursement.district ?? '').toLowerCase().includes(q) ||
+        String(disbursement.transactionId ?? '').toLowerCase().includes(q)
       );
     }
 
@@ -96,13 +97,13 @@ const DisbursementsPage: React.FC = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      const aVal = a[sortBy as keyof typeof a];
-      const bVal = b[sortBy as keyof typeof b];
+      const aVal = String(a[sortBy as keyof typeof a] ?? '');
+      const bVal = String(b[sortBy as keyof typeof b] ?? '');
 
       if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
+        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
       } else {
-        return aVal < bVal ? 1 : -1;
+        return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
       }
     });
 
@@ -117,33 +118,48 @@ const DisbursementsPage: React.FC = () => {
   );
 
   // Statistics
-  const stats = useMemo(() => {
-    const totalAmount = disbursements.reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
-    const disbursedAmount = disbursements.reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
-    const pendingAmount = totalAmount - disbursedAmount;
-
-    return {
-      total: disbursements.length,
-      completed: disbursements.filter(d => d.status === 'completed').length,
-      pending: disbursements.filter(d => d.status === 'pending').length,
-      inProgress: disbursements.filter(d => d.status === 'in-progress').length,
-      failed: disbursements.filter(d => d.status === 'failed').length,
-      cancelled: disbursements.filter(d => d.status === 'cancelled').length,
-      totalAmount,
-      disbursedAmount,
-      pendingAmount,
-      successRate: disbursements.length ? Math.round((disbursements.filter(d => d.status === 'completed').length / disbursements.length) * 100) : 0
-    };
-  }, []);
-
-  // Monthly disbursement trend
+ 
+  // Monthly disbursement trend (last 6 months)
   const monthlyTrend = useMemo(() => {
+    const monthsCount = 6;
+    const now = new Date();
+    const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months: { label: string; year: number; month: number }[] = [];
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ label: MONTH_SHORT[d.getMonth()], year: d.getFullYear(), month: d.getMonth() });
+    }
+
+    const completed = Array(monthsCount).fill(0);
+    const failed = Array(monthsCount).fill(0);
+
+    disbursements.forEach(d => {
+      const s = d.initiatedDate || d.applicationDate || d.initiatedOn || null;
+      let dtLocal: Date | null = null;
+      try {
+        if (!s) return;
+        dtLocal = typeof s === 'string' ? new Date(s) : (s.toDate ? s.toDate() : new Date(s));
+        if (!dtLocal || isNaN(dtLocal.getTime())) return;
+      } catch (e) {
+        return;
+      }
+
+      for (let idx = 0; idx < months.length; idx++) {
+        const m = months[idx];
+        if (dtLocal.getFullYear() === m.year && dtLocal.getMonth() === m.month) {
+          if ((d.status || '').toLowerCase() === 'completed') completed[idx] += 1;
+          else if ((d.status || '').toLowerCase() === 'failed') failed[idx] += 1;
+          break;
+        }
+      }
+    });
+
     return {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      completed: [12, 18, 24, 16, 22, 28],
-      failed: [2, 3, 1, 4, 2, 1]
+      labels: months.map(m => m.label),
+      completed,
+      failed
     };
-  }, []);
+  }, [disbursements]);
 
   // Listen for approved applications and generate disbursements in realtime
   useEffect(() => {
@@ -807,7 +823,7 @@ const DisbursementsPage: React.FC = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Disbursements List */}
+            {/* Disbursements List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -815,7 +831,9 @@ const DisbursementsPage: React.FC = () => {
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
       >
         {viewMode === 'table' ? (
+          // TABLE VIEW
           isMobile ? (
+            // Mobile "table" layout (cards)
             <div className="p-3 space-y-3">
               {paginatedDisbursements.map((disbursement, idx) => {
                 const StatusIcon = getStatusIcon(disbursement.status);
@@ -834,15 +852,24 @@ const DisbursementsPage: React.FC = () => {
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                          {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
+                          {disbursement.beneficiaryName
+                            .split(' ')
+                            .map((n: string) => n[0])
+                            .join('')}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold theme-text-primary truncate">{disbursement.beneficiaryName}</p>
+                          <p className="text-sm font-semibold theme-text-primary truncate">
+                            {disbursement.beneficiaryName}
+                          </p>
                           <p className="text-xs theme-text-muted truncate">{disbursement.id}</p>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(disbursement.priority)}`}>
-                        {disbursement.priority.toUpperCase()}
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(
+                          disbursement.priority ?? ''
+                        )}`}
+                      >
+                        {(disbursement.priority ?? '-').toString().toUpperCase()}
                       </span>
                     </div>
 
@@ -850,13 +877,21 @@ const DisbursementsPage: React.FC = () => {
                     <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs theme-text-muted mb-0.5">{t('extracted.relief_amount')} </p>
-                          <p className="text-lg font-bold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
+                          <p className="text-xs theme-text-muted mb-0.5">
+                            {t('extracted.relief_amount')}{' '}
+                          </p>
+                          <p className="text-lg font-bold theme-text-primary">
+                            {formatCurrency(disbursement.reliefAmount)}
+                          </p>
                         </div>
                         {disbursement.status === 'completed' && (
                           <div className="text-right">
-                            <p className="text-xs theme-text-muted mb-0.5">{t('extracted.net_amount')} </p>
-                            <p className="text-sm font-semibold text-green-400">{formatCurrency(disbursement.netAmount)}</p>
+                            <p className="text-xs theme-text-muted mb-0.5">
+                              {t('extracted.net_amount')}{' '}
+                            </p>
+                            <p className="text-sm font-semibold text-green-400">
+                              {formatCurrency(disbursement.netAmount)}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -869,7 +904,9 @@ const DisbursementsPage: React.FC = () => {
                           <CreditCard className="w-3.5 h-3.5" />
                           Transaction ID
                         </span>
-                        <span className="theme-text-primary font-mono text-[10px]">{disbursement.transactionId}</span>
+                        <span className="theme-text-primary font-mono text-[10px]">
+                          {disbursement.transactionId}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
@@ -877,7 +914,9 @@ const DisbursementsPage: React.FC = () => {
                           <Scale className="w-3.5 h-3.5" />
                           Act Type
                         </span>
-                        <span className="theme-text-primary font-medium">{disbursement.actType}</span>
+                        <span className="theme-text-primary font-medium">
+                          {disbursement.actType}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
@@ -885,7 +924,9 @@ const DisbursementsPage: React.FC = () => {
                           <MapPin className="w-3.5 h-3.5" />
                           Location
                         </span>
-                        <span className="theme-text-primary font-medium">{disbursement.district}</span>
+                        <span className="theme-text-primary font-medium">
+                          {disbursement.district}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
@@ -904,16 +945,24 @@ const DisbursementsPage: React.FC = () => {
                             <Receipt className="w-3.5 h-3.5" />
                             UTR Number
                           </span>
-                          <span className="theme-text-primary font-mono text-[10px]">{disbursement.utrNumber}</span>
+                          <span className="theme-text-primary font-mono text-[10px]">
+                            {disbursement.utrNumber}
+                          </span>
                         </div>
                       )}
                     </div>
 
                     {/* Status Badge with Retry Info */}
                     <div className="mb-3 pb-3 border-b theme-border-glass">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(
+                          disbursement.status
+                        )}`}
+                      >
                         <StatusIcon className="w-3.5 h-3.5" />
-                        <span className="capitalize">{disbursement.status.replace('-', ' ')}</span>
+                        <span className="capitalize">
+                          {disbursement.status.replace('-', ' ')}
+                        </span>
                       </span>
                       {disbursement.retryCount > 0 && (
                         <p className="text-xs theme-text-muted mt-2 flex items-center gap-1">
@@ -924,7 +973,9 @@ const DisbursementsPage: React.FC = () => {
                       {disbursement.failureReason && (
                         <p className="text-xs text-red-400 mt-2 flex items-start gap-1">
                           <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span className="line-clamp-2">{disbursement.failureReason}</span>
+                          <span className="line-clamp-2">
+                            {disbursement.failureReason}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -932,7 +983,10 @@ const DisbursementsPage: React.FC = () => {
                     {/* Action Buttons */}
                     <div className="grid grid-cols-3 gap-2">
                       <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedDisbursement(disbursement); }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          setSelectedDisbursement(disbursement);
+                        }}
                         className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -940,12 +994,21 @@ const DisbursementsPage: React.FC = () => {
                       </button>
                       {disbursement.status === 'failed' ? (
                         <button
-                          onClick={(e) => { e.stopPropagation(); }}
+                          onClick={e => {
+                            e.stopPropagation();
+                          }}
                           className="px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                           style={{
-                            backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                            color: theme === 'light' ? '#15803d' : '#86efac',
-                            border: theme === 'light' ? '1px solid rgba(22, 163, 74, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+                            backgroundColor:
+                              theme === 'light'
+                                ? 'rgba(22, 163, 74, 0.15)'
+                                : 'rgba(34, 197, 94, 0.2)',
+                            color:
+                              theme === 'light' ? '#15803d' : '#86efac',
+                            border:
+                              theme === 'light'
+                                ? '1px solid rgba(22, 163, 74, 0.3)'
+                                : '1px solid rgba(34, 197, 94, 0.3)'
                           }}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
@@ -953,18 +1016,32 @@ const DisbursementsPage: React.FC = () => {
                         </button>
                       ) : (
                         <button
-                          onClick={(e) => { e.stopPropagation(); }}
+                          onClick={e => {
+                            e.stopPropagation();
+                          }}
                           className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all theme-text-primary"
-                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                          style={{
+                            background:
+                              theme === 'light'
+                                ? 'rgba(255, 255, 255, 0.95)'
+                                : undefined
+                          }}
                         >
                           <Download className="w-3.5 h-3.5" />
                           <span>{t('extracted.receipt')} </span>
                         </button>
                       )}
                       <button
-                        onClick={(e) => { e.stopPropagation(); }}
+                        onClick={e => {
+                          e.stopPropagation();
+                        }}
                         className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 active:scale-95 transition-all theme-text-primary"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                        style={{
+                          background:
+                            theme === 'light'
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : undefined
+                        }}
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
                         <span>{t('extracted.more')} </span>
@@ -974,19 +1051,41 @@ const DisbursementsPage: React.FC = () => {
                 );
               })}
             </div>
+          ) : filteredDisbursements.length === 0 ? (
+            // Desktop no-records state
+            <div className="p-6 text-center theme-text-muted">
+              {t('disbursements.no_records') || 'No disbursements found.'}
+            </div>
           ) : (
+            // Desktop table
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="theme-bg-glass border-b theme-border-glass">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.disbursement_id')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.transaction_id')} </th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.initiated_date')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.disbursement_id')}{' '}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.beneficiary')}{' '}
+                    </th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.transaction_id')}{' '}
+                    </th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.act_type')}{' '}
+                    </th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.amount')}{' '}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.status')}{' '}
+                    </th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.initiated_date')}{' '}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      {t('extracted.actions')}{' '}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -998,15 +1097,24 @@ const DisbursementsPage: React.FC = () => {
                       transition={{ delay: idx * 0.05 }}
                       className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{disbursement.id}</td>
+                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">
+                        {disbursement.id}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                            {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
+                            {disbursement.beneficiaryName
+                              .split(' ')
+                              .map((n: string) => n[0])
+                              .join('')}
                           </div>
                           <div>
-                            <p className="text-sm font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
-                            <p className="text-xs theme-text-muted">{disbursement.district}</p>
+                            <p className="text-sm font-medium theme-text-primary">
+                              {disbursement.beneficiaryName}
+                            </p>
+                            <p className="text-xs theme-text-muted">
+                              {disbursement.district}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -1014,13 +1122,23 @@ const DisbursementsPage: React.FC = () => {
                         {disbursement.transactionId}
                       </td>
                       <td className="hidden md:table-cell px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary border theme-border-glass" style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}>
+                        <span
+                          className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary border theme-border-glass"
+                          style={{
+                            background:
+                              theme === 'light'
+                                ? 'rgba(248, 250, 252, 0.8)'
+                                : undefined
+                          }}
+                        >
                           {disbursement.actType}
                         </span>
                       </td>
                       <td className="hidden lg:table-cell px-4 py-3">
                         <div>
-                          <p className="text-sm font-semibold theme-text-primary">{formatCurrency(disbursement.reliefAmount)}</p>
+                          <p className="text-sm font-semibold theme-text-primary">
+                            {formatCurrency(disbursement.reliefAmount)}
+                          </p>
                           {disbursement.status === 'completed' && (
                             <p className="text-xs theme-text-muted">
                               Net: {formatCurrency(disbursement.netAmount)}
@@ -1029,7 +1147,11 @@ const DisbursementsPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                            disbursement.status
+                          )}`}
+                        >
                           {(() => {
                             const Icon = getStatusIcon(disbursement.status);
                             return <Icon className="w-3 h-3" />;
@@ -1037,7 +1159,9 @@ const DisbursementsPage: React.FC = () => {
                           {disbursement.status.replace('-', ' ')}
                         </span>
                         {disbursement.retryCount > 0 && (
-                          <p className="text-xs theme-text-muted mt-1">{t('extracted.retries')}: {disbursement.retryCount}</p>
+                          <p className="text-xs theme-text-muted mt-1">
+                            {t('extracted.retries')}: {disbursement.retryCount}
+                          </p>
                         )}
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
@@ -1050,7 +1174,12 @@ const DisbursementsPage: React.FC = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setSelectedDisbursement(disbursement)}
                             className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                            style={{
+                              background:
+                                theme === 'light'
+                                  ? 'rgba(255, 255, 255, 0.95)'
+                                  : undefined
+                            }}
                           >
                             <Eye className="w-4 h-4" />
                           </motion.button>
@@ -1059,7 +1188,12 @@ const DisbursementsPage: React.FC = () => {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
-                              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                              style={{
+                                background:
+                                  theme === 'light'
+                                    ? 'rgba(255, 255, 255, 0.95)'
+                                    : undefined
+                              }}
                             >
                               <RotateCcw className="w-4 h-4" />
                             </motion.button>
@@ -1068,7 +1202,12 @@ const DisbursementsPage: React.FC = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                            style={{
+                              background:
+                                theme === 'light'
+                                  ? 'rgba(255, 255, 255, 0.95)'
+                                  : undefined
+                            }}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </motion.button>
@@ -1081,6 +1220,7 @@ const DisbursementsPage: React.FC = () => {
             </div>
           )
         ) : (
+          // CARDS VIEW
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {paginatedDisbursements.map((disbursement, idx) => (
               <motion.div
@@ -1095,14 +1235,25 @@ const DisbursementsPage: React.FC = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                      {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
+                      {disbursement.beneficiaryName
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .join('')}
                     </div>
                     <div>
-                      <p className="font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
-                      <p className="text-xs theme-text-muted">{disbursement.id}</p>
+                      <p className="font-medium theme-text-primary">
+                        {disbursement.beneficiaryName}
+                      </p>
+                      <p className="text-xs theme-text-muted">
+                        {disbursement.id}
+                      </p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(disbursement.priority)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
+                      disbursement.priority
+                    )}`}
+                  >
                     {disbursement.priority}
                   </span>
                 </div>
@@ -1110,7 +1261,9 @@ const DisbursementsPage: React.FC = () => {
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <CreditCard className="w-4 h-4" />
-                    <span className="font-mono">{disbursement.transactionId}</span>
+                    <span className="font-mono">
+                      {disbursement.transactionId}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <Scale className="w-4 h-4" />
@@ -1118,7 +1271,9 @@ const DisbursementsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <DollarSign className="w-4 h-4" />
-                    <span className="font-semibold">{formatCurrency(disbursement.reliefAmount)}</span>
+                    <span className="font-semibold">
+                      {formatCurrency(disbursement.reliefAmount)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <Calendar className="w-4 h-4" />
@@ -1127,7 +1282,11 @@ const DisbursementsPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(disbursement.status)}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                      disbursement.status
+                    )}`}
+                  >
                     {(() => {
                       const Icon = getStatusIcon(disbursement.status);
                       return <Icon className="w-3 h-3" />;
@@ -1135,11 +1294,35 @@ const DisbursementsPage: React.FC = () => {
                     {disbursement.status.replace('-', ' ')}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
+                    <button
+                      className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary"
+                      style={{
+                        background:
+                          theme === 'light'
+                            ? 'rgba(255, 255, 255, 0.95)'
+                            : undefined,
+                        border:
+                          theme === 'light'
+                            ? '1px solid rgba(226, 232, 240, 0.8)'
+                            : 'none'
+                      }}
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
                     {disbursement.status === 'failed' && (
-                      <button className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary" style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined, border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : 'none' }}>
+                      <button
+                        className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary"
+                        style={{
+                          background:
+                            theme === 'light'
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : undefined,
+                          border:
+                            theme === 'light'
+                              ? '1px solid rgba(226, 232, 240, 0.8)'
+                              : 'none'
+                        }}
+                      >
                         <RotateCcw className="w-4 h-4" />
                       </button>
                     )}
@@ -1149,6 +1332,106 @@ const DisbursementsPage: React.FC = () => {
             ))}
           </div>
         )}
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
+          <p className="text-sm theme-text-muted">
+            {t('extracted.showing')}{' '}
+            {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')}{' '}
+            {Math.min(currentPage * itemsPerPage, filteredDisbursements.length)}{' '}
+            {t('extracted.of')} {filteredDisbursements.length}
+          </p>
+          <div className="flex items-center gap-2">
+            {isMobile ? (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p: number) => p - 1)}
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{
+                    background:
+                      theme === 'light'
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : undefined
+                  }}
+                >
+                  {t('extracted.prev')}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p: number) => p + 1)}
+                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{
+                    background:
+                      theme === 'light'
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : undefined
+                  }}
+                >
+                  {t('extracted.next')}
+                </motion.button>
+              </>
+            ) : (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p: number) => p - 1)}
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{
+                    background:
+                      theme === 'light'
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : undefined
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </motion.button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1.5 rounded-lg ${
+                      currentPage === i + 1
+                        ? 'accent-gradient text-white'
+                        : 'theme-bg-card theme-border-glass border theme-text-primary'
+                    }`}
+                    style={
+                      currentPage !== i + 1 && theme === 'light'
+                        ? { background: 'rgba(255, 255, 255, 0.95)' }
+                        : undefined
+                    }
+                  >
+                    {i + 1}
+                  </motion.button>
+                ))}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p: number) => p + 1)}
+                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  style={{
+                    background:
+                      theme === 'light'
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : undefined
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
@@ -1217,7 +1500,6 @@ const DisbursementsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </motion.div>
 
       {/* Disbursement Detail Modal */}
       <AnimatePresence>
