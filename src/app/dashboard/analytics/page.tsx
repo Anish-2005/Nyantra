@@ -34,7 +34,7 @@ const AnalyticsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedActs, setSelectedActs] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'applications' | 'disbursements' | 'successRate'>('applications');
+  const [sortBy, setSortBy] = useState<'applications' | 'disbursements' | 'successRate' | 'district'>('applications');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
