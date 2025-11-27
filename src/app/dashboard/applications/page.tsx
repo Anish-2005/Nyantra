@@ -8,7 +8,7 @@ import type * as THREE from 'three';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timestamp, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import {
     Search, Filter, Download, Plus, Eye, Edit, ChevronLeft, ChevronRight, X, Check,
     Clock, AlertCircle, FileText, User, Phone, MapPin,
@@ -26,11 +26,14 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         district: '',
         state: '',
         actType: '',
+        beneficiaryId: '',
         incidentDate: '',
         amount: '',
         priority: 'medium',
         assignedOfficer: ''
     });
+    const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
+    const [beneficiaryAutoFilled, setBeneficiaryAutoFilled] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +41,19 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         setIsSubmitting(true);
 
         try {
+            // Ensure beneficiary id exists in Firestore before creating/updating
+            if (!formData.beneficiaryId) {
+                alert(t('applications.beneficiaryIdRequired') || 'Beneficiary ID is required and must exist in records.');
+                setIsSubmitting(false);
+                return;
+            }
+            const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
+            const beneficiarySnap = await getDoc(beneficiaryRef);
+            if (!beneficiarySnap.exists()) {
+                alert(t('applications.beneficiaryNotFound') || 'Beneficiary ID not found in database.');
+                setIsSubmitting(false);
+                return;
+            }
             if (initialData && initialData.id) {
                 // Editing existing application
                 const ref = doc(db, 'applications', initialData.id);
@@ -48,6 +64,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     district: formData.district,
                     state: formData.state,
                     actType: formData.actType,
+                    beneficiaryId: formData.beneficiaryId,
                     incidentDate: formData.incidentDate,
                     // keep original applicationDate if present
                     lastUpdate: Timestamp.fromDate(new Date()),
@@ -72,6 +89,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     district: formData.district,
                     state: formData.state,
                     actType: formData.actType,
+                    beneficiaryId: formData.beneficiaryId,
                     incidentDate: formData.incidentDate,
                     applicationDate: Timestamp.fromDate(new Date()),
                     status: 'pending',
@@ -98,6 +116,10 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        if (field === 'beneficiaryId') {
+            // reset validation state while user types
+            setBeneficiaryExists(null);
+        }
     };
 
     // Prefill form when editing
@@ -110,11 +132,78 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 district: initialData.district || '',
                 state: initialData.state || '',
                 actType: initialData.actType || '',
+                beneficiaryId: (initialData as any).beneficiaryId || '',
                 incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
                 amount: String(initialData.amount || ''),
                 priority: initialData.priority || 'medium',
                 assignedOfficer: initialData.assignedOfficer || ''
             });
+            // if editing and beneficiaryId present, set and validate later
+            if ((initialData as any).beneficiaryId) {
+                setFormData(prev => ({ ...prev, beneficiaryId: (initialData as any).beneficiaryId }));
+                // optimistic mark - we'll validate on blur or explicitly
+                setBeneficiaryExists(true);
+            }
+        }
+    }, [initialData]);
+
+    // check beneficiary existence helper
+    const checkBeneficiaryExists = async (id: string) => {
+        if (!id) { setBeneficiaryExists(null); return false; }
+        try {
+            const ref = doc(db, 'beneficiaries', id);
+            const snap = await getDoc(ref);
+            const exists = snap.exists();
+            setBeneficiaryExists(exists);
+            if (exists) {
+                const data = snap.data() as any || {};
+                // Overwrite form fields with beneficiary data (even if fields already have values)
+                const normalizeDate = (val: any) => {
+                    if (!val) return undefined;
+                    if (val?.toDate && typeof val.toDate === 'function') {
+                        try { return val.toDate().toISOString().split('T')[0]; } catch { }
+                    }
+                    if (typeof val === 'string') {
+                        // try to parse and return yyyy-mm-dd
+                        const d = new Date(val);
+                        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+                        return val.slice(0, 10);
+                    }
+                    if (typeof val === 'number') {
+                        try { return new Date(val).toISOString().split('T')[0]; } catch {}
+                    }
+                    return undefined;
+                };
+
+                setFormData(prev => ({
+                    ...prev,
+                    applicantName: data.name ?? data.fullName ?? data.applicantName ?? prev.applicantName ?? '',
+                    aadhaar: data.aadhaar ?? data.aadhar ?? data.aadharNumber ?? data.aadhaarNumber ?? data.aadhar_no ?? prev.aadhaar ?? '',
+                    phone: data.phone ?? data.mobile ?? data.phoneNumber ?? prev.phone ?? '',
+                    district: data.district ?? (data.address && data.address.district) ?? prev.district ?? '',
+                    state: data.state ?? (data.address && data.address.state) ?? prev.state ?? '',
+                    actType: data.actType ?? data.act ?? data.caseType ?? prev.actType ?? '',
+                    incidentDate: normalizeDate(data.incidentDate) ?? normalizeDate(data.incident_date) ?? normalizeDate(data.dateOfIncident) ?? prev.incidentDate ?? '',
+                    amount: (data.amount ?? data.reliefAmount ?? data.requestedAmount ?? data.request_amount ?? prev.amount) ? String(data.amount ?? data.reliefAmount ?? data.requestedAmount ?? data.request_amount ?? prev.amount ?? '') : prev.amount ?? '',
+                    priority: data.priority ?? prev.priority ?? ''
+                }));
+                // show a quick auto-filled indicator
+                setBeneficiaryAutoFilled(true);
+                window.setTimeout(() => setBeneficiaryAutoFilled(false), 3500);
+            }
+            return exists;
+        } catch (err) {
+            console.error('Error checking beneficiary', err);
+            setBeneficiaryExists(false);
+            return false;
+        }
+    };
+
+    // If editing an existing application that already has a beneficiaryId, fetch its details to prefill
+    useEffect(() => {
+        if (initialData && (initialData as any).beneficiaryId) {
+            // validate and attempt to auto-fill
+            checkBeneficiaryExists((initialData as any).beneficiaryId);
         }
     }, [initialData]);
 
@@ -156,6 +245,22 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                             placeholder={t('applications.enter12DigitAadhaarNumber')}
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId') || 'Beneficiary ID'} *</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                              type="text"
+                              required
+                              value={formData.beneficiaryId}
+                              onChange={(e) => handleInputChange('beneficiaryId', e.target.value)}
+                              onBlur={(e) => checkBeneficiaryExists(e.currentTarget.value)}
+                              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                              placeholder={t('applications.enterBeneficiaryId') || 'Enter beneficiary ID'}
+                          />
+                          {beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound') || 'Found'}</span>}
+                          {beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound') || 'Not found'}</span>}
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
@@ -261,7 +366,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 </motion.button>
                 <motion.button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || beneficiaryExists !== true}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
@@ -292,6 +397,7 @@ interface Application {
     district: string;
     state: string;
     actType: string;
+    beneficiaryId?: string;
     incidentDate: string;
     applicationDate: string;
     status: string;
@@ -505,10 +611,14 @@ const ApplicationsPage = () => {
             filtered = filtered.filter(app => app.priority === priorityFilter);
         }
 
-        // Sort
+        // Sort (coerce undefined/null to '' and compare as strings to avoid TS errors)
         filtered.sort((a, b) => {
-            const aVal = a[sortBy as keyof Application];
-            const bVal = b[sortBy as keyof Application];
+            const rawA = a[sortBy as keyof Application];
+            const rawB = b[sortBy as keyof Application];
+            const aVal = rawA == null ? '' : String(rawA);
+            const bVal = rawB == null ? '' : String(rawB);
+
+            if (aVal === bVal) return 0;
 
             if (sortOrder === 'asc') {
                 return aVal > bVal ? 1 : -1;

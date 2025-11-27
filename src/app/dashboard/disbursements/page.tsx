@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import type * as THREE from 'three';
 import {
   Search, Filter, Download, Plus, Eye, ChevronLeft, ChevronRight, X,
@@ -15,256 +17,16 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-// Mock data for disbursements
-const mockDisbursements = [
-  {
-    id: 'DIS-2024-001234',
-    beneficiaryId: 'BEN-2024-001234',
-    beneficiaryName: 'Rajesh Kumar',
-    aadhaarNumber: '****-****-1234',
-    phone: '+91 98765-43210',
-    district: 'Patna',
-    state: 'Bihar',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-001',
-    reliefAmount: 40000,
-    disbursedAmount: 40000,
-    transactionFee: 50,
-    netAmount: 39950,
-    status: 'completed',
-    transactionId: 'TXN2024001234',
-    bankAccount: 'XXXXXX1234',
-    ifsc: 'SBIN0000123',
-    disbursementDate: '2024-03-15',
-    initiatedDate: '2024-03-10',
-    completedDate: '2024-03-15',
-    initiatedBy: 'Officer Sharma',
-    verifiedBy: 'Officer Verma',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: 'UTR202400123456',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'high',
-    documents: 4
-  },
-  {
-    id: 'DIS-2024-001235',
-    beneficiaryId: 'BEN-2024-001235',
-    beneficiaryName: 'Priya Singh',
-    aadhaarNumber: '****-****-5678',
-    phone: '+91 98765-43211',
-    district: 'Lucknow',
-    state: 'Uttar Pradesh',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-002',
-    reliefAmount: 35000,
-    disbursedAmount: 35000,
-    transactionFee: 50,
-    netAmount: 34950,
-    status: 'completed',
-    transactionId: 'TXN2024001235',
-    bankAccount: 'XXXXXX5678',
-    ifsc: 'SBIN0000567',
-    disbursementDate: '2024-03-14',
-    initiatedDate: '2024-03-08',
-    completedDate: '2024-03-14',
-    initiatedBy: 'Officer Verma',
-    verifiedBy: 'Officer Kapoor',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: 'UTR202400123457',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'medium',
-    documents: 5
-  },
-  {
-    id: 'DIS-2024-001236',
-    beneficiaryId: 'BEN-2024-001236',
-    beneficiaryName: 'Amit Verma',
-    aadhaarNumber: '****-****-9012',
-    phone: '+91 98765-43212',
-    district: 'Jaipur',
-    state: 'Rajasthan',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-003',
-    reliefAmount: 45000,
-    disbursedAmount: 45000,
-    transactionFee: 50,
-    netAmount: 44950,
-    status: 'completed',
-    transactionId: 'TXN2024001236',
-    bankAccount: 'XXXXXX9012',
-    ifsc: 'SBIN0000901',
-    disbursementDate: '2024-03-10',
-    initiatedDate: '2024-03-05',
-    completedDate: '2024-03-10',
-    initiatedBy: 'Officer Kapoor',
-    verifiedBy: 'Officer Gupta',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: 'UTR202400123458',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'medium',
-    documents: 6
-  },
-  {
-    id: 'DIS-2024-001237',
-    beneficiaryId: 'BEN-2024-001237',
-    beneficiaryName: 'Sunita Devi',
-    aadhaarNumber: '****-****-3456',
-    phone: '+91 98765-43213',
-    district: 'Bhopal',
-    state: 'Madhya Pradesh',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-004',
-    reliefAmount: 38000,
-    disbursedAmount: 0,
-    transactionFee: 50,
-    netAmount: 0,
-    status: 'pending',
-    transactionId: 'TXN2024001237',
-    bankAccount: 'XXXXXX3456',
-    ifsc: 'SBIN0000345',
-    disbursementDate: '',
-    initiatedDate: '2024-03-13',
-    completedDate: '',
-    initiatedBy: 'Officer Gupta',
-    verifiedBy: '',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: '',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'high',
-    documents: 3
-  },
-  {
-    id: 'DIS-2024-001238',
-    beneficiaryId: 'BEN-2024-001238',
-    beneficiaryName: 'Ramesh Yadav',
-    aadhaarNumber: '****-****-7890',
-    phone: '+91 98765-43214',
-    district: 'Ranchi',
-    state: 'Jharkhand',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-005',
-    reliefAmount: 42000,
-    disbursedAmount: 0,
-    transactionFee: 50,
-    netAmount: 0,
-    status: 'failed',
-    transactionId: 'TXN2024001238',
-    bankAccount: 'XXXXXX7890',
-    ifsc: 'SBIN0000789',
-    disbursementDate: '',
-    initiatedDate: '2024-03-12',
-    completedDate: '',
-    initiatedBy: 'Officer Mishra',
-    verifiedBy: '',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: '',
-    failureReason: 'Incorrect bank account details',
-    retryCount: 2,
-    priority: 'low',
-    documents: 4
-  },
-  {
-    id: 'DIS-2024-001239',
-    beneficiaryId: 'BEN-2024-001239',
-    beneficiaryName: 'Anita Sharma',
-    aadhaarNumber: '****-****-2468',
-    phone: '+91 98765-43215',
-    district: 'Chandigarh',
-    state: 'Punjab',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-006',
-    reliefAmount: 32000,
-    disbursedAmount: 32000,
-    transactionFee: 50,
-    netAmount: 31950,
-    status: 'in-progress',
-    transactionId: 'TXN2024001239',
-    bankAccount: 'XXXXXX2468',
-    ifsc: 'SBIN0000246',
-    disbursementDate: '',
-    initiatedDate: '2024-03-16',
-    completedDate: '',
-    initiatedBy: 'Officer Singh',
-    verifiedBy: 'Officer Kaur',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: 'UTR202400123459',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'medium',
-    documents: 5
-  },
-  {
-    id: 'DIS-2024-001240',
-    beneficiaryId: 'BEN-2024-001240',
-    beneficiaryName: 'Mohan Das',
-    aadhaarNumber: '****-****-1357',
-    phone: '+91 98765-43216',
-    district: 'Ahmedabad',
-    state: 'Gujarat',
-    actType: 'PCR Act',
-    caseNumber: 'PCR-2024-007',
-    reliefAmount: 48000,
-    disbursedAmount: 48000,
-    transactionFee: 50,
-    netAmount: 47950,
-    status: 'completed',
-    transactionId: 'TXN2024001240',
-    bankAccount: 'XXXXXX1357',
-    ifsc: 'SBIN0000135',
-    disbursementDate: '2024-03-08',
-    initiatedDate: '2024-03-03',
-    completedDate: '2024-03-08',
-    initiatedBy: 'Officer Patel',
-    verifiedBy: 'Officer Joshi',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: 'UTR202400123460',
-    failureReason: '',
-    retryCount: 0,
-    priority: 'high',
-    documents: 6
-  },
-  {
-    id: 'DIS-2024-001241',
-    beneficiaryId: 'BEN-2024-001241',
-    beneficiaryName: 'Kavita Nair',
-    aadhaarNumber: '****-****-9753',
-    phone: '+91 98765-43217',
-    district: 'Thiruvananthapuram',
-    state: 'Kerala',
-    actType: 'PoA Act',
-    caseNumber: 'POA-2024-008',
-    reliefAmount: 36000,
-    disbursedAmount: 0,
-    transactionFee: 50,
-    netAmount: 0,
-    status: 'cancelled',
-    transactionId: 'TXN2024001241',
-    bankAccount: 'XXXXXX9753',
-    ifsc: 'SBIN0000975',
-    disbursementDate: '',
-    initiatedDate: '2024-03-11',
-    completedDate: '',
-    initiatedBy: 'Officer Nair',
-    verifiedBy: '',
-    paymentMethod: 'Direct Transfer',
-    utrNumber: '',
-    failureReason: 'Application withdrawn by beneficiary',
-    retryCount: 0,
-    priority: 'medium',
-    documents: 4
-  }
-];
+// Disbursements state — generated from approved applications
 
-const DisbursementsPage = () => {
+const DisbursementsPage: React.FC = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
+  const [disbursements, setDisbursements] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
+  const [showExportModal, setShowExportModal] = useState(false);
   const [dateFilter, setDateFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [sortBy] = useState('initiatedDate');
@@ -272,14 +34,14 @@ const DisbursementsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedDisbursement, setSelectedDisbursement] = useState<typeof mockDisbursements[0] | null>(null);
+  const [selectedDisbursement, setSelectedDisbursement] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Filter and sort disbursements
   const filteredDisbursements = useMemo(() => {
-    let filtered = [...mockDisbursements];
+    let filtered = [...disbursements];
 
     // Search filter
     if (searchQuery) {
@@ -356,21 +118,21 @@ const DisbursementsPage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const totalAmount = mockDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
-    const disbursedAmount = mockDisbursements.reduce((sum, d) => sum + d.disbursedAmount, 0);
+    const totalAmount = disbursements.reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
+    const disbursedAmount = disbursements.reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
     const pendingAmount = totalAmount - disbursedAmount;
 
     return {
-      total: mockDisbursements.length,
-      completed: mockDisbursements.filter(d => d.status === 'completed').length,
-      pending: mockDisbursements.filter(d => d.status === 'pending').length,
-      inProgress: mockDisbursements.filter(d => d.status === 'in-progress').length,
-      failed: mockDisbursements.filter(d => d.status === 'failed').length,
-      cancelled: mockDisbursements.filter(d => d.status === 'cancelled').length,
+      total: disbursements.length,
+      completed: disbursements.filter(d => d.status === 'completed').length,
+      pending: disbursements.filter(d => d.status === 'pending').length,
+      inProgress: disbursements.filter(d => d.status === 'in-progress').length,
+      failed: disbursements.filter(d => d.status === 'failed').length,
+      cancelled: disbursements.filter(d => d.status === 'cancelled').length,
       totalAmount,
       disbursedAmount,
       pendingAmount,
-      successRate: Math.round((mockDisbursements.filter(d => d.status === 'completed').length / mockDisbursements.length) * 100)
+      successRate: disbursements.length ? Math.round((disbursements.filter(d => d.status === 'completed').length / disbursements.length) * 100) : 0
     };
   }, []);
 
@@ -381,6 +143,51 @@ const DisbursementsPage = () => {
       completed: [12, 18, 24, 16, 22, 28],
       failed: [2, 3, 1, 4, 2, 1]
     };
+  }, []);
+
+  // Listen for approved applications and generate disbursements in realtime
+  useEffect(() => {
+    const q = query(collection(db, 'applications'), where('status', '==', 'approved'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      try {
+        const now = Date.now();
+        const items = snap.docs.map((d, i) => {
+          const data = d.data() as any;
+          // Generate a DIS id using timestamp + index to ensure uniqueness
+          const disId = `DIS${now}${i}`;
+          const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
+          return {
+            id: disId,
+            beneficiaryId: data.beneficiaryId || '',
+            beneficiaryName: data.applicantName || data.name || '',
+            district: data.district || '',
+            state: data.state || '',
+            transactionId: data.transactionId || null,
+            utrNumber: data.utrNumber || null,
+            paymentMethod: data.paymentMethod || null,
+            reliefAmount: data.amount || 0,
+            transactionFee: 0,
+            netAmount: data.amount || 0,
+            disbursedAmount: data.disbursedAmount || 0,
+            status: data.disbursementStatus || 'pending',
+            initiatedDate,
+            actType: data.actType || data.caseType || 'relief',
+            retryCount: data.retryCount || 0,
+            failureReason: data.failureReason || null,
+            initiatedBy: data.assignedOfficer || null,
+            verifiedBy: data.verifiedBy || null,
+            applicationId: d.id
+          };
+        });
+        setDisbursements(items);
+      } catch (err) {
+        console.error('Error processing snapshot for approved applications', err);
+      }
+    }, (err) => {
+      console.error('onSnapshot error for approved applications:', err);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Detect small screens and adjust UI defaults for better mobile UX
@@ -578,6 +385,24 @@ const DisbursementsPage = () => {
     }
   };
 
+  // Export CSV helper
+  const exportDisbursementsData = (items: any[]) => {
+    const headers = ['Disbursement ID','Beneficiary ID','Beneficiary Name','Aadhaar','Phone','District','State','Act Type','Case Number','Relief Amount','Disbursed Amount','Net Amount','Status','Transaction ID','Initiated Date','Disbursement Date'];
+    const rows = items.map(d => [
+      d.id, d.beneficiaryId, d.beneficiaryName, d.aadhaarNumber, d.phone, d.district, d.state, d.actType, d.caseNumber, d.reliefAmount, d.disbursedAmount, d.netAmount, d.status, d.transactionId, d.initiatedDate, d.disbursementDate
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(f => `"${String(f ?? '')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `disbursements_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
  
 
   return (
@@ -649,26 +474,12 @@ const DisbursementsPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
-        {/* Animated gradient background */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl"
-        />
+        {/* Decorative gradient background (static) */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl opacity-40" />
         
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <motion.div
-              className="w-3 h-3 rounded-full bg-green-500"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <div className="w-3 h-3 rounded-full bg-green-500" />
             <span className="text-sm font-medium theme-text-secondary">
               {t('extracted.live_tracking')} • {filteredDisbursements.length} {t('extracted.active_disbursements')}
             </span>
@@ -679,13 +490,13 @@ const DisbursementsPage = () => {
           <p className="theme-text-secondary max-w-2xl">{t('extracted.realtime_disbursement_tracking_description')}</p>
         </div>
         
-        <div className="relative z-10 flex items-center gap-3">
+          <div className="relative z-10 flex items-center gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            onClick={() => window.print()}
+            onClick={() => setShowExportModal(true)}
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t('extracted.export_data')}</span>
@@ -716,36 +527,22 @@ const DisbursementsPage = () => {
           { labelKey: 'extracted.failed', value: stats.failed, color: 'from-red-500 to-rose-500', icon: XCircle, statusColor: 'bg-red-500' },
           { labelKey: 'extracted.cancelled', value: stats.cancelled, color: 'from-gray-500 to-slate-500', icon: X, statusColor: 'bg-gray-500' },
           { labelKey: 'extracted.success_rate', value: `${stats.successRate}%`, color: 'from-teal-500 to-cyan-500', icon: TrendingUp, statusColor: 'bg-teal-500' },
-          { labelKey: 'extracted.retry_needed', value: mockDisbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw, statusColor: 'bg-orange-500' }
+          { labelKey: 'extracted.retry_needed', value: disbursements.filter(d => d.retryCount > 0).length, color: 'from-orange-500 to-red-500', icon: RotateCcw, statusColor: 'bg-orange-500' }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
             whileHover={{ y: -4 }}
             className="relative theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl overflow-hidden group"
           >
-            {/* Status indicator dot */}
-            <motion.div
-              className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.6, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-            />
+            {/* Status indicator dot (static) */}
+            <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`} />
             
             {/* Animated icon with ripple effect */}
             <div className="relative mb-3">
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
                 <stat.icon className="w-5 h-5 text-white relative z-10" />
               </div>
-              <motion.div
-                className="absolute inset-0 rounded-lg bg-white"
-                animate={{
-                  scale: [1, 1.5],
-                  opacity: [0.6, 0]
-                }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.15 }}
-              />
+              {/* Ripple overlay removed for static UI */}
             </div>
             
             <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
@@ -812,12 +609,12 @@ const DisbursementsPage = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.pcr_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {mockDisbursements.filter(d => d.actType === 'PCR Act').length}
+                {disbursements.filter(d => d.actType === 'PCR Act').length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PCR Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} {t('extracted.disbursed')}
+            {formatCurrency(disbursements.filter(d => d.actType === 'PCR Act').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
 
@@ -832,12 +629,12 @@ const DisbursementsPage = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.poa_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {mockDisbursements.filter(d => d.actType === 'PoA Act').length}
+                {disbursements.filter(d => d.actType === 'PoA Act').length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(mockDisbursements.filter(d => d.actType === 'PoA Act').reduce((sum, d) => sum + d.disbursedAmount, 0))} {t('extracted.disbursed')}
+            {formatCurrency(disbursements.filter(d => d.actType === 'PoA Act').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
       </motion.div>
@@ -1037,7 +834,7 @@ const DisbursementsPage = () => {
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                          {disbursement.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                          {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold theme-text-primary truncate">{disbursement.beneficiaryName}</p>
@@ -1205,7 +1002,7 @@ const DisbursementsPage = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                            {disbursement.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                            {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
                           </div>
                           <div>
                             <p className="text-sm font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
@@ -1298,7 +1095,7 @@ const DisbursementsPage = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                      {disbursement.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                      {disbursement.beneficiaryName.split(' ').map((n: string) => n[0]).join('')}
                     </div>
                     <div>
                       <p className="font-medium theme-text-primary">{disbursement.beneficiaryName}</p>
@@ -1425,23 +1222,25 @@ const DisbursementsPage = () => {
       {/* Disbursement Detail Modal */}
       <AnimatePresence>
         {selectedDisbursement && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedDisbursement(null)}
-          >
+          <>
+            {/* Overlay for desktop when drawer open */}
+            {!isMobile && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black z-40" onClick={() => setSelectedDisbursement(null)} />
+            )}
+
+            {/* Drawer on desktop, centered modal on mobile */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={isMobile ? { opacity: 0 } : { x: 300 }}
+              animate={isMobile ? { opacity: 1 } : { x: 0 }}
+              exit={isMobile ? { opacity: 0 } : { x: 300 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className={`${isMobile
-                  ? 'theme-bg-card theme-border-glass border rounded-xl w-full h-full max-h-none overflow-y-auto'
-                  : 'theme-bg-card theme-border-glass border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'
-                }`}
+              className={isMobile
+                ? 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+                : 'fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[520px] lg:w-[720px] overflow-y-auto'
+              }
             >
+              <div className={isMobile ? 'theme-bg-card theme-border-glass border rounded-2xl w-full max-h-[90vh] overflow-y-auto' : 'h-full theme-bg-card theme-border-glass border-l shadow-2xl'}>
               {/* --- MODIFIED HEADER --- */}
               <div className="sticky top-0 theme-bg-nav backdrop-blur-xl border-b theme-border-glass p-4 sm:p-6 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0"> {/* -> Allows text to truncate */}
@@ -1662,8 +1461,9 @@ const DisbursementsPage = () => {
                   </motion.button>
                 </div>
               </div>
+               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
