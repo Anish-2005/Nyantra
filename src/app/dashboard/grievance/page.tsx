@@ -969,7 +969,7 @@ const GrievancePage = () => {
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
                   <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
-                    {selectedGrievance.priority ? `${selectedGrievance.priority.toUpperCase()} PRIORITY` : '-'}
+                    {selectedGrievance.priority ? `${selectedGrievance.priority.toUpperCase()} ${t('extracted.priority_tag')}` : '-'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 flex-wrap">
@@ -977,7 +977,7 @@ const GrievancePage = () => {
                   <span className="text-sm theme-text-muted">•</span>
                   <p className="theme-text-muted">{selectedGrievance.actType}</p>
                   <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted">Created: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleDateString() : '—'}</p>
+                  <p className="theme-text-muted">{t('extracted.created')}: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleDateString() : '—'}</p>
                 </div>
               </div>
             </div>
@@ -991,11 +991,11 @@ const GrievancePage = () => {
           <div className="border-b theme-border-glass mb-4">
             <div className="flex overflow-x-auto">
               {[
-                { id: 'overview', label: 'Overview', icon: Eye },
-                { id: 'communication', label: 'Communication', icon: MessageCircle },
-                { id: 'timeline', label: 'Timeline', icon: Clock },
-                { id: 'documents', label: 'Documents', icon: FileText },
-                { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+                { id: 'overview', labelKey: 'extracted.tab_overview', icon: Eye },
+                { id: 'communication', labelKey: 'extracted.tab_communication', icon: MessageCircle },
+                { id: 'timeline', labelKey: 'extracted.tab_timeline', icon: Clock },
+                { id: 'documents', labelKey: 'extracted.tab_documents', icon: FileText },
+                { id: 'analytics', labelKey: 'extracted.tab_analytics', icon: BarChart3 }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1007,7 +1007,7 @@ const GrievancePage = () => {
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
-                  {tab.label}
+                  {t((tab as any).labelKey)}
                 </button>
               ))}
             </div>
@@ -1024,51 +1024,51 @@ const GrievancePage = () => {
                   </div>
 
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Contact</h4>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.contact')}</h4>
                     <p className="text-sm theme-text-muted">{selectedGrievance.phone || '-'}</p>
                     <p className="text-sm theme-text-muted">{selectedGrievance.email || '-'}</p>
                   </div>
 
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Location</h4>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.location')}</h4>
                     <p className="text-sm theme-text-muted">{selectedGrievance.district || '-'}, {selectedGrievance.state || '-'}</p>
-                    <p className="text-xs theme-text-muted mt-1">Act: {selectedGrievance.actType || '-'}</p>
+                    <p className="text-xs theme-text-muted mt-1">{t('extracted.act')}: {selectedGrievance.actType || '-'}</p>
                   </div>
 
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Identification</h4>
-                    <p className="text-sm theme-text-muted">Application ID: {selectedGrievance.applicationId || '—'}</p>
-                    <p className="text-sm theme-text-muted">Grievance ID: {selectedGrievance.id}</p>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.identification')}</h4>
+                    <p className="text-sm theme-text-muted">{t('extracted.application_id')}: {selectedGrievance.applicationId || '—'}</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.grievance_id')}: {selectedGrievance.id}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Case Details</h4>
-                    <p className="text-sm theme-text-muted"><strong>Category:</strong> {selectedGrievance.category || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>Sub-category:</strong> {selectedGrievance.subCategory || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>Priority:</strong> {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>Status:</strong> {selectedGrievance.status || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>Assigned To:</strong> {selectedGrievance.assignedTo || '-'}</p>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.case_details')}</h4>
+                    <p className="text-sm theme-text-muted"><strong>{t('extracted.category')}:</strong> {selectedGrievance.category || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>{t('extracted.sub_category')}:</strong> {selectedGrievance.subCategory || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>{t('extracted.priority')}:</strong> {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>{t('extracted.status')}:</strong> {selectedGrievance.status || '-'}</p>
+                    <p className="text-sm theme-text-muted"><strong>{t('extracted.assigned_to')}:</strong> {selectedGrievance.assignedTo || '-'}</p>
                   </div>
 
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Timestamps</h4>
-                    <p className="text-sm theme-text-muted">Created: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">Last updated: {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">Expected resolution: {selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">Resolution date: {selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '—'}</p>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.timestamps')}</h4>
+                    <p className="text-sm theme-text-muted">{t('extracted.created')}: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.last_updated')}: {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.expected_resolution')}: {selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '—'}</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.resolution_date')}: {selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '—'}</p>
                   </div>
 
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">Attachments & Communication</h4>
-                    <p className="text-sm theme-text-muted">Attachments: {selectedGrievance.attachments ?? 0}</p>
-                    <p className="text-sm theme-text-muted">Messages: {selectedGrievance.communication?.length ?? 0}</p>
+                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.attachments_communication')}</h4>
+                    <p className="text-sm theme-text-muted">{t('extracted.attachments_label')}: {selectedGrievance.attachments ?? 0}</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.messages_label')}: {selectedGrievance.communication?.length ?? 0}</p>
                     {(selectedGrievance.communication?.length ?? 0) > 0 && (
                       <div className="mt-2 space-y-1">
                         {(selectedGrievance.communication ?? []).slice(0,3).map((c, i) => (
                           <div key={i} className="text-xs theme-text-muted">
-                            <strong>{c.user || 'User'}:</strong> {String(c.text || c.message || c.body || '—')}
+                            <strong>{c.user || (t('extracted.user') || 'User')}:</strong> {String(c.text || c.message || c.body || '—')}
                           </div>
                         ))}
                       </div>
@@ -1082,11 +1082,11 @@ const GrievancePage = () => {
               <div className="space-y-4">
                 <div className="max-h-64 overflow-auto p-2 space-y-3 border theme-border-glass rounded-lg theme-bg-glass">
                   {(selectedGrievance.communication ?? []).length === 0 ? (
-                    <p className="theme-text-muted">No messages yet.</p>
+                    <p className="theme-text-muted">{t('extracted.no_messages')}</p>
                   ) : (
                     (selectedGrievance.communication ?? []).slice().reverse().map((c, i) => (
                       <div key={i} className="p-2 rounded-md bg-white/5">
-                        <p className="text-sm font-semibold theme-text-primary">{c.user || 'User'}</p>
+                        <p className="text-sm font-semibold theme-text-primary">{c.user || (t('extracted.user') || 'User')}</p>
                         <p className="text-sm theme-text-muted">{String(c.text || c.message || c.body || '')}</p>
                         <p className="text-xs theme-text-muted mt-1">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</p>
                       </div>
@@ -1095,8 +1095,8 @@ const GrievancePage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Write a message..." className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-                  <button onClick={sendMessage} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold" disabled={!newMessage.trim()}>Send</button>
+                  <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={t('extracted.write_message')} className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+                  <button onClick={sendMessage} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold" disabled={!newMessage.trim()}>{t('extracted.send')}</button>
                 </div>
               </div>
             )}
@@ -1104,15 +1104,15 @@ const GrievancePage = () => {
             {activeTab === 'timeline' && (
               <div className="space-y-3">
                 <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
-                  <p className="text-sm theme-text-muted"><strong>Created:</strong> {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
-                  <p className="text-sm theme-text-muted"><strong>Last updated:</strong> {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.created')}:</strong> {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.last_updated')}:</strong> {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
                 </div>
                 <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Activity</h4>
-                  {(selectedGrievance.communication ?? []).length === 0 ? <p className="theme-text-muted">No activity recorded.</p> : (
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.activity')}</h4>
+                  {(selectedGrievance.communication ?? []).length === 0 ? <p className="theme-text-muted">{t('extracted.no_activity')}</p> : (
                     <ul className="list-disc pl-5 space-y-2">
                       {(selectedGrievance.communication ?? []).map((c, i) => (
-                        <li key={i} className="text-sm theme-text-muted">{c.user || 'User'} — {String(c.text || c.message || c.body || '')} <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span></li>
+                        <li key={i} className="text-sm theme-text-muted">{c.user || (t('extracted.user') || 'User')} — {String(c.text || c.message || c.body || '')} <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span></li>
                       ))}
                     </ul>
                   )}
@@ -1123,12 +1123,12 @@ const GrievancePage = () => {
             {activeTab === 'documents' && (
               <div className="space-y-3">
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Attachments</h4>
-                  <p className="text-sm theme-text-muted">Count: {selectedGrievance.attachments ?? 0}</p>
-                  <p className="text-xs theme-text-muted">(Upload / download integration can be implemented separately.)</p>
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.attachments_label')}</h4>
+                  <p className="text-sm theme-text-muted">{t('extracted.count')}: {selectedGrievance.attachments ?? 0}</p>
+                  <p className="text-xs theme-text-muted">{t('extracted.upload_download_note')}</p>
                 </div>
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <label className="text-sm theme-text-muted">Add document (not implemented)</label>
+                  <label className="text-sm theme-text-muted">{t('extracted.add_document_not_implemented')}</label>
                   <input type="file" disabled className="mt-2" />
                 </div>
               </div>
@@ -1138,11 +1138,11 @@ const GrievancePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
                   <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.communication?.length ?? 0}</div>
-                  <div className="text-sm theme-text-muted">Messages</div>
+                  <div className="text-sm theme-text-muted">{t('extracted.messages')}</div>
                 </div>
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
                   <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.attachments ?? 0}</div>
-                  <div className="text-sm theme-text-muted">Attachments</div>
+                  <div className="text-sm theme-text-muted">{t('extracted.attachments_label')}</div>
                 </div>
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
                   <div className="text-2xl font-bold theme-text-primary">{(() => {
@@ -1150,7 +1150,7 @@ const GrievancePage = () => {
                     const diff = Date.now() - created;
                     return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
                   })()}</div>
-                  <div className="text-sm theme-text-muted">Days Open</div>
+                  <div className="text-sm theme-text-muted">{t('extracted.days_open')}</div>
                 </div>
               </div>
             )}
