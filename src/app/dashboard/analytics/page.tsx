@@ -579,6 +579,48 @@ const AnalyticsPage = () => {
     return trend === 'up' ? TrendingUp : TrendingDown;
   };
 
+  // View mode layout helpers
+  const containerClass = useMemo(() => {
+    switch (viewMode) {
+      case 'list':
+        return 'p-2 lg:p-4 space-y-4';
+      case 'compact':
+        return 'p-2 lg:p-3 space-y-3 text-sm';
+      default:
+        return 'p-4 lg:p-6 space-y-6';
+    }
+  }, [viewMode]);
+
+  const kpiGridClass = useMemo(() => {
+    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
+    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-3 gap-2';
+    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4';
+  }, [viewMode]);
+
+  const overviewClass = useMemo(() => {
+    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
+    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-4 gap-2';
+    return 'grid grid-cols-2 md:grid-cols-4 gap-4';
+  }, [viewMode]);
+
+  const chartsGridClass = useMemo(() => {
+    if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
+    if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+  }, [viewMode]);
+
+  const stateCategoryGridClass = useMemo(() => {
+    if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
+    if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+  }, [viewMode]);
+
+  const performanceMetricsGridClass = useMemo(() => {
+    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
+    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2';
+    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4';
+  }, [viewMode]);
+
   // Export functions
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -641,7 +683,7 @@ const AnalyticsPage = () => {
     doc.save('analytics-report.pdf');
   };
 
-  const exportToCSV = () => {
+  const exportToCSV = (filename = 'analytics-report.csv') => {
     // Prepare CSV data
     let csvContent = 'Analytics Report\n';
     csvContent += `Generated on,${new Date().toLocaleDateString()}\n\n`;
@@ -681,11 +723,34 @@ const AnalyticsPage = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'analytics-report.csv');
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const exportToExcel = () => {
+    // CSV is compatible with Excel; provide .xlsx extension for convenience
+    exportToCSV('analytics-report.xlsx');
+  };
+
+  const [exportFormat, setExportFormat] = React.useState<'pdf'|'csv'|'excel'>('pdf');
+
+  const exportByFormat = (format: string) => {
+    switch (format) {
+      case 'pdf':
+        exportToPDF();
+        break;
+      case 'csv':
+        exportToCSV();
+        break;
+      case 'excel':
+        exportToExcel();
+        break;
+      default:
+        exportToCSV();
+    }
   };
 
   const generateMonthlyReport = () => {
@@ -780,7 +845,7 @@ const AnalyticsPage = () => {
   };
 
   return (
-    <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
+    <div data-theme={theme} data-view={viewMode} className={containerClass}>
       {/* Three.js Canvas Background (theme-aware) */}
       <canvas
         ref={canvasRef}
@@ -840,6 +905,12 @@ const AnalyticsPage = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+
+        /* View mode specific compact adjustments */
+        [data-view="compact"] .compact-card { padding: 0.5rem !important; }
+        [data-view="compact"] .compact-card .text-2xl { font-size: 1.125rem !important; }
+        [data-view="compact"] h3 { font-size: 1rem !important; }
+        [data-view="compact"] .hide-compact { display: none !important; }
       `}</style>
       
       {/* Header Section - Real-time Monitoring */}
@@ -1066,8 +1137,22 @@ const AnalyticsPage = () => {
             </motion.button>
 
             <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 theme-text-muted" />
-              <select className="px-3 py-1.5 rounded-lg text-xs theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button
+                onClick={() => exportByFormat(exportFormat)}
+                className="p-2 rounded theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
+                title={t('extracted.export')}
+              >
+                <Download className="w-4 h-4 theme-text-muted" />
+              </button>
+              <select
+                value={exportFormat}
+                onChange={(e) => {
+                  const v = e.target.value as any;
+                  setExportFormat(v);
+                  exportByFormat(v);
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 <option value="pdf">{t('extracted.export_pdf')}</option>
                 <option value="csv">{t('extracted.export_csv')}</option>
                 <option value="excel">{t('extracted.export_excel')}</option>
@@ -1176,7 +1261,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className={kpiGridClass}
       >
         {performanceIndicators.map((indicator, idx) => {
           const TrendIcon = getTrendIcon(indicator.trend);
@@ -1187,7 +1272,7 @@ const AnalyticsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + idx * 0.1 }}
               whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+              className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
               style={{
                 background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
               }}
@@ -1213,7 +1298,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className={overviewClass}
       >
         {[
           { labelKey: 'extracted.total_applications', value: formatNumber(analyticsData.overview.totalApplications), icon: FileText, color: 'from-blue-500 to-cyan-500' },
@@ -1224,7 +1309,7 @@ const AnalyticsPage = () => {
           <motion.div
             key={idx}
             whileHover={{ y: -2 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl text-center"
+            className={`theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl text-center ${viewMode === 'compact' ? 'compact-card text-sm' : ''}`}
             style={{
               background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
             }}
@@ -1239,13 +1324,13 @@ const AnalyticsPage = () => {
       </motion.div>
 
       {/* Charts and Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={chartsGridClass}>
         {/* Monthly Trends Chart */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1448,7 +1533,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1489,13 +1574,13 @@ const AnalyticsPage = () => {
       </div>
 
       {/* State-wise Performance and Category Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={stateCategoryGridClass}>
         {/* State-wise Performance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1530,7 +1615,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1572,7 +1657,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+        className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
       >
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -1581,7 +1666,7 @@ const AnalyticsPage = () => {
           </div>
           <Activity className="w-5 h-5 theme-text-muted" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className={performanceMetricsGridClass}>
           {[
             {
               labelKey: 'extracted.total_pending',
@@ -1628,7 +1713,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
+        className={`theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden ${viewMode === 'compact' ? 'compact-card' : ''}`}
         style={{
           background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
         }}
@@ -1817,7 +1902,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.55 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
+        className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         style={{
           background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
         }}

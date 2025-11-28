@@ -471,6 +471,15 @@ const DisbursementsPage: React.FC = () => {
     return icons[status as keyof typeof icons] || Clock;
   };
 
+  const translateStatus = (status?: string) => {
+    if (!status) return '';
+    const key = status.split(/[-_]/).map((s, i) => i === 0 ? s : s[0].toUpperCase() + s.slice(1)).join('');
+    const lookedUp = t(`dashboard.status.${key}`);
+    // if translation missing, t returns the key string — fall back to uppercase humanized status
+    if (lookedUp && lookedUp !== `dashboard.status.${key}`) return lookedUp;
+    return status.replace(/[-_]/g, ' ').toUpperCase();
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -1426,7 +1435,7 @@ const DisbursementsPage: React.FC = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <CreditCard className="w-3.5 h-3.5" />
-                          Transaction ID
+                          {t('transaction_id')}
                         </span>
                         <span className="theme-text-primary font-mono text-[10px]">
                           {disbursement.transactionId}
@@ -1436,7 +1445,7 @@ const DisbursementsPage: React.FC = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <Scale className="w-3.5 h-3.5" />
-                          Act Type
+                          {t('act_type')}
                         </span>
                         <span className="theme-text-primary font-medium">
                           {disbursement.actType}
@@ -1446,7 +1455,7 @@ const DisbursementsPage: React.FC = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5" />
-                          Location
+                          {t('location')}
                         </span>
                         <span className="theme-text-primary font-medium">
                           {disbursement.district}
@@ -1456,7 +1465,7 @@ const DisbursementsPage: React.FC = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5" />
-                          Initiated Date
+                          {t('initiated_date')}
                         </span>
                         <span className="theme-text-primary font-medium font-mono text-[10px]">
                           {formatDate(disbursement.initiatedDate)}
@@ -1467,7 +1476,7 @@ const DisbursementsPage: React.FC = () => {
                         <div className="flex items-center justify-between text-xs">
                           <span className="theme-text-muted flex items-center gap-1.5">
                             <Receipt className="w-3.5 h-3.5" />
-                            UTR Number
+                            {t('utr_number')}
                           </span>
                           <span className="theme-text-primary font-mono text-[10px]">
                             {disbursement.utrNumber}
@@ -2031,7 +2040,7 @@ const DisbursementsPage: React.FC = () => {
                   {selectedDisbursement.id}
                 </h2>
                 <p className="theme-text-muted">
-                  Disbursement Details • {selectedDisbursement.actType}
+                  {t('extracted.disbursement_details') || 'वितरण विवरण'} • {selectedDisbursement.actType}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -2086,33 +2095,33 @@ const DisbursementsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Beneficiary Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold theme-text-primary">Beneficiary Information</h3>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.beneficiary_information')}</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
                     <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs theme-text-muted">Beneficiary Name</p>
+                      <p className="text-xs theme-text-muted">{t('extracted.beneficiary_name')}</p>
                       <p className="font-medium theme-text-primary break-words">{selectedDisbursement.beneficiaryName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
                     <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs theme-text-muted">Aadhaar Number</p>
+                      <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')}</p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.aadhaarNumber}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
                     <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs theme-text-muted">Phone Number</p>
+                      <p className="text-xs theme-text-muted">{t('extracted.phone_number')}</p>
                       <p className="font-medium theme-text-primary break-all">{selectedDisbursement.phone}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
                     <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs theme-text-muted">Location</p>
+                      <p className="text-xs theme-text-muted">{t('extracted.location')}</p>
                       <p className="font-medium theme-text-primary break-words">{selectedDisbursement.district}, {selectedDisbursement.state}</p>
                     </div>
                   </div>
@@ -2121,24 +2130,24 @@ const DisbursementsPage: React.FC = () => {
 
               {/* Transaction Details */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold theme-text-primary">Transaction Details</h3>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.transaction_details_1')}</h3>
                 <div className="space-y-3">
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-xs theme-text-muted mb-1">Transaction ID</p>
+                    <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')}</p>
                     <p className="font-medium theme-text-primary font-mono break-all">{selectedDisbursement.transactionId}</p>
                   </div>
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-xs theme-text-muted mb-1">UTR Number</p>
+                    <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')}</p>
                     <p className="font-medium theme-text-primary font-mono break-all">
-                      {selectedDisbursement.utrNumber || 'Not Available'}
+                      {selectedDisbursement.utrNumber || 'उपलब्ध नहीं'}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-xs theme-text-muted mb-1">Payment Method</p>
+                    <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')}</p>
                     <p className="font-medium theme-text-primary">{selectedDisbursement.paymentMethod}</p>
                   </div>
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-xs theme-text-muted mb-1">Relief Amount</p>
+                    <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')}</p>
                     <p className="font-semibold text-lg theme-text-primary">{formatCurrency(selectedDisbursement.reliefAmount)}</p>
                   </div>
                 </div>
@@ -2146,47 +2155,47 @@ const DisbursementsPage: React.FC = () => {
 
               {/* Status and Timeline */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold theme-text-primary">Status & Timeline</h3>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.timeline_1')} & {t('extracted.disbursement_status')}</h3>
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">Disbursement Status</p>
+                    <p className="text-sm theme-text-muted mb-2">{t('extracted.disbursement_status')}</p>
                     <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(selectedDisbursement.status)}`}>
                       {(() => {
                         const Icon = getStatusIcon(selectedDisbursement.status);
                         return <Icon className="w-4 h-4" />;
                       })()}
-                      {selectedDisbursement.status.replace('-', ' ').toUpperCase()}
+                      {translateStatus(selectedDisbursement.status)}
                     </span>
                     {selectedDisbursement.failureReason && (
                       <p className="text-sm theme-text-muted mt-2">
-                        <strong>Failure Reason: </strong> {selectedDisbursement.failureReason}
+                        <strong>{t('extracted.failure_reason')}</strong> {selectedDisbursement.failureReason}
                       </p>
                     )}
                     {selectedDisbursement.retryCount > 0 && (
                       <p className="text-sm theme-text-muted mt-1">
-                        <strong>Retry Attempts: </strong> {selectedDisbursement.retryCount}
+                        <strong>{t('extracted.retry_attempts')}</strong> {selectedDisbursement.retryCount}
                       </p>
                     )}
                   </div>
                   <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                    <p className="text-sm theme-text-muted mb-2">Timeline</p>
+                    <p className="text-sm theme-text-muted mb-2">{t('timeline_1')}</p>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="theme-text-primary">Initiated</span>
-                        <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
-                      </div>
-                      {selectedDisbursement.completedDate && (
                         <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">Completed</span>
-                          <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
+                          <span className="theme-text-primary">{t('extracted.initiated')}</span>
+                          <span className="theme-text-muted">{formatDate(selectedDisbursement.initiatedDate)}</span>
                         </div>
-                      )}
-                      {selectedDisbursement.disbursementDate && (
-                        <div className="flex justify-between text-sm">
-                          <span className="theme-text-primary">Disbursed</span>
-                          <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
-                        </div>
-                      )}
+                        {selectedDisbursement.completedDate && (
+                          <div className="flex justify-between text-sm">
+                            <span className="theme-text-primary">{t('extracted.completed')}</span>
+                            <span className="theme-text-muted">{formatDate(selectedDisbursement.completedDate)}</span>
+                          </div>
+                        )}
+                        {selectedDisbursement.disbursementDate && (
+                          <div className="flex justify-between text-sm">
+                            <span className="theme-text-primary">{t('extracted.disbursed')}</span>
+                            <span className="theme-text-muted">{formatDate(selectedDisbursement.disbursementDate)}</span>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -2207,7 +2216,7 @@ const DisbursementsPage: React.FC = () => {
                   }}
                 >
                   <RotateCcw className="w-5 h-5" />
-                  Retry Disbursement
+                  {t('extracted.retry_disbursement')}
                 </motion.button>
               )}
               {selectedDisbursement.status === 'pending' && (
@@ -2222,7 +2231,7 @@ const DisbursementsPage: React.FC = () => {
                   }}
                 >
                   <PlayCircle className="w-5 h-5" />
-                  Initiate Payment
+                  {t('extracted.initiate_payment')}
                 </motion.button>
               )}
               <motion.button
@@ -2232,7 +2241,7 @@ const DisbursementsPage: React.FC = () => {
                 style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
               >
                 <Download className="w-5 h-5" />
-                Download Receipt
+                {t('extracted.download_receipt')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -2245,7 +2254,7 @@ const DisbursementsPage: React.FC = () => {
                 }}
               >
                 <X className="w-5 h-5" />
-                Cancel Disbursement
+                {t('extracted.cancel_disbursement')}
               </motion.button>
             </div>
           </div>
@@ -2275,9 +2284,9 @@ const DisbursementsPage: React.FC = () => {
                     <Download className="w-5 h-5 text-accent-gradient" />
                     {t('extracted.export') || 'Export Data'}
                   </h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('disbursements.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
+                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
                 </div>
-                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                <button onClick={() => setShowExportModal(false)} aria-label={t('close_export_modal')} className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
                   <X className="w-5 h-5 theme-text-primary" />
                 </button>
               </div>
@@ -2299,8 +2308,8 @@ const DisbursementsPage: React.FC = () => {
                       <p className="text-sm theme-text-muted">{allDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">{t('export_csv')}</button>
+                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">{t('export_pdf')}</button>
                     </div>
                   </div>
                 </div>
@@ -2321,8 +2330,8 @@ const DisbursementsPage: React.FC = () => {
                       <p className="text-sm theme-text-muted">{filteredDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">{t('export_csv')}</button>
+                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">{t('export_pdf')}</button>
                     </div>
                   </div>
                 </div>
