@@ -87,20 +87,18 @@ const PlatformLogos: { [key: string]: (props: React.SVGProps<SVGSVGElement>) => 
   )
 };
 
-const getPlatformLogo = (provider: string) => {
+// Define the wrapper component outside the function
+const PlatformLogoWrapper = ({ provider, ...props }: { provider: string } & React.SVGProps<SVGSVGElement>) => {
   const Logo = PlatformLogos[provider as keyof typeof PlatformLogos];
-  
-  // Define the component with a proper name
-  const PlatformLogoWrapper = (props: any) => {
-    if (Logo) return <Logo {...props} />;
-    // fallback to a simple square icon using lucide Database look
-    return <Database {...props} />;
-  };
-  
-  // Set display name for better debugging
-  PlatformLogoWrapper.displayName = `PlatformLogoWrapper(${provider})`;
-  
-  return PlatformLogoWrapper;
+  if (Logo) return <Logo {...props} />;
+  return <Database {...props} />;
+};
+
+PlatformLogoWrapper.displayName = 'PlatformLogoWrapper';
+
+const getPlatformLogo = (provider: string) => {
+  return (props: React.SVGProps<SVGSVGElement>) => 
+    <PlatformLogoWrapper provider={provider} {...props} />;
 };
 
 const Dashboard = () => {
