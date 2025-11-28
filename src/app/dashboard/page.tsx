@@ -89,12 +89,18 @@ const PlatformLogos: { [key: string]: (props: React.SVGProps<SVGSVGElement>) => 
 
 const getPlatformLogo = (provider: string) => {
   const Logo = PlatformLogos[provider as keyof typeof PlatformLogos];
-  const Wrapper = (props: any) => {
+  
+  // Define the component with a proper name
+  const PlatformLogoWrapper = (props: any) => {
     if (Logo) return <Logo {...props} />;
     // fallback to a simple square icon using lucide Database look
     return <Database {...props} />;
   };
-  return Wrapper;
+  
+  // Set display name for better debugging
+  PlatformLogoWrapper.displayName = `PlatformLogoWrapper(${provider})`;
+  
+  return PlatformLogoWrapper;
 };
 
 const Dashboard = () => {
