@@ -643,12 +643,12 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, theme]);
 
   // Fetch data on component mount
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   const navigationItems = [
     { id: 'overview', label: t('extracted.dashboard'), icon: Home },
@@ -737,7 +737,9 @@ const Dashboard = () => {
       'documents-required': AlertCircle
     };
     const Icon = icons[status as keyof typeof icons] || Clock;
-    return (props: any) => <Icon {...props} />;
+    const Comp = (props: any) => <Icon {...props} />;
+    try { (Comp as any).displayName = `VerificationIcon_${String(status).replace(/\s+/g, '_')}`; } catch {}
+    return Comp;
   };
 
   const getStatusText = (status: string) => {
@@ -2898,5 +2900,8 @@ const Dashboard = () => {
     </div>
   );
 };
+
+// Set display name for tooling and React devtools
+try { (Dashboard as any).displayName = 'Dashboard'; } catch {}
 
 export default Dashboard;
