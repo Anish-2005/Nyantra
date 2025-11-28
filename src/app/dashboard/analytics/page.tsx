@@ -1936,7 +1936,7 @@ const AnalyticsPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={exportToCSV}
+              onClick={() => exportToCSV()}
               className="w-full sm:w-auto px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 justify-center"
             >
               <Download className="w-4 h-4" />
