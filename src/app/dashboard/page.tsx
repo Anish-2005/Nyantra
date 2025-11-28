@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
+import { JSX } from 'react';
 import {
   Users, TrendingUp, FileText, Clock,
    BarChart3,
