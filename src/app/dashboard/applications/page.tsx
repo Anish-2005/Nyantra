@@ -44,7 +44,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         try {
             // Ensure beneficiary id exists in Firestore before creating/updating
             if (!formData.beneficiaryId) {
-                alert(t('applications.beneficiaryIdRequired') || 'Beneficiary is required.');
+                alert(t('applications.beneficiaryIdRequired'));
                 setIsSubmitting(false);
                 return;
             }
@@ -55,7 +55,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
                 const beneficiarySnap = await getDoc(beneficiaryRef);
                 if (!beneficiarySnap.exists()) {
-                    alert(t('applications.beneficiaryNotFound') || 'Beneficiary not found in database.');
+                    alert(t('applications.beneficiaryNotFound'));
                     setIsSubmitting(false);
                     return;
                 }
@@ -272,7 +272,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId') || 'Beneficiary'} *</label>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId')} *</label>
                         <select
                             required
                             value={formData.beneficiaryId}
@@ -308,8 +308,8 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                                 </option>
                             ))}
                         </select>
-                        {initialData && beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound') || 'Selected'}</span>}
-                        {initialData && beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound') || 'Not found'}</span>}
+                        {initialData && beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound')}</span>}
+                        {initialData && beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound')}</span>}
                     </div>
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
@@ -934,7 +934,7 @@ const ApplicationsPage = () => {
     // Request delete: open confirm modal
     const requestDeleteApplication = (id?: string) => {
         if (!id) return;
-        setConfirmModal({ open: true, id, message: `Delete application ${id}? This action cannot be undone.` });
+        setConfirmModal({ open: true, id, message: t('applications.confirmDeleteMessage').replace('{id}', id) });
     };
 
     const cancelConfirmDelete = () => setConfirmModal({ open: false });
@@ -1205,7 +1205,7 @@ const ApplicationsPage = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-60 flex items-center justify-center">
                         <div className="absolute inset-0 bg-black/50" onClick={cancelConfirmDelete} />
                         <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="relative w-full max-w-md p-6 rounded-xl theme-border-glass border shadow-lg theme-bg-card">
-                            <h3 className="text-lg font-semibold theme-text-primary mb-3">Confirm delete</h3>
+                            <h3 className="text-lg font-semibold theme-text-primary mb-3">{t('applications.confirmDeleteTitle')}</h3>
                             <p className="text-sm theme-text-muted mb-6">{confirmModal.message}</p>
                             <div className="flex justify-end gap-3">
                                 <button onClick={cancelConfirmDelete} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">Cancel</button>
@@ -1260,7 +1260,7 @@ const ApplicationsPage = () => {
                                                     <p className="text-xs theme-text-muted">{t('applications.exportAllDescription') || 'Download the full applications dataset in the chosen format.'}</p>
                                                 </div>
                                             </div>
-                                            <p className="text-sm theme-text-muted">{applications.length} {t('applications_lowercase') || 'applications'}</p>
+                                            <p className="text-sm theme-text-muted">{applications.length} {t('extracted.applications_lowercase')}</p>
                                         </div>
                                             <div className="flex flex-col items-end gap-2">
                                             <button onClick={() => { exportApplicationsData(applications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
@@ -1282,7 +1282,7 @@ const ApplicationsPage = () => {
                                                     <p className="text-xs theme-text-muted">{t('applications.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
                                                 </div>
                                             </div>
-                                            <p className="text-sm theme-text-muted">{filteredApplications.length} {t('applications_lowercase') || 'applications'}</p>
+                                            <p className="text-sm theme-text-muted">{filteredApplications.length} {t('extracted.applications_lowercase')}</p>
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <button disabled={filteredApplications.length === 0} onClick={() => { exportApplicationsData(filteredApplications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
@@ -1496,7 +1496,7 @@ const ApplicationsPage = () => {
                                             <tr>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')}</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')}</th>
-                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('applications.beneficiaryId') || 'Beneficiary ID'}</th>
+                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('applications.beneficiaryId')}</th>
                                                 <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')}</th>
                                                 <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')}</th>
                                                 <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')}</th>
@@ -1588,7 +1588,7 @@ const ApplicationsPage = () => {
 
                                             <div className="space-y-1 text-sm theme-text-secondary mb-3">
                                                 <div><strong>ID:</strong> {app.id}</div>
-                                                <div><strong>{t('applications.beneficiaryId') || 'Beneficiary ID'}:</strong> {app.beneficiaryId || '-'}</div>
+                                                <div><strong>{t('applications.beneficiaryId')}:</strong> {app.beneficiaryId || '-'}</div>
                                                 <div><strong>{t('extracted.district_1')}</strong> {app.district}, {app.state}</div>
                                                 <div><strong>{t('extracted.act_type_1')}</strong> {app.actType}</div>
                                                 <div><strong>{t('extracted.amount_1')}</strong> {formatCurrency(app.amount)}</div>

@@ -306,7 +306,7 @@ const AnalyticsPage = () => {
 
     // Monthly trends (last 12 months)
     const monthlyTrends = {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      labels: JSON.parse(t('extracted.months_short')),
       applications: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       disbursements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       amounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

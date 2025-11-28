@@ -17,7 +17,7 @@ import {
   Calendar, DollarSign, MessageSquare, MoreVertical,
   Shield, Award, Heart, Scale, BadgeCheck,
   Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
-  Activity, Target, Globe, Layers, Star,
+  Target, Globe, Layers, Star,
   CheckCircle, Tag
 } from 'lucide-react';
 
@@ -339,7 +339,6 @@ const BeneficiariesPage = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [fullBeneficiaries, setFullBeneficiaries] = useState<Record<string, any>>({});
   const [selectedBeneficiaryLoading, setSelectedBeneficiaryLoading] = useState(false);
-  const [manualFetchLoading, setManualFetchLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -528,65 +527,6 @@ const BeneficiariesPage = () => {
       console.error('Error fetching full beneficiary:', err);
     }
     return null;
-  };
-
-  const fetchBeneficiariesManually = async () => {
-    setManualFetchLoading(true);
-    try {
-      const beneficiariesRef = collection(db, 'beneficiaries');
-      const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const items: any[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const toIso = (val: any) => {
-          if (!val) return '';
-          if (val.toDate && typeof val.toDate === 'function') {
-            try { return val.toDate().toISOString(); } catch { return String(val); }
-          }
-          return typeof val === 'string' ? val : String(val);
-        };
-
-        items.push({
-          id: doc.id,
-          name: data.name || '',
-          aadhaarNumber: data.aadhaarNumber || data.aadhaar || '',
-          district: data.district || '',
-          state: data.state || '',
-          actType: data.actType || '',
-          reliefAmount: data.reliefAmount || 0,
-          disbursedAmount: data.disbursedAmount || 0,
-          status: data.status || 'pending-verification',
-          verificationStatus: data.verificationStatus || 'pending',
-          category: data.category || 'SC',
-          registrationDate: toIso(data.registrationDate),
-          priority: data.priority || 'medium',
-          assignedOfficer: data.assignedOfficer || '',
-          age: data.age || null,
-          gender: data.gender || null,
-          maritalStatus: data.maritalStatus || null,
-          bankAccount: data.bankAccount || null,
-          ifsc: data.ifsc || null
-        });
-      });
-      setBeneficiaries(items);
-      setLoading(false);
-      // Reset filters/search so manual fetch shows results immediately
-      setSearchQuery('');
-      setStatusFilter('all');
-      setActTypeFilter('all');
-      setCategoryFilter('all');
-      setVerificationFilter('all');
-      setCurrentPage(1);
-      setViewMode('table');
-      setRefreshKey(prev => prev + 1);
-      showToast('success', `Fetched ${items.length} beneficiaries`);
-    } catch (error) {
-      console.error('Error fetching beneficiaries manually:', error);
-      showToast('error', 'Failed to fetch beneficiaries');
-    } finally {
-      setManualFetchLoading(false);
-    }
   };
 
   // Filter and sort beneficiaries
@@ -1098,20 +1038,6 @@ const BeneficiariesPage = () => {
                           <span>{t('extracted.export_data')}</span>
                         </motion.button>
                         <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={fetchBeneficiariesManually}
-                          disabled={manualFetchLoading}
-                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow disabled:opacity-50"
-                        >
-                          {manualFetchLoading ? (
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Activity className="w-4 h-4" />
-                          )}
-                          <span>{manualFetchLoading ? (t('extracted.fetching') || 'Fetching...') : (t('extracted.fetch_data') || 'Fetch Data')}</span>
-                        </motion.button>
-                        <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setShowNewBeneficiaryForm(true)}
@@ -1310,21 +1236,21 @@ const BeneficiariesPage = () => {
             value: formatCurrency(stats.totalAmount),
             color: 'from-green-500 to-emerald-500',
             icon: DollarSign,
-            subtitle: 'Disbursed +12.5% this month'
+            subtitle: t('extracted.disbursed_this_month')
           },
           {
             labelKey: 'extracted.pcr_act_disbursements',
             value: formatCurrency(beneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
             color: 'from-blue-500 to-cyan-500',
             icon: Scale,
-            subtitle: `${beneficiaries.filter(b => b.actType === 'PCR Act').length} beneficiaries • 70% success rate`
+            subtitle: t('extracted.beneficiaries_success_rate', { count: beneficiaries.filter(b => b.actType === 'PCR Act').length, rate: 70 })
           },
           {
             labelKey: 'extracted.poa_act_disbursements',
             value: formatCurrency(beneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
             color: 'from-purple-500 to-pink-500',
             icon: Heart,
-            subtitle: `${beneficiaries.filter(b => b.actType === 'PoA Act').length} beneficiaries • Verified 70%`
+            subtitle: t('extracted.beneficiaries_verified', { count: beneficiaries.filter(b => b.actType === 'PoA Act').length, rate: 70 })
           }
         ].map((card, idx) => (
           <motion.div
@@ -1454,7 +1380,7 @@ const BeneficiariesPage = () => {
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             {/* View Mode Toggle */}
             <div className="flex items-center gap-4">
-              <span className="text-sm font-semibold theme-text-muted uppercase tracking-wide">View Mode</span>
+              <span className="text-sm font-semibold theme-text-muted uppercase tracking-wide">{t('extracted.view_mode')}</span>
               <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('table')}

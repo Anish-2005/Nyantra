@@ -148,7 +148,7 @@ const DisbursementsPage: React.FC = () => {
   const monthlyTrend = useMemo(() => {
     const monthsCount = 6;
     const now = new Date();
-    const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const MONTH_SHORT = JSON.parse(t('extracted.months_short'));
     const months: { label: string; year: number; month: number }[] = [];
     for (let i = monthsCount - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -803,16 +803,7 @@ const DisbursementsPage: React.FC = () => {
         </div>
         
           <div className="relative z-10 flex items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
-            onClick={() => setShowManualForm(true)}
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('extracted.new_disbursement')}</span>
-          </motion.button>
-          <motion.button
+            <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowExportModal(true)}
@@ -822,6 +813,16 @@ const DisbursementsPage: React.FC = () => {
             <Download className="w-4 h-4" />
             <span>{t('extracted.export_data')}</span>
           </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
+            onClick={() => setShowManualForm(true)}
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('extracted.new_disbursement')}</span>
+          </motion.button>
+          
         </div>
       </motion.div>
 
