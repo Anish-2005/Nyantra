@@ -23,8 +23,79 @@ import {
   RefreshCw,
   BarChart,
   Zap,
-  Timer
+  Timer,
+  Shield,
+  X,
+  BadgeCheck
 } from 'lucide-react';
+
+// Minimal in-file platform logos reused from the Integrations page so
+// the dashboard can show the same provider SVGs.
+const PlatformLogos: { [key: string]: (props: React.SVGProps<SVGSVGElement>) => JSX.Element } = {
+  UIDAI: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <circle cx="50" cy="50" r="45" fill="#FF9933" />
+      <circle cx="50" cy="50" r="35" fill="#FFFFFF" />
+      <circle cx="50" cy="50" r="25" fill="#138808" />
+      <path d="M50 25 L50 75 M35 50 L65 50" stroke="#000080" strokeWidth="3" />
+    </svg>
+  ),
+  MeitY: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <rect x="20" y="20" width="60" height="60" rx="10" fill="#1E40AF" />
+      <path d="M40 35 L60 50 L40 65 Z" fill="#FFFFFF" />
+    </svg>
+  ),
+  MHA: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <rect x="25" y="25" width="50" height="50" fill="#DC2626" />
+      <path d="M45 40 L55 50 L45 60 Z M55 40 L45 50 L55 60 Z" fill="#FFFFFF" />
+    </svg>
+  ),
+  NSDL: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <rect x="20" y="20" width="60" height="60" rx="5" fill="#059669" />
+      <text x="50" y="55" textAnchor="middle" fill="#FFFFFF" fontSize="16" fontWeight="bold">NSDL</text>
+    </svg>
+  ),
+  NPCI: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <circle cx="50" cy="50" r="40" fill="#2563EB" />
+      <path d="M35 40 L65 40 L50 70 Z" fill="#FFFFFF" />
+    </svg>
+  ),
+  CBDT: (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <rect x="25" y="25" width="50" height="50" fill="#D97706" />
+      <path d="M40 40 L60 40 L60 60 L40 60 Z" fill="#FFFFFF" />
+      <path d="M45 45 L55 45 L55 55 L45 55 Z" fill="#D97706" />
+    </svg>
+  ),
+  'Ministry of Rural Development': (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <path d="M30 30 L70 30 L70 70 L30 70 Z" fill="#16A34A" />
+      <circle cx="50" cy="50" r="15" fill="#FFFFFF" />
+    </svg>
+  ),
+  'Various State Governments': (props) => (
+    <svg {...props} viewBox="0 0 100 100" className={props.className ?? "w-6 h-6"}>
+      <path d="M35 35 L65 35 L65 65 L35 65 Z" fill="#9333EA" />
+      <circle cx="40" cy="40" r="5" fill="#FFFFFF" />
+      <circle cx="60" cy="40" r="5" fill="#FFFFFF" />
+      <circle cx="50" cy="60" r="5" fill="#FFFFFF" />
+    </svg>
+  )
+};
+
+const getPlatformLogo = (provider: string) => {
+  const Logo = PlatformLogos[provider as keyof typeof PlatformLogos];
+  const Wrapper = (props: any) => {
+    if (Logo) return <Logo {...props} />;
+    // fallback to a simple square icon using lucide Database look
+    return <Database {...props} />;
+  };
+  return Wrapper;
+};
 
 const Dashboard = () => {
   const { theme } = useTheme();
@@ -51,7 +122,12 @@ const Dashboard = () => {
   const [quickStats, setQuickStats] = useState<any[]>([]);
   const [grievanceData, setGrievanceData] = useState<any[]>([]);
   const [systemIntegrations, setSystemIntegrations] = useState<any[]>([]);
+  const [liveTrackingStats, setLiveTrackingStats] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
+  const [recentDisbursements, setRecentDisbursements] = useState<any[]>([]);
+  const [generatedReports, setGeneratedReports] = useState<any[]>([]);
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -62,16 +138,6 @@ const Dashboard = () => {
   // Scroll progress for progress bar
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-
-  // Update time on client side only to prevent hydration mismatch
-  useEffect(() => {
-    setCurrentTime(new Date().toLocaleTimeString());
-    const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
-    }, 1000); // Update every second for live monitoring
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Sync sidebar with viewport size
   useEffect(() => {
@@ -340,16 +406,10 @@ const Dashboard = () => {
         const data = doc.data();
         const name = data.name || 'Unknown Integration';
         
-        // Map integration names to icons and colors
-        const iconMap: { [key: string]: any } = {
-          'Aadhaar': Fingerprint,
-          'eCourts': FileText,
-          'CCTNS': Database,
-          'PFMS': Wallet,
-          'DigiLocker': Archive,
-          'State Databases': Server
-        };
-        
+        // Prefer provider-specific SVG logos (fall back to lucide icons)
+        const provider = data.provider || name;
+        const IconComp = getPlatformLogo(provider);
+
         const colorMap: { [key: string]: string } = {
           'Aadhaar': 'from-blue-500 to-blue-600',
           'eCourts': 'from-indigo-500 to-indigo-600',
@@ -358,10 +418,11 @@ const Dashboard = () => {
           'DigiLocker': 'from-amber-500 to-amber-600',
           'State Databases': 'from-red-500 to-red-600'
         };
-        
+
         return {
           name: name,
-          icon: iconMap[name] || Settings,
+          icon: IconComp,
+          imageUrl: data.imageUrl || '',
           status: data.status || 'active',
           color: colorMap[name] || 'from-gray-500 to-gray-600'
         };
@@ -389,44 +450,149 @@ const Dashboard = () => {
       const weekDisbursementsSnapshot = await getDocs(weekDisbursementsQuery);
       const weekDisbursementsTotal = weekDisbursementsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
 
-      // Calculate satisfaction rate (mock for now - would need real feedback data)
-      const satisfactionRate = 94.2;
+      // Calculate live tracking stats
+      const inProgressQuery = query(collection(db, 'applications'), where('status', '==', 'in-review'));
+      const inProgressSnapshot = await getDocs(inProgressQuery);
+      const inProgressCount = inProgressSnapshot.size;
 
-      const stats = [
+      // Completed today
+      const completedTodayQuery = query(collection(db, 'applications'), where('status', '==', 'approved'), where('applicationDate', '>=', startOfToday));
+      const completedTodaySnapshot = await getDocs(completedTodayQuery);
+      const completedTodayCount = completedTodaySnapshot.size;
+
+      // Pending review (same as in-progress for now)
+      const pendingReviewCount = inProgressCount;
+
+      // Average processing time (mock calculation - would need real timestamps)
+      const avgProcessingTime = '4.2h';
+
+      const liveStats = [
         {
-          title: t('dashboard.quickStats.todaysApplications'),
-          value: todaysAppsCount,
-          change: '+12%', // This would need historical comparison
+          label: t('dashboard.liveTracking.applicationsInProgress'),
+          value: inProgressCount.toString(),
+          change: '+5', // This would need historical comparison
           trend: 'up',
-          icon: TrendingUp,
-          color: 'from-green-500 to-emerald-500'
-        },
-        {
-          title: t('dashboard.quickStats.pendingReview'),
-          value: pendingAppsCount,
-          change: '-5%', // This would need historical comparison
-          trend: 'down',
           icon: Clock,
           color: 'from-amber-500 to-orange-500'
         },
         {
-          title: t('dashboard.quickStats.weekDisbursed'),
-          value: `₹${(weekDisbursementsTotal / 100000).toFixed(1)}L`,
-          change: '+18%', // This would need historical comparison
+          label: t('dashboard.liveTracking.completedToday'),
+          value: completedTodayCount.toString(),
+          change: '+12', // This would need historical comparison
           trend: 'up',
-          icon: Wallet,
-          color: 'from-blue-500 to-cyan-500'
+          icon: CheckCircle,
+          color: 'from-green-500 to-emerald-500'
         },
         {
-          title: t('dashboard.quickStats.satisfactionRate'),
-          value: `${satisfactionRate}%`,
-          change: '+2.1%', // This would need historical comparison
-          trend: 'up',
-          icon: Award,
+          label: t('dashboard.liveTracking.pendingReview'),
+          value: pendingReviewCount.toString(),
+          change: '-3', // This would need historical comparison
+          trend: 'down',
+          icon: AlertCircle,
+          color: 'from-red-500 to-rose-500'
+        },
+        {
+          label: t('dashboard.liveTracking.avgProcessingTime'),
+          value: avgProcessingTime,
+          change: '-0.8h', // This would need historical comparison
+          trend: 'down',
+          icon: Timer,
           color: 'from-purple-500 to-pink-500'
         }
       ];
-      setQuickStats(stats);
+      setLiveTrackingStats(liveStats);
+
+      // Fetch recent activity (applications + grievances)
+      const recentAppsQuery = query(collection(db, 'applications'), orderBy('applicationDate', 'desc'), limit(4));
+      const recentGrievancesQuery = query(collection(db, 'grievances'), orderBy('createdDate', 'desc'), limit(4));
+      
+      const [appsSnapshot, recentGrievancesSnapshot] = await Promise.all([
+        getDocs(recentAppsQuery),
+        getDocs(recentGrievancesQuery)
+      ]);
+
+      const activities = [
+        ...appsSnapshot.docs.map(doc => ({
+          type: 'application',
+          action: t('dashboard.recentActivity.applicationSubmitted'),
+          user: doc.data().applicantName || doc.data().name || 'Unknown User',
+          time: doc.data().applicationDate ? 
+            new Date(doc.data().applicationDate.toDate()).toLocaleString() : 'Recently'
+        })),
+        ...recentGrievancesSnapshot.docs.slice(0, 4 - appsSnapshot.docs.length).map(doc => ({
+          type: 'grievance',
+          action: doc.data().status === 'resolved' ? 
+            t('dashboard.recentActivity.grievanceResolved') : 
+            t('dashboard.recentActivity.reviewPending'),
+          user: doc.data().assignedTo || 'System',
+          time: doc.data().createdDate ? 
+            new Date(doc.data().createdDate.toDate()).toLocaleString() : 'Recently'
+        }))
+      ].slice(0, 4);
+
+      setRecentActivity(activities);
+
+      // Fetch verified beneficiaries (show most recently verified / active)
+      try {
+        const beneficiariesQuery = query(collection(db, 'beneficiaries'), orderBy('verified', 'desc'), limit(4));
+        const beneficiariesSnapshot = await getDocs(beneficiariesQuery);
+        const bens = beneficiariesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || data.fullName || 'Unknown',
+            code: data.beneficiaryId || data.code || '',
+            location: `${data.district || data.city || ''}${data.scheme ? ' • ' + data.scheme : ''}`,
+            status: data.verified ? 'verified' : 'unverified',
+            amount: data.assistanceAmount || data.amount || 0
+          };
+        });
+        setBeneficiaries(bens);
+      } catch (e) {
+        // non-fatal
+        console.warn('Failed to fetch beneficiaries', e);
+      }
+
+      // Fetch recent disbursements
+      try {
+        const disbQuery = query(collection(db, 'disbursements'), orderBy('disbursementDate', 'desc'), limit(4));
+        const disbSnapshot = await getDocs(disbQuery);
+        const disbs = disbSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            beneficiaryName: data.beneficiaryName || data.name || 'Unknown',
+            code: data.disbursementId || data.code || '',
+            amount: data.amount || 0,
+            status: data.status || 'processing',
+            date: data.disbursementDate ? new Date(data.disbursementDate.toDate()).toLocaleDateString() : 'N/A'
+          };
+        });
+        setRecentDisbursements(disbs);
+      } catch (e) {
+        console.warn('Failed to fetch disbursements', e);
+      }
+
+      // Fetch generated reports (if collection exists)
+      try {
+        const reportsQuery = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(4));
+        const reportsSnapshot = await getDocs(reportsQuery);
+        const rpts = reportsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title || data.name || 'Report',
+            category: data.category || 'General',
+            size: data.size || '',
+            date: data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : 'N/A',
+            status: data.status || 'Completed',
+            progress: typeof data.progress === 'number' ? data.progress : (data.status === 'Completed' ? 100 : (data.progress || 0))
+          };
+        });
+        setGeneratedReports(rpts);
+      } catch (e) {
+        console.warn('Failed to fetch reports', e);
+      }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -499,6 +665,37 @@ const Dashboard = () => {
     }
   };
 
+  const getVerificationColor = (status: string) => {
+    if (theme === 'dark') {
+      switch (status) {
+        case 'verified': return 'text-green-300 bg-green-900/30';
+        case 'pending': return 'text-amber-300 bg-amber-900/30';
+        case 'rejected': return 'text-red-300 bg-red-900/30';
+        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
+        default: return 'text-gray-300 bg-gray-800';
+      }
+    }
+
+    switch (status) {
+      case 'verified': return 'text-green-700 bg-green-100';
+      case 'pending': return 'text-amber-700 bg-amber-100';
+      case 'rejected': return 'text-red-700 bg-red-100';
+      case 'documents-required': return 'text-purple-700 bg-purple-100';
+      default: return 'text-gray-700 bg-gray-100';
+    }
+  };
+
+  const getVerificationIcon = (status: string) => {
+    const icons: { [key: string]: any } = {
+      'verified': Shield,
+      'pending': Clock,
+      'rejected': X,
+      'documents-required': AlertCircle
+    };
+    const Icon = icons[status as keyof typeof icons] || Clock;
+    return (props: any) => <Icon {...props} />;
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'approved': return t('dashboard.status.approved');
@@ -548,6 +745,9 @@ const Dashboard = () => {
       transition: { duration: 0.6, ease: "easeOut" as const }
     }
   };
+
+  // Brief preview of beneficiaries to show on the dashboard (show all statuses)
+  const previewBeneficiaries = beneficiaries.slice(0, 4);
 
 
   return (
@@ -882,12 +1082,28 @@ const Dashboard = () => {
 
                       {/* Live Tracking Stats */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[
-                          { label: t('dashboard.liveTracking.applicationsInProgress'), value: '23', change: '+5', trend: 'up', icon: Clock, color: 'from-amber-500 to-orange-500' },
-                          { label: t('dashboard.liveTracking.completedToday'), value: '156', change: '+12', trend: 'up', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
-                          { label: t('dashboard.liveTracking.pendingReview'), value: '48', change: '-3', trend: 'down', icon: AlertCircle, color: 'from-red-500 to-rose-500' },
-                          { label: t('dashboard.liveTracking.avgProcessingTime'), value: '4.2h', change: '-0.8h', trend: 'down', icon: Timer, color: 'from-purple-500 to-pink-500' }
-                        ].map((metric, idx) => (
+                        {loading ? (
+                          // Loading skeleton for live tracking stats
+                          Array.from({ length: 4 }).map((_, idx) => (
+                            <motion.div
+                              key={idx}
+                              className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass animate-pulse"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: idx * 0.1 }}
+                            >
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+                                <div className="flex-1">
+                                  <div className="h-3 bg-gray-300 rounded w-20 mb-1"></div>
+                                  <div className="h-4 bg-gray-300 rounded w-12"></div>
+                                </div>
+                              </div>
+                              <div className="h-3 bg-gray-300 rounded w-16"></div>
+                            </motion.div>
+                          ))
+                        ) : (
+                          liveTrackingStats.map((metric, idx) => (
                           <motion.div
                             key={metric.label}
                             className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass group/metric overflow-hidden"
@@ -926,51 +1142,66 @@ const Dashboard = () => {
                               transition={{ duration: 0.6 }}
                             />
                           </motion.div>
-                        ))}
+                        )))}
                       </div>
 
                       {/* Live Activity Feed */}
-                      <div className="mt-6">
-                        <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
-                          <motion.div
-                            className="w-2 h-2 rounded-full bg-green-500"
-                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          {t('dashboard.recentActivity.liveUpdates')}
-                        </h4>
-                        <div className="space-y-2">
-                          {[
-                            { action: t('dashboard.recentActivity.applicationSubmitted'), user: 'Rajesh Kumar', time: '2 min ago', status: 'processing' },
-                            { action: t('dashboard.recentActivity.documentVerified'), user: 'Priya Singh', time: '5 min ago', status: 'completed' },
-                            { action: t('dashboard.recentActivity.paymentProcessed'), user: 'Amit Sharma', time: '8 min ago', status: 'completed' },
-                            { action: t('dashboard.recentActivity.reviewPending'), user: 'Sunita Devi', time: '12 min ago', status: 'pending' }
-                          ].map((activity, idx) => (
-                            <motion.div
-                              key={idx}
-                              className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.1 }}
-                              whileHover={{ scale: 1.02, x: 5 }}
-                            >
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                activity.status === 'completed' ? 'bg-green-500' :
-                                activity.status === 'processing' ? 'bg-blue-500' : 'bg-amber-500'
-                              }`}>
-                                {activity.status === 'completed' ? <CheckCircle className="w-4 h-4 text-white" /> :
-                                 activity.status === 'processing' ? <Clock className="w-4 h-4 text-white" /> :
-                                 <AlertCircle className="w-4 h-4 text-white" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
-                                <p className="text-xs theme-text-muted">by {activity.user}</p>
-                              </div>
-                              <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
+<div className="mt-6">
+  <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
+    <motion.div
+      className="w-2 h-2 rounded-full bg-green-500"
+      animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+      transition={{ duration: 2, repeat: Infinity }}
+    />
+    {t('dashboard.recentActivity.liveUpdates')}
+  </h4>
+  <div className="space-y-2">
+    {loading ? (
+      // Loading skeleton for recent activity
+      Array.from({ length: 4 }).map((_, idx) => (
+        <motion.div
+          key={idx}
+          className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: idx * 0.1 }}
+        >
+          <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+          <div className="flex-1">
+            <div className="h-3 bg-gray-300 rounded w-32 mb-1"></div>
+            <div className="h-2 bg-gray-300 rounded w-24"></div>
+          </div>
+          <div className="h-4 bg-gray-300 rounded w-16"></div>
+        </motion.div>
+      ))
+    ) : (
+      recentActivity.map((activity, idx) => (
+        <motion.div
+          key={idx}
+          className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: idx * 0.1 }}
+          whileHover={{ scale: 1.02, x: 5 }}
+        >
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+            activity.type === 'application' ? 'bg-blue-500' :
+            activity.type === 'grievance' ? 'bg-amber-500' : 'bg-green-500'
+          }`}>
+            {activity.type === 'application' ? <FileText className="w-4 h-4 text-white" /> :
+             activity.type === 'grievance' ? <AlertCircle className="w-4 h-4 text-white" /> :
+             <CheckCircle className="w-4 h-4 text-white" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
+            <p className="text-xs theme-text-muted">by {activity.user}</p>
+          </div>
+          <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
+        </motion.div>
+      ))
+    )}
+  </div>
+</div>
                     </div>
 
                     {/* Decorative Elements */}
@@ -1333,13 +1564,17 @@ const Dashboard = () => {
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {[
-                              { name: 'Rajesh Kumar', id: 'BEN-001234', status: 'verified', amount: '₹40,000', color: 'from-green-500 to-emerald-500', avatar: 'R', district: 'Patna', type: 'PCR Act' },
-                              { name: 'Priya Singh', id: 'BEN-001235', status: 'verified', amount: '₹35,000', color: 'from-blue-500 to-cyan-500', avatar: 'P', district: 'Lucknow', type: 'PoA Act' },
-                              { name: 'Amit Sharma', id: 'BEN-001236', status: 'verified', amount: '₹42,000', color: 'from-purple-500 to-pink-500', avatar: 'A', district: 'Jaipur', type: 'PCR Act' }
-                            ].map((beneficiary, idx) => (
+                            {beneficiaries.map((beneficiary: any, idx: number) => {
+                              const avatar = beneficiary.avatar || (beneficiary.name ? beneficiary.name.split(' ').map((n: string) => n[0]).join('') : 'U');
+                              const bid = beneficiary.id || beneficiary.code || beneficiary.beneficiaryId || '—';
+                              const parts = (beneficiary.district || beneficiary.location || '').split(' • ');
+                              const district = parts[0] || beneficiary.district || '';
+                              const type = parts[1] || beneficiary.type || '';
+                              const color = beneficiary.color || (beneficiary.status === 'verified' ? 'from-green-500 to-emerald-500' : 'from-gray-500 to-gray-600');
+                              const amount = beneficiary.amount !== undefined ? (typeof beneficiary.amount === 'number' ? '₹' + beneficiary.amount.toLocaleString() : beneficiary.amount) : '—';
+                              return (
                               <motion.div
-                                key={beneficiary.id}
+                                key={bid + idx}
                                 className="relative p-5 rounded-2xl theme-bg-glass border-2 theme-border-glass group/card overflow-hidden shadow-xl"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1362,7 +1597,7 @@ const Dashboard = () => {
 
                                 {/* Status Accent Bar */}
                                 <motion.div
-                                  className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${beneficiary.color}`}
+                                  className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${color}`}
                                   initial={{ height: 0 }}
                                   animate={{ height: '100%' }}
                                   transition={{ delay: 0.2 + idx * 0.1, duration: 0.5 }}
@@ -1372,11 +1607,11 @@ const Dashboard = () => {
                                 <div className="flex items-center gap-4 mb-4">
                                   <div className="relative">
                                     <motion.div
-                                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${beneficiary.color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}
+                                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}
                                       whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                                       transition={{ duration: 0.5 }}
                                     >
-                                      {beneficiary.avatar}
+                                      {avatar}
                                     </motion.div>
                                     {/* Verification Badge */}
                                     <motion.div
@@ -1390,8 +1625,8 @@ const Dashboard = () => {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-bold theme-text-primary text-base truncate mb-1">{beneficiary.name}</p>
-                                    <p className="text-xs theme-text-muted mb-1">{beneficiary.id}</p>
-                                    <p className="text-xs theme-text-muted">{beneficiary.district} • {beneficiary.type}</p>
+                                    <p className="text-xs theme-text-muted mb-1">{bid}</p>
+                                    <p className="text-xs theme-text-muted">{district} {district && type ? '• ' : ''}{type}</p>
                                   </div>
                                 </div>
 
@@ -1406,7 +1641,7 @@ const Dashboard = () => {
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
                                       <CheckCircle className="w-3 h-3" />
-                                      {getStatusText(beneficiary.status)}
+                                      {getStatusText(beneficiary.status || 'verified')}
                                     </span>
                                   </motion.div>
                                   <motion.span
@@ -1415,7 +1650,7 @@ const Dashboard = () => {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: 0.4 + idx * 0.1 }}
                                   >
-                                    {beneficiary.amount}
+                                    {amount}
                                   </motion.span>
                                 </div>
 
@@ -1438,8 +1673,9 @@ const Dashboard = () => {
                                   whileHover={{ x: '100%' }}
                                   transition={{ duration: 0.6 }}
                                 />
-                              </motion.div>
-                            ))}
+                                </motion.div>
+                                  );
+                              })}
                           </div>
                         </div>
 
@@ -1488,43 +1724,58 @@ const Dashboard = () => {
                           </div>
 
                           <div className="space-y-3">
-                            {[
-                              { id: 'DIS-001234', beneficiary: 'Rajesh Kumar', amount: '₹40,000', status: 'completed', date: '2024-03-15', color: 'bg-green-500' },
-                              { id: 'DIS-001235', beneficiary: 'Priya Singh', amount: '₹35,000', status: 'processing', date: '2024-03-14', color: 'bg-blue-500' },
-                              { id: 'DIS-001236', beneficiary: 'Amit Sharma', amount: '₹42,000', status: 'completed', date: '2024-03-13', color: 'bg-green-500' }
-                            ].map((disbursement, idx) => (
-                              <motion.div
-                                key={disbursement.id}
-                                className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                whileHover={{ scale: 1.02, x: 5 }}
-                              >
-                                <div className={`w-2 h-16 rounded-full ${disbursement.color} absolute left-0`} />
-                                <div className="flex-1 pl-4">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div>
-                                      <p className="font-semibold theme-text-primary text-sm">{disbursement.beneficiary}</p>
-                                      <p className="text-xs theme-text-muted">{disbursement.id}</p>
+                            {loading ? (
+                              Array.from({ length: 3 }).map((_, idx) => (
+                                <motion.div
+                                  key={idx}
+                                  className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4 animate-pulse"
+                                />
+                              ))
+                            ) : recentDisbursements.length === 0 ? (
+                              <div className="p-4 text-center theme-text-muted">{t('dashboard.disbursements.noRecords') || 'No disbursements found.'}</div>
+                            ) : (
+                              recentDisbursements.map((disbursement: any, idx: number) => {
+                                const did = disbursement.id || disbursement.code || disbursement.disbursementId || '';
+                                const name = disbursement.beneficiary || disbursement.beneficiaryName || disbursement.name || 'Unknown';
+                                const amount = disbursement.amount !== undefined ? (typeof disbursement.amount === 'number' ? '₹' + disbursement.amount.toLocaleString() : disbursement.amount) : '—';
+                                const status = disbursement.status || 'processing';
+                                const date = disbursement.date || (disbursement.disbursementDate ? new Date(disbursement.disbursementDate.toDate()).toLocaleDateString() : 'N/A');
+                                const color = disbursement.color || (status === 'completed' ? 'bg-green-500' : 'bg-blue-500');
+                                return (
+                                  <motion.div
+                                    key={did + idx}
+                                    className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    whileHover={{ scale: 1.02, x: 5 }}
+                                  >
+                                    <div className={`w-2 h-16 rounded-full ${color} absolute left-0`} />
+                                    <div className="flex-1 pl-4">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold theme-text-primary text-sm">{name}</p>
+                                          <p className="text-xs theme-text-muted">{did}</p>
+                                        </div>
+                                        <span className="font-bold text-lg theme-text-primary">{amount}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                          status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                        }`}>
+                                          <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
+                                          {getStatusText(status)}
+                                        </span>
+                                        <span className="text-xs theme-text-muted flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          {date}
+                                        </span>
+                                      </div>
                                     </div>
-                                    <span className="font-bold text-lg theme-text-primary">{disbursement.amount}</span>
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                      disbursement.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
-                                    }`}>
-                                      <div className={`w-1.5 h-1.5 rounded-full ${disbursement.color}`} />
-                                      {getStatusText(disbursement.status)}
-                                    </span>
-                                    <span className="text-xs theme-text-muted flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      {disbursement.date}
-                                    </span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
+                                  </motion.div>
+                                );
+                              })
+                            )}
                           </div>
                         </div>
 
@@ -1569,12 +1820,11 @@ const Dashboard = () => {
                             </motion.button>
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
                               { label: t('dashboard.analytics.totalApplications'), value: '1,247', change: '+12%', trend: 'up', icon: FileText, color: 'from-blue-500 to-cyan-500', progress: 85 },
                               { label: t('dashboard.analytics.successRate'), value: '87.5%', change: '+3.2%', trend: 'up', icon: TrendingUp, color: 'from-green-500 to-emerald-500', progress: 87.5 },
-                              { label: t('dashboard.analytics.avgProcessing'), value: '4.2 days', change: '-0.8', trend: 'down', icon: Clock, color: 'from-amber-500 to-orange-500', progress: 65 },
-                              { label: t('dashboard.analytics.totalDisbursed'), value: '₹3.28Cr', change: '+18%', trend: 'up', icon: Wallet, color: 'from-purple-500 to-pink-500', progress: 92 }
+                              { label: t('dashboard.analytics.avgProcessing'), value: '4.2 days', change: '-0.8', trend: 'down', icon: Clock, color: 'from-amber-500 to-orange-500', progress: 65 }
                             ].map((metric, idx) => (
                               <motion.div
                                 key={metric.label}
@@ -1719,13 +1969,19 @@ const Dashboard = () => {
                           </div>
 
                           <div className="space-y-4">
-                            {[
+                            {(generatedReports.length ? generatedReports : [
                               { name: t('dashboard.reports.monthlyDbtDisbursement'), type: t('dashboard.reports.financial'), status: 'completed', size: '4.2 MB', date: '2024-03-18', icon: Wallet, progress: 100, color: 'from-green-500 to-emerald-500' },
                               { name: t('dashboard.reports.beneficiaryVerification'), type: t('dashboard.reports.operational'), status: 'completed', size: '2.8 MB', date: '2024-03-17', icon: CheckCircle, progress: 100, color: 'from-blue-500 to-cyan-500' },
                               { name: t('dashboard.reports.applicationAnalytics'), type: t('dashboard.reports.statistical'), status: 'processing', size: '3.5 MB', date: '2024-03-16', icon: BarChart3, progress: 65, color: 'from-amber-500 to-orange-500' }
-                            ].map((report, idx) => (
+                            ]).map((report: any, idx: number) => {
+                              const title = report.title || report.name || 'Report';
+                              const IconComp = report.icon || FileText;
+                              const color = report.color || 'from-gray-500 to-gray-600';
+                              const status = report.status || 'completed';
+                              const progress = typeof report.progress === 'number' ? report.progress : (status === 'completed' ? 100 : (report.progress || 0));
+                              return (
                               <motion.div
-                                key={report.name}
+                                key={(report.id || title) + idx}
                                 className="relative p-5 rounded-2xl theme-bg-glass border-2 theme-border-glass group/report overflow-hidden shadow-xl"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -1746,7 +2002,7 @@ const Dashboard = () => {
 
                                 {/* Status Accent Bar */}
                                 <motion.div
-                                  className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${report.color}`}
+                                  className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${color}`}
                                   initial={{ height: 0 }}
                                   animate={{ height: '100%' }}
                                   transition={{ delay: 0.2 + idx * 0.1, duration: 0.5 }}
@@ -1756,22 +2012,22 @@ const Dashboard = () => {
                                   {/* Icon with Animation */}
                                   <div className="relative">
                                     <motion.div
-                                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${report.color} flex items-center justify-center shadow-lg`}
+                                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg`}
                                       whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                                       transition={{ duration: 0.5 }}
                                     >
-                                      <report.icon className="w-7 h-7 text-white" />
+                                      <IconComp className="w-7 h-7 text-white" />
                                     </motion.div>
                                     {/* Status Indicator */}
                                     <motion.div
                                       className={`absolute -top-1 -right-1 w-6 h-6 rounded-full border-2 theme-bg-card flex items-center justify-center shadow-lg ${
-                                        report.status === 'completed' ? 'bg-green-500 border-green-300' : 'bg-blue-500 border-blue-300'
+                                        status === 'completed' ? 'bg-green-500 border-green-300' : 'bg-blue-500 border-blue-300'
                                       }`}
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       transition={{ delay: 0.4 + idx * 0.1, type: "spring" }}
                                     >
-                                      {report.status === 'completed' ?
+                                      {status === 'completed' ?
                                         <CheckCircle className="w-3 h-3 text-white" /> :
                                         <Clock className="w-3 h-3 text-white" />
                                       }
@@ -1839,20 +2095,21 @@ const Dashboard = () => {
                                           animate={{ width: `${report.progress}%` }}
                                           transition={{ delay: 0.5 + idx * 0.1, duration: 1, ease: "easeOut" }}
                                         />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
 
-                                {/* Shine Effect */}
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/report:opacity-10"
-                                  initial={{ x: '-100%' }}
-                                  whileHover={{ x: '100%' }}
-                                  transition={{ duration: 0.6 }}
-                                />
-                              </motion.div>
-                            ))}
+                                        {/* Shine Effect */}
+                                        <motion.div
+                                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/report:opacity-10"
+                                          initial={{ x: '-100%' }}
+                                          whileHover={{ x: '100%' }}
+                                          transition={{ duration: 0.6 }}
+                                        />
+                                      </motion.div>
+                                          );
+                                      })}
                           </div>
                         </div>
 
@@ -1922,106 +2179,67 @@ const Dashboard = () => {
                           {/* Grid Layout for Integrations */}
                           <div className="grid grid-cols-2 gap-2.5">
                             {loading ? (
-                              // Loading skeleton for integrations
                               Array.from({ length: 6 }).map((_, idx) => (
                                 <motion.div
                                   key={idx}
                                   className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
                                   initial={{ opacity: 0, scale: 0.8 }}
                                   animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: idx * 0.1 }}
+                                  transition={{ delay: idx * 0.05 }}
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
-                                    <div className="flex-1">
-                                      <div className="h-3 bg-gray-300 rounded w-20 mb-1"></div>
-                                      <div className="h-2 bg-gray-300 rounded w-12"></div>
+                                    <div className="w-8 h-8 rounded-lg bg-gray-300" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="h-4 bg-gray-300 rounded w-32 mb-2" />
+                                      <div className="h-3 bg-gray-300 rounded w-20" />
                                     </div>
                                   </div>
                                 </motion.div>
                               ))
                             ) : (
-                              systemIntegrations.map((integration, index) => (
-                              <motion.div
-                                key={integration.name}
-                                className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass group/card overflow-hidden"
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.08, type: "spring" }}
-                                whileHover={{ scale: 1.05, y: -3 }}
-                              >
-                                {/* Status Indicator Strip */}
-                                <div className={`absolute top-0 left-0 right-0 h-1 ${
-                                  integration.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                                  integration.status === 'warning' ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 
-                                  'bg-gradient-to-r from-red-500 to-rose-500'
-                                }`} />
-
-                                {/* Connection Animation Lines */}
-                                <motion.div
-                                  className={`absolute inset-0 opacity-10`}
-                                  style={{
-                                    background: `linear-gradient(135deg, ${
-                                      integration.status === 'active' ? 'rgba(34, 197, 94, 0.3)' :
-                                      integration.status === 'warning' ? 'rgba(245, 158, 11, 0.3)' : 
-                                      'rgba(239, 68, 68, 0.3)'
-                                    } 0%, transparent 50%)`
-                                  }}
-                                  animate={{ 
-                                    backgroundPosition: ['0% 0%', '100% 100%'],
-                                  }}
-                                  transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
-                                />
-
-                                <div className="relative flex flex-col items-center text-center gap-2">
-                                  {/* Icon with Hexagon Frame */}
-                                  <div className="relative">
-                                    <motion.div 
-                                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${integration.color} flex items-center justify-center shadow-md`}
-                                      whileHover={{ rotate: [0, -5, 5, -5, 0] }}
-                                      transition={{ duration: 0.5 }}
-                                    >
-                                      <integration.icon className="w-5 h-5 text-white" />
-                                    </motion.div>
-                                    
-                                    {/* Floating Status Badge */}
-                                    <motion.div
-                                      className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 theme-bg-card ${
-                                        integration.status === 'active' ? 'bg-green-500 border-green-300' :
-                                        integration.status === 'warning' ? 'bg-amber-500 border-amber-300' : 
-                                        'bg-red-500 border-red-300'
-                                      }`}
-                                      animate={{ 
-                                        scale: integration.status === 'active' ? [1, 1.2, 1] : 1,
-                                        opacity: integration.status === 'active' ? [1, 0.6, 1] : 1
-                                      }}
-                                      transition={{ duration: 2, repeat: Infinity }}
-                                    />
-                                  </div>
-
-                                  {/* Integration Name */}
-                                  <div>
-                                    <p className="font-semibold theme-text-primary text-xs leading-tight">{integration.name}</p>
-                                    <p className={`text-[10px] font-medium mt-0.5 ${
-                                      integration.status === 'active' ? 'text-green-500' :
-                                      integration.status === 'warning' ? 'text-amber-500' : 
-                                      'text-red-500'
-                                    }`}>
-                                      {integration.status === 'active' ? 'Connected' :
-                                       integration.status === 'warning' ? 'Warning' : 'Error'}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Shine Effect on Hover */}
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/card:opacity-20"
-                                  initial={{ x: '-100%' }}
-                                  whileHover={{ x: '100%' }}
-                                  transition={{ duration: 0.6 }}
-                                />
-                              </motion.div>
-                            )))}
+                              systemIntegrations.map((integration: any, idx: number) => {
+                                const name = integration.name || 'Unknown Integration';
+                                const IconComp = integration.icon || Settings;
+                                const color = integration.color || 'from-gray-500 to-gray-600';
+                                const status = integration.status || 'error';
+                                return (
+                                  <motion.div
+                                    key={(integration.id || name) + idx}
+                                    className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-3"
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                  >
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                      {integration.imageUrl ? (
+                                        <img
+                                          src={integration.imageUrl}
+                                          alt={name}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
+                                            if (sib) sib.style.display = 'flex';
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div className={`w-full h-full flex items-center justify-center ${integration.imageUrl ? 'hidden' : ''}`}>
+                                        {IconComp ? <IconComp className="w-6 h-6" /> : <Database className="w-6 h-6" />}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold theme-text-primary text-sm truncate">{name}</p>
+                                      <p className="text-xs theme-text-muted">{status === 'active' ? 'Connected' : status}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                        status === 'active' ? 'bg-green-500/10 text-green-500' : status === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'
+                                      }`}>{getStatusText(status)}</span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })
+                            )}
                           </div>
 
                           {/* Connection Status Summary */}
@@ -2058,7 +2276,81 @@ const Dashboard = () => {
                         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
 
-                      {/* Grievance Hub Preview */}
+                        {/* Verified Beneficiaries Preview */}
+                        <motion.div
+                          variants={itemVariants}
+                          className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                        >
+                          <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                                  <BadgeCheck className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                <h3 className="text-lg font-semibold theme-text-primary">Beneficiaries</h3>
+                                <p className="text-xs theme-text-muted">Active profiles preview (all verification statuses)</p>
+                              </div>
+                              </div>
+                              <motion.button
+                                onClick={() => router.push('/dashboard/beneficiaries')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-xs shadow-lg hover:shadow-xl transition-shadow"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <span>View Full</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </motion.button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead className="theme-bg-glass border-b theme-border-glass">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">ID</th>
+                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">Beneficiary</th>
+                                    <th className="hidden sm:table-cell px-3 py-2 text-left font-semibold theme-text-primary">Aadhaar</th>
+                                    <th className="hidden md:table-cell px-3 py-2 text-left font-semibold theme-text-primary">District</th>
+                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">Verification</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {previewBeneficiaries.length ? previewBeneficiaries.map((b: any, idx: number) => (
+                                    <tr key={b.id || idx} className="border-b theme-border-glass hover:theme-bg-glass transition-colors">
+                                      <td className="px-3 py-2 text-sm font-medium theme-text-primary">{b.id}</td>
+                                      <td className="px-3 py-2">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                                            {String(b.name || '').split(' ').map((n: string) => n[0]).join('')}
+                                          </div>
+                                          <div>
+                                            <p className="text-sm font-medium theme-text-primary">{b.name}</p>
+                                            <p className="text-xs theme-text-muted">{b.category}</p>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="hidden sm:table-cell px-3 py-2 theme-text-primary">{b.aadhaarNumber || '—'}</td>
+                                      <td className="hidden md:table-cell px-3 py-2"><p className="text-sm theme-text-primary">{b.district || '—'}</p></td>
+                                      <td className="px-3 py-2">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getVerificationColor(b.verificationStatus)}`}>
+                                          {(() => { const V = getVerificationIcon(b.verificationStatus); return <V className="w-3 h-3" />; })()}
+                                          {b.verificationStatus?.replace('-', ' ') || '—'}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  )) : (
+                                    <tr>
+                                      <td colSpan={5} className="p-4 text-sm theme-text-muted">No verified beneficiaries</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div className="absolute -top-8 -right-8 w-28 h-28 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl" />
+                        </motion.div>
+
+                        {/* Grievance Hub Preview */}
                       <motion.div
                         variants={itemVariants}
                         className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
