@@ -637,6 +637,7 @@ const AnalyticsPage = () => {
       headStyles: { fillColor: [59, 130, 246] }
     });
     
+
     doc.save('analytics-report.pdf');
   };
 
@@ -671,7 +672,7 @@ const AnalyticsPage = () => {
     
     csvContent += '\nMonthly Trends\n';
     csvContent += 'Month,Applications,Disbursements,Amount\n';
-    analyticsData.monthlyTrends.labels.forEach((month, index) => {
+    analyticsData.monthlyTrends.labels.forEach((month: string, index: number) => {
       csvContent += `${month},${analyticsData.monthlyTrends.applications[index]},${analyticsData.monthlyTrends.disbursements[index]},₹${(analyticsData.monthlyTrends.amounts[index] / 100000).toFixed(2)}L\n`;
     });
     
@@ -701,7 +702,7 @@ const AnalyticsPage = () => {
     doc.text('Monthly Trends', 20, 70);
     
     const monthlyHeaders = [['Month', 'Applications', 'Disbursements', 'Amount (₹)']];
-    const monthlyData = analyticsData.monthlyTrends.labels.map((month, index) => [
+    const monthlyData = analyticsData.monthlyTrends.labels.map((month: string, index: number) => [
       month,
       analyticsData.monthlyTrends.applications[index].toString(),
       analyticsData.monthlyTrends.disbursements[index].toString(),
@@ -1264,32 +1265,57 @@ const AnalyticsPage = () => {
           </div>
           <div className="h-48 sm:h-64 overflow-x-auto">
             {chartType === 'bar' && (
-              <div className="flex items-end gap-1 h-full">
-                {analyticsData.monthlyTrends.labels.map((month, index) => {
-                  const appHeight = analyticsData.monthlyTrends.applications[index] > 0 ? (analyticsData.monthlyTrends.applications[index] / Math.max(...analyticsData.monthlyTrends.applications.filter(v => v > 0))) * 100 : 0;
-                  const disbHeight = analyticsData.monthlyTrends.disbursements[index] > 0 ? (analyticsData.monthlyTrends.disbursements[index] / Math.max(...analyticsData.monthlyTrends.disbursements.filter(v => v > 0))) * 100 : 0;
+                <div className="flex items-end gap-1 h-full">
+                {analyticsData.monthlyTrends.labels.map((month: string, index: number) => {
+                  const appHeight =
+                  analyticsData.monthlyTrends.applications[index] > 0
+                    ? (analyticsData.monthlyTrends.applications[index] /
+                      Math.max(
+                      ...analyticsData.monthlyTrends.applications.filter(
+                        (v: number) => v > 0
+                      )
+                      )) *
+                    100
+                    : 0;
+                  const disbHeight =
+                  analyticsData.monthlyTrends.disbursements[index] > 0
+                    ? (analyticsData.monthlyTrends.disbursements[index] /
+                      Math.max(
+                      ...analyticsData.monthlyTrends.disbursements.filter(
+                        (v: number) => v > 0
+                      )
+                      )) *
+                    100
+                    : 0;
 
                   return (
-                    <div key={month} className="flex flex-col items-center min-w-[64px] sm:flex-1 sm:min-w-0 flex-shrink-0">
-                      <div className="flex items-end justify-center w-full h-24 sm:h-48 gap-1 mb-2">
-                        <motion.div
-                          className="w-1/2 bg-blue-500 rounded-t transition-all duration-500 hover:bg-blue-600"
-                          style={{ height: `${appHeight}%` }}
-                          whileHover={{ scale: 1.05 }}
-                          title={`${t('extracted.applications')}: ${analyticsData.monthlyTrends.applications[index]}`}
-                        ></motion.div>
-                        <motion.div
-                          className="w-1/2 bg-green-500 rounded-t transition-all duration-500 hover:bg-green-600"
-                          style={{ height: `${disbHeight}%` }}
-                          whileHover={{ scale: 1.05 }}
-                          title={`${t('extracted.disbursements')}: ${analyticsData.monthlyTrends.disbursements[index]}`}
-                        ></motion.div>
-                      </div>
-                      <span className="text-xs theme-text-muted">{month}</span>
+                  <div
+                    key={month}
+                    className="flex flex-col items-center min-w-[64px] sm:flex-1 sm:min-w-0 flex-shrink-0"
+                  >
+                    <div className="flex items-end justify-center w-full h-24 sm:h-48 gap-1 mb-2">
+                    <motion.div
+                      className="w-1/2 bg-blue-500 rounded-t transition-all duration-500 hover:bg-blue-600"
+                      style={{ height: `${appHeight}%` }}
+                      whileHover={{ scale: 1.05 }}
+                      title={`${t('extracted.applications')}: ${
+                      analyticsData.monthlyTrends.applications[index]
+                      }`}
+                    ></motion.div>
+                    <motion.div
+                      className="w-1/2 bg-green-500 rounded-t transition-all duration-500 hover:bg-green-600"
+                      style={{ height: `${disbHeight}%` }}
+                      whileHover={{ scale: 1.05 }}
+                      title={`${t('extracted.disbursements')}: ${
+                      analyticsData.monthlyTrends.disbursements[index]
+                      }`}
+                    ></motion.div>
                     </div>
+                    <span className="text-xs theme-text-muted">{month}</span>
+                  </div>
                   );
                 })}
-              </div>
+                </div>
             )}
 
             {chartType === 'line' && (
@@ -1308,7 +1334,7 @@ const AnalyticsPage = () => {
                     fill="none"
                     stroke="#3b82f6"
                     strokeWidth="3"
-                    points={analyticsData.monthlyTrends.labels.map((_, index) => {
+                    points={analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
                       const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
@@ -1321,7 +1347,7 @@ const AnalyticsPage = () => {
                     fill="none"
                     stroke="#10b981"
                     strokeWidth="3"
-                    points={analyticsData.monthlyTrends.labels.map((_, index) => {
+                    points={analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxDisb = Math.max(...analyticsData.monthlyTrends.disbursements);
                       const y = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
@@ -1330,7 +1356,7 @@ const AnalyticsPage = () => {
                   />
 
                   {/* Month labels */}
-                  {analyticsData.monthlyTrends.labels.map((month, index) => (
+                  {analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
                     <text
                       key={month}
                       x={(index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20}
@@ -1365,7 +1391,7 @@ const AnalyticsPage = () => {
                     fill="url(#appGradient)"
                     stroke="#3b82f6"
                     strokeWidth="2"
-                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_, index) => {
+                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
                       const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
@@ -1377,20 +1403,25 @@ const AnalyticsPage = () => {
                   <polygon
                     fill="url(#disbGradient)"
                     stroke="#10b981"
-                    strokeWidth="2"
-                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_, index) => {
-                      const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
-                      const maxDisb = Math.max(...analyticsData.monthlyTrends.disbursements);
-                      const y = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
+                    strokeWidth={2}
+                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_: string, index: number) => {
+                      const x: number = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
+                      const maxDisb: number = Math.max(...analyticsData.monthlyTrends.disbursements);
+                      const y: number = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
                       return `${x},${y}`;
                     }).join(' ')} 380,180`}
                   />
 
                   {/* Month labels */}
-                  {analyticsData.monthlyTrends.labels.map((month, index) => (
+                  {analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
                     <text
                       key={month}
-                      x={(index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20}
+                      x={
+                        (index /
+                          (analyticsData.monthlyTrends.labels.length - 1)) *
+                          360 +
+                        20
+                      }
                       y="195"
                       textAnchor="middle"
                       className="text-xs fill-current theme-text-muted"
@@ -1399,43 +1430,12 @@ const AnalyticsPage = () => {
                     </text>
                   ))}
                 </svg>
-              </div>
-            )}
-
-            {chartType === 'pie' && (
-              <div className="flex items-center justify-center h-full">
-                <div className="relative">
-                  <svg width="200" height="200" viewBox="0 0 200 200">
-                    {(() => {
-                      const totalApps = analyticsData.monthlyTrends.applications.reduce((a, b) => a + b, 0);
-                      const totalDisbs = analyticsData.monthlyTrends.disbursements.reduce((a, b) => a + b, 0);
-                      const total = totalApps + totalDisbs;
-                      const appAngle = total > 0 ? (totalApps / total) * 360 : 0;
-                      const disbAngle = total > 0 ? (totalDisbs / total) * 360 : 0;
-
-                      return (
-                        <>
-                          {/* Applications slice */}
-                          <path
-                            d={`M 100 100 L 100 20 A 80 80 0 ${appAngle > 180 ? 1 : 0} 1 ${100 + 80 * Math.sin((appAngle * Math.PI) / 180)} ${100 - 80 * Math.cos((appAngle * Math.PI) / 180)} Z`}
-                            fill="#3b82f6"
-                          />
-                          {/* Disbursements slice */}
-                          <path
-                            d={`M 100 100 L ${100 + 80 * Math.sin((appAngle * Math.PI) / 180)} ${100 - 80 * Math.cos((appAngle * Math.PI) / 180)} A 80 80 0 ${disbAngle > 180 ? 1 : 0} 1 100 20 Z`}
-                            fill="#10b981"
-                          />
-                        </>
-                      );
-                    })()}
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-lg font-bold theme-text-primary">
-                        {analyticsData.monthlyTrends.applications.reduce((a, b) => a + b, 0) + analyticsData.monthlyTrends.disbursements.reduce((a, b) => a + b, 0)}
-                      </div>
-                      <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-lg font-bold theme-text-primary">
+                      {analyticsData.monthlyTrends.applications.reduce((a, b) => a + b, 0) + analyticsData.monthlyTrends.disbursements.reduce((a, b) => a + b, 0)}
                     </div>
+                    <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                   </div>
                 </div>
               </div>
