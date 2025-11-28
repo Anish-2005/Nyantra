@@ -86,6 +86,11 @@ const PlatformLogos: { [key: string]: (props: React.SVGProps<SVGSVGElement>) => 
   )
 };
 
+// Provide display names for the inline platform logo components to satisfy react/display-name
+Object.entries(PlatformLogos).forEach(([k, v]) => {
+  try { (v as any).displayName = `${k}Logo`; } catch { /* safe */ }
+});
+
 // Define the wrapper component with proper display name
 const PlatformLogoWrapper = ({ provider, ...props }: { provider: string } & React.SVGProps<SVGSVGElement>) => {
   const Logo = PlatformLogos[provider as keyof typeof PlatformLogos];
@@ -96,8 +101,9 @@ const PlatformLogoWrapper = ({ provider, ...props }: { provider: string } & Reac
 PlatformLogoWrapper.displayName = 'PlatformLogoWrapper';
 
 const getPlatformLogo = (provider: string) => {
-  return (props: React.SVGProps<SVGSVGElement>) => 
-    <PlatformLogoWrapper provider={provider} {...props} />;
+  const Comp = (props: React.SVGProps<SVGSVGElement>) => <PlatformLogoWrapper provider={provider} {...props} />;
+  try { (Comp as any).displayName = `${provider.replace(/\s+/g, '')}_Logo`; } catch {}
+  return Comp;
 };
 
 const Dashboard = () => {
@@ -362,7 +368,7 @@ const Dashboard = () => {
   }, [theme]);
 
   // Data fetching functions
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -437,19 +443,19 @@ const Dashboard = () => {
       // Today's applications
       const todaysAppsQuery = query(collection(db, 'applications'), where('applicationDate', '>=', startOfToday));
       const todaysAppsSnapshot = await getDocs(todaysAppsQuery);
-      // Remove unused variable assignment
+      const todaysAppsCount = todaysAppsSnapshot.size;
 
       // Pending applications
       const pendingAppsQuery = query(collection(db, 'applications'), where('status', '==', 'pending'));
       const pendingAppsSnapshot = await getDocs(pendingAppsQuery);
-      // Remove unused variable assignment
+      const pendingAppsCount = pendingAppsSnapshot.size;
 
       // This week's disbursements
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());
       const weekDisbursementsQuery = query(collection(db, 'disbursements'), where('disbursementDate', '>=', startOfWeek));
       const weekDisbursementsSnapshot = await getDocs(weekDisbursementsQuery);
-      // Remove unused variable assignment
+      const weekDisbursementsCount = weekDisbursementsSnapshot.size;
 
       // Calculate live tracking stats
       const inProgressQuery = query(collection(db, 'applications'), where('status', '==', 'in-review'));
@@ -515,7 +521,7 @@ const Dashboard = () => {
         },
         {
           title: t('dashboard.quickStats.approvedToday'),
-          value: '156',
+          value: completedTodayCount.toString(),
           change: '+8%',
           trend: 'up',
           icon: CheckCircle,
@@ -523,7 +529,7 @@ const Dashboard = () => {
         },
         {
           title: t('dashboard.quickStats.pendingReview'),
-          value: '45',
+          value: pendingReviewCount.toString(),
           change: '-3%',
           trend: 'down',
           icon: Clock,
