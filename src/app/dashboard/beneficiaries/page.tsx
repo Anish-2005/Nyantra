@@ -6,6 +6,7 @@ import type * as THREE from 'three';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
+import { generateBeneficiaryId } from '@/lib/id';
 import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -128,8 +129,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           ifsc: formData.ifsc || null
         };
 
-        // Generate deterministic beneficiary id starting with BEN
-        const newId = `BEN${Date.now()}`;
+        // Generate beneficiary id starting with `BEN` followed by digits
+        const newId = generateBeneficiaryId();
         const ref = doc(db, 'beneficiaries', newId);
         await setDoc(ref, { ...newBeneficiary, id: newId });
         const saved = { id: newId, ...newBeneficiary };
