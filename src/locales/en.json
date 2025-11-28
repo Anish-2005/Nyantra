@@ -297,7 +297,104 @@
       "amit": "Officer Amit"
     },
     "chartLabels": {
-      "bar": "Bar"
+      "bar": "Bar",
+      "line": "Line",
+      "area": "Area",
+      "applications": "Applications",
+      "approved": "Approved",
+      "pending": "Pending"
+    },
+    "analytics": {
+      "performanceAnalytics": "Performance Analytics",
+      "keyMetricsAndInsights": "Key metrics and insights",
+      "totalApplications": "Total Applications",
+      "successRate": "Success Rate",
+      "avgProcessing": "Avg. Processing",
+      "totalDisbursed": "Total Disbursed",
+      "peakValue": "Peak Value",
+      "average": "Average",
+      "growthRate": "Growth Rate",
+      "liveDataStream": "Live Data Stream",
+      "export": "Export",
+      "refresh": "Refresh"
+    },
+    "beneficiaries": {
+      "verifiedBeneficiaries": "Verified Beneficiaries",
+      "activeProfilesWithFullVerification": "Active profiles with full verification"
+    },
+    "disbursements": {
+      "recentDisbursements": "Recent Disbursements",
+      "approvedPayments": "Approved payments ready for transfer",
+      "latestPaymentTransactions": "Latest payment transactions"
+    },
+    "reports": {
+      "generatedReports": "Generated Reports",
+      "latestSystemReports": "Latest system reports",
+      "monthlyDbtDisbursement": "Monthly DBT Disbursement",
+      "beneficiaryVerification": "Beneficiary Verification",
+      "applicationAnalytics": "Application Analytics",
+      "financial": "Financial",
+      "operational": "Operational",
+      "statistical": "Statistical",
+      "completed": "Completed",
+      "processing": "Processing"
+    },
+    "systemHealth": {
+      "systemHealth": "System Health",
+      "serverUptime": "Server Uptime",
+      "apiResponse": "API Response",
+      "databaseLoad": "Database Load",
+      "activeUsers": "Active Users"
+    },
+    "recentActivity": {
+      "recentActivity": "Recent Activity",
+      "liveUpdates": "Live Updates",
+      "newApplication": "New Application",
+      "disbursementApproved": "Disbursement Approved",
+      "reportGenerated": "Report Generated",
+      "grievanceResolved": "Grievance Resolved",
+      "applicationSubmitted": "Application submitted",
+      "documentVerified": "Document verified",
+      "paymentProcessed": "Payment processed",
+      "reviewPending": "Review pending"
+    },
+    "performance": {
+      "performance": "Performance",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "success": "Success",
+      "pending": "Pending"
+    },
+    "common": {
+      "viewFull": "View Full",
+      "exploreTab": "Explore {{tab}}",
+      "tabManagement": "{{tab}} Management",
+      "tabManagementDescription": "{{tab}} management interface with detailed tables, forms, and analytics.",
+      "viewAllTracking": "View All Tracking",
+      "view": "View:"
+    },
+    "liveTracking": {
+      "liveApplicationTracking": "Live Application Tracking",
+      "trackRealTime": "Track applications in real-time",
+      "applicationsInProgress": "Applications in Progress",
+      "completedToday": "Completed Today",
+      "pendingReview": "Pending Review",
+      "avgProcessingTime": "Avg. Processing Time"
+    },
+    "status": {
+      "approved": "Approved",
+      "pending": "Pending",
+      "inReview": "In Review",
+      "rejected": "Rejected",
+      "open": "Open",
+      "inProgress": "In Progress",
+      "resolved": "Resolved",
+      "active": "Active",
+      "warning": "Warning",
+      "error": "Error",
+      "verified": "Verified",
+      "completed": "Completed",
+      "processing": "Processing"
     }
   },
   "applications": {

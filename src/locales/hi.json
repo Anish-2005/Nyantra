@@ -297,7 +297,104 @@
       "amit": "अधिकारी अमित"
     },
     "chartLabels": {
-      "bar": "बार"
+      "bar": "बार",
+      "line": "लाइन",
+      "area": "क्षेत्र",
+      "applications": "आवेदन",
+      "approved": "स्वीकृत",
+      "pending": "लंबित"
+    },
+    "analytics": {
+      "performanceAnalytics": "प्रदर्शन विश्लेषण",
+      "keyMetricsAndInsights": "मुख्य मीट्रिक्स और अंतर्दृष्टि",
+      "totalApplications": "कुल आवेदन",
+      "successRate": "सफलता दर",
+      "avgProcessing": "औसत प्रसंस्करण",
+      "totalDisbursed": "कुल वितरित",
+      "peakValue": "पीक वैल्यू",
+      "average": "औसत",
+      "growthRate": "वृद्धि दर",
+      "liveDataStream": "लाइव डेटा स्ट्रीम",
+      "export": "निर्यात",
+      "refresh": "रीफ्रेश"
+    },
+    "beneficiaries": {
+      "verifiedBeneficiaries": "सत्यापित लाभार्थी",
+      "activeProfilesWithFullVerification": "पूर्ण सत्यापन के साथ सक्रिय प्रोफाइल"
+    },
+    "disbursements": {
+      "recentDisbursements": "हाल के वितरण",
+      "approvedPayments": "स्थानांतरण के लिए तैयार स्वीकृत भुगतान",
+      "latestPaymentTransactions": "नवीनतम भुगतान लेनदेन"
+    },
+    "reports": {
+      "generatedReports": "जनित रिपोर्ट",
+      "latestSystemReports": "नवीनतम सिस्टम रिपोर्ट",
+      "monthlyDbtDisbursement": "मासिक DBT वितरण",
+      "beneficiaryVerification": "लाभार्थी सत्यापन",
+      "applicationAnalytics": "आवेदन विश्लेषण",
+      "financial": "वित्तीय",
+      "operational": "संचालनात्मक",
+      "statistical": "सांख्यिकीय",
+      "completed": "पूर्ण",
+      "processing": "प्रसंस्करण"
+    },
+    "systemHealth": {
+      "systemHealth": "सिस्टम स्वास्थ्य",
+      "serverUptime": "सर्वर अपटाइम",
+      "apiResponse": "API प्रतिक्रिया",
+      "databaseLoad": "डेटाबेस लोड",
+      "activeUsers": "सक्रिय उपयोगकर्ता"
+    },
+    "recentActivity": {
+      "recentActivity": "हाल की गतिविधि",
+      "liveUpdates": "लाइव अपडेट",
+      "newApplication": "नया आवेदन",
+      "disbursementApproved": "वितरण स्वीकृत",
+      "reportGenerated": "रिपोर्ट जनित",
+      "grievanceResolved": "शिकायत हल",
+      "applicationSubmitted": "आवेदन जमा किया गया",
+      "documentVerified": "दस्तावेज़ सत्यापित",
+      "paymentProcessed": "भुगतान संसाधित",
+      "reviewPending": "समीक्षा लंबित"
+    },
+    "performance": {
+      "performance": "प्रदर्शन",
+      "today": "आज",
+      "thisWeek": "इस सप्ताह",
+      "success": "सफलता",
+      "pending": "लंबित"
+    },
+    "common": {
+      "viewFull": "पूर्ण देखें",
+      "exploreTab": "{{tab}} का अन्वेषण करें",
+      "tabManagement": "{{tab}} प्रबंधन",
+      "tabManagementDescription": "{{tab}} प्रबंधन इंटरफेस जिसमें विस्तृत तालिकाएं, फॉर्म और विश्लेषण हैं।",
+      "viewAllTracking": "सभी ट्रैकिंग देखें",
+      "view": "देखें:"
+    },
+    "liveTracking": {
+      "liveApplicationTracking": "लाइव आवेदन ट्रैकिंग",
+      "trackRealTime": "वास्तविक समय में आवेदनों को ट्रैक करें",
+      "applicationsInProgress": "प्रगति में आवेदन",
+      "completedToday": "आज पूर्ण",
+      "pendingReview": "समीक्षा लंबित",
+      "avgProcessingTime": "औसत प्रसंस्करण समय"
+    },
+    "status": {
+      "approved": "स्वीकृत",
+      "pending": "लंबित",
+      "inReview": "समीक्षा में",
+      "rejected": "अस्वीकृत",
+      "open": "खुला",
+      "inProgress": "प्रगति में",
+      "resolved": "हल",
+      "active": "सक्रिय",
+      "warning": "चेतावनी",
+      "error": "त्रुटि",
+      "verified": "सत्यापित",
+      "completed": "पूर्ण",
+      "processing": "प्रसंस्करण"
     }
   },
   "applications": {

@@ -4,6 +4,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import type * as THREE from 'three';
@@ -20,7 +22,8 @@ import {
   Download,
   RefreshCw,
   BarChart,
-  Zap
+  Zap,
+  Timer
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -42,6 +45,13 @@ const Dashboard = () => {
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
 
   const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Dashboard data state
+  const [recentApplications, setRecentApplications] = useState<any[]>([]);
+  const [quickStats, setQuickStats] = useState<any[]>([]);
+  const [grievanceData, setGrievanceData] = useState<any[]>([]);
+  const [systemIntegrations, setSystemIntegrations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -141,9 +151,9 @@ const Dashboard = () => {
     const pending = apps.map((p, i) => ({ x: p.x, y: Math.max(0, Math.round(p.y - approved[i].y)) }));
 
     const sets: DataSet[] = [];
-    if (showApplications) sets.push({ id: 'applications', label: 'Applications', points: smoothing ? smooth(apps) : apps });
-    if (showApproved) sets.push({ id: 'approved', label: 'Approved', color: undefined, points: smoothing ? smooth(approved) : approved });
-    if (showPending) sets.push({ id: 'pending', label: 'Pending', color: undefined, points: smoothing ? smooth(pending) : pending });
+    if (showApplications) sets.push({ id: 'applications', label: t('dashboard.chartLabels.applications'), points: smoothing ? smooth(apps) : apps });
+    if (showApproved) sets.push({ id: 'approved', label: t('dashboard.chartLabels.approved'), color: undefined, points: smoothing ? smooth(approved) : approved });
+    if (showPending) sets.push({ id: 'pending', label: t('dashboard.chartLabels.pending'), color: undefined, points: smoothing ? smooth(pending) : pending });
     return sets;
   }, [chartRange, showApplications, showApproved, showPending, smoothing]);
 
@@ -284,121 +294,151 @@ const Dashboard = () => {
     })();
   }, [theme]);
 
-  
+  // Data fetching functions
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-  const recentApplications = [
-    {
-      id: 'APP-2024-001234',
-      name: 'Rajesh Kumar',
-      district: 'Patna',
-      status: 'approved',
-      amount: 40000,
-      date: '2024-03-15',
-      type: 'PCR Act',
-      avatar: 'RK'
-    },
-    {
-      id: 'APP-2024-001235',
-      name: 'Priya Singh',
-      district: 'Lucknow',
-      status: 'pending',
-      amount: 35000,
-      date: '2024-03-14',
-      type: 'PoA Act',
-      avatar: 'PS'
-    },
-    {
-      id: 'APP-2024-001236',
-      name: 'Amit Verma',
-      district: 'Jaipur',
-      status: 'in-review',
-      amount: 45000,
-      date: '2024-03-14',
-      type: 'PCR Act',
-      avatar: 'AV'
-    },
-    {
-      id: 'APP-2024-001237',
-      name: 'Sunita Devi',
-      district: 'Bhopal',
-      status: 'approved',
-      amount: 38000,
-      date: '2024-03-13',
-      type: 'PoA Act',
-      avatar: 'SD'
+      // Fetch recent applications
+      const applicationsQuery = query(collection(db, 'applications'), orderBy('applicationDate', 'desc'), limit(4));
+      const applicationsSnapshot = await getDocs(applicationsQuery);
+      const applications = applicationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.applicantName || data.name || 'Unknown',
+          district: data.district || 'Unknown',
+          status: data.status || 'pending',
+          amount: data.amount || 0,
+          date: data.applicationDate ? new Date(data.applicationDate.toDate()).toLocaleDateString() : 'N/A',
+          type: data.applicationType || data.type || 'General',
+          avatar: (data.applicantName || data.name || 'U').split(' ').map((n: string) => n[0]).join('')
+        };
+      });
+      setRecentApplications(applications);
+
+      // Fetch grievances
+      const grievancesQuery = query(collection(db, 'grievances'), orderBy('createdDate', 'desc'), limit(3));
+      const grievancesSnapshot = await getDocs(grievancesQuery);
+      const grievances = grievancesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          subject: data.subject || data.title || 'Untitled Grievance',
+          status: data.status || 'open',
+          priority: data.priority || 'medium',
+          date: data.createdDate ? new Date(data.createdDate.toDate()).toLocaleDateString() : 'N/A',
+          assignedTo: data.assignedTo || data.assignedOfficer || 'Unassigned'
+        };
+      });
+      setGrievanceData(grievances);
+
+      // Fetch integrations
+      const integrationsQuery = query(collection(db, 'integrations'), orderBy('name'));
+      const integrationsSnapshot = await getDocs(integrationsQuery);
+      const integrations = integrationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const name = data.name || 'Unknown Integration';
+        
+        // Map integration names to icons and colors
+        const iconMap: { [key: string]: any } = {
+          'Aadhaar': Fingerprint,
+          'eCourts': FileText,
+          'CCTNS': Database,
+          'PFMS': Wallet,
+          'DigiLocker': Archive,
+          'State Databases': Server
+        };
+        
+        const colorMap: { [key: string]: string } = {
+          'Aadhaar': 'from-blue-500 to-blue-600',
+          'eCourts': 'from-indigo-500 to-indigo-600',
+          'CCTNS': 'from-purple-500 to-purple-600',
+          'PFMS': 'from-green-500 to-green-600',
+          'DigiLocker': 'from-amber-500 to-amber-600',
+          'State Databases': 'from-red-500 to-red-600'
+        };
+        
+        return {
+          name: name,
+          icon: iconMap[name] || Settings,
+          status: data.status || 'active',
+          color: colorMap[name] || 'from-gray-500 to-gray-600'
+        };
+      });
+      setSystemIntegrations(integrations);
+
+      // Calculate quick stats
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      // Today's applications
+      const todaysAppsQuery = query(collection(db, 'applications'), where('applicationDate', '>=', startOfToday));
+      const todaysAppsSnapshot = await getDocs(todaysAppsQuery);
+      const todaysAppsCount = todaysAppsSnapshot.size;
+
+      // Pending applications
+      const pendingAppsQuery = query(collection(db, 'applications'), where('status', '==', 'pending'));
+      const pendingAppsSnapshot = await getDocs(pendingAppsQuery);
+      const pendingAppsCount = pendingAppsSnapshot.size;
+
+      // This week's disbursements
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const weekDisbursementsQuery = query(collection(db, 'disbursements'), where('disbursementDate', '>=', startOfWeek));
+      const weekDisbursementsSnapshot = await getDocs(weekDisbursementsQuery);
+      const weekDisbursementsTotal = weekDisbursementsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+
+      // Calculate satisfaction rate (mock for now - would need real feedback data)
+      const satisfactionRate = 94.2;
+
+      const stats = [
+        {
+          title: t('dashboard.quickStats.todaysApplications'),
+          value: todaysAppsCount,
+          change: '+12%', // This would need historical comparison
+          trend: 'up',
+          icon: TrendingUp,
+          color: 'from-green-500 to-emerald-500'
+        },
+        {
+          title: t('dashboard.quickStats.pendingReview'),
+          value: pendingAppsCount,
+          change: '-5%', // This would need historical comparison
+          trend: 'down',
+          icon: Clock,
+          color: 'from-amber-500 to-orange-500'
+        },
+        {
+          title: t('dashboard.quickStats.weekDisbursed'),
+          value: `₹${(weekDisbursementsTotal / 100000).toFixed(1)}L`,
+          change: '+18%', // This would need historical comparison
+          trend: 'up',
+          icon: Wallet,
+          color: 'from-blue-500 to-cyan-500'
+        },
+        {
+          title: t('dashboard.quickStats.satisfactionRate'),
+          value: `${satisfactionRate}%`,
+          change: '+2.1%', // This would need historical comparison
+          trend: 'up',
+          icon: Award,
+          color: 'from-purple-500 to-pink-500'
+        }
+      ];
+      setQuickStats(stats);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const quickStats = [
-    {
-      title: t('dashboard.quickStats.todaysApplications'),
-      value: 23,
-      change: '+12%',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'from-green-500 to-emerald-500'
-    },
-    {
-      title: t('dashboard.quickStats.pendingReview'),
-      value: 48,
-      change: '-5%',
-      trend: 'down',
-      icon: Clock,
-      color: 'from-amber-500 to-orange-500'
-    },
-    {
-      title: t('dashboard.quickStats.weekDisbursed'),
-      value: '₹42.5L',
-      change: '+18%',
-      trend: 'up',
-      icon: Wallet,
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      title: t('dashboard.quickStats.satisfactionRate'),
-      value: '94.2%',
-      change: '+2.1%',
-      trend: 'up',
-      icon: Award,
-      color: 'from-purple-500 to-pink-500'
-    }
-  ];
-
-  const grievanceData = [
-    {
-      id: 'GRV-001',
-      subject: t('dashboard.grievance.subject1'),
-      status: 'open',
-      priority: 'high',
-      date: '2024-03-15',
-      assignedTo: t('dashboard.officers.raj')
-    },
-    {
-      id: 'GRV-002',
-      subject: t('dashboard.grievance.subject2'),
-      status: 'in-progress',
-      priority: 'medium',
-      date: '2024-03-14',
-      assignedTo: t('dashboard.officers.priya')
-    },
-    {
-      id: 'GRV-003',
-      subject: t('dashboard.grievance.subject3'),
-      status: 'resolved',
-      priority: 'low',
-      date: '2024-03-13',
-      assignedTo: t('dashboard.officers.amit')
-    }
-  ];
-
-  const systemIntegrations = [
-    { name: t('dashboard.integrations.aadhaar'), icon: Fingerprint, status: 'active', color: 'from-blue-500 to-blue-600' },
-    { name: t('dashboard.integrations.ecourts'), icon: FileText, status: 'active', color: 'from-indigo-500 to-indigo-600' },
-    { name: t('dashboard.integrations.cctns'), icon: Database, status: 'warning', color: 'from-purple-500 to-purple-600' },
-    { name: t('dashboard.integrations.pfms'), icon: Wallet, status: 'active', color: 'from-green-500 to-green-600' },
-    { name: t('dashboard.integrations.digilocker'), icon: Archive, status: 'active', color: 'from-amber-500 to-amber-600' },
-    { name: t('dashboard.integrations.stateDbs'), icon: Server, status: 'error', color: 'from-red-500 to-red-600' }
-  ];
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const navigationItems = [
     { id: 'overview', label: t('extracted.dashboard'), icon: Home },
@@ -456,6 +496,25 @@ const Dashboard = () => {
       case 'pending': return <ClockIcon className="w-4 h-4" />;
       case 'in-review': return <AlertCircle className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'approved': return t('dashboard.status.approved');
+      case 'pending': return t('dashboard.status.pending');
+      case 'in-review': return t('dashboard.status.inReview');
+      case 'rejected': return t('dashboard.status.rejected');
+      case 'open': return t('dashboard.status.open');
+      case 'in-progress': return t('dashboard.status.inProgress');
+      case 'resolved': return t('dashboard.status.resolved');
+      case 'active': return t('dashboard.status.active');
+      case 'warning': return t('dashboard.status.warning');
+      case 'error': return t('dashboard.status.error');
+      case 'verified': return t('dashboard.status.verified');
+      case 'completed': return t('dashboard.status.completed');
+      case 'processing': return t('dashboard.status.processing');
+      default: return status;
     }
   };
 
@@ -668,7 +727,26 @@ const Dashboard = () => {
                     animate="visible"
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
                   >
-                    {quickStats.map((stat, idx) => (
+                    {loading ? (
+                      // Loading skeleton for quick stats
+                      Array.from({ length: 4 }).map((_, idx) => (
+                        <motion.div
+                          key={idx}
+                          variants={itemVariants}
+                          className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm animate-pulse"
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-gray-300"></div>
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                              <div className="h-6 bg-gray-300 rounded"></div>
+                            </div>
+                          </div>
+                          <div className="h-4 bg-gray-300 rounded w-16"></div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      quickStats.map((stat, idx) => (
                       <motion.div
                         key={stat.title}
                         variants={itemVariants}
@@ -714,8 +792,6 @@ const Dashboard = () => {
                             <motion.div
                               className="absolute inset-0 rounded-full border-2 border-dashed opacity-20"
                               style={{ borderColor: `var(--${stat.trend === 'up' ? 'green' : 'amber'}-500)` }}
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                             />
                             <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl`}>
                               <stat.icon className="w-8 h-8 text-white" />
@@ -749,7 +825,157 @@ const Dashboard = () => {
                           />
                         </div>
                       </motion.div>
-                    ))}
+                    )))}
+                  </motion.div>
+
+                  {/* Live Application Tracking */}
+                  <motion.div
+                    variants={itemVariants}
+                    className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                  >
+                    {/* Animated Background Pattern */}
+                    <div className="absolute inset-0 opacity-5">
+                      <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <pattern id="tracking-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <circle cx="20" cy="20" r="2" fill="rgba(59, 130, 246, 0.8)" />
+                            <path d="M20,10 L30,20 L20,30 L10,20 Z" stroke="rgba(59, 130, 246, 0.4)" fill="none" strokeWidth="1" />
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#tracking-pattern)" />
+                      </svg>
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <motion.div
+                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
+                          >
+                            <Activity className="w-7 h-7 text-white" />
+                            <motion.div
+                              className="absolute inset-0 rounded-2xl border-2 border-blue-400"
+                              animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
+                              transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
+                            />
+                            <motion.div
+                              className="absolute inset-0 rounded-2xl border-2 border-cyan-400"
+                              animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 1, repeatDelay: 0.5 }}
+                            />
+                          </motion.div>
+                          <div>
+                            <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.liveTracking.liveApplicationTracking')}</h3>
+                            <p className="text-sm theme-text-muted">{t('dashboard.liveTracking.trackRealTime')}</p>
+                          </div>
+                        </div>
+                        <motion.button
+                          onClick={() => router.push('/dashboard/applications')}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                          whileHover={{ scale: 1.05, x: 5 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <span>{t('dashboard.common.viewAllTracking')}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+
+                      {/* Live Tracking Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { label: t('dashboard.liveTracking.applicationsInProgress'), value: '23', change: '+5', trend: 'up', icon: Clock, color: 'from-amber-500 to-orange-500' },
+                          { label: t('dashboard.liveTracking.completedToday'), value: '156', change: '+12', trend: 'up', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
+                          { label: t('dashboard.liveTracking.pendingReview'), value: '48', change: '-3', trend: 'down', icon: AlertCircle, color: 'from-red-500 to-rose-500' },
+                          { label: t('dashboard.liveTracking.avgProcessingTime'), value: '4.2h', change: '-0.8h', trend: 'down', icon: Timer, color: 'from-purple-500 to-pink-500' }
+                        ].map((metric, idx) => (
+                          <motion.div
+                            key={metric.label}
+                            className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass group/metric overflow-hidden"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.1, type: "spring" }}
+                            whileHover={{ scale: 1.05, y: -3 }}
+                          >
+                            {/* Animated Background */}
+                            <div className="absolute inset-0 opacity-10">
+                              <motion.div
+                                className={`w-full h-full bg-gradient-to-br ${metric.color} rounded-2xl`}
+                                animate={{ opacity: [0.1, 0.2, 0.1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              />
+                            </div>
+
+                            <div className="relative z-10">
+                              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-3 shadow-lg`}>
+                                <metric.icon className="w-5 h-5 text-white" />
+                              </div>
+                              <p className="text-xs theme-text-muted font-medium mb-1">{metric.label}</p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-lg font-bold theme-text-primary">{metric.value}</p>
+                                <span className={`text-xs font-semibold ${metric.trend === 'up' ? 'text-green-500' : 'text-amber-500'}`}>
+                                  {metric.change}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Shine Effect */}
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/metric:opacity-10"
+                              initial={{ x: '-100%' }}
+                              whileHover={{ x: '100%' }}
+                              transition={{ duration: 0.6 }}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Live Activity Feed */}
+                      <div className="mt-6">
+                        <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-green-500"
+                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          {t('dashboard.recentActivity.liveUpdates')}
+                        </h4>
+                        <div className="space-y-2">
+                          {[
+                            { action: t('dashboard.recentActivity.applicationSubmitted'), user: 'Rajesh Kumar', time: '2 min ago', status: 'processing' },
+                            { action: t('dashboard.recentActivity.documentVerified'), user: 'Priya Singh', time: '5 min ago', status: 'completed' },
+                            { action: t('dashboard.recentActivity.paymentProcessed'), user: 'Amit Sharma', time: '8 min ago', status: 'completed' },
+                            { action: t('dashboard.recentActivity.reviewPending'), user: 'Sunita Devi', time: '12 min ago', status: 'pending' }
+                          ].map((activity, idx) => (
+                            <motion.div
+                              key={idx}
+                              className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.1 }}
+                              whileHover={{ scale: 1.02, x: 5 }}
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                activity.status === 'completed' ? 'bg-green-500' :
+                                activity.status === 'processing' ? 'bg-blue-500' : 'bg-amber-500'
+                              }`}>
+                                {activity.status === 'completed' ? <CheckCircle className="w-4 h-4 text-white" /> :
+                                 activity.status === 'processing' ? <Clock className="w-4 h-4 text-white" /> :
+                                 <AlertCircle className="w-4 h-4 text-white" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
+                                <p className="text-xs theme-text-muted">by {activity.user}</p>
+                              </div>
+                              <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                   </motion.div>
 
                   {/* Premium Analytics Dashboard */}
@@ -773,20 +999,18 @@ const Dashboard = () => {
                           <div className="flex items-center gap-4">
                             <motion.div 
                               className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
-                              animate={{ rotate: [0, 360] }}
-                              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                             >
                               <Activity className="w-6 h-6 text-white" />
                             </motion.div>
                             <div>
-                              <h3 className="text-xl font-bold theme-text-primary">Analytics Dashboard</h3>
+                              <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.analytics.performanceAnalytics')}</h3>
                               <div className="flex items-center gap-2 mt-1">
                                 <motion.div
                                   className="w-2 h-2 bg-green-500 rounded-full"
                                   animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
                                   transition={{ duration: 2, repeat: Infinity }}
                                 />
-                                <span className="text-xs theme-text-muted">Live Data Stream</span>
+                                <span className="text-xs theme-text-muted">{t('dashboard.analytics.liveDataStream')}</span>
                               </div>
                             </div>
                           </div>
@@ -800,7 +1024,7 @@ const Dashboard = () => {
                               className="px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 text-sm font-medium theme-text-primary"
                             >
                               <Download className="w-4 h-4" />
-                              <span className="hidden sm:inline">Export</span>
+                              <span className="hidden sm:inline">{t('dashboard.analytics.export')}</span>
                             </motion.button>
                             <motion.button
                               whileHover={{ scale: 1.05 }}
@@ -808,7 +1032,7 @@ const Dashboard = () => {
                               className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center gap-2 text-sm font-medium shadow-lg"
                             >
                               <RefreshCw className="w-4 h-4" />
-                              <span className="hidden sm:inline">Refresh</span>
+                              <span className="hidden sm:inline">{t('dashboard.analytics.refresh')}</span>
                             </motion.button>
                           </div>
                         </div>
@@ -842,11 +1066,11 @@ const Dashboard = () => {
 
                             {/* Chart Type Selector */}
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">View:</span>
+                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">{t('dashboard.common.view')}</span>
                               {[
-                                { value: 'line', icon: TrendingUp, label: 'Line' },
-                                { value: 'area', icon: BarChart, label: 'Area' },
-                                { value: 'bar', icon: BarChart3, label: 'Bar' }
+                                { value: 'line', icon: TrendingUp, label: t('dashboard.chartLabels.line') },
+                                { value: 'area', icon: BarChart, label: t('dashboard.chartLabels.area') },
+                                { value: 'bar', icon: BarChart3, label: t('dashboard.chartLabels.bar') }
                               ].map((type) => (
                                 <motion.button
                                   key={type.value}
@@ -869,9 +1093,9 @@ const Dashboard = () => {
                           {/* Dataset Toggle Chips */}
                           <div className="flex flex-wrap gap-2">
                             {[
-                              { id: "ds-app", label: "Applications", value: showApplications, setter: setShowApplications, color: "from-blue-500 to-cyan-500" },
-                              { id: "ds-approved", label: "Approved", value: showApproved, setter: setShowApproved, color: "from-green-500 to-emerald-500" },
-                              { id: "ds-pending", label: "Pending", value: showPending, setter: setShowPending, color: "from-amber-500 to-orange-500" }
+                              { id: "ds-app", label: t('dashboard.chartLabels.applications'), value: showApplications, setter: setShowApplications, color: "from-blue-500 to-cyan-500" },
+                              { id: "ds-approved", label: t('dashboard.chartLabels.approved'), value: showApproved, setter: setShowApproved, color: "from-green-500 to-emerald-500" },
+                              { id: "ds-pending", label: t('dashboard.chartLabels.pending'), value: showPending, setter: setShowPending, color: "from-amber-500 to-orange-500" }
                             ].map(ds => (
                               <motion.button
                                 key={ds.id}
@@ -915,9 +1139,9 @@ const Dashboard = () => {
                           {/* Chart Statistics Bar */}
                           <div className="grid grid-cols-3 gap-4 mb-6">
                             {[
-                              { label: 'Peak Value', value: '1,247', color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
-                              { label: 'Average', value: '856', color: 'from-purple-500 to-pink-500', icon: Activity },
-                              { label: 'Growth Rate', value: '+23%', color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
+                              { label: t('dashboard.analytics.peakValue'), value: '1,247', color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
+                              { label: t('dashboard.analytics.average'), value: '856', color: 'from-purple-500 to-pink-500', icon: Activity },
+                              { label: t('dashboard.analytics.growthRate'), value: '+23%', color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
                             ].map((stat, idx) => (
                               <motion.div
                                 key={stat.label}
@@ -959,7 +1183,7 @@ const Dashboard = () => {
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
                           <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>Live Application Tracking</h3>
+                            <h3 className="text-lg font-semibold theme-text-primary" style={{ overflow: 'visible', lineHeight: '1.4' }}>{t('dashboard.liveTracking.liveApplicationTracking')}</h3>
                             <motion.div
                               className="w-2 h-2 rounded-full bg-green-500"
                               animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
@@ -972,13 +1196,37 @@ const Dashboard = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <span>View All Tracking</span>
+                            <span>{t('dashboard.common.viewAllTracking')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </motion.button>
                         </div>
 
                         <div className="space-y-3">
-                          {recentApplications.map((app, idx) => (
+                          {loading ? (
+                            // Loading skeleton for recent applications
+                            Array.from({ length: 4 }).map((_, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass border border-transparent animate-pulse gap-3"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                              >
+                                <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0 pl-3">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gray-300"></div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="h-4 bg-gray-300 rounded mb-2 w-32"></div>
+                                    <div className="h-3 bg-gray-300 rounded w-24"></div>
+                                  </div>
+                                </div>
+                                <div className="hidden sm:flex sm:flex-col sm:items-end text-right">
+                                  <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+                                  <div className="h-4 bg-gray-300 rounded w-16"></div>
+                                </div>
+                              </motion.div>
+                            ))
+                          ) : (
+                            recentApplications.map((app, idx) => (
                             <motion.div
                               key={app.id}
                               className="relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all gap-3"
@@ -1026,7 +1274,7 @@ const Dashboard = () => {
                                   <div className="flex items-center space-x-2 mt-2 sm:hidden">
                                     <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
                                       {getStatusIcon(app.status)}
-                                      <span className="capitalize">{app.status}</span>
+                                      <span>{getStatusText(app.status)}</span>
                                     </span>
                                     <p className="font-semibold theme-text-primary text-sm">₹{app.amount.toLocaleString()}</p>
                                   </div>
@@ -1036,12 +1284,12 @@ const Dashboard = () => {
                                 <p className="font-semibold theme-text-primary text-lg">₹{app.amount.toLocaleString()}</p>
                                 <span className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(app.status)}`}>
                                   {getStatusIcon(app.status)}
-                                  <span className="capitalize">{app.status}</span>
+                                  <span>{getStatusText(app.status)}</span>
                                 </span>
                                 <span className="text-xs theme-text-muted">{app.date}</span>
                               </div>
                             </motion.div>
-                          ))}
+                          )))}
                         </div>
                       </motion.div>
 
@@ -1069,8 +1317,8 @@ const Dashboard = () => {
                                 <Users className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">Verified Beneficiaries</h3>
-                                <p className="text-sm theme-text-muted">Active profiles with full verification</p>
+                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.beneficiaries.verifiedBeneficiaries')}</h3>
+                                <p className="text-sm theme-text-muted">{t('dashboard.beneficiaries.activeProfilesWithFullVerification')}</p>
                               </div>
                             </div>
                             <motion.button
@@ -1079,16 +1327,16 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05, x: 5 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-4 h-4" />
                             </motion.button>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
-                              { name: 'Rajesh Kumar', id: 'BEN-001234', status: 'Verified', amount: '₹40,000', color: 'from-green-500 to-emerald-500', avatar: 'R', district: 'Patna', type: 'PCR Act' },
-                              { name: 'Priya Singh', id: 'BEN-001235', status: 'Verified', amount: '₹35,000', color: 'from-blue-500 to-cyan-500', avatar: 'P', district: 'Lucknow', type: 'PoA Act' },
-                              { name: 'Amit Sharma', id: 'BEN-001236', status: 'Verified', amount: '₹42,000', color: 'from-purple-500 to-pink-500', avatar: 'A', district: 'Jaipur', type: 'PCR Act' }
+                              { name: 'Rajesh Kumar', id: 'BEN-001234', status: 'verified', amount: '₹40,000', color: 'from-green-500 to-emerald-500', avatar: 'R', district: 'Patna', type: 'PCR Act' },
+                              { name: 'Priya Singh', id: 'BEN-001235', status: 'verified', amount: '₹35,000', color: 'from-blue-500 to-cyan-500', avatar: 'P', district: 'Lucknow', type: 'PoA Act' },
+                              { name: 'Amit Sharma', id: 'BEN-001236', status: 'verified', amount: '₹42,000', color: 'from-purple-500 to-pink-500', avatar: 'A', district: 'Jaipur', type: 'PCR Act' }
                             ].map((beneficiary, idx) => (
                               <motion.div
                                 key={beneficiary.id}
@@ -1158,7 +1406,7 @@ const Dashboard = () => {
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
                                       <CheckCircle className="w-3 h-3" />
-                                      {beneficiary.status}
+                                      {getStatusText(beneficiary.status)}
                                     </span>
                                   </motion.div>
                                   <motion.span
@@ -1224,8 +1472,8 @@ const Dashboard = () => {
                                 <Wallet className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">Recent Disbursements</h3>
-                                <p className="text-sm theme-text-muted">Latest payment transactions</p>
+                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.disbursements.recentDisbursements')}</h3>
+                                <p className="text-sm theme-text-muted">{t('dashboard.disbursements.latestPaymentTransactions')}</p>
                               </div>
                             </div>
                             <motion.button
@@ -1234,16 +1482,16 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05, x: 5 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-4 h-4" />
                             </motion.button>
                           </div>
 
                           <div className="space-y-3">
                             {[
-                              { id: 'DIS-001234', beneficiary: 'Rajesh Kumar', amount: '₹40,000', status: 'Completed', date: '2024-03-15', color: 'bg-green-500' },
-                              { id: 'DIS-001235', beneficiary: 'Priya Singh', amount: '₹35,000', status: 'Processing', date: '2024-03-14', color: 'bg-blue-500' },
-                              { id: 'DIS-001236', beneficiary: 'Amit Sharma', amount: '₹42,000', status: 'Completed', date: '2024-03-13', color: 'bg-green-500' }
+                              { id: 'DIS-001234', beneficiary: 'Rajesh Kumar', amount: '₹40,000', status: 'completed', date: '2024-03-15', color: 'bg-green-500' },
+                              { id: 'DIS-001235', beneficiary: 'Priya Singh', amount: '₹35,000', status: 'processing', date: '2024-03-14', color: 'bg-blue-500' },
+                              { id: 'DIS-001236', beneficiary: 'Amit Sharma', amount: '₹42,000', status: 'completed', date: '2024-03-13', color: 'bg-green-500' }
                             ].map((disbursement, idx) => (
                               <motion.div
                                 key={disbursement.id}
@@ -1264,10 +1512,10 @@ const Dashboard = () => {
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                      disbursement.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                      disbursement.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
                                     }`}>
                                       <div className={`w-1.5 h-1.5 rounded-full ${disbursement.color}`} />
-                                      {disbursement.status}
+                                      {getStatusText(disbursement.status)}
                                     </span>
                                     <span className="text-xs theme-text-muted flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
@@ -1302,14 +1550,12 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4">
                               <motion.div 
                                 className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
-                                animate={{ rotate: [0, 360] }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                               >
                                 <BarChart3 className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">Performance Analytics</h3>
-                                <p className="text-sm theme-text-muted">Key metrics and insights</p>
+                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.analytics.performanceAnalytics')}</h3>
+                                <p className="text-sm theme-text-muted">{t('dashboard.analytics.keyMetricsAndInsights')}</p>
                               </div>
                             </div>
                             <motion.button
@@ -1318,17 +1564,17 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05, x: 5 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-4 h-4" />
                             </motion.button>
                           </div>
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
-                              { label: 'Total Applications', value: '1,247', change: '+12%', trend: 'up', icon: FileText, color: 'from-blue-500 to-cyan-500', progress: 85 },
-                              { label: 'Success Rate', value: '87.5%', change: '+3.2%', trend: 'up', icon: TrendingUp, color: 'from-green-500 to-emerald-500', progress: 87.5 },
-                              { label: 'Avg. Processing', value: '4.2 days', change: '-0.8', trend: 'down', icon: Clock, color: 'from-amber-500 to-orange-500', progress: 65 },
-                              { label: 'Total Disbursed', value: '₹3.28Cr', change: '+18%', trend: 'up', icon: Wallet, color: 'from-purple-500 to-pink-500', progress: 92 }
+                              { label: t('dashboard.analytics.totalApplications'), value: '1,247', change: '+12%', trend: 'up', icon: FileText, color: 'from-blue-500 to-cyan-500', progress: 85 },
+                              { label: t('dashboard.analytics.successRate'), value: '87.5%', change: '+3.2%', trend: 'up', icon: TrendingUp, color: 'from-green-500 to-emerald-500', progress: 87.5 },
+                              { label: t('dashboard.analytics.avgProcessing'), value: '4.2 days', change: '-0.8', trend: 'down', icon: Clock, color: 'from-amber-500 to-orange-500', progress: 65 },
+                              { label: t('dashboard.analytics.totalDisbursed'), value: '₹3.28Cr', change: '+18%', trend: 'up', icon: Wallet, color: 'from-purple-500 to-pink-500', progress: 92 }
                             ].map((metric, idx) => (
                               <motion.div
                                 key={metric.label}
@@ -1457,8 +1703,8 @@ const Dashboard = () => {
                                 <FileText className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">Generated Reports</h3>
-                                <p className="text-sm theme-text-muted">Latest system reports</p>
+                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.reports.generatedReports')}</h3>
+                                <p className="text-sm theme-text-muted">{t('dashboard.reports.latestSystemReports')}</p>
                               </div>
                             </div>
                             <motion.button
@@ -1467,16 +1713,16 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05, x: 5 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-4 h-4" />
                             </motion.button>
                           </div>
 
                           <div className="space-y-4">
                             {[
-                              { name: 'Monthly DBT Disbursement', type: 'Financial', status: 'Completed', size: '4.2 MB', date: '2024-03-18', icon: Wallet, progress: 100, color: 'from-green-500 to-emerald-500' },
-                              { name: 'Beneficiary Verification', type: 'Operational', status: 'Completed', size: '2.8 MB', date: '2024-03-17', icon: CheckCircle, progress: 100, color: 'from-blue-500 to-cyan-500' },
-                              { name: 'Application Analytics', type: 'Statistical', status: 'Processing', size: '3.5 MB', date: '2024-03-16', icon: BarChart3, progress: 65, color: 'from-amber-500 to-orange-500' }
+                              { name: t('dashboard.reports.monthlyDbtDisbursement'), type: t('dashboard.reports.financial'), status: 'completed', size: '4.2 MB', date: '2024-03-18', icon: Wallet, progress: 100, color: 'from-green-500 to-emerald-500' },
+                              { name: t('dashboard.reports.beneficiaryVerification'), type: t('dashboard.reports.operational'), status: 'completed', size: '2.8 MB', date: '2024-03-17', icon: CheckCircle, progress: 100, color: 'from-blue-500 to-cyan-500' },
+                              { name: t('dashboard.reports.applicationAnalytics'), type: t('dashboard.reports.statistical'), status: 'processing', size: '3.5 MB', date: '2024-03-16', icon: BarChart3, progress: 65, color: 'from-amber-500 to-orange-500' }
                             ].map((report, idx) => (
                               <motion.div
                                 key={report.name}
@@ -1519,13 +1765,13 @@ const Dashboard = () => {
                                     {/* Status Indicator */}
                                     <motion.div
                                       className={`absolute -top-1 -right-1 w-6 h-6 rounded-full border-2 theme-bg-card flex items-center justify-center shadow-lg ${
-                                        report.status === 'Completed' ? 'bg-green-500 border-green-300' : 'bg-blue-500 border-blue-300'
+                                        report.status === 'completed' ? 'bg-green-500 border-green-300' : 'bg-blue-500 border-blue-300'
                                       }`}
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       transition={{ delay: 0.4 + idx * 0.1, type: "spring" }}
                                     >
-                                      {report.status === 'Completed' ?
+                                      {report.status === 'completed' ?
                                         <CheckCircle className="w-3 h-3 text-white" /> :
                                         <Clock className="w-3 h-3 text-white" />
                                       }
@@ -1566,17 +1812,17 @@ const Dashboard = () => {
                                       {/* Status Badge */}
                                       <motion.span
                                         className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                                          report.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                          report.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
                                         }`}
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: 0.4 + idx * 0.1 }}
                                       >
-                                        {report.status === 'Completed' ?
+                                        {report.status === 'completed' ?
                                           <CheckCircle className="w-3 h-3" /> :
                                           <Clock className="w-3 h-3" />
                                         }
-                                        {report.status}
+                                        {getStatusText(report.status)}
                                       </motion.span>
                                     </div>
 
@@ -1668,14 +1914,34 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-3 h-3" />
                             </motion.button>
                           </div>
 
                           {/* Grid Layout for Integrations */}
                           <div className="grid grid-cols-2 gap-2.5">
-                            {systemIntegrations.map((integration, index) => (
+                            {loading ? (
+                              // Loading skeleton for integrations
+                              Array.from({ length: 6 }).map((_, idx) => (
+                                <motion.div
+                                  key={idx}
+                                  className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+                                    <div className="flex-1">
+                                      <div className="h-3 bg-gray-300 rounded w-20 mb-1"></div>
+                                      <div className="h-2 bg-gray-300 rounded w-12"></div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))
+                            ) : (
+                              systemIntegrations.map((integration, index) => (
                               <motion.div
                                 key={integration.name}
                                 className="relative p-3 rounded-xl theme-bg-glass border theme-border-glass group/card overflow-hidden"
@@ -1755,7 +2021,7 @@ const Dashboard = () => {
                                   transition={{ duration: 0.6 }}
                                 />
                               </motion.div>
-                            ))}
+                            )))}
                           </div>
 
                           {/* Connection Status Summary */}
@@ -1837,13 +2103,34 @@ const Dashboard = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span>View Full</span>
+                              <span>{t('dashboard.common.viewFull')}</span>
                               <ArrowRight className="w-3 h-3" />
                             </motion.button>
                           </div>
                           
                           <div className="space-y-2.5">
-                            {grievanceData.map((grievance, index) => {
+                            {loading ? (
+                              // Loading skeleton for grievances
+                              Array.from({ length: 3 }).map((_, idx) => (
+                                <motion.div
+                                  key={idx}
+                                  className="flex items-center justify-between p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+                                    <div>
+                                      <div className="h-4 bg-gray-300 rounded w-32 mb-1"></div>
+                                      <div className="h-3 bg-gray-300 rounded w-24"></div>
+                                    </div>
+                                  </div>
+                                  <div className="h-6 bg-gray-300 rounded w-16"></div>
+                                </motion.div>
+                              ))
+                            ) : (
+                              grievanceData.map((grievance, index) => {
                               const priorityConfig = {
                                 high: { 
                                   bg: 'from-red-500 to-rose-500', 
@@ -1958,7 +2245,7 @@ const Dashboard = () => {
                                   />
                                 </motion.div>
                               );
-                            })}
+                            }))}
                           </div>
 
                           {/* Priority Summary */}
@@ -2064,7 +2351,7 @@ const Dashboard = () => {
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
                               <Activity className="w-5 h-5 text-green-500" />
-                              System Health
+                              {t('dashboard.systemHealth.systemHealth')}
                             </h3>
                             <motion.div
                               className="w-3 h-3 rounded-full bg-green-500"
@@ -2075,10 +2362,10 @@ const Dashboard = () => {
 
                           <div className="space-y-3">
                             {[
-                              { label: 'Server Uptime', value: '99.9%', status: 'excellent', color: 'text-green-500' },
-                              { label: 'API Response', value: '45ms', status: 'good', color: 'text-green-500' },
-                              { label: 'Database Load', value: '34%', status: 'normal', color: 'text-blue-500' },
-                              { label: 'Active Users', value: '1,247', status: 'high', color: 'text-purple-500' }
+                              { label: t('dashboard.systemHealth.serverUptime'), value: '99.9%', status: 'excellent', color: 'text-green-500' },
+                              { label: t('dashboard.systemHealth.apiResponse'), value: '45ms', status: 'good', color: 'text-green-500' },
+                              { label: t('dashboard.systemHealth.databaseLoad'), value: '34%', status: 'normal', color: 'text-blue-500' },
+                              { label: t('dashboard.systemHealth.activeUsers'), value: '1,247', status: 'high', color: 'text-purple-500' }
                             ].map((metric, idx) => (
                               <motion.div
                                 key={metric.label}
@@ -2119,16 +2406,16 @@ const Dashboard = () => {
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
                               <Clock className="w-5 h-5 text-purple-500" />
-                              Recent Activity
+                              {t('dashboard.recentActivity.recentActivity')}
                             </h3>
                           </div>
 
                           <div className="space-y-3">
                             {[
-                              { action: 'New Application', user: 'Rajesh Kumar', time: '2 min ago', icon: Plus, color: 'from-blue-500 to-cyan-500' },
-                              { action: 'Disbursement Approved', user: 'Officer Sharma', time: '15 min ago', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
-                              { action: 'Report Generated', user: 'System', time: '1 hr ago', icon: FileText, color: 'from-amber-500 to-orange-500' },
-                              { action: 'Grievance Resolved', user: 'Officer Verma', time: '3 hrs ago', icon: MessageCircle, color: 'from-red-500 to-rose-500' }
+                              { action: t('dashboard.recentActivity.newApplication'), user: 'Rajesh Kumar', time: '2 min ago', icon: Plus, color: 'from-blue-500 to-cyan-500' },
+                              { action: t('dashboard.recentActivity.disbursementApproved'), user: 'Officer Sharma', time: '15 min ago', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
+                              { action: t('dashboard.recentActivity.reportGenerated'), user: 'System', time: '1 hr ago', icon: FileText, color: 'from-amber-500 to-orange-500' },
+                              { action: t('dashboard.recentActivity.grievanceResolved'), user: 'Officer Verma', time: '3 hrs ago', icon: MessageCircle, color: 'from-red-500 to-rose-500' }
                             ].map((activity, idx) => (
                               <motion.div
                                 key={idx}
@@ -2176,16 +2463,16 @@ const Dashboard = () => {
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2" style={{ overflow: 'visible', lineHeight: '1.4' }}>
                               <TrendingUp className="w-5 h-5 text-blue-500" />
-                              Performance
+                              {t('dashboard.performance.performance')}
                             </h3>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
                             {[
-                              { label: 'Today', value: '156', change: '+12%', icon: Rocket, color: 'from-blue-500 to-cyan-500' },
-                              { label: 'This Week', value: '892', change: '+8%', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-                              { label: 'Success', value: '87.5%', change: '+3%', icon: Award, color: 'from-purple-500 to-pink-500' },
-                              { label: 'Pending', value: '45', change: '-5%', icon: Clock, color: 'from-amber-500 to-orange-500' }
+                              { label: t('dashboard.performance.today'), value: '156', change: '+12%', icon: Rocket, color: 'from-blue-500 to-cyan-500' },
+                              { label: t('dashboard.performance.thisWeek'), value: '892', change: '+8%', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                              { label: t('dashboard.performance.success'), value: '87.5%', change: '+3%', icon: Award, color: 'from-purple-500 to-pink-500' },
+                              { label: t('dashboard.performance.pending'), value: '45', change: '-5%', icon: Clock, color: 'from-amber-500 to-orange-500' }
                             ].map((metric, idx) => (
                               <motion.div
                                 key={metric.label}
@@ -2234,16 +2521,16 @@ const Dashboard = () => {
                         return <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />;
                       })()}
                     </div>
-                    <h3 className="text-lg sm:text-xl font-semibold theme-text-primary mb-2 capitalize">{activeTab} Management</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold theme-text-primary mb-2 capitalize">{t('dashboard.common.tabManagement', { tab: activeTab })}</h3>
                     <p className="theme-text-muted text-sm sm:text-base mb-4">
-                      {activeTab} management interface with detailed tables, forms, and analytics.
+                      {t('dashboard.common.tabManagementDescription', { tab: activeTab })}
                     </p>
                     <motion.button
                       className="px-4 py-2.5 sm:px-6 sm:py-3 accent-gradient rounded-xl font-semibold text-white flex items-center space-x-2 mx-auto text-sm sm:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <span>Explore {activeTab}</span>
+                      <span>{t('dashboard.common.exploreTab', { tab: activeTab })}</span>
                       <ArrowRight className="w-4 h-4" />
                     </motion.button>
                   </div>
