@@ -1383,92 +1383,102 @@ return (
       </motion.div>
     ) : (
       <>
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
-          <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-                <User className="w-5 h-5" />
-              </div>
-              <span className="text-lg font-bold theme-text-primary">
-                {stats.total}
-              </span>
-            </div>
-            <p className="text-sm font-medium theme-text-muted">
-              {t("applications.stats.total")}
-            </p>
+      {/* Statistics Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
+  {/* Total Applications */}
+  <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between mb-2">
+      <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
+        <User className="w-5 h-5" />
+      </div>
+      <span className="text-lg font-bold theme-text-primary">
+        {stats.total}
+      </span>
+    </div>
+    <p className="text-sm font-medium theme-text-muted">
+      {t("applications.stats.total")}
+    </p>
+  </div>
+
+  {(() => {
+    const list = [
+      {
+        status: "pending",
+        label: t("applications.stats.pending"),
+        count: stats.pending,
+        Icon: Clock,
+      },
+      {
+        status: "in-review",
+        label: t("applications.stats.inReview"),
+        count: stats.inReview,
+        Icon: Eye,
+      },
+      {
+        status: "approved",
+        label: t("applications.stats.approved"),
+        count: stats.approved,
+        Icon: Check,
+      },
+      {
+        status: "rejected",
+        label: t("applications.stats.rejected"),
+        count: stats.rejected,
+        Icon: X,
+      },
+      {
+        status: "documents-required",
+        label:
+          t("applications.stats.docsRequired") ||
+          t("applications.stats.documentsrequired"),
+        count: stats.documentsRequired,
+        Icon: AlertCircle,
+      },
+    ] as const;
+
+    return list.map((s) => (
+      <div
+        key={s.status}
+        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${
+              theme === "light"
+                ? s.status === "approved"
+                  ? "bg-green-500"
+                  : s.status === "pending"
+                  ? "bg-amber-400"
+                  : s.status === "in-review"
+                  ? "bg-blue-400"
+                  : s.status === "rejected"
+                  ? "bg-red-400"
+                  : "bg-purple-400"
+                : s.status === "approved"
+                ? "bg-green-700"
+                : s.status === "pending"
+                ? "bg-amber-600"
+                : s.status === "in-review"
+                ? "bg-blue-700"
+                : s.status === "rejected"
+                ? "bg-red-700"
+                : "bg-purple-700"
+            }`}
+          >
+            <s.Icon className="w-5 h-5" />
           </div>
-
-          {(() => {
-            const list = [
-              {
-                status: "pending",
-                label: t("applications.stats.pending"),
-                count: stats.pending,
-                Icon: Clock,
-              },
-              {
-                status: "in-review",
-                label: t("applications.stats.inReview"),
-                count: stats.inReview,
-                Icon: Eye,
-              },
-              {
-                status: "approved",
-                label: t("applications.stats.approved"),
-                count: stats.approved,
-                Icon: Check,
-              },
-              {
-                status: "rejected",
-                label: t("applications.stats.rejected"),
-                count: stats.rejected,
-                Icon: X,
-              },
-              {
-                status: "documents-required",
-                label:
-                  t("applications.stats.docsRequired") ||
-                  t("applications.stats.documentsrequired"),
-                count: stats.documentsRequired,
-                Icon: AlertCircle,
-              },
-            ] as const;
-
-            return list.map((s) => (
-              <div
-                key={s.status}
-                className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${
-                      theme === "light"
-                        ? s.status === "approved"
-                          ? "bg-green-500"
-                          : s.status === "pending"
-                          ? "bg-amber-400"
-                          : s.status === "in-review"
-                          ? "bg-blue-400"
-                          : s.status === "rejected"
-                          ? "bg-red-400"
-                          : "bg-purple-400"
-                        : "bg-opacity-80"
-                    }`}
-                  >
-                    <s.Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-lg font-bold theme-text-primary">
-                    {s.count}
-                  </span>
-                </div>
-                <p className="text-sm font-medium theme-text-muted">
-                  {s.label}
-                </p>
-              </div>
-            ));
-          })()}
+          <span className="text-lg font-bold theme-text-primary">
+            {s.count}
+          </span>
         </div>
+        <p className="text-sm font-medium theme-text-muted">
+          {s.label}
+        </p>
+      </div>
+    ));
+  })()}
+</div>
+
 
         {/* Filters and Search */}
         <motion.div
@@ -1635,9 +1645,9 @@ return (
       <table className="w-full table-auto">
         <thead className="border-b theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm text-sm">
           <tr className="whitespace-nowrap">
-            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.application_id")}</th>
+            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.application_id")}</th>
             <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.applicant")}</th>
-            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("applications.beneficiaryId")}</th>
+            <th className="hidden sm:table-cell py-3 px-3 text-left font-semibold theme-text-primary min-w-[120px]">{t("applications.beneficiaryId")}</th>
             <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.district")}</th>
             <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.act_type")}</th>
             <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.amount")}</th>
@@ -1674,7 +1684,9 @@ return (
                 </div>
               </td>
 
-              <td className="hidden sm:table-cell py-3 px-2 truncate">{app.beneficiaryId || "-"}</td>
+<td className="hidden sm:table-cell py-3 px-2 theme-text-primary font-medium truncate">
+  {app.beneficiaryId || "-"}
+</td>
 
               <td className="hidden sm:table-cell py-3 px-2">
                 <span className="theme-text-primary truncate">{app.district}</span>
