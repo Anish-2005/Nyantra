@@ -698,7 +698,7 @@ const ReportsPage = () => {
             </span>
           </div>
           <h1 className="text-3xl font-bold theme-text-primary mb-2">
-            {t('extracted.report_hub')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+            {t('extracted.report_hub')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">
             {t('extracted.generate_analyze_schedule_comprehensive_reports')}

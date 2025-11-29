@@ -939,13 +939,21 @@ const AnalyticsPage = () => {
               }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="text-sm font-medium theme-text-secondary">
-              {t('extracted.live_tracking')} • {t('extracted.analytics')} {t('extracted.monitoring_center')}
+            <span className="text-sm font-medium theme-text-secondary leading-tight inline-flex items-center gap-1">
+              {t('extracted.live_tracking')} • {t('extracted.analytics')}
+              <span className="text-accent-gradient inline-block leading-none">
+                {t('extracted.monitoring_center')}
+              </span>
             </span>
+
           </div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">
-            {t('extracted.analytics')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
+          <h1 className="text-3xl font-bold theme-text-primary mb-2 gap-2">
+            <span>{t("extracted.analytics")}</span>
+            <span className="text-accent-gradient inline-block leading-normal ml-2">
+              {t("extracted.monitoring_center")}
+            </span>
           </h1>
+
           <p className="theme-text-secondary max-w-2xl">{t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')}</p>
         </div>
         

@@ -1020,9 +1020,13 @@ const BeneficiariesPage = () => {
             >
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                        <h1 className="text-3xl font-bold theme-text-primary mb-2">
-                            {t('beneficiary.beneficiary')} <span className="text-accent-gradient">{t('beneficiary.management')}</span>
-                        </h1>
+                       <h1 className="text-3xl font-bold theme-text-primary mb-2 inline-block leading-tight pt-4">
+                        {t("beneficiary.beneficiary")}{" "}
+                        <span className="text-accent-gradient inline-block leading-normal">
+                          {t("beneficiary.management")}
+                        </span>
+                      </h1>
+
                         <p className="theme-text-secondary text-base">
                             {t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
                         </p>

@@ -813,8 +813,11 @@ const DisbursementsPage: React.FC = () => {
             </span>
           </div>
           <h1 className="text-3xl font-bold theme-text-primary mb-2">
-            {t('extracted.disbursement')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
-          </h1>
+          {t("extracted.disbursement")}{" "}
+          <span className="text-accent-gradient inline-block leading-normal">
+            {t("extracted.monitoring_center")}
+          </span>
+        </h1>
           <p className="theme-text-secondary max-w-2xl">{t('extracted.realtime_disbursement_tracking_description')}</p>
         </div>
         

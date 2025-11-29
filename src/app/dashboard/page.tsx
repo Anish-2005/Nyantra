@@ -941,7 +941,7 @@ const Dashboard = () => {
                           <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {currentTime}</span>
                         </div>
                         <h2 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
-                          {t('extracted.realtime_monitoring_dashboard').split(' ')[0]} <span className="text-accent-gradient">{t('extracted.realtime_monitoring_dashboard').split(' ').slice(1).join(' ')}</span>
+                          {t('extracted.realtime_monitoring_dashboard').split(' ')[0]} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.realtime_monitoring_dashboard').split(' ').slice(1).join(' ')}</span>
                         </h2>
                         <p className="theme-text-secondary text-sm sm:text-base">
                           {t('extracted.comprehensive_oversight_description')}

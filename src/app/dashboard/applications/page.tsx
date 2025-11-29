@@ -1068,9 +1068,10 @@ return (
         <div className="flex-1">
           <h1 className="text-3xl font-bold theme-text-primary mb-2">
             {t("extracted.application")}{" "}
-            <span className="text-accent-gradient">
-              {t("extracted.monitoring_center")}
+           <span className="text-accent-gradient inline-block leading-tight pt-4">
+            {t("extracted.monitoring_center")}
             </span>
+
           </h1>
           <p className="theme-text-secondary text-base">
             {t("extracted.realtime_application_tracking_description")}
@@ -1684,7 +1685,7 @@ return (
                 </div>
               </td>
 
-<td className="hidden sm:table-cell py-3 px-2 theme-text-primary font-medium truncate">
+<td className="hidden sm:table-cell py-3 px-3 text-sm theme-text-primary min-w-[120px]">
   {app.beneficiaryId || "-"}
 </td>
 
