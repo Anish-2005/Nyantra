@@ -392,6 +392,13 @@ const GrievancePage = () => {
     return () => mq.removeEventListener('change', handler as EventListener);
   }, []);
 
+  // Auto-scroll to bottom of chat when messages change
+  useEffect(() => {
+    if (chatRef.current && activeTab === 'communication') {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [selectedGrievance?.communication, pendingMessages, activeTab]);
+
   // Three.js background
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -481,6 +488,13 @@ const GrievancePage = () => {
       };
     })();
   }, [theme]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [selectedGrievance?.communication, pendingMessages]);
 
   const getStatusColor = (status?: string) => {
     const colors = {
@@ -1103,7 +1117,7 @@ const GrievancePage = () => {
                   ) : (
                     <>
                       {(selectedGrievance.communication ?? []).map((c, i) => {
-                        const isOfficer = c.type === 'officer' || c.user === 'Officer';
+                        const isOfficer = c.type !== 'user';
                         return (
                           <motion.div
                             key={i}
@@ -1113,33 +1127,33 @@ const GrievancePage = () => {
                             className={`flex items-start gap-3 ${isOfficer ? 'justify-end' : 'justify-start'}`}
                           >
                             {!isOfficer && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                 {c.user?.charAt(0)?.toUpperCase() || 'U'}
                               </div>
                             )}
                             <div className={`max-w-xs lg:max-w-md ${isOfficer ? 'order-1' : 'order-2'}`}>
                               <div className={`p-3 rounded-2xl shadow-sm ${
                                 isOfficer
-                                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white ml-auto'
-                                  : 'theme-bg-card theme-border-glass border'
+                                  ? 'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm'
+                                  : 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-tl-sm'
                               }`}>
                                 <div className="flex items-center gap-2 mb-1">
-                                  {isOfficer && <Shield className="w-4 h-4" />}
-                                  <span className={`text-xs font-medium ${isOfficer ? 'text-blue-100' : 'theme-text-muted'}`}>
-                                    {isOfficer ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
+                                  {!isOfficer && <Shield className="w-4 h-4 text-blue-500" />}
+                                  <span className={`text-xs font-medium ${!isOfficer ? 'text-blue-600' : 'theme-text-muted'}`}>
+                                    {!isOfficer ? (c.user || (t('extracted.user') || 'User')) : (t('extracted.officer') || 'Officer')}
                                   </span>
                                 </div>
-                                <p className={`text-sm ${isOfficer ? 'text-white' : 'theme-text-primary'}`}>
+                                <p className={`text-sm ${!isOfficer ? 'text-blue-700' : 'theme-text-primary'}`}>
                                   {String(c.text || c.message || c.body || '')}
                                 </p>
-                                <p className={`text-xs mt-2 ${isOfficer ? 'text-blue-100' : 'theme-text-muted'}`}>
+                                <p className={`text-xs mt-2 ${!isOfficer ? 'text-blue-500' : 'theme-text-muted'}`}>
                                   {c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}
                                 </p>
                               </div>
                             </div>
                             {isOfficer && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 order-2">
-                                <Shield className="w-4 h-4" />
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 order-2">
+                                {c.user?.charAt(0)?.toUpperCase() || 'U'}
                               </div>
                             )}
                           </motion.div>
@@ -1154,20 +1168,20 @@ const GrievancePage = () => {
                           className="flex items-start gap-3 justify-end"
                         >
                           <div className="max-w-xs lg:max-w-md">
-                            <div className="p-3 rounded-2xl shadow-sm bg-gradient-to-r from-gray-400 to-gray-500 text-white ml-auto opacity-70">
+                            <div className="p-3 rounded-2xl shadow-sm bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm opacity-70">
                               <div className="flex items-center gap-2 mb-1">
-                                <Shield className="w-4 h-4" />
-                                <span className="text-xs font-medium text-gray-100">
+                                <Shield className="w-4 h-4 text-blue-500" />
+                                <span className="text-xs font-medium text-blue-600">
                                   {t('extracted.officer') || 'Officer'}
                                 </span>
                               </div>
-                              <p className="text-sm text-white">{c.text}</p>
-                              <p className="text-xs mt-2 text-gray-100">
+                              <p className="text-sm text-blue-700">{c.text}</p>
+                              <p className="text-xs mt-2 text-blue-500">
                                 {t('extracted.sending') || 'Sending...'}
                               </p>
                             </div>
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                             <Shield className="w-4 h-4" />
                           </div>
                         </motion.div>
