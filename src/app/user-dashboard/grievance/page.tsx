@@ -10,6 +10,7 @@ import { useTheme } from '@/context/ThemeContext';
 type Grievance = {
   id: string;
   beneficiaryId?: string;
+  userId?: string;
   beneficiaryName: string;
   phone?: string;
   email?: string;
@@ -34,33 +35,43 @@ type Grievance = {
   satisfactionRating?: number | null;
   followUpRequired?: boolean;
   relatedGrievances?: string[];
-  subject?: string; // For user grievances
 };
 
 // Hook to get user-specific grievances from Firestore
-const useUserGrievances = (userId: string, setState: React.Dispatch<React.SetStateAction<Grievance[]>>) => {
+const useUserGrievances = (setState: React.Dispatch<React.SetStateAction<Grievance[]>>, beneficiaries: any[], userId: string) => {
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || beneficiaries.length === 0) {
+      setState([]);
+      return;
+    }
 
-    const q = query(
-      collection(db, 'grievances'), 
-      where('beneficiaryId', '==', userId),
-      orderBy('createdDate', 'desc')
+    // Get all beneficiary IDs
+    const beneficiaryIds = beneficiaries.map(b => b.id);
+
+    // Query for grievances by userId OR by beneficiaryIds
+    const userQuery = query(
+      collection(db, 'grievances'),
+      where('userId', '==', userId)
     );
-    
-    const unsub = onSnapshot(q, (snapshot) => {
-      const items: Grievance[] = snapshot.docs.map((d) => {
+
+    const unsubscribers: (() => void)[] = [];
+    const allGrievances: Grievance[] = [];
+
+    // Query for grievances created by this user (new format)
+    const unsub1 = onSnapshot(userQuery, (snapshot) => {
+      const userGrievances: Grievance[] = snapshot.docs.map((d) => {
         const data = d.data() as any;
         const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
         const created = toIso(data?.createdDate);
         const lastUpdated = toIso(data?.lastUpdated);
         const resolutionDate = toIso(data?.resolutionDate);
         const expectedResolution = toIso(data?.expectedResolution);
-        
+
         return {
           id: d.id,
           beneficiaryName: data.beneficiaryName || data.name || '—',
           beneficiaryId: data.beneficiaryId,
+          userId: data.userId,
           phone: data.phone,
           email: data.email,
           district: data.district,
@@ -78,7 +89,6 @@ const useUserGrievances = (userId: string, setState: React.Dispatch<React.SetSta
           resolutionDate: resolutionDate,
           expectedResolution: expectedResolution,
           description: data.description,
-          subject: data.subject || data.description?.substring(0, 50) + '...' || 'No subject',
           attachments: data.attachments || 0,
           communication: data.communication || [],
           escalationLevel: data.escalationLevel || 0,
@@ -87,62 +97,198 @@ const useUserGrievances = (userId: string, setState: React.Dispatch<React.SetSta
           relatedGrievances: data.relatedGrievances || []
         };
       });
-      setState(items);
+
+      // Update combined list
+      allGrievances.splice(0, allGrievances.length, ...userGrievances);
+
+      // Sort by createdDate descending
+      allGrievances.sort((a, b) => {
+        const da = a.createdDate || '';
+        const db = b.createdDate || '';
+        if (da === db) return 0;
+        return da < db ? 1 : -1;
+      });
+
+      setState([...allGrievances]);
     });
-    
-    return () => unsub();
-  }, [userId, setState]);
+
+    unsubscribers.push(unsub1);
+
+    // Also query for grievances by beneficiary IDs (legacy support)
+    beneficiaryIds.forEach((beneficiaryId) => {
+      const beneficiaryQuery = query(
+        collection(db, 'grievances'),
+        where('beneficiaryId', '==', beneficiaryId)
+      );
+
+      const unsub = onSnapshot(beneficiaryQuery, (snapshot) => {
+        const beneficiaryGrievances: Grievance[] = snapshot.docs.map((d) => {
+          const data = d.data() as any;
+          // Skip if this grievance already exists in userGrievances (avoid duplicates)
+          if (allGrievances.some(g => g.id === d.id)) return;
+
+          const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
+          const created = toIso(data?.createdDate);
+          const lastUpdated = toIso(data?.lastUpdated);
+          const resolutionDate = toIso(data?.resolutionDate);
+          const expectedResolution = toIso(data?.expectedResolution);
+
+          return {
+            id: d.id,
+            beneficiaryName: data.beneficiaryName || data.name || '—',
+            beneficiaryId: data.beneficiaryId,
+            userId: data.userId,
+            phone: data.phone,
+            email: data.email,
+            district: data.district,
+            state: data.state,
+            actType: data.actType,
+            applicationId: data.applicationId,
+            category: data.category,
+            subCategory: data.subCategory,
+            priority: data.priority,
+            status: data.status,
+            assignedTo: data.assignedTo,
+            assignedDate: data.assignedDate,
+            createdDate: created,
+            lastUpdated: lastUpdated,
+            resolutionDate: resolutionDate,
+            expectedResolution: expectedResolution,
+            description: data.description,
+            attachments: data.attachments || 0,
+            communication: data.communication || [],
+            escalationLevel: data.escalationLevel || 0,
+            satisfactionRating: data.satisfactionRating ?? null,
+            followUpRequired: data.followUpRequired || false,
+            relatedGrievances: data.relatedGrievances || []
+          };
+        }).filter(Boolean) as Grievance[]; // Filter out undefined results
+
+        // Add new grievances to combined list
+        beneficiaryGrievances.forEach(grievance => {
+          if (!allGrievances.some(g => g.id === grievance.id)) {
+            allGrievances.push(grievance);
+          }
+        });
+
+        // Sort by createdDate descending
+        allGrievances.sort((a, b) => {
+          const da = a.createdDate || '';
+          const db = b.createdDate || '';
+          if (da === db) return 0;
+          return da < db ? 1 : -1;
+        });
+
+        setState([...allGrievances]);
+      });
+
+      unsubscribers.push(unsub);
+    });
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [setState, beneficiaries, userId]);
 };
 
 export default function GrievancePage() {
   const [grievances, setGrievances] = useState<Grievance[]>([]);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
+  const [subCategory, setSubCategory] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [category, setCategory] = useState('disbursement-delay');
   const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'pending' | 'resolved' | 'closed' | 'escalated'>('all');
   const [selectedGrv, setSelectedGrv] = useState<Grievance | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [beneficiaryName, setBeneficiaryName] = useState('');
+  const [beneficiaryPhone, setBeneficiaryPhone] = useState('');
+  const [beneficiaryEmail, setBeneficiaryEmail] = useState('');
   const { t } = useLocale();
   const { theme } = useTheme();
   const { user, loading } = useAuth();
 
   // In a real app, you'd get this from auth context
-  const currentUser = user ? {
-    id: user.uid,
-    name: user.displayName || 'User',
-    phone: '', // You might want to store this in user profile
-    email: user.email || '',
-    district: 'Sample District',
-    state: 'Sample State'
-  } : null;
+  const currentUser = selectedBeneficiary ? {
+    id: selectedBeneficiary.id,
+    name: selectedBeneficiary.name || beneficiaryName,
+    phone: selectedBeneficiary.phone || beneficiaryPhone,
+    email: selectedBeneficiary.email || beneficiaryEmail,
+    district: selectedBeneficiary.district || '',
+    state: selectedBeneficiary.state || ''
+  } : {
+    id: '',
+    name: beneficiaryName,
+    phone: beneficiaryPhone,
+    email: beneficiaryEmail,
+    district: '',
+    state: ''
+  };
 
   // Load user grievances from Firestore
-  useUserGrievances(currentUser?.id || '', setGrievances);
+  useUserGrievances(setGrievances, beneficiaries, user?.uid || '');
+
+  // Fetch user's beneficiaries
+  useEffect(() => {
+    if (!user) {
+      setBeneficiaries([]);
+      setSelectedBeneficiary(null);
+      return;
+    }
+
+    const q = query(collection(db, 'beneficiaries'), where('ownerId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const items: any[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        items.push({
+          id: doc.id,
+          ...data
+        });
+      });
+      setBeneficiaries(items);
+      // Auto-select the first beneficiary if available
+      if (items.length > 0 && !selectedBeneficiary) {
+        setSelectedBeneficiary(items[0]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Initialize editable fields when beneficiary is selected
+  useEffect(() => {
+    if (selectedBeneficiary) {
+      setBeneficiaryName(selectedBeneficiary.name || '');
+      setBeneficiaryPhone(selectedBeneficiary.phone || '');
+      setBeneficiaryEmail(selectedBeneficiary.email || '');
+    }
+  }, [selectedBeneficiary]);
 
   const submitGrievance = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject.trim() || !description.trim() || !currentUser) return;
+    if (!description.trim() || !user) return;
     
     setIsSubmitting(true);
     
     try {
       const grievanceId = `GRV-${Date.now()}`;
       const grievanceData = {
-        id: grievanceId,
-        beneficiaryId: currentUser.id,
+        beneficiaryId: selectedBeneficiary?.id || '',
+        userId: user?.uid || '',
         beneficiaryName: currentUser.name,
-        phone: currentUser.phone,
-        email: currentUser.email,
+        phone: currentUser.phone || null,
+        email: currentUser.email || null,
         district: currentUser.district,
         state: currentUser.state,
-        category: category,
-        subCategory: '', // User can specify if needed
-        priority: priority,
-        status: 'open',
-        subject: subject.trim(),
+        category,
+        subCategory: subCategory || null,
+        priority,
         description: description.trim(),
+        status: 'open',
         attachments: 0,
         communication: [],
         escalationLevel: 0,
@@ -155,14 +301,14 @@ export default function GrievancePage() {
       await setDoc(doc(db, 'grievances', grievanceId), grievanceData);
       
       // Reset form
-      setSubject('');
       setDescription('');
+      setSubCategory('');
       setPriority('medium');
-      setCategory('general');
+      setCategory('disbursement-delay');
       
     } catch (error) {
       console.error('Error submitting grievance:', error);
-      alert(t('extracted.submission_failed') || 'Failed to submit grievance');
+      alert(t('extracted.failed_to_submit_grievance'));
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +334,7 @@ export default function GrievancePage() {
 
   const filteredList = grievances.filter(g => {
     if (filter !== 'all' && g.status !== filter) return false;
-    if (searchTerm && !g.subject?.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    if (searchTerm && !g.category?.toLowerCase().includes(searchTerm.toLowerCase()) && 
         !g.description?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
@@ -248,7 +394,46 @@ export default function GrievancePage() {
 
   return (
     <div className="min-h-screen p-4 md:p-6 theme-bg-primary">
-      {loading ? (
+      {/* Custom styles for dropdown options in dark mode */}
+      <style jsx global>{`
+        /* Dropdown styling for dark mode compatibility */
+        select {
+          background-color: var(--glass-bg) !important;
+          color: var(--text-primary) !important;
+          border-color: var(--glass-border) !important;
+        }
+        
+        select option {
+          background-color: var(--card-bg) !important;
+          color: var(--text-primary) !important;
+          padding: 8px 12px !important;
+        }
+        
+        /* Ensure dropdown options are visible in both themes */
+        [data-theme="dark"] select option {
+          background-color: rgba(15, 23, 42, 0.95) !important;
+          color: #f1f5f9 !important;
+        }
+        
+        [data-theme="light"] select option {
+          background-color: rgba(255, 255, 255, 0.95) !important;
+          color: #0f172a !important;
+        }
+        
+        /* Style the dropdown arrow */
+        select {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 16px;
+          padding-right: 40px !important;
+        }
+      `}</style>
+      
+      {loading || (user && beneficiaries.length === 0) ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -258,8 +443,23 @@ export default function GrievancePage() {
       ) : !currentUser ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h2 className="text-xl font-semibold theme-text-primary mb-4">Please log in to access grievances</h2>
-            <p className="theme-text-muted">You need to be authenticated to view and submit grievances.</p>
+            <h2 className="text-xl font-semibold theme-text-primary mb-4">
+              {beneficiaries.length === 0 ? 'No Beneficiaries Found' : 'Please select a beneficiary'}
+            </h2>
+            <p className="theme-text-muted mb-4">
+              {beneficiaries.length === 0 
+                ? 'You need to have at least one beneficiary record to create grievances. Please visit the beneficiaries page to add one.'
+                : 'Please select a beneficiary from the dropdown above.'
+              }
+            </p>
+            {beneficiaries.length === 0 && (
+              <a 
+                href="/user-dashboard/beneficiaries"
+                className="accent-gradient text-white px-6 py-2 rounded-lg inline-block"
+              >
+                Go to Beneficiaries
+              </a>
+            )}
           </div>
         </div>
       ) : (
@@ -290,6 +490,93 @@ export default function GrievancePage() {
               <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')}</h2>
               
               <form onSubmit={submitGrievance} className="space-y-4">
+                {/* Beneficiary Selection */}
+                {beneficiaries.length > 1 && (
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      Select Beneficiary
+                    </label>
+                    <select
+                      value={selectedBeneficiary?.id || ''}
+                      onChange={(e) => {
+                        const beneficiary = beneficiaries.find(b => b.id === e.target.value);
+                        setSelectedBeneficiary(beneficiary || null);
+                        if (!beneficiary) {
+                          // Clear editable fields when no beneficiary is selected
+                          setBeneficiaryName('');
+                          setBeneficiaryPhone('');
+                          setBeneficiaryEmail('');
+                        }
+                      }}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="">{t('extracted.select_a_beneficiary')}</option>
+                      {beneficiaries.map((beneficiary) => (
+                        <option key={beneficiary.id} value={beneficiary.id}>
+                          {beneficiary.name} - {beneficiary.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Beneficiary Information (read-only) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      {t('extracted.beneficiary_name')}
+                    </label>
+                    <input 
+                      value={beneficiaryName}
+                      onChange={(e) => setBeneficiaryName(e.target.value)}
+                      readOnly={!!selectedBeneficiary?.name}
+                      placeholder={t('enterBeneficiaryName')}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      {t('extracted.phone')}
+                    </label>
+                    <input 
+                      value={beneficiaryPhone}
+                      onChange={(e) => setBeneficiaryPhone(e.target.value)}
+                      readOnly={!!selectedBeneficiary?.phone}
+                      placeholder={t('extracted.enterPhoneNumber')}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      {t('extracted.email')}
+                    </label>
+                    <input 
+                      value={beneficiaryEmail}
+                      onChange={(e) => setBeneficiaryEmail(e.target.value)}
+                      readOnly={!!selectedBeneficiary?.email}
+                      placeholder={t('extracted.enter_your_email')}
+                      type="email"
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      {t('extracted.beneficiary_id')}
+                    </label>
+                    <input 
+                      value={currentUser?.id || ''}
+                      readOnly
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Grievance Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
@@ -300,15 +587,29 @@ export default function GrievancePage() {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
-                      <option value="disbursement-delay">Disbursement Delay</option>
-                      <option value="document-issues">Document Issues</option>
-                      <option value="application-status">Application Status</option>
-                      <option value="officer-behavior">Officer Behavior</option>
-                      <option value="information-correction">Information Correction</option>
-                      <option value="technical-issues">Technical Issues</option>
+                      <option value="disbursement-delay">{t('extracted.disbursement_delay')}</option>
+                      <option value="document-issues">{t('extracted.document_issues')}</option>
+                      <option value="application-status">{t('extracted.application_status')}</option>
+                      <option value="officer-behavior">{t('extracted.officer_behavior')}</option>
+                      <option value="information-correction">{t('extracted.information_correction')}</option>
+                      <option value="technical-issues">{t('extracted.technical_issues')}</option>
                     </select>
                   </div>
                   
+                  <div>
+                    <label className="text-sm font-medium theme-text-muted block mb-2">
+                      {t('extracted.sub_category')}
+                    </label>
+                    <input 
+                      value={subCategory}
+                      onChange={(e) => setSubCategory(e.target.value)}
+                      placeholder={t('extracted.optional_sub_category')}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       {t('extracted.priority')}
@@ -327,24 +628,11 @@ export default function GrievancePage() {
 
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
-                    {t('extracted.subject')} *
-                  </label>
-                  <input 
-                    value={subject}
-                    onChange={e => setSubject(e.target.value)}
-                    placeholder={t('extracted.brief_description_of_your_grievance')}
-                    className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium theme-text-muted block mb-2">
                     {t('extracted.description')} *
                   </label>
                   <textarea 
                     value={description}
-                    onChange={e => setDescription(e.target.value)}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder={t('extracted.please_provide_detailed_information_about_your_grievance')}
                     rows={4}
                     className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
@@ -354,7 +642,7 @@ export default function GrievancePage() {
 
                 <button 
                   type="submit"
-                  disabled={!subject.trim() || !description.trim() || isSubmitting}
+                  disabled={!description.trim() || isSubmitting}
                   className="w-full accent-gradient text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
@@ -463,7 +751,7 @@ export default function GrievancePage() {
                                 <h4 className={`font-semibold mb-1 ${
                                   selectedGrv?.id === grievance.id ? 'text-white' : 'theme-text-primary'
                                 }`}>
-                                  {grievance.subject}
+                                  {grievance.category || 'General Grievance'}
                                 </h4>
                                 <div className="flex flex-wrap gap-2 mb-2">
                                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(grievance.status)}`}>
@@ -613,8 +901,8 @@ export default function GrievancePage() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.subject_1')}</div>
-                      <div className="font-medium theme-text-primary">{selectedGrv.subject}</div>
+                      <div className="text-sm theme-text-muted mb-1">Category</div>
+                      <div className="font-medium theme-text-primary">{selectedGrv.category || 'General'}</div>
                     </div>
 
                     <div>

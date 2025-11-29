@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
     
     const router = useRouter();
-    const { user, loading } = useAuth();
+    const { user, loading, profile } = useAuth();
 
     // Compute a friendly display name from Firebase user
     const displayName = user?.displayName ?? (user?.email ? user.email.split('@')[0] : 'Guest');
@@ -40,7 +40,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         // If auth finished loading and there is no user, redirect to login
         if (!loading && !user) router.push('/login');
-    }, [user, loading, router]);
+        // If user is loaded but profile is loaded and doesn't have officer role, redirect appropriately
+        if (!loading && user && profile !== undefined && profile?.role !== 'officer') {
+            if (profile?.role === 'user') {
+                router.push('/user-dashboard');
+            } else {
+                router.push('/choose-role');
+            }
+        }
+    }, [user, loading, profile, router]);
     
     const handleSidebarChange = (id: string) => {
         setActiveTab(id);
