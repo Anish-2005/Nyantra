@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, updateDoc, where, serverTimestamp } from 'firebase/firestore';
@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import LoadingState from '@/components/LoadingState';
-import { Shield } from 'lucide-react';
+import { Shield, MessageCircle } from 'lucide-react';
 // Grievance type definition matching the admin page
 type Grievance = {
   id: string;
@@ -209,7 +209,7 @@ export default function GrievancePage() {
   const [beneficiaryName, setBeneficiaryName] = useState('');
   const [beneficiaryPhone, setBeneficiaryPhone] = useState('');
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('');
-  const [newMessage, setNewMessage] = useState('');
+  const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const { t } = useLocale();
   const { theme } = useTheme();
   const { user, loading } = useAuth();
@@ -270,6 +270,23 @@ export default function GrievancePage() {
       setBeneficiaryEmail(selectedBeneficiary.email || '');
     }
   }, [selectedBeneficiary]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [selectedGrv?.communication, pendingMessages]);
+
+  // Clear pending messages after Firestore sync
+  useEffect(() => {
+    if (pendingMessages.length > 0 && selectedGrv?.communication) {
+      const timer = setTimeout(() => {
+        setPendingMessages([]);
+      }, 2000); // Clear after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [pendingMessages.length, selectedGrv?.communication]);
 
   const submitGrievance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,11 +354,28 @@ export default function GrievancePage() {
 
   const sendMessage = async () => {
     if (!selectedGrv?.id || !newMessage.trim()) return;
+    const messageText = newMessage.trim();
+    
+    // Add to pending messages immediately
+    const pendingMessage = {
+      id: `pending-${Date.now()}-${Math.random()}`,
+      user: currentUser.name,
+      text: messageText,
+      createdAt: new Date().toISOString(),
+      type: 'user',
+      pending: true
+    };
+    
+    setPendingMessages(prev => [...prev, pendingMessage]);
+    setNewMessage('');
+    
     try {
-      await addCommunication(selectedGrv.id, newMessage.trim());
-      setNewMessage('');
+      await addCommunication(selectedGrv.id, messageText);
+      // Mark as sent (optional - Firestore will update anyway)
     } catch (error) {
       console.error('Error sending message:', error);
+      // Remove from pending messages on error
+      setPendingMessages(prev => prev.filter(msg => msg !== pendingMessage));
     }
   };
 
@@ -976,43 +1010,85 @@ export default function GrievancePage() {
                       )}
                     </div>
 
-                    {/* Communication Section */}
-                    {selectedGrv.communication && selectedGrv.communication.length > 0 && (
-                      <div className="pt-2 border-t theme-border-glass">
-                        <div className="text-sm font-medium theme-text-muted mb-2">{t('extracted.communication')}</div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {selectedGrv.communication.map((comm, index) => (
-                            <div key={index} className="text-xs theme-bg-glass p-2 rounded">
-                              <div className="flex items-center gap-2 font-medium theme-text-primary">
-                                {(comm.type === 'officer' || comm.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500" />}
-                                <span>{(comm.type === 'officer' || comm.user === 'Officer') ? (t('extracted.officer') || 'Officer') : comm.user}</span>
-                              </div>
-                              <div className="theme-text-muted">{comm.text}</div>
-                              <div className="text-xs theme-text-muted mt-1">
-                                {comm.createdAt ? new Date(comm.createdAt).toLocaleString() : ''}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {/* Dedicated Chat Section */}
+                    <div className="pt-4 border-t theme-border-glass">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MessageCircle className="w-4 h-4 text-blue-500" />
+                        <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.communication')}</h4>
                       </div>
-                    )}
 
-                    {/* Add Message Section */}
-                    <div className="pt-2 border-t theme-border-glass">
-                      <div className="text-sm font-medium theme-text-muted mb-2">{t('extracted.add_message')}</div>
-                      <div className="flex gap-2">
+                      {/* Chat Messages Container */}
+                      <div
+                        ref={chatRef}
+                        className="h-64 overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-white/5 to-white/10 rounded-lg border theme-border-glass backdrop-blur-sm"
+                      >
+                        {(!selectedGrv.communication || selectedGrv.communication.length === 0) ? (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="text-center theme-text-muted">
+                              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center">
+                                <Shield className="w-6 h-6 text-blue-400" />
+                              </div>
+                              <p className="text-sm">{t('extracted.no_messages')}</p>
+                              <p className="text-xs mt-1">{t('extracted.start_conversation')}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          [...(selectedGrv.communication || []), ...pendingMessages].map((comm, index) => {
+                            const isOfficer = comm.type === 'officer' || comm.user === 'Officer' || comm.user === 'Admin' || comm.user === 'You';
+                            console.log('Message:', comm, 'isOfficer:', isOfficer);
+                            return (
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className={`flex ${isOfficer ? 'justify-start' : 'justify-end'}`}
+                              >
+                                <div className={`max-w-[80%] ${isOfficer ? 'order-1' : 'order-2'}`}>
+                                  <div className={`flex items-center gap-2 mb-1 ${isOfficer ? 'justify-start' : 'justify-end'}`}>
+                                    {isOfficer && <Shield className="w-3 h-3 text-blue-500" />}
+                                    <span className="text-xs font-medium theme-text-muted">
+                                      {isOfficer ? (t('extracted.officer') || 'Officer') : comm.user}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className={`p-3 rounded-2xl shadow-sm ${
+                                      isOfficer
+                                        ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-tl-sm'
+                                        : 'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm'
+                                    } ${comm.pending ? 'opacity-70' : ''}`}
+                                  >
+                                    <p className="text-sm theme-text-primary leading-relaxed">{comm.text}</p>
+                                    <div className="flex items-center justify-between mt-2">
+                                      <p className="text-xs theme-text-muted opacity-70">
+                                        {comm.createdAt ? new Date(comm.createdAt).toLocaleString() : ''}
+                                      </p>
+                                      {comm.pending && (
+                                        <span className="text-xs text-yellow-500 font-medium">Sending...</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      {/* Message Input */}
+                      <div className="mt-3 flex gap-2">
                         <input
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder={t('extracted.write_message')}
-                          className="flex-1 px-3 py-2 text-sm rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                          className="flex-1 px-4 py-3 text-sm rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         />
                         <button
                           onClick={sendMessage}
                           disabled={!newMessage.trim()}
-                          className="px-3 py-2 text-sm rounded-lg accent-gradient text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                         >
                           {t('extracted.send')}
                         </button>
