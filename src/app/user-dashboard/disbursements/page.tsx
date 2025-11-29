@@ -167,22 +167,22 @@ export default function DisbursementsPage() {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "pending":
-      return "bg-amber-600 text-white border border-amber-700 font-semibold shadow-sm dark:bg-amber-500/30 dark:text-amber-700 dark:border-amber-500/40";
+      return "bg-amber-200 text-white border border-amber-200 font-semibold shadow-sm dark:bg-amber-500/30 dark:text-amber-700 dark:border-amber-500/40";
 
     case "processing":
-      return "bg-blue-600 text-white border border-blue-700 font-semibold shadow-sm dark:bg-blue-500/30 dark:text-blue-700 dark:border-blue-500/40";
+      return "bg-blue-200 text-white border border-blue-200 font-semibold shadow-sm dark:bg-blue-500/30 dark:text-blue-700 dark:border-blue-500/40";
 
     case "completed":
-      return "bg-green-600 text-white border border-green-700 font-semibold shadow-sm dark:bg-green-500/30 dark:text-green-700 dark:border-green-500/40";
+      return "bg-green-200 text-white border border-green-200 font-semibold shadow-sm dark:bg-green-500/30 dark:text-green-700 dark:border-green-500/40";
 
     case "failed":
-      return "bg-red-600 text-white border border-red-700 font-semibold shadow-sm dark:bg-red-500/30 dark:text-red-700 dark:border-red-500/40";
+      return "bg-red-200 text-white border border-red-200 font-semibold shadow-sm dark:bg-red-500/30 dark:text-red-700 dark:border-red-500/40";
 
     case "cancelled":
-      return "bg-gray-600 text-white border border-gray-700 font-semibold shadow-sm dark:bg-gray-500/30 dark:text-gray-700 dark:border-gray-500/40";
+      return "bg-gray-200 text-white border border-gray-200 font-semibold shadow-sm dark:bg-gray-500/30 dark:text-gray-700 dark:border-gray-500/40";
 
     default:
-      return "bg-gray-600 text-white border border-gray-700 font-semibold shadow-sm dark:bg-gray-500/30 dark:text-gray-700 dark:border-gray-500/40";
+      return "bg-gray-200 text-white border border-gray-200 font-semibold shadow-sm dark:bg-gray-500/30 dark:text-gray-700 dark:border-gray-500/40";
   }
 };
 
