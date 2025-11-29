@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, updateDoc, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
+import { useLocale } from '@/context/LocaleContext';
+import { useTheme } from '@/context/ThemeContext';
 // Grievance type definition matching the admin page
 type Grievance = {
   id: string;
@@ -99,30 +99,31 @@ export default function GrievancePage() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [category, setCategory] = useState('general');
-  const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'resolved' | 'closed'>('all');
+  const [category, setCategory] = useState('disbursement-delay');
+  const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'pending' | 'resolved' | 'closed' | 'escalated'>('all');
   const [selectedGrv, setSelectedGrv] = useState<Grievance | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { t } = useLocale();
   const { theme } = useTheme();
+  const { user, loading } = useAuth();
 
   // In a real app, you'd get this from auth context
-  const [currentUser] = useState({
-    id: 'user-123', // This should come from your auth system
-    name: 'John Doe',
-    phone: '+1234567890',
-    email: 'user@example.com',
+  const currentUser = user ? {
+    id: user.uid,
+    name: user.displayName || 'User',
+    phone: '', // You might want to store this in user profile
+    email: user.email || '',
     district: 'Sample District',
     state: 'Sample State'
-  });
+  } : null;
 
   // Load user grievances from Firestore
-  useUserGrievances(currentUser.id, setGrievances);
+  useUserGrievances(currentUser?.id || '', setGrievances);
 
   const submitGrievance = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject.trim() || !description.trim()) return;
+    if (!subject.trim() || !description.trim() || !currentUser) return;
     
     setIsSubmitting(true);
     
@@ -168,6 +169,7 @@ export default function GrievancePage() {
   };
 
   const addCommunication = async (grievanceId: string, message: string) => {
+    if (!currentUser) return;
     try {
       const grievanceRef = doc(db, 'grievances', grievanceId);
       await updateDoc(grievanceRef, {
@@ -246,6 +248,21 @@ export default function GrievancePage() {
 
   return (
     <div className="min-h-screen p-4 md:p-6 theme-bg-primary">
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="theme-text-muted">Loading...</p>
+          </div>
+        </div>
+      ) : !currentUser ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold theme-text-primary mb-4">Please log in to access grievances</h2>
+            <p className="theme-text-muted">You need to be authenticated to view and submit grievances.</p>
+          </div>
+        </div>
+      ) : (
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -278,62 +295,33 @@ export default function GrievancePage() {
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       {t('extracted.category')}
                     </label>
-                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
-                      {['general', 'application', 'payment', 'technical', 'other'].map(option => {
-                        const isActive = category === option;
-                        const label =
-                          option === 'general' ? t('extracted.general') :
-                          option === 'application' ? t('extracted.application') :
-                          option === 'payment' ? t('extracted.payment') :
-                          option === 'technical' ? t('extracted.technical') :
-                          t('extracted.other');
-
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => setCategory(option)}
-                            className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                              isActive 
-                                ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' 
-                                : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="disbursement-delay">Disbursement Delay</option>
+                      <option value="document-issues">Document Issues</option>
+                      <option value="application-status">Application Status</option>
+                      <option value="officer-behavior">Officer Behavior</option>
+                      <option value="information-correction">Information Correction</option>
+                      <option value="technical-issues">Technical Issues</option>
+                    </select>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium theme-text-muted block mb-2">
                       {t('extracted.priority')}
                     </label>
-                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-start">
-                      {['low', 'medium', 'high'].map(option => {
-                        const isActive = priority === option;
-                        const label =
-                          option === 'low' ? t('extracted.low') :
-                          option === 'medium' ? t('extracted.medium') :
-                          t('extracted.high');
-
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => setPriority(option as 'low' | 'medium' | 'high')}
-                            className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                              isActive 
-                                ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' 
-                                : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
+                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="low">{t('extracted.low')}</option>
+                      <option value="medium">{t('extracted.medium')}</option>
+                      <option value="high">{t('extracted.high')}</option>
+                    </select>
                   </div>
                 </div>
 
@@ -415,32 +403,19 @@ export default function GrievancePage() {
                   </div>
                   
                   <div className="relative w-full sm:w-auto">
-                    <div className="inline-flex items-center flex-nowrap sm:flex-wrap theme-bg-glass border theme-border-glass rounded-full p-1 gap-2 overflow-x-auto sm:overflow-x-visible w-full sm:w-auto sm:bg-transparent sm:border-0 sm:rounded-none sm:p-0 sm:gap-3 sm:justify-end">
-                      {['all', 'open', 'in-progress', 'resolved', 'closed'].map(option => {
-                        const isActive = filter === option;
-                        const label =
-                          option === 'all' ? t('extracted.all_status') :
-                          option === 'open' ? t('extracted.open') :
-                          option === 'in-progress' ? t('extracted.in_progress') :
-                          option === 'resolved' ? t('extracted.resolved') :
-                          t('extracted.closed');
-
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => setFilter(option as any)}
-                            className={`inline-flex items-center justify-center whitespace-nowrap text-sm font-medium rounded-full transition-all duration-200 px-3 sm:px-4 py-2 sm:py-1.5 min-w-[7.5rem] sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                              isActive 
-                                ? 'accent-gradient text-white shadow-md sm:shadow-none sm:ring-1 sm:ring-white/10 sm:scale-105' 
-                                : 'bg-transparent theme-text-primary hover:theme-bg-glass sm:bg-transparent sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:hover:border-gray-300 dark:sm:hover:border-gray-600'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <select
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value as 'all' | 'open' | 'in-progress' | 'pending' | 'resolved' | 'closed' | 'escalated')}
+                      className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="all">{t('extracted.all_status')}</option>
+                      <option value="open">{t('extracted.open')}</option>
+                      <option value="in-progress">{t('extracted.in_progress')}</option>
+                      <option value="pending">Pending</option>
+                      <option value="resolved">{t('extracted.resolved')}</option>
+                      <option value="closed">{t('extracted.closed')}</option>
+                      <option value="escalated">Escalated</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -729,6 +704,7 @@ export default function GrievancePage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
