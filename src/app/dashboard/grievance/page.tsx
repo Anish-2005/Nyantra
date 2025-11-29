@@ -289,7 +289,9 @@ const GrievancePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [newMessage, setNewMessage] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // subscribe to Firestore grievances collection
   useFirestoreGrievances(setGrievances);
@@ -544,15 +546,18 @@ const GrievancePage = () => {
     if (!selectedGrievance?.id) return;
     const text = newMessage.trim();
     if (!text) return;
+    const pendingMessage = { user: 'Officer', text, createdAt: new Date().toISOString(), type: 'officer', pending: true };
+    setPendingMessages(prev => [...prev, pendingMessage]);
+    setNewMessage('');
     try {
-      // Use client timestamp for arrayUnion element (serverTimestamp cannot be nested inside arrayUnion)
       await updateDoc(doc(db, 'grievances', selectedGrievance.id), {
         communication: arrayUnion({ user: 'Officer', text, createdAt: new Date().toISOString(), type: 'officer' }),
         lastUpdated: serverTimestamp()
       });
-      setNewMessage('');
+      setPendingMessages(prev => prev.filter(msg => msg !== pendingMessage));
     } catch (err) {
       console.error('Failed to send message', err);
+      setPendingMessages(prev => prev.filter(msg => msg !== pendingMessage));
     }
   };
 
@@ -1080,28 +1085,115 @@ const GrievancePage = () => {
 
             {activeTab === 'communication' && (
               <div className="space-y-4">
-                <div className="max-h-64 overflow-auto p-2 space-y-3 border theme-border-glass rounded-lg theme-bg-glass">
-                  {(selectedGrievance.communication ?? []).length === 0 ? (
-                    <p className="theme-text-muted">{t('extracted.no_messages')}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  <MessageCircle className="w-5 h-5 theme-text-primary" />
+                  <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.communication_history') || 'Communication History'}</h3>
+                </div>
+
+                <div
+                  ref={chatRef}
+                  className="max-h-96 overflow-y-auto p-4 space-y-4 border theme-border-glass rounded-xl theme-bg-glass scroll-smooth"
+                >
+                  {(selectedGrievance.communication ?? []).length === 0 && pendingMessages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 theme-text-muted mx-auto mb-3 opacity-50" />
+                      <p className="theme-text-muted">{t('extracted.no_messages') || 'No messages yet'}</p>
+                      <p className="text-sm theme-text-muted mt-1">{t('extracted.start_conversation') || 'Start a conversation with the beneficiary'}</p>
+                    </div>
                   ) : (
-                    (selectedGrievance.communication ?? []).slice().reverse().map((c, i) => (
-                      <div key={i} className="p-2 rounded-md bg-white/5">
-                        <div className="flex items-center gap-2">
-                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-4 h-4 text-blue-500" />}
-                          <p className="text-sm font-semibold theme-text-primary">
-                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
-                          </p>
-                        </div>
-                        <p className="text-sm theme-text-muted">{String(c.text || c.message || c.body || '')}</p>
-                        <p className="text-xs theme-text-muted mt-1">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</p>
-                      </div>
-                    ))
+                    <>
+                      {(selectedGrievance.communication ?? []).map((c, i) => {
+                        const isOfficer = c.type === 'officer' || c.user === 'Officer';
+                        return (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className={`flex items-start gap-3 ${isOfficer ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {!isOfficer && (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                {c.user?.charAt(0)?.toUpperCase() || 'U'}
+                              </div>
+                            )}
+                            <div className={`max-w-xs lg:max-w-md ${isOfficer ? 'order-1' : 'order-2'}`}>
+                              <div className={`p-3 rounded-2xl shadow-sm ${
+                                isOfficer
+                                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white ml-auto'
+                                  : 'theme-bg-card theme-border-glass border'
+                              }`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  {isOfficer && <Shield className="w-4 h-4" />}
+                                  <span className={`text-xs font-medium ${isOfficer ? 'text-blue-100' : 'theme-text-muted'}`}>
+                                    {isOfficer ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
+                                  </span>
+                                </div>
+                                <p className={`text-sm ${isOfficer ? 'text-white' : 'theme-text-primary'}`}>
+                                  {String(c.text || c.message || c.body || '')}
+                                </p>
+                                <p className={`text-xs mt-2 ${isOfficer ? 'text-blue-100' : 'theme-text-muted'}`}>
+                                  {c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}
+                                </p>
+                              </div>
+                            </div>
+                            {isOfficer && (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 order-2">
+                                <Shield className="w-4 h-4" />
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                      {pendingMessages.map((c, i) => (
+                        <motion.div
+                          key={`pending-${i}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-start gap-3 justify-end"
+                        >
+                          <div className="max-w-xs lg:max-w-md">
+                            <div className="p-3 rounded-2xl shadow-sm bg-gradient-to-r from-gray-400 to-gray-500 text-white ml-auto opacity-70">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Shield className="w-4 h-4" />
+                                <span className="text-xs font-medium text-gray-100">
+                                  {t('extracted.officer') || 'Officer'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-white">{c.text}</p>
+                              <p className="text-xs mt-2 text-gray-100">
+                                {t('extracted.sending') || 'Sending...'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                            <Shield className="w-4 h-4" />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </>
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={t('extracted.write_message')} className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-                  <button onClick={sendMessage} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold" disabled={!newMessage.trim()}>{t('extracted.send')}</button>
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                      placeholder={t('extracted.write_message') || 'Write a message...'}
+                      className="w-full px-4 py-3 pr-12 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={!newMessage.trim()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+                      aria-label={t('extracted.send_message') || 'Send message'}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

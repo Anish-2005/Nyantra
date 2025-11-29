@@ -210,6 +210,8 @@ export default function GrievancePage() {
   const [beneficiaryPhone, setBeneficiaryPhone] = useState('');
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('');
   const [pendingMessages, setPendingMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatRef = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
   const { theme } = useTheme();
   const { user, loading } = useAuth();
