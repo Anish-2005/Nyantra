@@ -547,7 +547,7 @@ const GrievancePage = () => {
     try {
       // Use client timestamp for arrayUnion element (serverTimestamp cannot be nested inside arrayUnion)
       await updateDoc(doc(db, 'grievances', selectedGrievance.id), {
-        communication: arrayUnion({ user: 'You', text, createdAt: new Date().toISOString() }),
+        communication: arrayUnion({ user: 'Officer', text, createdAt: new Date().toISOString(), type: 'officer' }),
         lastUpdated: serverTimestamp()
       });
       setNewMessage('');
@@ -1086,7 +1086,12 @@ const GrievancePage = () => {
                   ) : (
                     (selectedGrievance.communication ?? []).slice().reverse().map((c, i) => (
                       <div key={i} className="p-2 rounded-md bg-white/5">
-                        <p className="text-sm font-semibold theme-text-primary">{c.user || (t('extracted.user') || 'User')}</p>
+                        <div className="flex items-center gap-2">
+                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-4 h-4 text-blue-500" />}
+                          <p className="text-sm font-semibold theme-text-primary">
+                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
+                          </p>
+                        </div>
                         <p className="text-sm theme-text-muted">{String(c.text || c.message || c.body || '')}</p>
                         <p className="text-xs theme-text-muted mt-1">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</p>
                       </div>
@@ -1112,7 +1117,13 @@ const GrievancePage = () => {
                   {(selectedGrievance.communication ?? []).length === 0 ? <p className="theme-text-muted">{t('extracted.no_activity')}</p> : (
                     <ul className="list-disc pl-5 space-y-2">
                       {(selectedGrievance.communication ?? []).map((c, i) => (
-                        <li key={i} className="text-sm theme-text-muted">{c.user || (t('extracted.user') || 'User')} — {String(c.text || c.message || c.body || '')} <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span></li>
+                        <li key={i} className="text-sm theme-text-muted flex items-start gap-2">
+                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500 mt-0.5 flex-shrink-0" />}
+                          <span>
+                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))} — {String(c.text || c.message || c.body || '')}
+                            <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span>
+                          </span>
+                        </li>
                       ))}
                     </ul>
                   )}

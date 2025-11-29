@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import LoadingState from '@/components/LoadingState';
+import { Shield } from 'lucide-react';
 // Grievance type definition matching the admin page
 type Grievance = {
   id: string;
@@ -208,6 +209,7 @@ export default function GrievancePage() {
   const [beneficiaryName, setBeneficiaryName] = useState('');
   const [beneficiaryPhone, setBeneficiaryPhone] = useState('');
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('');
+  const [newMessage, setNewMessage] = useState('');
   const { t } = useLocale();
   const { theme } = useTheme();
   const { user, loading } = useAuth();
@@ -330,6 +332,16 @@ export default function GrievancePage() {
       });
     } catch (error) {
       console.error('Error adding communication:', error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!selectedGrv?.id || !newMessage.trim()) return;
+    try {
+      await addCommunication(selectedGrv.id, newMessage.trim());
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
 
@@ -971,7 +983,10 @@ export default function GrievancePage() {
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                           {selectedGrv.communication.map((comm, index) => (
                             <div key={index} className="text-xs theme-bg-glass p-2 rounded">
-                              <div className="font-medium theme-text-primary">{comm.user}</div>
+                              <div className="flex items-center gap-2 font-medium theme-text-primary">
+                                {(comm.type === 'officer' || comm.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500" />}
+                                <span>{(comm.type === 'officer' || comm.user === 'Officer') ? (t('extracted.officer') || 'Officer') : comm.user}</span>
+                              </div>
                               <div className="theme-text-muted">{comm.text}</div>
                               <div className="text-xs theme-text-muted mt-1">
                                 {comm.createdAt ? new Date(comm.createdAt).toLocaleString() : ''}
@@ -981,6 +996,28 @@ export default function GrievancePage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Add Message Section */}
+                    <div className="pt-2 border-t theme-border-glass">
+                      <div className="text-sm font-medium theme-text-muted mb-2">{t('extracted.add_message')}</div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder={t('extracted.write_message')}
+                          className="flex-1 px-3 py-2 text-sm rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+                          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        />
+                        <button
+                          onClick={sendMessage}
+                          disabled={!newMessage.trim()}
+                          className="px-3 py-2 text-sm rounded-lg accent-gradient text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {t('extracted.send')}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
