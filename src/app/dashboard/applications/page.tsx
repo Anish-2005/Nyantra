@@ -1003,824 +1003,1126 @@ const ApplicationsPage = () => {
         </div>
     );
 
-    return (
-        <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-            {/* Three.js Canvas Background (theme-aware) */}
-            <canvas
-                ref={canvasRef}
-                id="applications-three-canvas"
-                className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-                style={{ zIndex: 0, background: 'transparent' }}
-            />
-            <style jsx global>{`
-        [data-theme="dark"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
-          --nav-bg: rgba(15, 23, 42, 0.95);
-          --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
-          --text-muted: #64748b;
-          --accent-primary: #06b6d4;
-          --accent-secondary: #8b5cf6;
-          --glass-bg: rgba(15, 23, 42, 0.6);
-          --glass-border: rgba(255, 255, 255, 0.1);
-        }
+return (
+  <div
+    data-theme={theme}
+    className="p-4 lg:p-6 space-y-6"
+    style={{
+      marginLeft: "0",
+      width: "100%",
+      maxWidth: "100%",
+      flex: "1",
+    }}
+  >
+    {/* Three.js Canvas Background (theme-aware) */}
+    <canvas
+      ref={canvasRef}
+      id="applications-three-canvas"
+      className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
+      style={{
+        zIndex: 0,
+        background: "transparent",
+        left: "0",
+        width: "100%",
+      }}
+    />
 
-                [data-theme="light"] {
-                    --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.06), transparent 8%), 
-                                                 radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.04), transparent 8%), 
-                                                 linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-                    /* Make cards and glass backgrounds more opaque in light mode for better contrast */
-                    --card-bg: rgba(255, 255, 255, 1);
-                    --card-border: rgba(0, 0, 0, 0.08);
-                    --nav-bg: rgba(255, 255, 255, 1);
-                    --text-primary: #0f172a;
-                    --text-secondary: #475569;
-                    --text-muted: #64748b;
-                    --accent-primary: #fb7185;
-                    --accent-secondary: #fb923c;
-                    --glass-bg: rgba(255, 255, 255, 0.95);
-                    --glass-border: rgba(0, 0, 0, 0.12);
-                }
+    {/* Print Header - Only visible when printing */}
+    <div className="print-only hidden">
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: "30px",
+          paddingBottom: "20px",
+          borderBottom: "2px solid #3b82f6",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "28px",
+            fontWeight: "bold",
+            color: "#0f172a",
+            marginBottom: "8px",
+          }}
+        >
+          {t("applications.title")}
+        </h1>
+        <p style={{ fontSize: "14px", color: "#64748b" }}>
+          Generated on{" "}
+          {new Date().toLocaleDateString("en-GB", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
 
-        .theme-text-primary { color: var(--text-primary) !important; }
-        .theme-text-secondary { color: var(--text-secondary) !important; }
-        .theme-text-muted { color: var(--text-muted) !important; }
-        .theme-bg-card { background: var(--card-bg) !important; }
-        .theme-border-card { border-color: var(--card-border) !important; }
-        .theme-bg-glass { background: var(--glass-bg) !important; }
-        .theme-border-glass { border-color: var(--glass-border) !important; }
-        .theme-bg-nav { background: var(--nav-bg) !important; }
-        
-        .accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-        }
-        
-        .text-accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        @media print {
-          body {
-            background: white !important;
-          }
-          
-          #applications-three-canvas,
-          canvas {
-            display: none !important;
-          }
-          
-          .no-print {
-            display: none !important;
-          }
-          
-          .print-only {
-            display: block !important;
-          }
-          
-          .theme-bg-card,
-          .theme-bg-glass {
-            background: white !important;
-            border: 1px solid #e2e8f0 !important;
-          }
-          
-          .theme-text-primary {
-            color: #0f172a !important;
-          }
-          
-          .theme-text-secondary,
-          .theme-text-muted {
-            color: #475569 !important;
-          }
-          
-          .accent-gradient {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          
-          table {
-            page-break-inside: auto;
-          }
-          
-          tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-          
-          thead {
-            display: table-header-group;
-          }
-          
-          .print-page-break {
-            page-break-before: always;
-          }
-          
-          @page {
-            margin: 1.5cm;
-            size: A4;
-          }
-        }
-      `}</style>
-            
-            {/* Print Header - Only visible when printing */}
-            <div className="print-only hidden">
-                <div style={{ textAlign: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #3b82f6' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', marginBottom: '8px' }}>
-                        {t('applications.title')}
-                    </h1>
-                    <p style={{ fontSize: '14px', color: '#64748b' }}>
-                        Generated on {new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                </div>
-            </div>
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
-            >
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-bold theme-text-primary mb-2">
-                            {t('extracted.application')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
-                        </h1>
-                        <p className="theme-text-secondary text-base">
-                            {t('extracted.realtime_application_tracking_description')}
-                        </p>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-3">
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setShowExportModal(true)}
-                            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
-                        >
-                            <Download className="w-4 h-4" />
-                            <span>{t('extracted.export_data')}</span>
-                        </motion.button>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setShowNewApplicationForm(true)}
-                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>{t('extracted.new_application')}</span>
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* Toast container (top-right) */}
-            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-                {toasts.map(t => {
-                    const toastClass = t.type === 'success'
-                        ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
-                        : t.type === 'error'
-                            ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
-                            : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
-
-                    return (
-                        <div key={t.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
-                            <div className="flex items-center justify-between">
-                                <div className="text-sm">{t.message}</div>
-                                <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Confirm delete modal */}
-            <AnimatePresence>
-                {confirmModal.open && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-60 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-black/50" onClick={cancelConfirmDelete} />
-                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="relative w-full max-w-md p-6 rounded-xl theme-border-glass border shadow-lg theme-bg-card">
-                            <h3 className="text-lg font-semibold theme-text-primary mb-3">{t('applications.confirmDeleteTitle')}</h3>
-                            <p className="text-sm theme-text-muted mb-6">{confirmModal.message}</p>
-                            <div className="flex justify-end gap-3">
-                                <button onClick={cancelConfirmDelete} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">Cancel</button>
-                                <button onClick={confirmDeleteApplication} className={`px-4 py-2 rounded-lg text-white ${theme === 'light' ? 'bg-red-600' : 'bg-red-500'}`}>Delete</button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Export Modal */}
-            <AnimatePresence>
-                {showExportModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center"
-                    >
-                        <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
-                        <motion.div
-                            initial={{ scale: 0.98, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.98, opacity: 0 }}
-                            className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
-                            style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-                        >
-                            <div className="flex items-start justify-between mb-6">
-                                <div>
-                                    <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
-                                        <Download className="w-5 h-5 text-accent-gradient" />
-                                        {t('applications.export') || 'Export Data'}
-                                    </h3>
-                                    <p className="text-sm theme-text-muted mt-1">{t('applications.exportDescription') || 'Export applications as CSV or a printable PDF report.'}</p>
-                                </div>
-                                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                                    <X className="w-5 h-5 theme-text-primary" />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {/* Export All Card */}
-                                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                                                    <FileText className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold theme-text-primary">{t('applications.exportAll') || 'Export All'}</h4>
-                                                    <p className="text-xs theme-text-muted">{t('applications.exportAllDescription') || 'Download the full applications dataset in the chosen format.'}</p>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm theme-text-muted">{applications.length} {t('extracted.applications_lowercase')}</p>
-                                        </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                            <button onClick={() => { exportApplicationsData(applications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                                            <button onClick={() => { exportApplicationsPDF(applications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Export Filtered Card */}
-                                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                                                    <Download className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold theme-text-primary">{t('applications.exportFiltered') || 'Export Filtered'}</h4>
-                                                    <p className="text-xs theme-text-muted">{t('applications.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm theme-text-muted">{filteredApplications.length} {t('extracted.applications_lowercase')}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <button disabled={filteredApplications.length === 0} onClick={() => { exportApplicationsData(filteredApplications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                                            <button disabled={filteredApplications.length === 0} onClick={() => { exportApplicationsPDF(filteredApplications); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Main Content */}
-            {showNewApplicationForm ? (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
-                >
-                    <div className="p-6 border-b theme-border-glass">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication ? t('applications.editANewReliefApplication') : t('applications.createANewReliefApplication')}</h2>
-                                <p className="theme-text-muted">{selectedApplication ? t('applications.editingApplicationDescription') : (t('applications.createANewReliefApplicationDescription') || 'Create a new relief application')}</p>
-                            </div>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setShowNewApplicationForm(false)}
-                                className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-primary transition-colors"
-                            >
-                                <X className="w-5 h-5 theme-text-primary" />
-                            </motion.button>
-                        </div>
-                    </div>
-                    <NewApplicationForm
-                        onCancel={() => setShowNewApplicationForm(false)}
-                        initialData={selectedApplication}
-                        onSaved={() => {
-                            // Clear selection after save and refresh UI if needed
-                            setSelectedApplication(null);
-                        }}
-                    />
-                </motion.div>
-            ) : (
-                <>
-                    {/* Statistics Cards (total + dynamic per-status cards) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
-                        <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-                                    <User className="w-5 h-5" />
-                                </div>
-                                <span className="text-lg font-bold theme-text-primary">{stats.total}</span>
-                            </div>
-                            <p className="text-sm font-medium theme-text-muted">{t('applications.stats.total')}</p>
-                        </div>
-
-                        {(() => {
-                            const list = [
-                                { status: 'pending', label: t('applications.stats.pending'), count: stats.pending, Icon: Clock },
-                                { status: 'in-review', label: t('applications.stats.inReview'), count: stats.inReview, Icon: Eye },
-                                { status: 'approved', label: t('applications.stats.approved'), count: stats.approved, Icon: Check },
-                                { status: 'rejected', label: t('applications.stats.rejected'), count: stats.rejected, Icon: X },
-                                { status: 'documents-required', label: t('applications.stats.docsRequired') || t('applications.stats.documentsrequired'), count: stats.documentsRequired, Icon: AlertCircle }
-                            ];
-
-                            return list.map((s) => (
-                                <div key={s.status} className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${theme === 'light' ? (s.status === 'approved' ? 'bg-green-500' : s.status === 'pending' ? 'bg-amber-400' : s.status === 'in-review' ? 'bg-blue-400' : s.status === 'rejected' ? 'bg-red-400' : 'bg-purple-400') : 'bg-opacity-80'}`}>
-                                            <s.Icon className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-lg font-bold theme-text-primary">{s.count}</span>
-                                    </div>
-                                    <p className="text-sm font-medium theme-text-muted">{s.label}</p>
-                                </div>
-                            ));
-                        })()}
-                    </div>
-
-                    {/* Filters and Search */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm"
-                    >
-                        <div className="flex flex-col lg:flex-row gap-4">
-                            {/* Search */}
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-                                <input
-                                    type="text"
-                                    placeholder={t('applications.search')}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                />
-                            </div>
-
-                            {/* View Mode Toggle */}
-                            <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
-                                <button
-                                    onClick={() => setViewMode('table')}
-                                    className={`px-4 py-2 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
-                                >
-                                    {t('applications.viewMode.table')}
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('cards')}
-                                    className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
-                                >
-                                    {t('applications.viewMode.cards')}
-                                </button>
-                            </div>
-
-                            {/* Filter Toggle */}
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
-                            >
-                                <Filter className="w-4 h-4" />
-                                <span>{t('applications.filters')}</span>
-                                {(statusFilter !== 'all' || actTypeFilter !== 'all' || priorityFilter !== 'all') && (
-                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                )}
-                            </motion.button>
-                        </div>
-
-                        {/* Expanded Filters */}
-                        <AnimatePresence>
-                            {showFilters && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                                        <div>
-                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.status')}</label>
-                                            <select
-                                                value={statusFilter}
-                                                onChange={(e) => setStatusFilter(e.target.value)}
-                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                            >
-                                                <option value="all">{t('applications.filterLabels.allStatuses')}</option>
-                                                <option value="pending">{t('applications.stats.pending')}</option>
-                                                <option value="in-review">{t('applications.stats.inReview')}</option>
-                                                <option value="approved">{t('applications.stats.approved')}</option>
-                                                <option value="rejected">{t('applications.stats.rejected')}</option>
-                                                <option value="documents-required">{t('applications.stats.docsRequired')}</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.actType')}</label>
-                                            <select
-                                                value={actTypeFilter}
-                                                onChange={(e) => setActTypeFilter(e.target.value)}
-                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                            >
-                                                <option value="all">{t('applications.filterLabels.allActs')}</option>
-                                                <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                                                <option value="PoA Act">{t('extracted.poa_act')}</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.filterLabels.priority')}</label>
-                                            <select
-                                                value={priorityFilter}
-                                                onChange={(e) => setPriorityFilter(e.target.value)}
-                                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                            >
-                                                <option value="all">{t('applications.filterLabels.allPriorities')}</option>
-                                                <option value="high">{t('extracted.high')}</option>
-                                                <option value="medium">{t('extracted.medium')}</option>
-                                                <option value="low">{t('extracted.low')}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-
-                    {/* Applications List */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
-                    >
-                        {loading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <p className="theme-text-secondary">{t('extracted.loading_applications')}</p>
-                                </div>
-                            </div>
-                        ) : viewMode === 'table' ? (
-                            <div className="w-full">
-                                {/* Desktop Table */}
-                                <div className="hidden sm:block overflow-x-auto">
-                                    <table className="w-full min-w-[700px]">
-                                        <thead className="border-b theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
-                                            <tr>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.application_id')}</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.applicant')}</th>
-                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('applications.beneficiaryId')}</th>
-                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')}</th>
-                                                <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')}</th>
-                                                <th className="hidden md:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')}</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')}</th>
-                                                <th className="hidden sm:table-cell px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.priority')}</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y theme-border-glass">
-                                            {paginatedApplications.map((app, idx) => (
-                                                <motion.tr
-                                                    key={app.id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.02 }}
-                                                    className={`${idx % 2 === 0 ? 'theme-bg-glass dark:bg-gray-900/30' : 'theme-bg-glass dark:bg-gray-800/20'} hover:bg-slate-100/60 dark:hover:bg-gray-800/30 transition-colors`}
-                                                >
-                                                    <td className="px-6 py-4 text-sm font-medium theme-text-primary">{app.id}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                                                                {app.applicantName.split(' ').map(n => n[0]).join('')}
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
-                                                                <p className="text-xs theme-text-muted">{app.phone}</p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="hidden sm:table-cell px-6 py-4 text-sm theme-text-primary">{app.beneficiaryId || '-'}</td>
-                                                    <td className="hidden sm:table-cell px-6 py-4">
-                                                        <p className="text-sm theme-text-primary">{app.district}</p>
-                                                        <p className="text-xs theme-text-muted">{app.state}</p>
-                                                    </td>
-                                                    <td className="hidden md:table-cell px-6 py-4">
-                                                        <span className="px-2 py-1 rounded text-xs font-medium theme-bg-glass theme-text-primary">{app.actType}</span>
-                                                    </td>
-                                                    <td className="hidden md:table-cell px-6 py-4 text-sm font-semibold theme-text-primary">
-                                                        {formatCurrency(app.amount)}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                                            {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3" /> })()}
-                                                            {app.status.replace('-', ' ')}
-                                                        </span>
-                                                    </td>
-                                                    <td className="hidden sm:table-cell px-6 py-4">
-                                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
-                                                            {app.priority}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex gap-2">
-                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
-                                                                <Eye className="w-4 h-4" />
-                                                            </button>
-                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
-                                                                <Edit className="w-4 h-4" />
-                                                            </button>
-                                                            <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
-                                                                <Trash className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Mobile Card View */}
-                                <div className="sm:hidden grid grid-cols-1 gap-4 p-4">
-                                    {paginatedApplications.map((app) => (
-                                        <motion.div
-                                            key={app.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="theme-bg-glass theme-border-glass border rounded-lg p-4"
-                                        >
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div>
-                                                    <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
-                                                    <p className="text-xs theme-text-muted">{app.phone}</p>
-                                                </div>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
-                                                    {app.priority}
-                                                </span>
-                                            </div>
-
-                                            <div className="space-y-1 text-sm theme-text-secondary mb-3">
-                                                <div><strong>ID:</strong> {app.id}</div>
-                                                <div><strong>{t('applications.beneficiaryId')}:</strong> {app.beneficiaryId || '-'}</div>
-                                                <div><strong>{t('extracted.district_1')}</strong> {app.district}, {app.state}</div>
-                                                <div><strong>{t('extracted.act_type_1')}</strong> {app.actType}</div>
-                                                <div><strong>{t('extracted.amount_1')}</strong> {formatCurrency(app.amount)}</div>
-                                                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                                    {(() => { const Icon = getStatusIcon(app.status); return <Icon className="w-3 h-3 mr-1" /> })()}
-                                                    {app.status.replace('-', ' ')}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={() => setSelectedApplication(app)}>
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
-                                                    <Trash className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                                {paginatedApplications.map((app, idx) => (
-                                    <motion.div
-                                        key={app.id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: idx * 0.02 }}
-                                        whileHover={{ y: -2 }}
-                                        className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
-                                        onClick={() => setSelectedApplication(app)}
-                                    >
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full accent-gradient flex items-center justify-center text-white font-bold">
-                                                    {app.applicantName.split(' ').map(n => n[0]).join('')}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium theme-text-primary">{app.applicantName}</p>
-                                                    <p className="text-xs theme-text-muted">{app.id}</p>
-                                                </div>
-                                            </div>
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
-                                                {app.priority}
-                                            </span>
-                                        </div>
-                                        <div className="space-y-2 mb-3">
-                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                                <MapPin className="w-4 h-4" />
-                                                <span>{app.district}, {app.state}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                                <FileText className="w-4 h-4" />
-                                                <span>{app.actType}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                                                <DollarSign className="w-4 h-4" />
-                                                <span className="font-semibold">{formatCurrency(app.amount)}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                                                {(() => {
-                                                    const Icon = getStatusIcon(app.status);
-                                                    return <Icon className="w-3 h-3" />;
-                                                })()}
-                                                {app.status.replace('-', ' ')}
-                                            </span>
-                                            <div className="flex items-center gap-1">
-                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); }}>
-                                                    <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
-                                                </button>
-                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedApplication(app); setShowNewApplicationForm(true); }}>
-                                                    <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
-                                                </button>
-                                                <button className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors" onClick={(e) => { e.stopPropagation(); requestDeleteApplication(app.id); }} aria-label={`Delete ${app.id}`}>
-                                                    <Trash className="w-4 h-4 theme-text-muted hover:text-red-500" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between px-6 py-4 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
-                            <p className="text-sm theme-text-muted">
-                                {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredApplications.length)} {t('extracted.of')} {filteredApplications.length}
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage((p) => p - 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                </button>
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    const pageNum = i + Math.max(1, currentPage - 2);
-                                    if (pageNum > totalPages) return null;
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => setCurrentPage(pageNum)}
-                                            className={`px-3 py-1.5 rounded-lg ${currentPage === pageNum ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700'} transition-colors`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                                <button
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage((p) => p + 1)}
-                                    className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                </>
-            )}
-
-            {/* Application Detail Inline Section (appears below the list) */}
-            {selectedApplication && (
-                <div className="theme-bg-card theme-border-glass border rounded-2xl w-full mt-6 overflow-hidden" aria-live="polite">
-                    <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b theme-border-glass">
-                        <div>
-                            <h2 className="text-2xl font-bold theme-text-primary">{selectedApplication.applicantName}</h2>
-                            <p className="theme-text-muted">{selectedApplication.id} • {selectedApplication.actType}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => { setSelectedApplication(null); }} className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/10 theme-text-primary transition-colors" aria-label={t('extracted.close_sidebar') || 'Close'}>
-                                <X className="w-5 h-5 theme-text-primary" />
-                            </button>
-                            <button onClick={() => { setShowNewApplicationForm(true); }} className="px-3 py-2 rounded-lg accent-gradient text-white">
-                                <Edit className="w-4 h-4 inline-block mr-2" /> {t('applications.edit') || 'Edit'}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        <div>
-                            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.details') || 'Application Details'}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.applicant')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
-                                </div>
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.aadhaar_number')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
-                                </div>
-
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.phone_number')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
-                                </div>
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.location')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.district}, {selectedApplication.state}</p>
-                                </div>
-
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.act_type')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
-                                </div>
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.incident_date')}</p>
-                                    <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
-                                </div>
-
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.application_date')}</p>
-                                    <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
-                                </div>
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.amount_1') || 'Amount'}</p>
-                                    <p className="font-semibold theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
-                                </div>
-
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.status')}</p>
-                                    <div className="flex items-center gap-3">
-                                        <select
-                                            value={detailStatus}
-                                            onChange={(e) => setDetailStatus(e.target.value)}
-                                            className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                        >
-                                            <option value="pending">Pending</option>
-                                            <option value="in-review">In Review</option>
-                                            <option value="approved">Approved</option>
-                                            <option value="rejected">Rejected</option>
-                                            <option value="documents-required">Documents Required</option>
-                                        </select>
-                                        <button
-                                            onClick={() => { if (selectedApplication) updateApplicationStatus(selectedApplication.id, detailStatus); }}
-                                            disabled={!selectedApplication || detailStatus === selectedApplication.status}
-                                            className={`px-3 py-2 rounded-lg text-white ${theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'}`}
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.priority')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.priority}</p>
-                                </div>
-
-                                <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                                    <p className="text-xs theme-text-muted mb-1">{t('extracted.assigned_officer')}</p>
-                                    <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer || '—'}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button onClick={() => { setShowExportModal(true); }} className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-glass theme-text-primary">{t('extracted.export')}</button>
-                            <button onClick={() => { setSelectedApplication(null); }} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass theme-text-primary">{t('extracted.close')}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
+    {/* Header */}
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
+    >
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            {t("extracted.application")}{" "}
+            <span className="text-accent-gradient">
+              {t("extracted.monitoring_center")}
+            </span>
+          </h1>
+          <p className="theme-text-secondary text-base">
+            {t("extracted.realtime_application_tracking_description")}
+          </p>
         </div>
-    );
+
+        <div className="flex flex-wrap gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowExportModal(true)}
+            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
+          >
+            <Download className="w-4 h-4" />
+            <span>{t("extracted.export_data")}</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowNewApplicationForm(true)}
+            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t("extracted.new_application")}</span>
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+
+    {/* Toast container (top-right) */}
+    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+      {toasts.map((toast: any) => {
+        const toastClass =
+          toast.type === "success"
+            ? theme === "light"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : "bg-green-900/30 border-green-800 text-green-200"
+            : toast.type === "error"
+            ? theme === "light"
+              ? "bg-red-50 border-red-200 text-red-800"
+              : "bg-red-900/30 border-red-800 text-red-200"
+            : theme === "light"
+            ? "bg-gray-50 border-gray-200 text-gray-900"
+            : "bg-gray-900/30 border-gray-800 text-gray-200";
+
+        return (
+          <div
+            key={toast.id}
+            className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`}
+            role="status"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-sm">{toast.message}</div>
+              <button
+                onClick={() =>
+                  setToasts((prev: any[]) =>
+                    prev.filter((x) => x.id !== toast.id)
+                  )
+                }
+                className="ml-4 p-1 rounded hover:bg-gray-100"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Confirm delete modal */}
+    <AnimatePresence>
+      {confirmModal.open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={cancelConfirmDelete}
+          />
+          <motion.div
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.98, opacity: 0 }}
+            className="relative w-full max-w-md p-6 rounded-xl theme-border-glass border shadow-lg theme-bg-card"
+          >
+            <h3 className="text-lg font-semibold theme-text-primary mb-3">
+              {t("applications.confirmDeleteTitle")}
+            </h3>
+            <p className="text-sm theme-text-muted mb-6">
+              {confirmModal.message}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelConfirmDelete}
+                className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteApplication}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  theme === "light" ? "bg-red-600" : "bg-red-500"
+                }`}
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Export Modal */}
+    <AnimatePresence>
+      {showExportModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowExportModal(false)}
+          />
+          <motion.div
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.98, opacity: 0 }}
+            className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+            style={{
+              background:
+                theme === "light"
+                  ? "rgba(255,255,255,0.98)"
+                  : "rgba(6,8,20,0.98)",
+            }}
+          >
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                  <Download className="w-5 h-5 text-accent-gradient" />
+                  {t("applications.export") || "Export Data"}
+                </h3>
+                <p className="text-sm theme-text-muted mt-1">
+                  {t("applications.exportDescription") ||
+                    "Export applications as CSV or a printable PDF report."}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowExportModal(false)}
+                aria-label="Close export modal"
+                className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors"
+              >
+                <X className="w-5 h-5 theme-text-primary" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Export All Card */}
+              <div
+                className={`rounded-lg p-4 border ${
+                  theme === "light" ? "bg-white" : "bg-gray-900/90"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold theme-text-primary">
+                          {t("applications.exportAll") || "Export All"}
+                        </h4>
+                        <p className="text-xs theme-text-muted">
+                          {t("applications.exportAllDescription") ||
+                            "Download the full applications dataset in the chosen format."}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm theme-text-muted">
+                      {applications.length}{" "}
+                      {t("extracted.applications_lowercase")}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <button
+                      onClick={() => {
+                        exportApplicationsData(applications);
+                        setShowExportModal(false);
+                      }}
+                      className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportApplicationsPDF(applications);
+                        setShowExportModal(false);
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow"
+                    >
+                      PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Filtered Card */}
+              <div
+                className={`rounded-lg p-4 border ${
+                  theme === "light" ? "bg-white" : "bg-gray-900/90"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                        <Download className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold theme-text-primary">
+                          {t("applications.exportFiltered") || "Export Filtered"}
+                        </h4>
+                        <p className="text-xs theme-text-muted">
+                          {t("applications.exportFilteredDescription") ||
+                            "Download only the results matching your current filters."}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm theme-text-muted">
+                      {filteredApplications.length}{" "}
+                      {t("extracted.applications_lowercase")}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <button
+                      disabled={filteredApplications.length === 0}
+                      onClick={() => {
+                        exportApplicationsData(filteredApplications);
+                        setShowExportModal(false);
+                      }}
+                      className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      CSV
+                    </button>
+                    <button
+                      disabled={filteredApplications.length === 0}
+                      onClick={() => {
+                        exportApplicationsPDF(filteredApplications);
+                        setShowExportModal(false);
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50"
+                    >
+                      PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Main Content */}
+    {showNewApplicationForm ? (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
+      >
+        <div className="p-6 border-b theme-border-glass">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold theme-text-primary">
+                {selectedApplication
+                  ? t("applications.editANewReliefApplication")
+                  : t("applications.createANewReliefApplication")}
+              </h2>
+              <p className="theme-text-muted">
+                {selectedApplication
+                  ? t("applications.editingApplicationDescription")
+                  : t(
+                      "applications.createANewReliefApplicationDescription"
+                    ) || "Create a new relief application"}
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowNewApplicationForm(false)}
+              className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-primary transition-colors"
+            >
+              <X className="w-5 h-5 theme-text-primary" />
+            </motion.button>
+          </div>
+        </div>
+        <NewApplicationForm
+          onCancel={() => setShowNewApplicationForm(false)}
+          initialData={selectedApplication}
+          onSaved={() => {
+            setSelectedApplication(null);
+          }}
+        />
+      </motion.div>
+    ) : (
+      <>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
+                <User className="w-5 h-5" />
+              </div>
+              <span className="text-lg font-bold theme-text-primary">
+                {stats.total}
+              </span>
+            </div>
+            <p className="text-sm font-medium theme-text-muted">
+              {t("applications.stats.total")}
+            </p>
+          </div>
+
+          {(() => {
+            const list = [
+              {
+                status: "pending",
+                label: t("applications.stats.pending"),
+                count: stats.pending,
+                Icon: Clock,
+              },
+              {
+                status: "in-review",
+                label: t("applications.stats.inReview"),
+                count: stats.inReview,
+                Icon: Eye,
+              },
+              {
+                status: "approved",
+                label: t("applications.stats.approved"),
+                count: stats.approved,
+                Icon: Check,
+              },
+              {
+                status: "rejected",
+                label: t("applications.stats.rejected"),
+                count: stats.rejected,
+                Icon: X,
+              },
+              {
+                status: "documents-required",
+                label:
+                  t("applications.stats.docsRequired") ||
+                  t("applications.stats.documentsrequired"),
+                count: stats.documentsRequired,
+                Icon: AlertCircle,
+              },
+            ] as const;
+
+            return list.map((s) => (
+              <div
+                key={s.status}
+                className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${
+                      theme === "light"
+                        ? s.status === "approved"
+                          ? "bg-green-500"
+                          : s.status === "pending"
+                          ? "bg-amber-400"
+                          : s.status === "in-review"
+                          ? "bg-blue-400"
+                          : s.status === "rejected"
+                          ? "bg-red-400"
+                          : "bg-purple-400"
+                        : "bg-opacity-80"
+                    }`}
+                  >
+                    <s.Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-lg font-bold theme-text-primary">
+                    {s.count}
+                  </span>
+                </div>
+                <p className="text-sm font-medium theme-text-muted">
+                  {s.label}
+                </p>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {/* Filters and Search */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm"
+        >
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
+              <input
+                type="text"
+                placeholder={t("applications.search")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+              />
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`px-4 py-2 rounded ${
+                  viewMode === "table"
+                    ? "accent-gradient text-white"
+                    : "theme-text-muted hover:theme-text-primary"
+                } transition-colors`}
+              >
+                {t("applications.viewMode.table")}
+              </button>
+              <button
+                onClick={() => setViewMode("cards")}
+                className={`px-4 py-2 rounded ${
+                  viewMode === "cards"
+                    ? "accent-gradient text-white"
+                    : "theme-text-muted hover:theme-text-primary"
+                } transition-colors`}
+              >
+                {t("applications.viewMode.cards")}
+              </button>
+            </div>
+
+            {/* Filter Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${
+                showFilters
+                  ? "accent-gradient text-white"
+                  : "theme-bg-glass theme-text-primary"
+              } transition-colors`}
+            >
+              <Filter className="w-4 h-4" />
+              <span>{t("applications.filters")}</span>
+              {(statusFilter !== "all" ||
+                actTypeFilter !== "all" ||
+                priorityFilter !== "all") && (
+                <span className="w-2 h-2 bg-red-500 rounded-full" />
+              )}
+            </motion.button>
+          </div>
+
+          {/* Expanded Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
+                  <div>
+                    <label className="block text-sm font-medium theme-text-muted mb-2">
+                      {t("applications.filterLabels.status")}
+                    </label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    >
+                      <option value="all">
+                        {t("applications.filterLabels.allStatuses")}
+                      </option>
+                      <option value="pending">
+                        {t("applications.stats.pending")}
+                      </option>
+                      <option value="in-review">
+                        {t("applications.stats.inReview")}
+                      </option>
+                      <option value="approved">
+                        {t("applications.stats.approved")}
+                      </option>
+                      <option value="rejected">
+                        {t("applications.stats.rejected")}
+                      </option>
+                      <option value="documents-required">
+                        {t("applications.stats.docsRequired")}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium theme-text-muted mb-2">
+                      {t("applications.filterLabels.actType")}
+                    </label>
+                    <select
+                      value={actTypeFilter}
+                      onChange={(e) => setActTypeFilter(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    >
+                      <option value="all">
+                        {t("applications.filterLabels.allActs")}
+                      </option>
+                      <option value="PCR Act">{t("extracted.pcr_act")}</option>
+                      <option value="PoA Act">{t("extracted.poa_act")}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium theme-text-muted mb-2">
+                      {t("applications.filterLabels.priority")}
+                    </label>
+                    <select
+                      value={priorityFilter}
+                      onChange={(e) => setPriorityFilter(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    >
+                      <option value="all">
+                        {t("applications.filterLabels.allPriorities")}
+                      </option>
+                      <option value="high">{t("extracted.high")}</option>
+                      <option value="medium">{t("extracted.medium")}</option>
+                      <option value="low">{t("extracted.low")}</option>
+                    </select>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Applications List */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <p className="theme-text-secondary">
+                  {t("extracted.loading_applications")}
+                </p>
+              </div>
+            </div>
+) : viewMode === "table" ? (
+  <div className="w-full flex flex-col overflow-hidden">
+    <div className="hidden sm:block overflow-x-auto">
+      <table className="w-full table-auto">
+        <thead className="border-b theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm text-sm">
+          <tr className="whitespace-nowrap">
+            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.application_id")}</th>
+            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.applicant")}</th>
+            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("applications.beneficiaryId")}</th>
+            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.district")}</th>
+            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.act_type")}</th>
+            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.amount")}</th>
+            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.status")}</th>
+            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.priority")}</th>
+            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.actions")}</th>
+          </tr>
+        </thead>
+
+        <tbody className="divide-y theme-border-glass text-sm">
+          {paginatedApplications.map((app: any, idx: number) => (
+            <motion.tr
+              key={app.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.02 }}
+              className={`${
+                idx % 2 === 0
+                  ? "theme-bg-glass dark:bg-gray-900/30"
+                  : "theme-bg-glass dark:bg-gray-800/20"
+              } hover:bg-slate-100/60 dark:hover:bg-gray-800/30 transition-colors`}
+            >
+              <td className="py-3 px-2 font-medium theme-text-primary truncate">{app.id}</td>
+
+              <td className="py-3 px-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {app.applicantName.split(" ").map((n: string) => n[0]).join("")}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium theme-text-primary truncate">{app.applicantName}</span>
+                    <span className="text-xs theme-text-muted truncate">{app.phone}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td className="hidden sm:table-cell py-3 px-2 truncate">{app.beneficiaryId || "-"}</td>
+
+              <td className="hidden sm:table-cell py-3 px-2">
+                <span className="theme-text-primary truncate">{app.district}</span>
+                <span className="text-xs theme-text-muted truncate block">{app.state}</span>
+              </td>
+
+              <td className="hidden md:table-cell py-3 px-2">
+                <span className="inline-block rounded text-xs font-medium theme-bg-glass theme-text-primary truncate">
+                  {app.actType}
+                </span>
+              </td>
+
+              <td className="hidden md:table-cell py-3 px-2 font-semibold theme-text-primary truncate">
+                {formatCurrency(app.amount)}
+              </td>
+
+              <td className="py-3 px-2">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                    app.status
+                  )}`}
+                >
+                  {(() => {
+                    const Icon = getStatusIcon(app.status);
+                    return <Icon className="w-3 h-3" />;
+                  })()}
+                  {app.status.replace("-", " ")}
+                </span>
+              </td>
+
+              <td className="hidden sm:table-cell py-3 px-2">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
+                    app.priority
+                  )}`}
+                >
+                  {app.priority}
+                </span>
+              </td>
+
+              <td className="py-3 px-2">
+                <div className="flex gap-1">
+                  <button
+                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors"
+                    onClick={() => setSelectedApplication(app)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedApplication(app);
+                      setShowNewApplicationForm(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestDeleteApplication(app.id);
+                    }}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Mobile Card View */}
+    <div className="sm:hidden grid grid-cols-1 gap-3 p-3">
+      {paginatedApplications.map((app: any) => (
+        <motion.div
+          key={app.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="theme-bg-glass theme-border-glass border rounded-lg p-3"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium theme-text-primary">{app.applicantName}</p>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(app.priority)}`}>
+              {app.priority}
+            </span>
+          </div>
+          <div className="space-y-1 text-sm theme-text-secondary">
+            <p><strong>ID:</strong> {app.id}</p>
+            <p><strong>{t("applications.beneficiaryId")}:</strong> {app.beneficiaryId || "-"}</p>
+            <p><strong>{t("extracted.district_1")}</strong> {app.district}, {app.state}</p>
+            <p><strong>{t("extracted.act_type_1")}</strong> {app.actType}</p>
+            <p><strong>{t("extracted.amount_1")}</strong> {formatCurrency(app.amount)}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  </div>
+)
+
+: (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {paginatedApplications.map((app: any, idx: number) => (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.02 }}
+                  whileHover={{ y: -2 }}
+                  className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedApplication(app)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full accent-gradient flex items-center justify-center text-white font-bold">
+                        {app.applicantName
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")}
+                      </div>
+                      <div>
+                        <p className="font-medium theme-text-primary">
+                          {app.applicantName}
+                        </p>
+                        <p className="text-xs theme-text-muted">{app.id}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
+                        app.priority
+                      )}`}
+                    >
+                      {app.priority}
+                    </span>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <MapPin className="w-4 h-4" />
+                      <span>
+                        {app.district}, {app.state}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <FileText className="w-4 h-4" />
+                      <span>{app.actType}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
+                      <DollarSign className="w-4 h-4" />
+                      <span className="font-semibold">
+                        {formatCurrency(app.amount)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                        app.status
+                      )}`}
+                    >
+                      {(() => {
+                        const Icon = getStatusIcon(app.status);
+                        return <Icon className="w-3 h-3" />;
+                      })()}
+                      {app.status.replace("-", " ")}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedApplication(app);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedApplication(app);
+                          setShowNewApplicationForm(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestDeleteApplication(app.id);
+                        }}
+                        aria-label={`Delete ${app.id}`}
+                      >
+                        <Trash className="w-4 h-4 theme-text-muted hover:text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-6 py-4 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
+            <p className="text-sm theme-text-muted">
+              {t("extracted.showing")}{" "}
+              {(currentPage - 1) * itemsPerPage + 1} {t("extracted.to")}{" "}
+              {Math.min(currentPage * itemsPerPage, filteredApplications.length)}{" "}
+              {t("extracted.of")} {filteredApplications.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p: number) => p - 1)}
+                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              {Array.from(
+                { length: Math.min(5, totalPages) },
+                (_, i: number) => {
+                  const pageNum = i + Math.max(1, currentPage - 2);
+                  if (pageNum > totalPages) return null;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1.5 rounded-lg ${
+                        currentPage === pageNum
+                          ? "accent-gradient text-white"
+                          : "theme-bg-card theme-border-glass border theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700"
+                      } transition-colors`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+              )}
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p: number) => p + 1)}
+                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </>
+    )}
+
+    {/* Application Detail Inline Section */}
+    {selectedApplication && (
+      <div
+        className="theme-bg-card theme-border-glass border rounded-2xl w-full mt-6 overflow-hidden"
+        aria-live="polite"
+      >
+        <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b theme-border-glass">
+          <div>
+            <h2 className="text-2xl font-bold theme-text-primary">
+              {selectedApplication.applicantName}
+            </h2>
+            <p className="theme-text-muted">
+              {selectedApplication.id} • {selectedApplication.actType}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSelectedApplication(null);
+              }}
+              className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/10 theme-text-primary transition-colors"
+              aria-label={t("extracted.close_sidebar") || "Close"}
+            >
+              <X className="w-5 h-5 theme-text-primary" />
+            </button>
+            <button
+              onClick={() => {
+                setShowNewApplicationForm(true);
+              }}
+              className="px-3 py-2 rounded-lg accent-gradient text-white"
+            >
+              <Edit className="w-4 h-4 inline-block mr-2" />{" "}
+              {t("applications.edit") || "Edit"}
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">
+              {t("applications.details") || "Application Details"}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.applicant")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.applicantName}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.aadhaar_number")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.aadhaar}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.phone_number")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.phone}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.location")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.district}, {selectedApplication.state}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.act_type")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.actType}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.incident_date")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {formatDate(selectedApplication.incidentDate)}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.application_date")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {formatDate(selectedApplication.applicationDate)}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.amount_1") || "Amount"}
+                </p>
+                <p className="font-semibold theme-text-primary">
+                  {formatCurrency(selectedApplication.amount)}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.status")}
+                </p>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={detailStatus}
+                    onChange={(e) => setDetailStatus(e.target.value)}
+                    className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-review">In Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="documents-required">
+                      Documents Required
+                    </option>
+                  </select>
+                  <button
+                    onClick={() => {
+                      if (selectedApplication) {
+                        updateApplicationStatus(
+                          selectedApplication.id,
+                          detailStatus
+                        );
+                      }
+                    }}
+                    disabled={
+                      !selectedApplication ||
+                      detailStatus === selectedApplication.status
+                    }
+                    className={`px-3 py-2 rounded-lg text-white ${
+                      theme === "light" ? "bg-blue-600" : "bg-blue-500"
+                    }`}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.priority")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.priority}
+                </p>
+              </div>
+
+              <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass">
+                <p className="text-xs theme-text-muted mb-1">
+                  {t("extracted.assigned_officer")}
+                </p>
+                <p className="font-medium theme-text-primary">
+                  {selectedApplication.assignedOfficer || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowExportModal(true);
+              }}
+              className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-glass theme-text-primary"
+            >
+              {t("extracted.export")}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedApplication(null);
+              }}
+              className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass theme-text-primary"
+            >
+              {t("extracted.close")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 };
 
 export default ApplicationsPage;
