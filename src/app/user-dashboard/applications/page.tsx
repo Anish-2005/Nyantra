@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import LoadingState from '@/components/LoadingState';
 import {
   Search, Filter, Plus, Eye, Edit, Trash, ChevronLeft, ChevronRight, X, Check,
   Clock, AlertCircle, FileText, User, Phone, MapPin, DollarSign, MessageSquare,
@@ -712,6 +713,10 @@ export default function ApplicationsPage() {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <LoadingState message={t('loading_applications')} />;
   }
 
   return (

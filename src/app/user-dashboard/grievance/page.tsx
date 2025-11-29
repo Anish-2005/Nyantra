@@ -1,11 +1,12 @@
 "use client";
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, updateDoc, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
+import LoadingState from '@/components/LoadingState';
 // Grievance type definition matching the admin page
 type Grievance = {
   id: string;
@@ -434,12 +435,7 @@ export default function GrievancePage() {
       `}</style>
       
       {loading || (user && beneficiaries.length === 0) ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="theme-text-muted">Loading...</p>
-          </div>
-        </div>
+        <LoadingState message={t('extracted.loading_grievances')} />
       ) : !currentUser ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">

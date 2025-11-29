@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
+import LoadingState from '@/components/LoadingState';
 import {
   User, Plus, Edit, Trash, Eye, Search,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
@@ -576,6 +577,10 @@ export default function BeneficiariesPage() {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <LoadingState message={t('loading_beneficiaries')} />;
   }
 
   return (

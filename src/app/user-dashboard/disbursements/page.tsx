@@ -5,6 +5,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import LoadingState from '@/components/LoadingState';
 import { Clock, CheckCircle, XCircle, PlayCircle, X } from 'lucide-react';
 
 interface Disbursement {
@@ -47,6 +48,7 @@ export default function DisbursementsPage() {
   const { user } = useAuth();
   const [disbursements, setDisbursements] = useState<Disbursement[]>([]);
   const [userBeneficiary, setUserBeneficiary] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'>('all');
   const [selectedDisbursement, setSelectedDisbursement] = useState<Disbursement | null>(null);
   const [editingDisbursement, setEditingDisbursement] = useState<Disbursement | null>(null);
@@ -75,6 +77,7 @@ export default function DisbursementsPage() {
       } else {
         setUserBeneficiary(null);
       }
+      setLoading(false);
     });
 
     return () => unsubscribeBeneficiary();
@@ -84,9 +87,11 @@ export default function DisbursementsPage() {
   useEffect(() => {
     if (!userBeneficiary?.id) {
       setDisbursements([]);
+      setLoading(false);
       return;
     }
 
+    setLoading(true);
     const q = query(
       collection(db, 'disbursements'),
       where('beneficiaryId', '==', userBeneficiary.id)
@@ -131,6 +136,7 @@ export default function DisbursementsPage() {
         });
       });
       setDisbursements(userDisbursements);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -269,6 +275,10 @@ const getStatusColor = (status: string) => {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <LoadingState message={t('loading_disbursements')} />;
   }
 
   return (
