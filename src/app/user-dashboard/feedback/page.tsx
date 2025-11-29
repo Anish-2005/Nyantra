@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
+import LoadingState from '@/components/LoadingState';
 
 type Feedback = {
   id: string;
@@ -17,6 +18,7 @@ const STORAGE_KEY = 'nyantra_user_feedback_v1';
 
 export default function FeedbackPage() {
   const [list, setList] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(true);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [type, setType] = useState<Feedback['type']>('feedback');
@@ -34,6 +36,7 @@ export default function FeedbackPage() {
     } catch {
       setList([]);
     }
+    setLoading(false);
   }, []);
 
   const persist = (items: Feedback[]) => {
@@ -156,6 +159,10 @@ export default function FeedbackPage() {
   const resolvedCount = list.filter(f => f.status === 'resolved').length;
   const grievanceCount = list.filter(f => f.type === 'grievance').length;
   
+
+  if (loading) {
+    return <LoadingState message={t('loading_feedback')} />;
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-6 theme-bg-primary">
