@@ -21,12 +21,11 @@ import {
   Receipt
 } from 'lucide-react';
 
-// Disbursements state — generated from approved applications
+// Disbursements state — now all from Firestore
 
 const DisbursementsPage: React.FC = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
-  const [disbursements, setDisbursements] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('all');
@@ -45,6 +44,7 @@ const DisbursementsPage: React.FC = () => {
 
   // Edit disbursement form states
   const [editingDisbursementId, setEditingDisbursementId] = useState<string | null>(null);
+  const [isEditingManual, setIsEditingManual] = useState<boolean>(false);
 
   // Manual disbursement form states
   const [showManualForm, setShowManualForm] = useState(false);
@@ -61,8 +61,8 @@ const DisbursementsPage: React.FC = () => {
   // Manual disbursements from Firestore
   const [manualDisbursements, setManualDisbursements] = useState<any[]>([]);
 
-  // Combine auto-generated and manual disbursements
-  const allDisbursements = useMemo(() => [...disbursements, ...manualDisbursements], [disbursements, manualDisbursements]);
+  // Combine disbursements (now all from Firestore)
+  const allDisbursements = useMemo(() => manualDisbursements, [manualDisbursements]);
 
   // Filter and sort disbursements
   const filteredDisbursements = useMemo(() => {
@@ -201,46 +201,50 @@ const DisbursementsPage: React.FC = () => {
     return { total, completed, pending, inProgress, failed, cancelled, successRate, disbursedAmount, totalAmount, pendingAmount };
   }, [allDisbursements]);
 
-  // Listen for approved applications and generate disbursements in realtime
+  // Listen for approved or completed applications and create disbursements if not exist
   useEffect(() => {
-    const q = query(collection(db, 'applications'), where('status', '==', 'approved'));
-    const unsubscribe = onSnapshot(q, (snap) => {
+    const q = query(collection(db, 'applications'), where('status', 'in', ['approved', 'completed']));
+    const unsubscribe = onSnapshot(q, async (snap) => {
       try {
-        const now = Date.now();
-        const items = snap.docs.map((d, i) => {
-          const data = d.data() as any;
-          // Generate a DIS id using timestamp + index to ensure uniqueness
-          const disId = `DIS${now}${i}`;
-          const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
-          return {
-            id: disId,
-            beneficiaryId: data.beneficiaryId || '',
-            beneficiaryName: data.applicantName || data.name || '',
-            district: data.district || '',
-            state: data.state || '',
-            transactionId: data.transactionId || null,
-            utrNumber: data.utrNumber || null,
-            paymentMethod: data.paymentMethod || null,
-            reliefAmount: data.amount || 0,
-            transactionFee: 0,
-            netAmount: data.amount || 0,
-            disbursedAmount: data.disbursedAmount || 0,
-            status: data.disbursementStatus || 'pending',
-            initiatedDate,
-            actType: data.actType || data.caseType || 'relief',
-            retryCount: data.retryCount || 0,
-            failureReason: data.failureReason || null,
-            initiatedBy: data.assignedOfficer || null,
-            verifiedBy: data.verifiedBy || null,
-            applicationId: d.id
-          };
-        });
-        setDisbursements(items);
+        for (const doc of snap.docs) {
+          const data = doc.data() as any;
+          const disQuery = query(collection(db, 'disbursements'), where('applicationId', '==', doc.id));
+          const disSnap = await getDocs(disQuery);
+          if (disSnap.empty) {
+            // Create disbursement
+            const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
+            const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
+            await addDoc(collection(db, 'disbursements'), {
+              id: disId,
+              beneficiaryId: data.beneficiaryId || '',
+              beneficiaryName: data.applicantName || data.name || '',
+              district: data.district || '',
+              state: data.state || '',
+              transactionId: data.transactionId || null,
+              utrNumber: data.utrNumber || null,
+              paymentMethod: data.paymentMethod || null,
+              reliefAmount: data.amount || 0,
+              transactionFee: 0,
+              netAmount: data.amount || 0,
+              disbursedAmount: data.disbursedAmount || 0,
+              status: data.status === 'completed' ? 'completed' : (data.disbursementStatus || 'pending'),
+              initiatedDate,
+              actType: data.actType || data.caseType || 'relief',
+              retryCount: data.retryCount || 0,
+              failureReason: data.failureReason || null,
+              initiatedBy: data.assignedOfficer || null,
+              verifiedBy: data.verifiedBy || null,
+              applicationId: doc.id,
+              ownerId: data.ownerId || '',
+              isAuto: true
+            });
+          }
+        }
       } catch (err) {
-        console.error('Error processing snapshot for approved applications', err);
+        console.error('Error creating disbursements for applications:', err);
       }
     }, (err) => {
-      console.error('onSnapshot error for approved applications:', err);
+      console.error('onSnapshot error for applications:', err);
     });
 
     return () => unsubscribe();
@@ -642,7 +646,7 @@ const DisbursementsPage: React.FC = () => {
 
     try {
       console.log('Submitting form. Editing ID:', editingDisbursementId);
-      if (editingDisbursementId) {
+      if (isEditingManual && editingDisbursementId) {
         // Update existing disbursement
         console.log('Updating disbursement with ID:', editingDisbursementId);
         const disbursementRef = doc(db, 'disbursements', editingDisbursementId);
@@ -662,7 +666,7 @@ const DisbursementsPage: React.FC = () => {
 
         await updateDoc(disbursementRef, updateData);
       } else {
-        // Create new disbursement
+        // Create new disbursement (for auto-generated being edited)
         console.log('Creating new disbursement');
         const selectedApp = availableApplications.find(a => a.id === manualApplicationId);
         if (!selectedApp) {
@@ -692,12 +696,14 @@ const DisbursementsPage: React.FC = () => {
           initiatedBy: 'manual', // or current user
           verifiedBy: null,
           applicationId: manualApplicationId,
+          ownerId: selectedApp.ownerId || '',
           isManual: true
         });
       }
 
       // Reset form
       setEditingDisbursementId(null);
+      setIsEditingManual(false);
       setManualBeneficiaryId('');
       setManualApplicationId('');
       setAvailableApplications([]);
@@ -711,7 +717,7 @@ const DisbursementsPage: React.FC = () => {
 
     } catch (err) {
       console.error('Error saving disbursement:', err);
-      alert(editingDisbursementId ? (t('extracted.error_updating_disbursement') || 'Error updating disbursement') : t('extracted.error_adding_disbursement'));
+      alert(isEditingManual ? (t('extracted.error_updating_disbursement') || 'Error updating disbursement') : t('extracted.error_adding_disbursement'));
     }
   };
 
@@ -724,6 +730,7 @@ const DisbursementsPage: React.FC = () => {
     setEditUtrNumber(selectedDisbursement.utrNumber || '');
     setEditPaymentMethod(selectedDisbursement.paymentMethod || '');
     setEditingDisbursementId(selectedDisbursement.firestoreId || selectedDisbursement.id || null);
+    setIsEditingManual(!!selectedDisbursement.firestoreId);
   };
 
   return (
@@ -2052,6 +2059,7 @@ const DisbursementsPage: React.FC = () => {
                     const docId = selectedDisbursement.firestoreId || selectedDisbursement.id;
                     console.log('Editing disbursement:', selectedDisbursement, 'Document ID:', docId);
                     setEditingDisbursementId(docId);
+                    setIsEditingManual(!!selectedDisbursement.firestoreId);
                     setManualBeneficiaryId(selectedDisbursement.beneficiaryId || '');
                     setManualApplicationId(selectedDisbursement.applicationId || '');
                     // Fetch applications for this beneficiary
