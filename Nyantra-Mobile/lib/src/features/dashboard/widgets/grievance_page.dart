@@ -174,7 +174,7 @@ class _GrievancePageState extends State<GrievancePage> {
                           Text(
                                 'Track and manage all your grievance reports',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 230),
+                                  color: Colors.white,
                                   height: 1.4,
                                 ),
                               )

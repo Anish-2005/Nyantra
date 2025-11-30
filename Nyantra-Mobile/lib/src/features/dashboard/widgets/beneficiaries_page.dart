@@ -173,7 +173,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                           Text(
                                 'Manage and track your beneficiaries',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 230),
+                                  color: Colors.white,
                                   height: 1.4,
                                 ),
                               )

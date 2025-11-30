@@ -173,7 +173,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                           Text(
                                 'Track and manage all your relief applications',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 230),
+                                  color: Colors.white,
                                   height: 1.4,
                                 ),
                               )
