@@ -169,7 +169,9 @@ class _OverviewPageState extends State<OverviewPage> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Welcome Back',
+                                        localeProvider.translate(
+                                          'dashboard.welcomeBack',
+                                        ),
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               color: Colors.white,
@@ -187,7 +189,9 @@ class _OverviewPageState extends State<OverviewPage> {
 
                             // Title
                             Text(
-                                  localeProvider.translate('dashboard.yourDashboard'),
+                                  localeProvider.translate(
+                                    'dashboard.yourDashboard',
+                                  ),
                                   style: theme.textTheme.headlineMedium
                                       ?.copyWith(
                                         color: Colors.white,
@@ -203,7 +207,9 @@ class _OverviewPageState extends State<OverviewPage> {
 
                             // Subtitle
                             Text(
-                                  'Track your applications, view disbursements, and manage your beneficiary information all in one place.',
+                                  localeProvider.translate(
+                                    'dashboard.dashboardSubtitle',
+                                  ),
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     color: Colors.white.withOpacity(0.9),
                                     height: 1.4,
@@ -246,7 +252,9 @@ class _OverviewPageState extends State<OverviewPage> {
                           _buildStatCard(
                             context,
                             '${_stats['totalApplications'] ?? 0}',
-                            'Total Applications',
+                            localeProvider.translate(
+                              'dashboard.stats.totalApplications',
+                            ),
                             Icons.file_copy,
                             isDark,
                             0,
@@ -254,7 +262,9 @@ class _OverviewPageState extends State<OverviewPage> {
                           _buildStatCard(
                             context,
                             '₹${(_stats['totalDisbursed'] as double? ?? 0.0).toStringAsFixed(0)}L',
-                            'Total Disbursed',
+                            localeProvider.translate(
+                              'dashboard.stats.totalDisbursed',
+                            ),
                             Icons.account_balance_wallet,
                             isDark,
                             1,
@@ -262,7 +272,7 @@ class _OverviewPageState extends State<OverviewPage> {
                           _buildStatCard(
                             context,
                             '${_stats['pendingApplications'] ?? 0}',
-                            'Pending',
+                            localeProvider.translate('dashboard.stats.pending'),
                             Icons.pending,
                             isDark,
                             2,
@@ -270,7 +280,9 @@ class _OverviewPageState extends State<OverviewPage> {
                           _buildStatCard(
                             context,
                             '${_stats['approvedApplications'] ?? 0}',
-                            'Approved',
+                            localeProvider.translate(
+                              'dashboard.stats.approved',
+                            ),
                             Icons.check_circle,
                             isDark,
                             3,
@@ -287,7 +299,9 @@ class _OverviewPageState extends State<OverviewPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        localeProvider.translate('dashboard.sections.quickActions'),
+                        localeProvider.translate(
+                          'dashboard.sections.quickActions',
+                        ),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.textTheme.bodyLarge?.color,
@@ -306,8 +320,12 @@ class _OverviewPageState extends State<OverviewPage> {
                         children: [
                           _buildActionCard(
                             context,
-                            'New Application',
-                            'Submit a new relief application',
+                            localeProvider.translate(
+                              'dashboard.quickActions.newApplication.title',
+                            ),
+                            localeProvider.translate(
+                              'dashboard.quickActions.newApplication.subtitle',
+                            ),
                             Icons.add,
                             () {
                               // Navigate to applications page
@@ -318,8 +336,12 @@ class _OverviewPageState extends State<OverviewPage> {
                           ),
                           _buildActionCard(
                             context,
-                            'Check Status',
-                            'View your application progress',
+                            localeProvider.translate(
+                              'dashboard.quickActions.checkStatus.title',
+                            ),
+                            localeProvider.translate(
+                              'dashboard.quickActions.checkStatus.subtitle',
+                            ),
                             Icons.search,
                             () {
                               // Navigate to applications page
@@ -329,8 +351,12 @@ class _OverviewPageState extends State<OverviewPage> {
                           ),
                           _buildActionCard(
                             context,
-                            'File Grievance',
-                            'Report an issue or complaint',
+                            localeProvider.translate(
+                              'dashboard.quickActions.fileGrievance.title',
+                            ),
+                            localeProvider.translate(
+                              'dashboard.quickActions.fileGrievance.subtitle',
+                            ),
                             Icons.message,
                             () {
                               // Navigate to grievance page
@@ -340,8 +366,12 @@ class _OverviewPageState extends State<OverviewPage> {
                           ),
                           _buildActionCard(
                             context,
-                            'View Beneficiaries',
-                            'Manage beneficiary information',
+                            localeProvider.translate(
+                              'dashboard.quickActions.viewBeneficiaries.title',
+                            ),
+                            localeProvider.translate(
+                              'dashboard.quickActions.viewBeneficiaries.subtitle',
+                            ),
                             Icons.people,
                             () {
                               // Navigate to beneficiaries page
@@ -387,7 +417,9 @@ class _OverviewPageState extends State<OverviewPage> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              localeProvider.translate('dashboard.recentActivity'),
+                              localeProvider.translate(
+                                'dashboard.recentActivity',
+                              ),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyLarge?.color,
@@ -397,22 +429,28 @@ class _OverviewPageState extends State<OverviewPage> {
                         ),
                         const SizedBox(height: 16),
                         _buildActivityItem(
-                          'Application #APP001 submitted successfully',
-                          '2 hours ago',
+                          localeProvider.translate(
+                            'dashboard.activityItems.appSubmitted',
+                          ),
+                          '2 ${localeProvider.translate('dashboard.timeAgo.hours')}',
                           Icons.check_circle,
                           Colors.green,
                         ),
                         const SizedBox(height: 12),
                         _buildActivityItem(
-                          'Document verification completed',
-                          '1 day ago',
+                          localeProvider.translate(
+                            'dashboard.activityItems.docVerified',
+                          ),
+                          '1 ${localeProvider.translate('dashboard.timeAgo.days')}',
                           Icons.verified,
                           Colors.blue,
                         ),
                         const SizedBox(height: 12),
                         _buildActivityItem(
-                          'Beneficiary information updated',
-                          '3 days ago',
+                          localeProvider.translate(
+                            'dashboard.activityItems.beneficiaryUpdated',
+                          ),
+                          '3 ${localeProvider.translate('dashboard.timeAgo.days')}',
                           Icons.edit,
                           Colors.orange,
                         ),
@@ -578,11 +616,12 @@ class _OverviewPageState extends State<OverviewPage> {
     final theme = Theme.of(context);
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 16),
@@ -598,11 +637,16 @@ class _OverviewPageState extends State<OverviewPage> {
                   color: theme.textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.w500,
                 ),
+                softWrap: true,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 time,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  color: theme.textTheme.bodyMedium?.color?.withValues(
+                    alpha: 0.6,
+                  ),
                 ),
               ),
             ],

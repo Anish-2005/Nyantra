@@ -7,7 +7,13 @@
     "integrations": "इंटीग्रेशन",
     "faq": "अक्सर पूछे जाने वाले प्रश्न",
     "getStarted": "शुरू करें",
-    "toggleTheme": "थीम बदलें"
+    "toggleTheme": "थीम बदलें",
+    "dashboard": "डैशबोर्ड",
+    "applications": "आवेदन",
+    "beneficiaries": "लाभार्थी",
+    "disbursements": "वितरण",
+    "grievance": "शिकायत",
+    "feedback": "प्रतिक्रिया"
   },
   "hero": {
     "badge": "सामाजिक न्याय के लिए स्मार्ट DBT समाधान",
@@ -261,6 +267,41 @@
     },
     "yourDashboard": "आपका डैशबोर्ड",
     "yourImpact": "आपका प्रभाव",
+    "welcomeBack": "वापसी पर स्वागत है",
+    "dashboardSubtitle": "अपने आवेदनों को ट्रैक करें, वितरण देखें, और अपने लाभार्थी की जानकारी को एक ही स्थान पर प्रबंधित करें।",
+    "stats": {
+      "totalApplications": "कुल आवेदन",
+      "totalDisbursed": "कुल वितरित",
+      "pending": "लंबित",
+      "approved": "अनुमोदित"
+    },
+    "quickActions": {
+      "newApplication": {
+        "title": "नया आवेदन",
+        "subtitle": "एक नया राहत आवेदन जमा करें"
+      },
+      "checkStatus": {
+        "title": "स्थिति जांचें",
+        "subtitle": "अपने आवेदन की प्रगति देखें"
+      },
+      "fileGrievance": {
+        "title": "शिकायत दर्ज करें",
+        "subtitle": "कोई समस्या या शिकायत दर्ज करें"
+      },
+      "viewBeneficiaries": {
+        "title": "लाभार्थी देखें",
+        "subtitle": "लाभार्थी की जानकारी प्रबंधित करें"
+      }
+    },
+    "activityItems": {
+      "appSubmitted": "आवेदन जमा",
+      "docVerified": "दस्तावेज़ सत्यापित",
+      "beneficiaryUpdated": "लाभार्थी अपडेट"
+    },
+    "timeAgo": {
+      "hours": "घंटे पहले",
+      "days": "दिन पहले"
+    },
     "quickStats": {
       "todaysApplications": "आज के आवेदन",
       "pendingReview": "समीक्षा लंबित",
@@ -3317,5 +3358,16 @@
     "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
     "advanced_search": "एडवांस्ड सर्च"
   },
-  "beneficiary_lowercase": "लाभार्थी"
+  "beneficiary_lowercase": "लाभार्थी",
+  "auth": {
+    "applicant": "आवेदक",
+    "your_portal": "आपका पोर्टल",
+    "sign_out": "साइन आउट"
+  },
+  "ui": {
+    "lightMode": "लाइट मोड",
+    "darkMode": "डार्क मोड",
+    "changeLanguage": "भाषा बदलें",
+    "signOut": "साइन आउट"
+  }
 }

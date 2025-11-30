@@ -542,7 +542,9 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                               color: theme.textTheme.bodyMedium?.color,
                               size: 20,
                             ),
-                            tooltip: isDark ? 'Light Mode' : 'Dark Mode',
+                            tooltip: isDark
+                                ? localeProvider.translate('ui.lightMode')
+                                : localeProvider.translate('ui.darkMode'),
                           ),
                           // Language Toggle
                           IconButton(
@@ -556,7 +558,9 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                               color: theme.textTheme.bodyMedium?.color,
                               size: 20,
                             ),
-                            tooltip: 'Change Language',
+                            tooltip: localeProvider.translate(
+                              'ui.changeLanguage',
+                            ),
                           ),
                         ],
                       ),
@@ -596,7 +600,9 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           color: theme.textTheme.bodyMedium?.color,
                           size: 20,
                         ),
-                        tooltip: isDark ? 'Light Mode' : 'Dark Mode',
+                        tooltip: isDark
+                            ? localeProvider.translate('ui.lightMode')
+                            : localeProvider.translate('ui.darkMode'),
                       ),
                       // Language Toggle
                       IconButton(
@@ -610,7 +616,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           color: theme.textTheme.bodyMedium?.color,
                           size: 20,
                         ),
-                        tooltip: 'Change Language',
+                        tooltip: localeProvider.translate('ui.changeLanguage'),
                       ),
                       const SizedBox(height: 8),
                       // Sign Out Button
@@ -623,7 +629,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           color: Colors.red,
                           size: 20,
                         ),
-                        tooltip: 'Sign Out',
+                        tooltip: localeProvider.translate('ui.signOut'),
                       ),
                     ],
                   ),

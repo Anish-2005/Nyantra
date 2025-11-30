@@ -7,7 +7,13 @@
     "integrations": "Integrations",
     "faq": "FAQ",
     "getStarted": "Get Started",
-    "toggleTheme": "Toggle Theme"
+    "toggleTheme": "Toggle Theme",
+    "dashboard": "Dashboard",
+    "applications": "Applications",
+    "beneficiaries": "Beneficiaries",
+    "disbursements": "Disbursements",
+    "grievance": "Grievance",
+    "feedback": "Feedback"
   },
   "hero": {
     "badge": "Smart DBT Solution for Social Justice",
@@ -261,6 +267,42 @@
     },
     "yourDashboard": "Your Dashboard",
     "yourImpact": "Your Impact",
+    "welcomeBack": "Welcome Back",
+    "dashboardSubtitle": "Track your applications, view disbursements, and manage your beneficiary information all in one place.",
+    "stats": {
+      "totalApplications": "Total Applications",
+      "totalDisbursed": "Total Disbursed",
+      "pending": "Pending",
+      "approved": "Approved"
+    },
+    "quickActions": {
+      "newApplication": {
+        "title": "New Application",
+        "subtitle": "Submit a new relief application"
+      },
+      "checkStatus": {
+        "title": "Check Status",
+        "subtitle": "View your application progress"
+      },
+      "fileGrievance": {
+        "title": "File Grievance",
+        "subtitle": "Report an issue or complaint"
+      },
+      "viewBeneficiaries": {
+        "title": "View Beneficiaries",
+        "subtitle": "Manage beneficiary information"
+      }
+    },
+    "recentActivity": "Recent Activity",
+    "activityItems": {
+      "appSubmitted": "Application #APP001 submitted successfully",
+      "docVerified": "Document verification completed",
+      "beneficiaryUpdated": "Beneficiary information updated"
+    },
+    "timeAgo": {
+      "hours": "hours ago",
+      "days": "days ago"
+    },
     "quickStats": {
       "todaysApplications": "Today's Applications",
       "pendingReview": "Pending Review",
@@ -3322,5 +3364,16 @@
     "exportDescription": "Export Description",
     "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location"
   },
-  "beneficiary_lowercase": "Beneficiary Lowercase"
+  "beneficiary_lowercase": "Beneficiary Lowercase",
+  "auth": {
+    "applicant": "Applicant",
+    "your_portal": "Your Portal",
+    "sign_out": "Sign Out"
+  },
+  "ui": {
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode", 
+    "changeLanguage": "Change Language",
+    "signOut": "Sign Out"
+  }
 }
