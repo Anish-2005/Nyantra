@@ -271,12 +271,16 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                   color: theme.cardColor,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: theme.dividerColor.withValues(alpha: 26),
+                                    color: theme.dividerColor.withValues(
+                                      alpha: 26,
+                                    ),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: theme.shadowColor.withValues(alpha: 26),
+                                      color: theme.shadowColor.withValues(
+                                        alpha: 26,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -323,7 +327,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                               .textTheme
                                                               .bodyMedium
                                                               ?.color
-                                                              ?.withValues(alpha: 179),
+                                                              ?.withValues(
+                                                                alpha: 179,
+                                                              ),
                                                         ),
                                                   ),
                                                 ],
@@ -350,7 +356,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     border: Border.all(
                                                       color: application
                                                           .statusColor
-                                                          .withValues(alpha: 51),
+                                                          .withValues(
+                                                            alpha: 51,
+                                                          ),
                                                       width: 1,
                                                     ),
                                                   ),
@@ -483,7 +491,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 153),
+                  color: theme.textTheme.bodyMedium?.color?.withValues(
+                    alpha: 153,
+                  ),
                   fontWeight: FontWeight.w500,
                 ),
               ),

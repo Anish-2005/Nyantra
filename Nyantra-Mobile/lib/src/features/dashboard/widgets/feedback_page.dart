@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/locale_provider.dart';
-import '../../../core/providers/auth_provider.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -55,8 +52,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final localeProvider = context.watch<LocaleProvider>();
-    final authProvider = context.watch<AuthProvider>();
 
     return Container(
       padding: const EdgeInsets.all(24),

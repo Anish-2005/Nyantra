@@ -90,13 +90,13 @@ class GrievanceModel {
           ? (data['createdDate'] as Timestamp).toDate()
           : DateTime.now(),
       lastUpdated: data['lastUpdated'] != null
-          ? (data['lastUpdated'] as Timestamp).toDate()?.toString()
+          ? (data['lastUpdated'] as Timestamp).toDate().toString()
           : null,
       resolvedDate: data['resolvedDate'] != null
           ? (data['resolvedDate'] as Timestamp).toDate()
           : null,
       expectedResolution: data['expectedResolution'] != null
-          ? (data['expectedResolution'] as Timestamp).toDate()?.toString()
+          ? (data['expectedResolution'] as Timestamp).toDate().toString()
           : null,
       title: data['title'] as String?,
       description: data['description'] as String?,

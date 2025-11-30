@@ -157,7 +157,7 @@ class _GrievancePageState extends State<GrievancePage> {
 
                           // Title
                           Text(
-                                'Grievances',
+                                'Your Grievances',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -172,7 +172,7 @@ class _GrievancePageState extends State<GrievancePage> {
 
                           // Subtitle
                           Text(
-                                'Track and manage grievance reports',
+                                'Track and manage all your grievance reports',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withValues(alpha: 230),
                                   height: 1.4,
@@ -224,13 +224,6 @@ class _GrievancePageState extends State<GrievancePage> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {});
-                                },
-                                child: const Text('Retry'),
-                              ),
                             ],
                           ),
                         );
@@ -247,7 +240,7 @@ class _GrievancePageState extends State<GrievancePage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.message_outlined,
+                                Icons.report_problem_outlined,
                                 size: 64,
                                 color: theme.textTheme.bodyMedium?.color
                                     ?.withValues(alpha: 77),
@@ -259,6 +252,14 @@ class _GrievancePageState extends State<GrievancePage> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
+                              Text(
+                                'Your submitted grievances will appear here',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 margin: const EdgeInsets.symmetric(
@@ -352,7 +353,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // Header with title and status
+                                        // Header with status
                                         Row(
                                           children: [
                                             Expanded(
@@ -362,7 +363,6 @@ class _GrievancePageState extends State<GrievancePage> {
                                                 children: [
                                                   Text(
                                                     grievance.title ??
-                                                        grievance.description ??
                                                         'Untitled Grievance',
                                                     style: theme
                                                         .textTheme
@@ -391,42 +391,33 @@ class _GrievancePageState extends State<GrievancePage> {
                                                 ],
                                               ),
                                             ),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 6,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: grievance.statusColor
+                                                        .withValues(alpha: 26),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: grievance
+                                                          .statusColor
+                                                          .withValues(
+                                                            alpha: 51,
+                                                          ),
+                                                      width: 1,
+                                                    ),
                                                   ),
-                                              decoration: BoxDecoration(
-                                                color: grievance.statusColor
-                                                    .withValues(alpha: 26),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: grievance.statusColor
-                                                      .withValues(alpha: 51),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    grievance.status ==
-                                                            GrievanceStatus
-                                                                .resolved
-                                                        ? Icons.check_circle
-                                                        : grievance.status ==
-                                                              GrievanceStatus
-                                                                  .inProgress
-                                                        ? Icons.hourglass_top
-                                                        : Icons.report_problem,
-                                                    color:
-                                                        grievance.statusColor,
-                                                    size: 16,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
+                                                  child: Text(
                                                     grievance.statusText,
                                                     style: TextStyle(
                                                       color:
@@ -436,13 +427,27 @@ class _GrievancePageState extends State<GrievancePage> {
                                                           FontWeight.w600,
                                                     ),
                                                   ),
+                                                ),
+                                                if (grievance.priority !=
+                                                    null) ...[
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Priority: ${grievance.priority}',
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
                                                 ],
-                                              ),
+                                              ],
                                             ),
                                           ],
                                         ),
 
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 16),
 
                                         // Description
                                         Text(
@@ -450,7 +455,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                               'No description provided',
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(height: 1.4),
-                                          maxLines: 3,
+                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
 
@@ -463,11 +468,34 @@ class _GrievancePageState extends State<GrievancePage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.calendar_today,
-                                                'Created',
+                                                'Date',
                                                 grievance.createdDate
                                                         ?.toString()
                                                         .split(' ')[0] ??
                                                     'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.category,
+                                                'Category',
+                                                grievance.category ?? 'General',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.person,
+                                                'User ID',
+                                                grievance.userId ?? 'N/A',
                                               ),
                                             ),
                                             if (grievance.resolvedDate != null)
@@ -479,15 +507,6 @@ class _GrievancePageState extends State<GrievancePage> {
                                                   grievance.resolvedDate!
                                                       .toString()
                                                       .split(' ')[0],
-                                                ),
-                                              )
-                                            else
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  context,
-                                                  Icons.access_time,
-                                                  'Status',
-                                                  grievance.statusText,
                                                 ),
                                               ),
                                           ],

@@ -16,15 +16,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   bool _sidebarOpen = false;
 
-  final List<String> _routes = [
-    'overview',
-    'applications',
-    'beneficiaries',
-    'disbursements',
-    'grievance',
-    'feedback',
-  ];
-
   @override
   void initState() {
     super.initState();

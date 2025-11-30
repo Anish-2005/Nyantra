@@ -328,7 +328,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                                 .textTheme
                                                                 .bodyMedium
                                                                 ?.color
-                                                                ?.withValues(alpha: 179),
+                                                                ?.withValues(
+                                                                  alpha: 179,
+                                                                ),
                                                           ),
                                                     ),
                                                 ],
