@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 enum GrievanceStatus { open, inProgress, resolved, closed }
 
@@ -80,6 +81,19 @@ class GrievanceModel {
         return 'Resolved';
       case GrievanceStatus.closed:
         return 'Closed';
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case GrievanceStatus.open:
+        return Colors.red;
+      case GrievanceStatus.inProgress:
+        return Colors.blue;
+      case GrievanceStatus.resolved:
+        return Colors.green;
+      case GrievanceStatus.closed:
+        return Colors.grey;
     }
   }
 }

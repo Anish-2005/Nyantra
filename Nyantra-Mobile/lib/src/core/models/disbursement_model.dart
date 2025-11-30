@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 enum DisbursementStatus { pending, completed, failed, cancelled }
 
@@ -79,6 +80,19 @@ class DisbursementModel {
         return 'Failed';
       case DisbursementStatus.cancelled:
         return 'Cancelled';
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case DisbursementStatus.pending:
+        return Colors.orange;
+      case DisbursementStatus.completed:
+        return Colors.green;
+      case DisbursementStatus.failed:
+        return Colors.red;
+      case DisbursementStatus.cancelled:
+        return Colors.grey;
     }
   }
 }
