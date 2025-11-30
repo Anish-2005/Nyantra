@@ -187,7 +187,7 @@ class _OverviewPageState extends State<OverviewPage> {
 
                             // Title
                             Text(
-                                  'Your Dashboard',
+                                  localeProvider.translate('dashboard.yourDashboard'),
                                   style: theme.textTheme.headlineMedium
                                       ?.copyWith(
                                         color: Colors.white,
@@ -226,7 +226,7 @@ class _OverviewPageState extends State<OverviewPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your Impact',
+                        localeProvider.translate('dashboard.yourImpact'),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.textTheme.bodyLarge?.color,
@@ -287,7 +287,7 @@ class _OverviewPageState extends State<OverviewPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Quick Actions',
+                        localeProvider.translate('dashboard.sections.quickActions'),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.textTheme.bodyLarge?.color,
@@ -387,7 +387,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Recent Activity',
+                              localeProvider.translate('dashboard.recentActivity'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyLarge?.color,

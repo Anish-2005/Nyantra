@@ -174,7 +174,9 @@ class _GrievancePageState extends State<GrievancePage> {
 
                           // Subtitle
                           Text(
-                                localeProvider.translate('grievances.pageSubtitle'),
+                                localeProvider.translate(
+                                  'grievances.pageSubtitle',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
                                   height: 1.4,
@@ -249,13 +251,17 @@ class _GrievancePageState extends State<GrievancePage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No grievances found',
+                                localeProvider.translate(
+                                  'grievances.noGrievances',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Your submitted grievances will appear here',
+                                localeProvider.translate(
+                                  'grievances.noGrievancesDescription',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
                                 ),

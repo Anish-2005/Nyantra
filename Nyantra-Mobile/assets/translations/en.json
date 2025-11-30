@@ -259,6 +259,8 @@
       "officer": "Officer",
       "description": "Here's what's happening with your DBT applications today."
     },
+    "yourDashboard": "Your Dashboard",
+    "yourImpact": "Your Impact",
     "quickStats": {
       "todaysApplications": "Today's Applications",
       "pendingReview": "Pending Review",
@@ -323,6 +325,10 @@
       "activeProfilesWithFullVerification": "Active profiles with full verification"
     },
     "disbursements": {
+      "pageTitle": "Disbursements",
+      "pageSubtitle": "Track relief fund disbursements and transactions",
+      "noDisbursements": "No disbursements found",
+      "noDisbursementsDescription": "Your disbursements will appear here",
       "recentDisbursements": "Recent Disbursements",
       "approvedPayments": "Approved payments ready for transfer",
       "latestPaymentTransactions": "Latest payment transactions"
@@ -3233,7 +3239,10 @@
       "email_address": "Email address",
       "password": "Password",
       "email": "Email",
-      "enter_your_email": "Enter your email"
+      "enter_your_email": "Enter your email",
+      "sign_out": "Sign Out",
+      "applicant": "Applicant",
+      "your_portal": "Your Portal"
     },
     "integrations": {
       "nsdl": "NSDL",

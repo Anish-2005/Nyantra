@@ -80,102 +80,116 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
               children: [
                 // Hero Header Section
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  margin: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isDark
-                          ? [const Color(0xFF06B6D4), const Color(0xFF8B5CF6)]
-                          : [const Color(0xFFFB7185), const Color(0xFFFB923C)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (isDark
-                                    ? const Color(0xFF06B6D4)
-                                    : const Color(0xFFFB7185))
-                                .withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF06B6D4),
+                                  const Color(0xFF8B5CF6),
+                                ]
+                              : [
+                                  const Color(0xFFFB7185),
+                                  const Color(0xFFFB923C),
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (isDark
+                                        ? const Color(0xFF06B6D4)
+                                        : const Color(0xFFFB7185))
+                                    .withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Badge
-                      Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.account_balance_wallet,
-                                  color: Colors.white,
-                                  size: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Badge
+                          Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Disbursements',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1,
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 600.ms)
-                          .slideY(begin: -0.2, end: 0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance_wallet,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Disbursements',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                              .slideY(begin: -0.2, end: 0),
 
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                      // Title
-                      Text(
-                            'Disbursements',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 600.ms, delay: 200.ms)
-                          .slideY(begin: -0.2, end: 0),
+                          // Title
+                          Text(
+                                localeProvider.translate(
+                                  'disbursements.pageTitle',
+                                ),
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms, delay: 200.ms)
+                              .slideY(begin: -0.2, end: 0),
 
-                      const SizedBox(height: 8),
+                          const SizedBox(height: 8),
 
-                      // Subtitle
-                      Text(
-                            'Track relief fund disbursements and transactions',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.4,
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 600.ms, delay: 400.ms)
-                          .slideY(begin: -0.2, end: 0),
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 800.ms).slideY(begin: -0.1, end: 0),
+                          // Subtitle
+                          Text(
+                                localeProvider.translate(
+                                  'disbursements.pageSubtitle',
+                                ),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.4,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms, delay: 400.ms)
+                              .slideY(begin: -0.2, end: 0),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 800.ms)
+                    .slideY(begin: -0.1, end: 0),
 
                 // Disbursements List
                 Expanded(
@@ -231,13 +245,17 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No disbursements found',
+                                localeProvider.translate(
+                                  'disbursements.noDisbursements',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Disbursement records will appear here',
+                                localeProvider.translate(
+                                  'disbursements.noDisbursementsDescription',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
                                 ),

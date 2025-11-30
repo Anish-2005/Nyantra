@@ -163,7 +163,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Applicant',
+                                    localeProvider.translate('auth.applicant'),
                                     style: theme.textTheme.titleMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -172,7 +172,9 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                                         ),
                                   ),
                                   Text(
-                                    'Your Portal',
+                                    localeProvider.translate(
+                                      'auth.your_portal',
+                                    ),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.textTheme.bodyMedium?.color
                                           ?.withOpacity(0.7),
@@ -402,14 +404,14 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Applicant',
+                              localeProvider.translate('auth.applicant'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyLarge?.color,
                               ),
                             ),
                             Text(
-                              'Your Portal',
+                              localeProvider.translate('auth.your_portal'),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.textTheme.bodyMedium?.color
                                     ?.withOpacity(0.7),

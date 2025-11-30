@@ -259,6 +259,8 @@
       "officer": "अधिकारी",
       "description": "आज आपके DBT आवेदनों के साथ यह हो रहा है।"
     },
+    "yourDashboard": "आपका डैशबोर्ड",
+    "yourImpact": "आपका प्रभाव",
     "quickStats": {
       "todaysApplications": "आज के आवेदन",
       "pendingReview": "समीक्षा लंबित",
@@ -323,6 +325,10 @@
       "activeProfilesWithFullVerification": "पूर्ण सत्यापन के साथ सक्रिय प्रोफाइल"
     },
     "disbursements": {
+      "pageTitle": "वितरण",
+      "pageSubtitle": "राहत कोष वितरण और लेनदेन को ट्रैक करें",
+      "noDisbursements": "कोई वितरण नहीं मिला",
+      "noDisbursementsDescription": "आपके वितरण यहां दिखाई देंगे",
       "recentDisbursements": "हाल के वितरण",
       "approvedPayments": "स्थानांतरण के लिए तैयार स्वीकृत भुगतान",
       "latestPaymentTransactions": "नवीनतम भुगतान लेनदेन"
@@ -3228,7 +3234,10 @@
       "email_address": "ईमेल पता",
       "password": "पासवर्ड",
       "email": "ईमेल",
-      "enter_your_email": "अपना ईमेल दर्ज करें"
+      "enter_your_email": "अपना ईमेल दर्ज करें",
+      "sign_out": "साइन आउट",
+      "applicant": "आवेदक",
+      "your_portal": "आपका पोर्टल"
     },
     "integrations": {
       "nsdl": "NSDL",
