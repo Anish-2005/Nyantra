@@ -40,10 +40,16 @@ class LocaleProvider extends ChangeNotifier {
 
   Future<void> _loadTranslations() async {
     final localeFile = _locale == AppLocale.en ? 'en.json' : 'hi.json';
-    final jsonString = await rootBundle.loadString(
-      'assets/translations/$localeFile',
-    );
-    _translations = json.decode(jsonString);
+    try {
+      final jsonString = await rootBundle.loadString(
+        'assets/translations/$localeFile',
+      );
+      _translations = json.decode(jsonString);
+      print('Translations loaded successfully for $localeFile');
+    } catch (e) {
+      print('Error loading translations for $localeFile: $e');
+      _translations = {}; // Fallback to empty map
+    }
   }
 
   Future<void> setLocale(AppLocale locale) async {
@@ -63,6 +69,7 @@ class LocaleProvider extends ChangeNotifier {
         if (value is Map<String, dynamic>) {
           value = value[k];
         } else {
+          print('Translation not found for key: $key, stopped at: $k');
           return key; // Return key if translation not found
         }
       }
@@ -77,9 +84,12 @@ class LocaleProvider extends ChangeNotifier {
 
       return value?.toString() ?? key;
     } catch (e) {
+      print('Error translating key: $key, error: $e');
       return key;
     }
   }
 
   String Function(String, [Map<String, dynamic>?]) get t => translate;
+
+  bool get hasTranslations => _translations.isNotEmpty;
 }
