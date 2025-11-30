@@ -10,7 +10,6 @@ import {
   BarChart3, PieChart,
   Database,
   Cpu, FilePlus, FileCheck, BookOpen, Printer, Share2,
-  
   Sparkles,
   Settings,
   BarChart,
@@ -19,301 +18,345 @@ import {
   Calendar,
   Clock,
   Zap,
+  Plus,
+  MoreVertical,
+  Edit
 } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { db } from '@/lib/firebase';
 
-// Mock data for reports
-const mockReports = [
-  {
-    id: 'REP-2024-001234',
-    name: 'Monthly DBT Disbursement Report',
-    type: 'disbursement',
-    category: 'financial',
-    frequency: 'monthly',
-    status: 'completed',
-    fileSize: '4.2 MB',
-    fileFormat: 'PDF',
-    generatedDate: '2024-03-18 14:30:25',
-    generatedBy: 'Officer Sharma',
-    schedule: null,
-    lastRun: '2024-03-18 14:30:25',
-    nextRun: null,
-    recordCount: 1247,
-    description: 'Comprehensive monthly report of all DBT disbursements under PCR and PoA Acts',
-    parameters: {
-      dateRange: '2024-03-01 to 2024-03-18',
-      actType: 'Both',
-      districts: 'All',
-      status: 'All'
-    },
-    downloadCount: 45,
-    isScheduled: false,
-    recipients: [],
-    columns: ['Application ID', 'Beneficiary Name', 'District', 'Act Type', 'Amount', 'Status', 'Disbursement Date']
-  },
-  {
-    id: 'REP-2024-001235',
-    name: 'Beneficiary Verification Report',
-    type: 'verification',
-    category: 'compliance',
-    frequency: 'weekly',
-    status: 'completed',
-    fileSize: '2.8 MB',
-    fileFormat: 'Excel',
-    generatedDate: '2024-03-17 09:15:10',
-    generatedBy: 'Officer Verma',
-    schedule: null,
-    lastRun: '2024-03-17 09:15:10',
-    nextRun: null,
-    recordCount: 892,
-    description: 'Weekly report of beneficiary verification status and pending cases',
-    parameters: {
-      dateRange: '2024-03-11 to 2024-03-17',
-      verificationStatus: 'All',
-      districts: 'Priority Districts',
-      category: 'All'
-    },
-    downloadCount: 32,
-    isScheduled: false,
-    recipients: [],
-    columns: ['Beneficiary ID', 'Name', 'Aadhaar', 'District', 'Verification Status', 'Pending Days']
-  },
-  {
-    id: 'REP-2024-001236',
-    name: 'Grievance Redressal Performance',
-    type: 'grievance',
-    category: 'performance',
-    frequency: 'weekly',
-    status: 'completed',
-    fileSize: '1.5 MB',
-    fileFormat: 'PDF',
-    generatedDate: '2024-03-16 16:45:30',
-    generatedBy: 'Officer Kapoor',
-    schedule: null,
-    lastRun: '2024-03-16 16:45:30',
-    nextRun: null,
-    recordCount: 156,
-    description: 'Weekly performance report on grievance resolution and response times',
-    parameters: {
-      dateRange: '2024-03-09 to 2024-03-16',
-      grievanceType: 'All',
-      priority: 'All',
-      resolutionStatus: 'All'
-    },
-    downloadCount: 28,
-    isScheduled: false,
-    recipients: [],
-    columns: ['Grievance ID', 'Category', 'Priority', 'Status', 'Resolution Time', 'Satisfaction Rating']
-  },
-  {
-    id: 'REP-2024-001237',
-    name: 'PCR Act Applications Quarterly',
-    type: 'applications',
-    category: 'statistical',
-    frequency: 'quarterly',
-    status: 'scheduled',
-    fileSize: null,
-    fileFormat: 'PDF',
-    generatedDate: null,
-    generatedBy: null,
-    schedule: {
-      frequency: 'quarterly',
-      nextRun: '2024-04-01 00:00:00',
-      recipients: ['director@socialwelfare.gov.in', 'pcr-section@socialwelfare.gov.in'],
-      format: 'PDF'
-    },
-    lastRun: '2024-01-05 09:00:00',
-    nextRun: '2024-04-01 00:00:00',
-    recordCount: null,
-    description: 'Quarterly statistical report on PCR Act applications and processing',
-    parameters: {
-      dateRange: '2024 Q1',
-      actType: 'PCR Act',
-      districts: 'All',
-      reportType: 'Statistical'
-    },
-    downloadCount: 67,
-    isScheduled: true,
-    recipients: ['director@socialwelfare.gov.in', 'pcr-section@socialwelfare.gov.in'],
-    columns: ['Application ID', 'District', 'Incident Date', 'Status', 'Processing Time', 'Officer']
-  },
-  {
-    id: 'REP-2024-001238',
-    name: 'SC/ST Category-wise Distribution',
-    type: 'demographic',
-    category: 'analytical',
-    frequency: 'monthly',
-    status: 'scheduled',
-    fileSize: null,
-    fileFormat: 'Excel',
-    generatedDate: null,
-    generatedBy: null,
-    schedule: {
-      frequency: 'monthly',
-      nextRun: '2024-04-01 06:00:00',
-      recipients: ['analysis@socialwelfare.gov.in'],
-      format: 'Excel'
-    },
-    lastRun: '2024-03-01 06:00:00',
-    nextRun: '2024-04-01 06:00:00',
-    recordCount: null,
-    description: 'Monthly demographic analysis of beneficiaries by SC/ST categories',
-    parameters: {
-      dateRange: 'Monthly',
-      categories: ['SC', 'ST'],
-      districts: 'All',
-      analysisType: 'Demographic'
-    },
-    downloadCount: 41,
-    isScheduled: true,
-    recipients: ['analysis@socialwelfare.gov.in'],
-    columns: ['Category', 'District', 'Applications', 'Approved', 'Rejected', 'Pending']
-  },
-  {
-    id: 'REP-2024-001239',
-    name: 'Financial Reconciliation Report',
-    type: 'financial',
-    category: 'audit',
-    frequency: 'monthly',
-    status: 'processing',
-    fileSize: null,
-    fileFormat: 'PDF',
-    generatedDate: null,
-    generatedBy: 'System',
-    schedule: null,
-    lastRun: '2024-02-29 23:59:00',
-    nextRun: null,
-    recordCount: null,
-    description: 'Monthly financial reconciliation of disbursed amounts and bank records',
-    parameters: {
-      dateRange: '2024-03-01 to 2024-03-18',
-      banks: 'All',
-      transactionType: 'All',
-      reconciliationType: 'Full'
-    },
-    downloadCount: 0,
-    isScheduled: false,
-    recipients: [],
-    columns: ['Bank', 'Transaction Count', 'Total Amount', 'Success Rate', 'Failed Amount']
-  },
-  {
-    id: 'REP-2024-001240',
-    name: 'Integration Health Dashboard',
-    type: 'system',
-    category: 'technical',
-    frequency: 'daily',
-    status: 'scheduled',
-    fileSize: null,
-    fileFormat: 'PDF',
-    generatedDate: null,
-    generatedBy: null,
-    schedule: {
-      frequency: 'daily',
-      nextRun: '2024-03-19 08:00:00',
-      recipients: ['tech-support@socialwelfare.gov.in'],
-      format: 'PDF'
-    },
-    lastRun: '2024-03-18 08:00:00',
-    nextRun: '2024-03-19 08:00:00',
-    recordCount: null,
-    description: 'Daily system health report of all government integrations and APIs',
-    parameters: {
-      dateRange: 'Daily',
-      integrations: 'All',
-      metrics: 'Health, Performance, Errors'
-    },
-    downloadCount: 89,
-    isScheduled: true,
-    recipients: ['tech-support@socialwelfare.gov.in'],
-    columns: ['Integration', 'Status', 'Uptime', 'Response Time', 'Error Rate']
-  },
-  {
-    id: 'REP-2024-001241',
-    name: 'District-wise Performance Ranking',
-    type: 'performance',
-    category: 'analytical',
-    frequency: 'weekly',
-    status: 'failed',
-    fileSize: null,
-    fileFormat: 'PDF',
-    generatedDate: null,
-    generatedBy: 'System',
-    schedule: null,
-    lastRun: '2024-03-17 18:00:00',
-    nextRun: null,
-    recordCount: null,
-    description: 'Weekly performance ranking of districts based on application processing',
-    parameters: {
-      dateRange: '2024-03-11 to 2024-03-17',
-      metrics: ['Processing Time', 'Approval Rate', 'Satisfaction'],
-      districts: 'All'
-    },
-    downloadCount: 23,
-    isScheduled: false,
-    recipients: [],
-    columns: ['District', 'Rank', 'Processing Time', 'Approval Rate', 'Satisfaction Score']
-  }
-];
+// Report type definition
+type Report = {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  frequency: string;
+  status: 'completed' | 'processing' | 'scheduled' | 'failed';
+  fileSize: string | null;
+  fileFormat: string;
+  generatedDate: string | null;
+  generatedBy: string | null;
+  schedule: any;
+  lastRun: string | null;
+  nextRun: string | null;
+  recordCount: number | null;
+  description: string;
+  parameters: any;
+  downloadCount: number;
+  isScheduled: boolean;
+  recipients: string[];
+  columns: string[];
+  createdAt?: string;
+  updatedAt?: string;
+};
 
-// Mock data for report templates
-const reportTemplates = [
-  {
-    id: 'TEMP-001',
-    name: 'Standard DBT Disbursement Report',
-    type: 'disbursement',
-    category: 'financial',
-    description: 'Standard template for monthly DBT disbursement reporting',
-    defaultFormat: 'PDF',
-    defaultParameters: {
-      dateRange: 'last-month',
-      actType: 'both',
-      includeSummary: true,
-      includeCharts: true
-    },
-    popular: true
-  },
-  {
-    id: 'TEMP-002',
-    name: 'Beneficiary Verification Summary',
-    type: 'verification',
-    category: 'compliance',
-    description: 'Template for beneficiary verification status reports',
-    defaultFormat: 'Excel',
-    defaultParameters: {
-      dateRange: 'last-week',
-      verificationStatus: 'all',
-      includePending: true
-    },
-    popular: true
-  },
-  {
-    id: 'TEMP-003',
-    name: 'Grievance Resolution Analytics',
-    type: 'grievance',
-    category: 'performance',
-    description: 'Detailed analytics template for grievance resolution',
-    defaultFormat: 'PDF',
-    defaultParameters: {
-      dateRange: 'last-month',
-      resolutionTime: 'all',
-      includeTrends: true
-    },
-    popular: false
-  },
-  {
-    id: 'TEMP-004',
-    name: 'PCR/PoA Act Comparison',
-    type: 'analytical',
-    category: 'statistical',
-    description: 'Comparative analysis between PCR and PoA Act implementations',
-    defaultFormat: 'Excel',
-    defaultParameters: {
-      dateRange: 'last-quarter',
-      comparisonType: 'side-by-side',
-      includeRecommendations: true
-    },
-    popular: false
-  }
-];
+// Firestore-backed reports hook
+const useFirestoreReports = (setState: React.Dispatch<React.SetStateAction<Report[]>>) => {
+  useEffect(() => {
+    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const items: Report[] = snapshot.docs.map((d) => {
+        const data = d.data() as any;
+        const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
+        
+        return {
+          id: d.id,
+          name: data.name || 'Unnamed Report',
+          type: data.type || 'general',
+          category: data.category || 'analytical',
+          frequency: data.frequency || 'once',
+          status: data.status || 'completed',
+          fileSize: data.fileSize || null,
+          fileFormat: data.fileFormat || 'PDF',
+          generatedDate: toIso(data.generatedDate),
+          generatedBy: data.generatedBy,
+          schedule: data.schedule || null,
+          lastRun: toIso(data.lastRun),
+          nextRun: toIso(data.nextRun),
+          recordCount: data.recordCount || null,
+          description: data.description || '',
+          parameters: data.parameters || {},
+          downloadCount: data.downloadCount || 0,
+          isScheduled: data.isScheduled || false,
+          recipients: data.recipients || [],
+          columns: data.columns || [],
+          createdAt: toIso(data.createdAt),
+          updatedAt: toIso(data.updatedAt)
+        };
+      });
+      setState(items);
+    });
+    return () => unsub();
+  }, [setState]);
+};
+
+// New Report Form
+const NewReportForm = ({ onClose, onCreated, initialData }: { onClose: () => void; onCreated?: (r: Report) => void; initialData?: Report | null }) => {
+  const { theme } = useTheme();
+  const { t } = useLocale();
+  const [name, setName] = useState('');
+  const [type, setType] = useState('disbursement');
+  const [category, setCategory] = useState('financial');
+  const [frequency, setFrequency] = useState('once');
+  const [description, setDescription] = useState('');
+  const [format, setFormat] = useState('PDF');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reportTypes = [
+    { value: 'disbursement', label: 'Disbursement Report' },
+    { value: 'verification', label: 'Verification Report' },
+    { value: 'grievance', label: 'Grievance Report' },
+    { value: 'financial', label: 'Financial Report' },
+    { value: 'performance', label: 'Performance Report' },
+    { value: 'analytical', label: 'Analytical Report' }
+  ];
+
+  const categories = [
+    { value: 'financial', label: 'Financial' },
+    { value: 'compliance', label: 'Compliance' },
+    { value: 'performance', label: 'Performance' },
+    { value: 'statistical', label: 'Statistical' },
+    { value: 'analytical', label: 'Analytical' },
+    { value: 'technical', label: 'Technical' }
+  ];
+
+  const frequencies = [
+    { value: 'once', label: 'Once' },
+    { value: 'daily', label: 'Daily' },
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'quarterly', label: 'Quarterly' }
+  ];
+
+  const formats = [
+    { value: 'PDF', label: 'PDF' },
+    { value: 'Excel', label: 'Excel' },
+    { value: 'CSV', label: 'CSV' }
+  ];
+
+  // Prefill when editing
+  useEffect(() => {
+    if (!initialData) return;
+    setName(initialData.name || '');
+    setType(initialData.type || 'disbursement');
+    setCategory(initialData.category || 'financial');
+    setFrequency(initialData.frequency || 'once');
+    setDescription(initialData.description || '');
+    setFormat(initialData.fileFormat || 'PDF');
+  }, [initialData]);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setError(null);
+    if (!name.trim()) {
+      setError(t('extracted.report_name_required') || 'Report name is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const baseData: any = {
+        name: name.trim(),
+        type,
+        category,
+        frequency,
+        description: description.trim(),
+        fileFormat: format,
+        status: 'processing',
+        downloadCount: 0,
+        isScheduled: frequency !== 'once',
+        parameters: {},
+        recipients: [],
+        columns: [],
+        lastUpdated: serverTimestamp()
+      };
+
+      if (initialData && initialData.id) {
+        // Update existing report
+        await updateDoc(doc(db, 'reports', initialData.id), baseData);
+        const updated: Report = { ...initialData, ...baseData, updatedAt: new Date().toISOString() };
+        onCreated?.(updated);
+        onClose();
+      } else {
+        // Create new report
+        const newId = `REP-${Date.now()}`;
+        const payload = {
+          ...baseData,
+          createdAt: serverTimestamp(),
+          generatedDate: null,
+          generatedBy: 'System',
+          fileSize: null,
+          recordCount: null,
+          schedule: frequency !== 'once' ? {
+            frequency,
+            nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+            recipients: [],
+            format
+          } : null
+        };
+
+        await setDoc(doc(db, 'reports', newId), payload);
+        
+        const created: Report = {
+          id: newId,
+          name: payload.name,
+          type: payload.type,
+          category: payload.category,
+          frequency: payload.frequency,
+          status: payload.status,
+          fileSize: payload.fileSize,
+          fileFormat: payload.fileFormat,
+          generatedDate: payload.generatedDate,
+          generatedBy: payload.generatedBy,
+          schedule: payload.schedule,
+          lastRun: payload.lastRun,
+          nextRun: payload.nextRun,
+          recordCount: payload.recordCount,
+          description: payload.description,
+          parameters: payload.parameters,
+          downloadCount: payload.downloadCount,
+          isScheduled: payload.isScheduled,
+          recipients: payload.recipients,
+          columns: payload.columns,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        onCreated?.(created);
+        onClose();
+      }
+    } catch (err) {
+      console.error('Create report failed', err);
+      setError(t('extracted.create_failed') || 'Failed to create report');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="md:col-span-2">
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.report_name') || 'Report Name'}
+          </label>
+          <input
+            placeholder={t('extracted.report_name_placeholder') || 'Enter report name'}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.report_type') || 'Report Type'}
+          </label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${
+              theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'
+            }`}
+          >
+            {reportTypes.map(rt => (
+              <option key={rt.value} value={rt.value}>{rt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.category') || 'Category'}
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${
+              theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'
+            }`}
+          >
+            {categories.map(cat => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.frequency') || 'Frequency'}
+          </label>
+          <select
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value)}
+            className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${
+              theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'
+            }`}
+          >
+            {frequencies.map(freq => (
+              <option key={freq.value} value={freq.value}>{freq.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.format') || 'Format'}
+          </label>
+          <select
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${
+              theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'
+            }`}
+          >
+            {formats.map(fmt => (
+              <option key={fmt.value} value={fmt.value}>{fmt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-sm font-medium theme-text-muted block mb-2">
+            {t('extracted.description') || 'Description'}
+          </label>
+          <textarea
+            placeholder={t('extracted.description_placeholder') || 'Enter report description'}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+          />
+        </div>
+      </div>
+
+      {error && <div className="text-sm text-red-500">{error}</div>}
+
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <button type="button" onClick={onClose} className="btn-cancel">
+          {t('extracted.cancel')}
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold shadow"
+        >
+          {isSubmitting
+            ? t('extracted.saving') || 'Saving...'
+            : initialData
+            ? t('extracted.save') || 'Save'
+            : t('extracted.create_report') || 'Create Report'
+          }
+        </button>
+      </div>
+    </form>
+  );
+};
 
 const ReportsPage = () => {
   const { theme } = useTheme();
@@ -323,40 +366,24 @@ const ReportsPage = () => {
   const [statusFilter] = useState('all');
   const [categoryFilter] = useState('all');
   const [frequencyFilter] = useState('all');
-  const [sortBy] = useState('generatedDate');
+  const [sortBy] = useState('createdAt');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [selectedReport, setSelectedReport] = useState<typeof mockReports[0] | null>(null);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [viewMode, setViewMode] = useState<'reports' | 'templates' | 'scheduled'>('reports');
   const [activeTab] = useState('details');
-  // Note: removed unused isMobile/showScheduleModal/newSchedule state variables
+  const [showNewReportModal, setShowNewReportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Use deterministic formatting so server and client render identical strings
-  const formatDate = (s?: string | null) => {
-    if (!s) return '--';
-    try {
-      const d = new Date(s);
-      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-    } catch {
-      return '--';
-    }
-  };
-
-  const formatDateTime = (s?: string | null) => {
-    if (!s) return '--';
-    try {
-      const d = new Date(s);
-      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
-    } catch {
-      return '--';
-    }
-  };
+  // Subscribe to Firestore reports collection
+  useFirestoreReports(setReports);
 
   // Filter and sort reports
   const filteredReports = useMemo(() => {
-    let filtered = [...mockReports];
+    let filtered = [...reports];
 
     // Search filter
     if (searchQuery) {
@@ -402,15 +429,10 @@ const ReportsPage = () => {
       const aNull = aVal === null || aVal === undefined;
       const bNull = bVal === null || bVal === undefined;
 
-      // Handle null/undefined consistently (place nulls last for ascending)
+      // Handle null/undefined consistently
       if (aNull && bNull) return 0;
       if (aNull) return sortOrder === 'asc' ? 1 : -1;
       if (bNull) return sortOrder === 'asc' ? -1 : 1;
-
-      // If both are numbers, compare numerically
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-      }
 
       // If both can be parsed as valid dates, compare by timestamp
       const aTime = Date.parse(String(aVal));
@@ -419,7 +441,7 @@ const ReportsPage = () => {
         return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
       }
 
-      // Fallback to string comparison (numeric option helps compare numeric strings)
+      // Fallback to string comparison
       const aStr = String(aVal);
       const bStr = String(bVal);
       return sortOrder === 'asc'
@@ -428,7 +450,7 @@ const ReportsPage = () => {
     });
 
     return filtered;
-  }, [searchQuery, typeFilter, statusFilter, categoryFilter, frequencyFilter, viewMode, sortBy, sortOrder]);
+  }, [reports, searchQuery, typeFilter, statusFilter, categoryFilter, frequencyFilter, viewMode, sortBy, sortOrder]);
 
   // Pagination
   const paginatedReports = filteredReports.slice(
@@ -436,9 +458,42 @@ const ReportsPage = () => {
     currentPage * itemsPerPage
   );
 
-  // small-screen detection removed (isMobile not used)
+  // Statistics
+  const stats = useMemo(() => {
+    const total = reports.length;
+    const completed = reports.filter(r => r.status === 'completed').length;
+    const processing = reports.filter(r => r.status === 'processing').length;
+    const scheduled = reports.filter(r => r.status === 'scheduled').length;
+    const failed = reports.filter(r => r.status === 'failed').length;
+    const totalDownloads = reports.reduce((sum, r) => sum + r.downloadCount, 0);
+    const avgProcessingTime = 2.3;
+    const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  // Three.js canvas background (particles + connecting lines) — theme-aware
+    return {
+      total,
+      completed,
+      processing,
+      scheduled,
+      failed,
+      totalDownloads,
+      avgProcessingTime,
+      successRate
+    };
+  }, [reports]);
+
+  // Category distribution
+  const categoryStats = useMemo(() => {
+    return {
+      'financial': reports.filter(r => r.category === 'financial').length,
+      'compliance': reports.filter(r => r.category === 'compliance').length,
+      'performance': reports.filter(r => r.category === 'performance').length,
+      'statistical': reports.filter(r => r.category === 'statistical').length,
+      'analytical': reports.filter(r => r.category === 'analytical').length,
+      'technical': reports.filter(r => r.category === 'technical').length
+    };
+  }, [reports]);
+
+  // Three.js canvas background
   useEffect(() => {
     if (!canvasRef.current) return;
     let cancelled = false;
@@ -559,8 +614,6 @@ const ReportsPage = () => {
     }
   };
 
-  // getStatusIcon removed (not used)
-
   const getCategoryIcon = (category: string) => {
     const icons = {
       'financial': DollarSign,
@@ -583,21 +636,156 @@ const ReportsPage = () => {
     return icons[format as keyof typeof icons] || FileText;
   };
 
-  const handleDownload = (reportId: string) => {
-    // In a real application, this would trigger the download
-    console.log(`Downloading report: ${reportId}`);
-    // Show download progress/notification
+  const formatDate = (s?: string | null) => {
+    if (!s) return '--';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+    } catch {
+      return '--';
+    }
   };
 
-  const handleScheduleReport = (reportId: string) => {
-    const report = mockReports.find(r => r.id === reportId);
-    if (report) {
-      setSelectedReport(report);
+  const formatDateTime = (s?: string | null) => {
+    if (!s) return '--';
+    try {
+      const d = new Date(s);
+      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    } catch {
+      return '--';
     }
   };
 
   const formatFileSize = (size: string | null) => {
     return size || '--';
+  };
+
+  const handleDownload = async (reportId: string) => {
+    try {
+      // Update download count
+      await updateDoc(doc(db, 'reports', reportId), {
+        downloadCount: (reports.find(r => r.id === reportId)?.downloadCount || 0) + 1,
+        lastUpdated: serverTimestamp()
+      });
+      
+      // In a real app, this would trigger the actual file download
+      console.log(`Downloading report: ${reportId}`);
+      // Show download progress/notification
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
+
+  const handleScheduleReport = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    if (report) {
+      setSelectedReport(report);
+    }
+  };
+
+  // Export utilities
+  const exportReportsData = (items: Report[]) => {
+    const headers = [
+      'Report ID',
+      'Name',
+      'Type',
+      'Category',
+      'Status',
+      'File Format',
+      'File Size',
+      'Generated Date',
+      'Generated By',
+      'Record Count',
+      'Download Count',
+      'Frequency',
+      'Is Scheduled'
+    ];
+
+    const rows = items.map(r => [
+      r.id,
+      r.name,
+      r.type,
+      r.category,
+      r.status,
+      r.fileFormat,
+      r.fileSize || '',
+      r.generatedDate || '',
+      r.generatedBy || '',
+      r.recordCount?.toString() || '',
+      r.downloadCount.toString(),
+      r.frequency,
+      r.isScheduled ? 'Yes' : 'No'
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${(field ?? '')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `reports_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportReportsPDF = (items: Report[]) => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 56, 'F');
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Reports Export', margin, 36);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
+    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+    const head = [[
+      'Report ID', 'Name', 'Type', 'Category', 'Status', 'Format', 'Records', 'Downloads'
+    ]];
+
+    const body: any[] = [];
+    items.forEach(r => {
+      body.push([
+        r.id,
+        r.name,
+        r.type,
+        r.category,
+        r.status,
+        r.fileFormat,
+        r.recordCount || '--',
+        r.downloadCount.toString()
+      ]);
+    });
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak', cellWidth: 'wrap' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [250, 250, 251] },
+      margin: { left: margin, right: margin, top: 70 },
+      tableWidth: 'auto',
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 120 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 80 },
+        4: { cellWidth: 70 },
+        5: { cellWidth: 50 },
+        6: { cellWidth: 50 },
+        7: { cellWidth: 50 }
+      }
+    });
+
+    doc.save(`reports_export_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -665,6 +853,24 @@ const ReportsPage = () => {
           backdrop-filter: blur(16px) saturate(180%);
           -webkit-backdrop-filter: blur(16px) saturate(180%);
         }
+        
+        .btn-cancel {
+          background: transparent;
+          border: 1px solid var(--glass-border);
+          color: var(--text-muted);
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        [data-theme="light"] .btn-cancel:hover {
+          background: rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .btn-cancel:hover {
+          background: rgba(255,255,255,0.03);
+        }
       `}</style>
 
       {/* Header Section - Real-time Monitoring */}
@@ -710,15 +916,17 @@ const ReportsPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              aria-label={t('extracted.print_dashboard')}
+              onClick={() => setShowExportModal(true)}
+              aria-label={t('extracted.export_data_1')}
               className={`flex-1 sm:flex-none px-4 py-2 rounded-xl border flex items-center gap-3 glass-effect focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass text-white'}`}
             >
-              <Printer className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`} />
-              <span className="font-semibold text-sm">{t('extracted.print')}</span>
+              <Download className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`} />
+              <span className="font-semibold text-sm">{t('extracted.export_data')}</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setShowNewReportModal(true)}
               className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
             >
               <FilePlus className="w-5 h-5" />
@@ -728,7 +936,276 @@ const ReportsPage = () => {
         </div>
       </motion.div>
 
-      {/* Dashboard Grid - New Layout */}
+      {/* New Report Modal */}
+      <AnimatePresence>
+        {showNewReportModal && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-xl font-semibold theme-text-primary">
+                  {selectedReport ? (t('extracted.edit_report') || 'Edit Report') : (t('extracted.new_report') || 'New Report')}
+                </h3>
+                <p className="text-sm theme-text-muted">
+                  {selectedReport ? (t('extracted.edit_report_description') || 'Edit the report details and save changes.') : (t('extracted.new_report_description') || 'Create a new report with custom parameters.')}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowNewReportModal(false); setSelectedReport(null); }} className="btn-cancel text-sm">
+                  <X className="w-4 h-4 inline-block" /> <span>{t('extracted.cancel')}</span>
+                </button>
+              </div>
+            </div>
+            <NewReportForm
+              initialData={selectedReport}
+              onClose={() => { setShowNewReportModal(false); setSelectedReport(null); }}
+              onCreated={(r) => { setSelectedReport(r); setShowNewReportModal(false); }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export reports as CSV or a printable PDF report.'}</p>
+                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full reports dataset in the chosen format.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{reports.length} {t('extracted.reports') || 'reports'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportReportsData(reports); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportReportsPDF(reports); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{filteredReports.length} {t('extracted.reports') || 'reports'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button disabled={filteredReports.length === 0} onClick={() => { exportReportsData(filteredReports); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredReports.length === 0} onClick={() => { exportReportsPDF(filteredReports); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Detail Section */}
+      {selectedReport && (
+        <motion.section
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start gap-4 flex-1">
+              <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+                <BarChart3 className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold theme-text-primary">{selectedReport.name}</h2>
+                  <span className={`px-3 py-1 ${getStatusColor(selectedReport.status)} text-sm font-bold rounded-full`}>
+                    {selectedReport.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <p className="theme-text-muted text-lg">{selectedReport.id}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <p className="theme-text-muted">{selectedReport.category} • {selectedReport.frequency}</p>
+                  <span className="text-sm theme-text-muted">•</span>
+                  <p className="theme-text-muted">Generated: {formatDateTime(selectedReport.generatedDate)}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSelectedReport(null)} className="btn-cancel">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-b theme-border-glass mb-4">
+            <div className="flex overflow-x-auto">
+              {[
+                { id: 'overview', label: 'Overview', icon: Eye },
+                { id: 'analytics', label: 'Analytics', icon: BarChart },
+                { id: 'parameters', label: 'Parameters', icon: Settings },
+                { id: 'preview', label: 'Preview', icon: FileText },
+                { id: 'sharing', label: 'Sharing', icon: Share2 }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600 theme-text-primary'
+                      : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Report Details</h4>
+                  <p className="text-sm theme-text-muted"><strong>Type:</strong> {selectedReport.type}</p>
+                  <p className="text-sm theme-text-muted"><strong>Category:</strong> {selectedReport.category}</p>
+                  <p className="text-sm theme-text-muted"><strong>Frequency:</strong> {selectedReport.frequency}</p>
+                  <p className="text-sm theme-text-muted"><strong>Format:</strong> {selectedReport.fileFormat}</p>
+                </div>
+
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Generation Info</h4>
+                  <p className="text-sm theme-text-muted"><strong>Generated By:</strong> {selectedReport.generatedBy || 'System'}</p>
+                  <p className="text-sm theme-text-muted"><strong>Generated Date:</strong> {formatDateTime(selectedReport.generatedDate)}</p>
+                  <p className="text-sm theme-text-muted"><strong>Last Run:</strong> {formatDateTime(selectedReport.lastRun)}</p>
+                  <p className="text-sm theme-text-muted"><strong>Next Run:</strong> {formatDateTime(selectedReport.nextRun)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Statistics</h4>
+                  <p className="text-sm theme-text-muted"><strong>Record Count:</strong> {selectedReport.recordCount || '--'}</p>
+                  <p className="text-sm theme-text-muted"><strong>File Size:</strong> {formatFileSize(selectedReport.fileSize)}</p>
+                  <p className="text-sm theme-text-muted"><strong>Download Count:</strong> {selectedReport.downloadCount}</p>
+                  <p className="text-sm theme-text-muted"><strong>Is Scheduled:</strong> {selectedReport.isScheduled ? 'Yes' : 'No'}</p>
+                </div>
+
+                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary">Description</h4>
+                  <p className="text-sm theme-text-muted">{selectedReport.description}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleDownload(selectedReport.id)}
+              disabled={selectedReport.status !== 'completed'}
+              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                selectedReport.status === 'completed'
+                  ? theme === 'light'
+                    ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+                    : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
+                  : 'opacity-50 cursor-not-allowed theme-bg-glass theme-border-glass'
+              }`}
+            >
+              <Download className="w-5 h-5" />
+              Download
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => { setShowNewReportModal(true); }}
+              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                theme === 'light'
+                  ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100'
+                  : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
+              }`}
+            >
+              <Edit className="w-5 h-5" />
+              Edit
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                theme === 'light'
+                  ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                  : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'
+              }`}
+            >
+              <Share2 className="w-5 h-5" />
+              Share
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                theme === 'light'
+                  ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                  : 'theme-bg-glass theme-border-glass hover:theme-bg-card'
+              }`}
+            >
+              <Sparkles className="w-5 h-5" />
+              Analyze
+            </motion.button>
+          </div>
+        </motion.section>
+      )}
+
+      {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Analytics Sidebar */}
         <motion.div
@@ -739,13 +1216,13 @@ const ReportsPage = () => {
         >
           {/* Quick Stats */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_analytics')} </h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_analytics')}</h3>
             <div className="space-y-4">
               {[
-                { labelKey: 'extracted.total_generated', value: '1,247', trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
-                { labelKey: 'extracted.avg_processing_time', value: '2.3s', trend: '-0.4s', icon: Zap, color: 'from-green-500 to-emerald-500' },
-                { labelKey: 'extracted.success_rate_label', value: '98.7%', trend: '+1.2%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
-                { labelKey: 'extracted.active_schedules', value: '24', trend: '+3', icon: Clock, color: 'from-orange-500 to-red-500' }
+                { labelKey: 'extracted.total_generated', value: stats.total.toString(), trend: '+12%', icon: FileText, color: 'from-blue-500 to-cyan-500' },
+                { labelKey: 'extracted.avg_processing_time', value: `${stats.avgProcessingTime}s`, trend: '-0.4s', icon: Zap, color: 'from-green-500 to-emerald-500' },
+                { labelKey: 'extracted.success_rate_label', value: `${stats.successRate}%`, trend: '+1.2%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+                { labelKey: 'extracted.active_schedules', value: stats.scheduled.toString(), trend: '+3', icon: Clock, color: 'from-orange-500 to-red-500' }
               ].map((stat, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
                   <div className="flex items-center gap-3">
@@ -765,7 +1242,7 @@ const ReportsPage = () => {
 
           {/* Quick Actions */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')}</h3>
             <div className="space-y-3">
               {[
                 { labelKey: 'extracted.generate_disbursement', icon: FilePlus, color: 'bg-blue-500/20 text-blue-400' },
@@ -787,87 +1264,83 @@ const ReportsPage = () => {
 
           {/* Report Categories */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')} </h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')}</h3>
             <div className="space-y-3">
-              {[
-                { nameKey: 'extracted.financial', count: 45, color: 'bg-green-500' },
-                { nameKey: 'extracted.compliance', count: 32, color: 'bg-blue-500' },
-                { nameKey: 'extracted.performance', count: 28, color: 'bg-purple-500' },
-                { nameKey: 'extracted.statistical', count: 19, color: 'bg-orange-500' },
-                { nameKey: 'extracted.technical', count: 15, color: 'bg-red-500' }
-              ].map((category, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
-                    <span className="text-sm theme-text-primary">{t(category.nameKey)}</span>
+              {Object.entries(categoryStats).map(([category, count], idx) => {
+                const Icon = getCategoryIcon(category);
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 theme-text-primary" />
+                      <span className="text-sm theme-text-primary">{category}</span>
+                    </div>
+                    <span className="text-sm theme-text-muted">{count}</span>
                   </div>
-                  <span className="text-sm theme-text-muted">{category.count}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </motion.div>
 
         {/* Main Content Area */}
-        {/* Main Content Area */}
-<motion.div
-  initial={{ opacity: 0, x: 20 }}
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ delay: 0.3 }}
-  className="lg:col-span-9 xl:col-span-9 space-y-6 order-1 lg:order-2"
->
-  {/* View Controls - Improved */}
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 theme-bg-card theme-border-glass border rounded-2xl glass-effect">
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-        <FileText className="w-4 h-4 text-white" />
-      </div>
-      <div>
-        <h2 className="text-lg sm:text-xl font-bold theme-text-primary">{t('extracted.recent_reports')} </h2>
-  <p className="text-sm theme-text-muted">{viewMode === 'templates' ? `${reportTemplates.length} templates` : `${filteredReports.length} reports found`}</p>
-      </div>
-    </div>
-    
-  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-      {/* Search */}
-      <div className="relative flex-1 sm:w-48 lg:w-56">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
-        <input
-          type="text"
-          placeholder={t('extracted.search_reports')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
-        />
-      </div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:col-span-9 xl:col-span-9 space-y-6 order-1 lg:order-2"
+        >
+          {/* View Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 theme-bg-card theme-border-glass border rounded-2xl glass-effect">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold theme-text-primary">{t('extracted.recent_reports')}</h2>
+                <p className="text-sm theme-text-muted">{viewMode === 'templates' ? '0 templates' : `${filteredReports.length} reports found`}</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Search */}
+              <div className="relative flex-1 sm:w-48 lg:w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
+                <input
+                  type="text"
+                  placeholder={t('extracted.search_reports')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
+                />
+              </div>
 
-      {/* View Toggle */}
-      <div className="flex items-center gap-1 theme-bg-glass rounded-xl p-1">
-        {[
-          { mode: 'reports', labelKey: 'extracted.reports', icon: FileText },
-          { mode: 'templates', labelKey: 'extracted.templates', icon: BookOpen },
-          { mode: 'scheduled', labelKey: 'extracted.scheduled', icon: Clock }
-        ].map(({ mode, labelKey, icon: Icon }) => (
-          <motion.button
-            key={mode}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setViewMode(mode as 'reports' | 'templates' | 'scheduled')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              viewMode === mode 
-                ? 'accent-gradient text-white shadow-sm' 
-                : 'theme-text-muted hover:theme-text-primary'
-            }`}
-          >
-            <Icon className="w-3 h-3" />
-            <span className="hidden sm:inline">{t(labelKey)}</span>
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  </div>
+              {/* View Toggle */}
+              <div className="flex items-center gap-1 theme-bg-glass rounded-xl p-1">
+                {[
+                  { mode: 'reports', labelKey: 'extracted.reports', icon: FileText },
+                  { mode: 'templates', labelKey: 'extracted.templates', icon: BookOpen },
+                  { mode: 'scheduled', labelKey: 'extracted.scheduled', icon: Clock }
+                ].map(({ mode, labelKey, icon: Icon }) => (
+                  <motion.button
+                    key={mode}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setViewMode(mode as 'reports' | 'templates' | 'scheduled')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                      viewMode === mode 
+                        ? 'accent-gradient text-white shadow-sm' 
+                        : 'theme-text-muted hover:theme-text-primary'
+                    }`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    <span className="hidden sm:inline">{t(labelKey)}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Reports Grid */}
-          {/* Reports Grid - Fixed Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedReports.map((report, idx) => (
               <motion.div
@@ -897,7 +1370,7 @@ const ReportsPage = () => {
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
                     <span className={`px-2 py-1 ${getStatusColor(report.status)} text-xs font-bold rounded-full whitespace-nowrap`}>
-                      {report.status?.charAt(0).toUpperCase() + report.status?.slice(1)}
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -911,7 +1384,7 @@ const ReportsPage = () => {
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <p className="text-sm font-bold theme-text-primary">{report.recordCount ?? '--'}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.records')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.records')}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <div className="flex items-center justify-center gap-1 mb-1">
@@ -921,11 +1394,11 @@ const ReportsPage = () => {
                       })()}
                       <p className="text-sm font-bold theme-text-primary">{formatFileSize(report.fileSize)}</p>
                     </div>
-                    <p className="theme-text-muted text-xs">{t('extracted.size')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.size')}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <p className="text-sm font-bold theme-text-primary">{report.downloadCount}</p>
-                    <p className="theme-text-muted text-xs">{t('extracted.downloads')} </p>
+                    <p className="theme-text-muted text-xs">{t('extracted.downloads')}</p>
                   </div>
                 </div>
 
@@ -944,14 +1417,15 @@ const ReportsPage = () => {
                 {/* Footer Actions */}
                 <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${report.status === 'completed' ? 'bg-green-500' :
-                        report.status === 'processing' ? 'bg-blue-500' :
-                          report.status === 'scheduled' ? 'bg-purple-500' : 'bg-gray-400'
-                      }`}></div>
+                    <div className={`w-2 h-2 rounded-full ${
+                      report.status === 'completed' ? 'bg-green-500' :
+                      report.status === 'processing' ? 'bg-blue-500' :
+                      report.status === 'scheduled' ? 'bg-purple-500' : 'bg-gray-400'
+                    }`}></div>
                     <span className="text-xs theme-text-muted">
                       {report.status === 'completed' ? 'Ready' :
-                        report.status === 'processing' ? 'Processing' :
-                          report.status === 'scheduled' ? 'Scheduled' : 'Failed'}
+                       report.status === 'processing' ? 'Processing' :
+                       report.status === 'scheduled' ? 'Scheduled' : 'Failed'}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -989,196 +1463,74 @@ const ReportsPage = () => {
           </div>
 
           {/* Analytics Overview */}
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-    {/* Performance Chart */}
-    <motion.div
-      whileHover={{ y: -2 }}
-      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')} </h3>
-        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
-      </div>
-      <div className="space-y-3">
-        {[
-          { labelKey: 'extracted.success_rate_label', value: 98, color: 'bg-green-500', icon: CheckCircle },
-          { labelKey: 'extracted.processing_speed', value: 85, color: 'bg-blue-500', icon: Zap },
-          { labelKey: 'extracted.user_satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
-        ].map((metric, idx) => (
-          <div key={idx} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
-                <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
-              </div>
-              <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full ${metric.color} transition-all duration-1000`}
-                style={{ width: `${metric.value}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-
-    {/* Recent Activity */}
-    <motion.div
-      whileHover={{ y: -2 }}
-      className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity_1')} </h3>
-        <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
-      </div>
-      <div className="space-y-3">
-        {[
-          { actionKey: 'extracted.monthly_report_generated', userKey: 'extracted.system', timeKey: 'extracted.min_ago_2', status: 'success' },
-          { actionKey: 'extracted.weekly_schedule_created', userKey: 'extracted.admin', timeKey: 'extracted.min_ago_5', status: 'info' },
-          { actionKey: 'extracted.export_completed', user: 'Officer Sharma', timeKey: 'extracted.min_ago_10', status: 'success' },
-          { actionKey: 'extracted.processing_failed', userKey: 'extracted.system', timeKey: 'extracted.min_ago_15', status: 'error' }
-        ].map((activity, idx) => (
-          <div key={idx} className="flex items-center gap-3 p-2 rounded-lg theme-bg-glass">
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              activity.status === 'success' ? 'bg-green-500' :
-              activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-            }`} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
-              <p className="text-xs theme-text-muted truncate">{activity.userKey ? t(activity.userKey) : activity.user} • {t(activity.timeKey)}</p>
-            </div>
-            <ArrowUpRight className="w-3 h-3 theme-text-muted flex-shrink-0" />
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  </div>
-        </motion.div>
-      </div>
-
-      {/* Enhanced Report Detail Modal */}
-      <AnimatePresence>
-        {selectedReport && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ zIndex: 9999 }}
-            className={`fixed inset-0 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto ${theme === 'light' ? 'bg-black/40' : 'bg-black/60'}`}
-            onClick={() => setSelectedReport(null)}
-            aria-modal="true"
-            role="dialog"
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {/* Performance Chart */}
             <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className={`border rounded-2xl w-full sm:w-[95%] md:w-[90%] lg:w-[80%] max-w-6xl my-6 overflow-hidden glass-effect shadow-2xl ${theme === 'light' ? 'bg-white border-gray-200' : 'theme-bg-card theme-border-glass'}`}
+              whileHover={{ y: -2 }}
+              className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
-              {/* Enhanced Header */}
-              <div className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
-                      <BarChart3 className="w-8 h-8" />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')}</h3>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
+              </div>
+              <div className="space-y-3">
+                {[
+                  { labelKey: 'extracted.success_rate_label', value: stats.successRate, color: 'bg-green-500', icon: CheckCircle },
+                  { labelKey: 'extracted.processing_speed', value: 85, color: 'bg-blue-500', icon: Zap },
+                  { labelKey: 'extracted.user_satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
+                ].map((metric, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
+                        <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
+                      </div>
+                      <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">{selectedReport.name}</h2>
-                        <span className={`px-3 py-2 text-sm font-bold rounded-full ${getStatusColor(selectedReport.status)}`}>{selectedReport.status?.toUpperCase()}</span>
-                      </div>
-                      <div className="flex items-center gap-4 flex-wrap">
-                        <p className="theme-text-muted text-sm sm:text-lg">{selectedReport.id}</p>
-                        <span className="text-sm theme-text-muted">•</span>
-                        <p className="theme-text-muted">{selectedReport.category} • {selectedReport.frequency}</p>
-                        <span className="text-sm theme-text-muted">•</span>
-                        <p className="theme-text-muted">Generated: {formatDateTime(selectedReport.generatedDate)}</p>
-                      </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                      <div 
+                        className={`h-1.5 rounded-full ${metric.color} transition-all duration-1000`}
+                        style={{ width: `${metric.value}%` }}
+                      ></div>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedReport(null)} className={`p-2 sm:p-3 rounded-xl hover:bg-red-500/20 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700' : 'theme-bg-glass theme-text-primary'}`} aria-label={t('extracted.close_report_details')}>
-                    <X className={`w-5 h-5 sm:w-6 sm:h-6 ${theme === 'light' ? 'text-gray-700' : ''}`} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Enhanced Tabs */}
-              <div className={`border-b ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'theme-border-glass bg-gradient-to-r from-transparent via-theme-bg-glass to-transparent'}`}>
-                <div className="flex overflow-x-auto px-8">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: Eye },
-                    { id: 'analytics', label: 'Analytics', icon: BarChart },
-                    { id: 'parameters', label: 'Parameters', icon: Settings },
-                    { id: 'preview', label: 'Preview', icon: FileText },
-                    { id: 'sharing', label: 'Sharing', icon: Share2 }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      className={`flex items-center gap-3 px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600 theme-text-primary'
-                          : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
-                        }`}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-8 space-y-8 max-h-[calc(95vh-200px)] overflow-y-auto">
-                {/* Content would go here based on active tab */}
-                <div className="text-center py-12">
-                  <FileText className="w-16 h-16 theme-text-muted mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold theme-text-primary mb-2">{t('extracted.report_details')} </h3>
-                  <p className="theme-text-muted text-lg">{t('extracted.select_a_tab_to_view_different_aspects_of_this_report')} </p>
-                </div>
-              </div>
-
-              {/* Enhanced Action Buttons */}
-              <div className={`sticky bottom-0 backdrop-blur-xl border-t p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
-                  >
-                    <Download className="w-5 h-5" />
-                    Download Report
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'}`}
-                  >
-                    <Clock className="w-5 h-5" />
-                    Schedule
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
-                  >
-                    <Share2 className="w-5 h-5" />
-                    Share
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-6 py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass hover:theme-bg-card'}`}
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    Analyze
-                  </motion.button>
-                </div>
+                ))}
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Recent Activity */}
+            <motion.div
+              whileHover={{ y: -2 }}
+              className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity_1')}</h3>
+                <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
+              </div>
+              <div className="space-y-3">
+                {[
+                  { actionKey: 'extracted.monthly_report_generated', userKey: 'extracted.system', timeKey: 'extracted.min_ago_2', status: 'success' },
+                  { actionKey: 'extracted.weekly_schedule_created', userKey: 'extracted.admin', timeKey: 'extracted.min_ago_5', status: 'info' },
+                  { actionKey: 'extracted.export_completed', user: 'Officer Sharma', timeKey: 'extracted.min_ago_10', status: 'success' },
+                  { actionKey: 'extracted.processing_failed', userKey: 'extracted.system', timeKey: 'extracted.min_ago_15', status: 'error' }
+                ].map((activity, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-2 rounded-lg theme-bg-glass">
+                    <div className={`w-1.5 h-1.5 rounded-full ${
+                      activity.status === 'success' ? 'bg-green-500' :
+                      activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
+                      <p className="text-xs theme-text-muted truncate">{activity.userKey ? t(activity.userKey) : activity.user} • {t(activity.timeKey)}</p>
+                    </div>
+                    <ArrowUpRight className="w-3 h-3 theme-text-muted flex-shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };
