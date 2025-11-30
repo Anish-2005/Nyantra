@@ -157,7 +157,9 @@ class _GrievancePageState extends State<GrievancePage> {
 
                           // Title
                           Text(
-                                'Your Grievances',
+                                localeProvider.translate(
+                                  'grievances.pageTitle',
+                                ),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -172,7 +174,7 @@ class _GrievancePageState extends State<GrievancePage> {
 
                           // Subtitle
                           Text(
-                                'Track and manage all your grievance reports',
+                                localeProvider.translate('grievances.pageSubtitle'),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
                                   height: 1.4,

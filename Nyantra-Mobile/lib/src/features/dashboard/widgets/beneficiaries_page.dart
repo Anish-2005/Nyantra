@@ -156,7 +156,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
 
                           // Title
                           Text(
-                                'Beneficiaries',
+                                localeProvider.translate(
+                                  'beneficiaries.pageTitle',
+                                ),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -171,7 +173,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
 
                           // Subtitle
                           Text(
-                                'Manage and track your beneficiaries',
+                                localeProvider.translate(
+                                  'beneficiaries.pageSubtitle',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
                                   height: 1.4,
@@ -343,7 +347,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                                 .aadhaar !=
                                                             null)
                                                           Text(
-                                                            'Aadhaar: ${beneficiary.aadhaar}',
+                                                            '${localeProvider.translate('beneficiaries.aadhaarLabel')} ${beneficiary.aadhaar}',
                                                             style: theme
                                                                 .textTheme
                                                                 .bodySmall
@@ -393,7 +397,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                     ),
                                                     const SizedBox(width: 4),
                                                     Text(
-                                                      'Bank Linked',
+                                                      localeProvider.translate(
+                                                        'beneficiaries.bankLinked',
+                                                      ),
                                                       style: TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 11,

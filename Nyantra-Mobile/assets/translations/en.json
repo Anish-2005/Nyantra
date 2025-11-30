@@ -366,6 +366,7 @@
       "pending": "Pending"
     },
     "common": {
+      "loading": "Loading...",
       "viewFull": "View Full",
       "exploreTab": "Explore {{tab}}",
       "tabManagement": "{{tab}} Management",
@@ -461,7 +462,28 @@
     "beneficiaryNotFound": "Beneficiary not found.",
     "beneficiaryFound": "Selected",
     "confirmDeleteTitle": "Confirm delete",
-    "confirmDeleteMessage": "Delete application {id}? This action cannot be undone."
+    "confirmDeleteMessage": "Delete application {id}? This action cannot be undone.",
+    "pageTitle": "Applications",
+    "pageSubtitle": "Track and manage all your relief applications",
+    "noApplications": "No applications found",
+    "noApplicationsDescription": "Your submitted applications will appear here",
+    "unknownApplicant": "Unknown Applicant",
+    "idLabel": "ID:"
+  },
+  "beneficiaries": {
+    "pageTitle": "Beneficiaries",
+    "pageSubtitle": "Manage and track your beneficiaries",
+    "noBeneficiaries": "No beneficiaries found",
+    "noBeneficiariesDescription": "Your beneficiaries will appear here",
+    "bankLinked": "Bank Linked",
+    "aadhaarLabel": "Aadhaar:"
+  },
+  "grievances": {
+    "pageTitle": "Grievances",
+    "pageSubtitle": "Track and manage all your grievance reports",
+    "noGrievances": "No grievances found",
+    "noGrievancesDescription": "Your submitted grievances will appear here",
+    "idLabel": "ID:"
   },
   "extracted": {
     "grievance": "Grievance",

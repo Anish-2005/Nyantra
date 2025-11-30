@@ -366,6 +366,7 @@
       "pending": "लंबित"
     },
     "common": {
+      "loading": "लोड हो रहा है...",
       "viewFull": "पूर्ण देखें",
       "exploreTab": "{{tab}} का अन्वेषण करें",
       "tabManagement": "{{tab}} प्रबंधन",
@@ -461,7 +462,28 @@
     "beneficiaryNotFound": "लाभार्थी नहीं मिला।",
     "beneficiaryFound": "चयनित",
     "confirmDeleteTitle": "हटाने की पुष्टि करें",
-    "confirmDeleteMessage": "आवेदन {id} हटाएं? यह क्रिया वापस नहीं की जा सकती।"
+    "confirmDeleteMessage": "आवेदन {id} हटाएं? यह क्रिया वापस नहीं की जा सकती।",
+    "pageTitle": "आवेदन",
+    "pageSubtitle": "अपने सभी राहत आवेदनों को ट्रैक और प्रबंधित करें",
+    "noApplications": "कोई आवेदन नहीं मिला",
+    "noApplicationsDescription": "आपके सबमिट किए गए आवेदन यहां दिखाई देंगे",
+    "unknownApplicant": "अज्ञात आवेदक",
+    "idLabel": "आईडी:"
+  },
+  "beneficiaries": {
+    "pageTitle": "लाभार्थी",
+    "pageSubtitle": "अपने लाभार्थियों को प्रबंधित और ट्रैक करें",
+    "noBeneficiaries": "कोई लाभार्थी नहीं मिला",
+    "noBeneficiariesDescription": "आपके लाभार्थी यहां दिखाई देंगे",
+    "bankLinked": "बैंक लिंक",
+    "aadhaarLabel": "आधार:"
+  },
+  "grievances": {
+    "pageTitle": "शिकायतें",
+    "pageSubtitle": "अपनी सभी शिकायत रिपोर्टों को ट्रैक और प्रबंधित करें",
+    "noGrievances": "कोई शिकायत नहीं मिली",
+    "noGrievancesDescription": "आपकी सबमिट की गई शिकायतें यहां दिखाई देंगी",
+    "idLabel": "आईडी:"
   },
   "extracted": {
     "grievance": "शिकायत",

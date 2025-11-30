@@ -138,7 +138,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Applications',
+                                      localeProvider.translate(
+                                        'applications.pageTitle',
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: Colors.white,
@@ -156,7 +158,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
 
                           // Title
                           Text(
-                                'Your Applications',
+                                localeProvider.translate(
+                                  'applications.pageTitle',
+                                ),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -171,7 +175,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
 
                           // Subtitle
                           Text(
-                                'Track and manage all your relief applications',
+                                localeProvider.translate(
+                                  'applications.pageSubtitle',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
                                   height: 1.4,
@@ -243,13 +249,17 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No applications found',
+                                localeProvider.translate(
+                                  'applications.noApplications',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Your submitted applications will appear here',
+                                localeProvider.translate(
+                                  'applications.noApplicationsDescription',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
@@ -330,7 +340,10 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                         Text(
                                                           application
                                                                   .applicantName ??
-                                                              'Unknown Applicant',
+                                                              localeProvider
+                                                                  .translate(
+                                                                    'applications.unknownApplicant',
+                                                                  ),
                                                           style: theme
                                                               .textTheme
                                                               .titleMedium
@@ -344,7 +357,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                           height: 4,
                                                         ),
                                                         Text(
-                                                          'ID: ${application.id}',
+                                                          '${localeProvider.translate('applications.idLabel')} ${application.id}',
                                                           style: theme
                                                               .textTheme
                                                               .bodySmall
