@@ -104,7 +104,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 (isDark
                                         ? const Color(0xFF06B6D4)
                                         : const Color(0xFFFB7185))
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 77),
                             blurRadius: 20,
                             spreadRadius: 2,
                             offset: const Offset(0, 8),
@@ -121,10 +121,10 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 51),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 77),
                                     width: 1,
                                   ),
                                 ),
@@ -173,7 +173,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                           Text(
                                 'Track and manage all your relief applications',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 230),
                                   height: 1.4,
                                 ),
                               )
@@ -206,7 +206,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               Icon(
                                 Icons.error_outline,
                                 size: 64,
-                                color: theme.colorScheme.error.withOpacity(0.5),
+                                color: theme.colorScheme.error.withValues(
+                                  alpha: 128,
+                                ),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -237,7 +239,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 Icons.file_copy_outlined,
                                 size: 64,
                                 color: theme.textTheme.bodyMedium?.color
-                                    ?.withOpacity(0.3),
+                                    ?.withValues(alpha: 77),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -269,12 +271,12 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                   color: theme.cardColor,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: theme.dividerColor.withOpacity(0.1),
+                                    color: theme.dividerColor.withValues(alpha: 26),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: theme.shadowColor.withOpacity(0.1),
+                                      color: theme.shadowColor.withValues(alpha: 26),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -321,9 +323,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                               .textTheme
                                                               .bodyMedium
                                                               ?.color
-                                                              ?.withOpacity(
-                                                                0.7,
-                                                              ),
+                                                              ?.withValues(alpha: 179),
                                                         ),
                                                   ),
                                                 ],
@@ -342,7 +342,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                   decoration: BoxDecoration(
                                                     color: application
                                                         .statusColor
-                                                        .withOpacity(0.1),
+                                                        .withValues(alpha: 26),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           20,
@@ -350,7 +350,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     border: Border.all(
                                                       color: application
                                                           .statusColor
-                                                          .withOpacity(0.2),
+                                                          .withValues(alpha: 51),
                                                       width: 1,
                                                     ),
                                                   ),
@@ -473,7 +473,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
         Icon(
           icon,
           size: 16,
-          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 153),
         ),
         const SizedBox(width: 6),
         Expanded(
@@ -483,7 +483,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 153),
                   fontWeight: FontWeight.w500,
                 ),
               ),

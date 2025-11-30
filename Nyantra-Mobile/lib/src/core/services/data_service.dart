@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
@@ -269,17 +270,112 @@ class DataService {
         .add(disbursement.toFirestore());
   }
 
-  // Grievances - proper implementation with user filtering
+  // Grievances - proper implementation with user filtering and beneficiary filtering
   static Stream<List<GrievanceModel>> getGrievances() {
-    return _firestore
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return Stream.value([]);
+    }
+
+    // Stream for grievances created by the current user
+    final userGrievancesStream = _firestore
         .collection('grievances')
-        .where('userId', isEqualTo: _auth.currentUser?.uid)
+        .where('userId', isEqualTo: currentUser.uid)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
             return GrievanceModel.fromFirestore(doc.data(), doc.id);
           }).toList();
         });
+
+    // Stream for grievances associated with user's beneficiaries
+    final beneficiaryGrievancesStream = _firestore
+        .collection('beneficiaries')
+        .where('ownerId', isEqualTo: currentUser.uid)
+        .snapshots()
+        .asyncMap((beneficiariesSnapshot) async {
+          final beneficiaryIds = beneficiariesSnapshot.docs
+              .map((doc) => doc.id)
+              .toList();
+
+          if (beneficiaryIds.isEmpty) {
+            return <GrievanceModel>[];
+          }
+
+          // Fetch grievances for each beneficiary ID
+          final grievanceLists = await Future.wait(
+            beneficiaryIds.map(
+              (beneficiaryId) => _firestore
+                  .collection('grievances')
+                  .where('beneficiaryId', isEqualTo: beneficiaryId)
+                  .get()
+                  .then(
+                    (snapshot) => snapshot.docs
+                        .map(
+                          (doc) =>
+                              GrievanceModel.fromFirestore(doc.data(), doc.id),
+                        )
+                        .toList(),
+                  ),
+            ),
+          );
+
+          // Flatten the list of lists
+          return grievanceLists.expand((list) => list).toList();
+        });
+
+    // Combine both streams using a StreamController
+    final controller = StreamController<List<GrievanceModel>>();
+
+    StreamSubscription? userSubscription;
+    StreamSubscription? beneficiarySubscription;
+    List<GrievanceModel>? latestUserGrievances;
+    List<GrievanceModel>? latestBeneficiaryGrievances;
+
+    void emitCombined() {
+      if (latestUserGrievances != null && latestBeneficiaryGrievances != null) {
+        // Combine and deduplicate by ID
+        final allGrievances = <String, GrievanceModel>{};
+        for (final grievance in latestUserGrievances!) {
+          allGrievances[grievance.id] = grievance;
+        }
+        for (final grievance in latestBeneficiaryGrievances!) {
+          allGrievances[grievance.id] = grievance;
+        }
+
+        // Sort by creation date (newest first), handling null dates
+        final sortedGrievances = allGrievances.values.toList()
+          ..sort((a, b) {
+            final aDate = a.createdDate;
+            final bDate = b.createdDate;
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1; // null dates go to the end
+            if (bDate == null) return -1;
+            return bDate.compareTo(aDate);
+          });
+
+        controller.add(sortedGrievances);
+      }
+    }
+
+    userSubscription = userGrievancesStream.listen((userGrievances) {
+      latestUserGrievances = userGrievances;
+      emitCombined();
+    });
+
+    beneficiarySubscription = beneficiaryGrievancesStream.listen((
+      beneficiaryGrievances,
+    ) {
+      latestBeneficiaryGrievances = beneficiaryGrievances;
+      emitCombined();
+    });
+
+    controller.onCancel = () {
+      userSubscription?.cancel();
+      beneficiarySubscription?.cancel();
+    };
+
+    return controller.stream;
   }
 
   static Future<void> createGrievance(GrievanceModel grievance) async {
