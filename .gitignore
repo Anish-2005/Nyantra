@@ -41,3 +41,4 @@ yarn-error.log*
 next-env.d.ts
 firestore.rules
 firestore.indexes.json
+user_dashboard_app/
