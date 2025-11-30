@@ -301,38 +301,57 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                         Row(
                                           children: [
                                             Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                              child: Row(
                                                 children: [
-                                                  Text(
-                                                    beneficiary.name,
-                                                    style: theme
-                                                        .textTheme
-                                                        .titleMedium
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.blue.withValues(alpha: 51),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.person,
+                                                      color: Colors.blue,
+                                                      size: 16,
+                                                    ),
                                                   ),
-                                                  const SizedBox(height: 4),
-                                                  if (beneficiary.aadhaar !=
-                                                      null)
-                                                    Text(
-                                                      'Aadhaar: ${beneficiary.aadhaar}',
-                                                      style: theme
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            color: theme
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          beneficiary.name,
+                                                          style: theme
+                                                              .textTheme
+                                                              .titleMedium
+                                                              ?.copyWith(
+                                                                fontWeight:
+                                                                    FontWeight.w600,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        if (beneficiary.aadhaar !=
+                                                            null)
+                                                          Text(
+                                                            'Aadhaar: ${beneficiary.aadhaar}',
+                                                            style: theme
                                                                 .textTheme
-                                                                .bodyMedium
-                                                                ?.color
-                                                                ?.withValues(
-                                                                  alpha: 179,
+                                                                .bodySmall
+                                                                ?.copyWith(
+                                                                  color: theme
+                                                                      .textTheme
+                                                                      .bodyMedium
+                                                                      ?.color
+                                                                      ?.withValues(
+                                                                        alpha: 179,
+                                                                      ),
                                                                 ),
                                                           ),
+                                                      ],
                                                     ),
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -340,17 +359,17 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 6,
+                                                      horizontal: 10,
+                                                      vertical: 5,
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.green
-                                                      .withValues(alpha: 26),
+                                                      .withValues(alpha: 102),
                                                   borderRadius:
-                                                      BorderRadius.circular(20),
+                                                      BorderRadius.circular(16),
                                                   border: Border.all(
                                                     color: Colors.green
-                                                        .withValues(alpha: 51),
+                                                        .withValues(alpha: 153),
                                                     width: 1,
                                                   ),
                                                 ),
@@ -360,17 +379,17 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                   children: [
                                                     Icon(
                                                       Icons.account_balance,
-                                                      color: Colors.green,
-                                                      size: 16,
+                                                      color: Colors.white,
+                                                      size: 14,
                                                     ),
                                                     const SizedBox(width: 4),
                                                     Text(
                                                       'Bank Linked',
                                                       style: TextStyle(
-                                                        color: Colors.green,
-                                                        fontSize: 12,
+                                                        color: Colors.white,
+                                                        fontSize: 11,
                                                         fontWeight:
-                                                            FontWeight.w600,
+                                                            FontWeight.w700,
                                                       ),
                                                     ),
                                                   ],

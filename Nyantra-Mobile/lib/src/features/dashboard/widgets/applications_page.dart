@@ -301,23 +301,39 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                         Row(
                                           children: [
                                             Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                              child: Row(
                                                 children: [
-                                                  Text(
-                                                    application.applicantName ??
-                                                        'Unknown Applicant',
-                                                    style: theme
-                                                        .textTheme
-                                                        .titleMedium
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: application.statusColor.withValues(alpha: 51),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.description,
+                                                      color: application.statusColor,
+                                                      size: 16,
+                                                    ),
                                                   ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          application.applicantName ??
+                                                              'Unknown Applicant',
+                                                          style: theme
+                                                              .textTheme
+                                                              .titleMedium
+                                                              ?.copyWith(
+                                                                fontWeight:
+                                                                    FontWeight.w600,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
                                                     'ID: ${application.id}',
                                                     style: theme
                                                         .textTheme
@@ -342,22 +358,22 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                 Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
+                                                        horizontal: 10,
+                                                        vertical: 5,
                                                       ),
                                                   decoration: BoxDecoration(
                                                     color: application
                                                         .statusColor
-                                                        .withValues(alpha: 26),
+                                                        .withValues(alpha: 102),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          20,
+                                                          16,
                                                         ),
                                                     border: Border.all(
                                                       color: application
                                                           .statusColor
                                                           .withValues(
-                                                            alpha: 51,
+                                                            alpha: 153,
                                                           ),
                                                       width: 1,
                                                     ),
@@ -365,11 +381,10 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                   child: Text(
                                                     application.statusText,
                                                     style: TextStyle(
-                                                      color: application
-                                                          .statusColor,
-                                                      fontSize: 12,
+                                                      color: Colors.white,
+                                                      fontSize: 11,
                                                       fontWeight:
-                                                          FontWeight.w600,
+                                                          FontWeight.w700,
                                                     ),
                                                   ),
                                                 ),
