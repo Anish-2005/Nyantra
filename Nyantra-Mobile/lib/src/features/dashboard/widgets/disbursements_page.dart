@@ -138,7 +138,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Disbursements',
+                                      localeProvider.translate(
+                                        'nav.disbursements',
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: Colors.white,
@@ -157,7 +159,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                           // Title
                           Text(
                                 localeProvider.translate(
-                                  'disbursements.pageTitle',
+                                  'dashboard.disbursements.pageTitle',
                                 ),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
@@ -174,7 +176,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                           // Subtitle
                           Text(
                                 localeProvider.translate(
-                                  'disbursements.pageSubtitle',
+                                  'dashboard.disbursements.pageSubtitle',
                                 ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
@@ -214,7 +216,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Error loading disbursements',
+                                localeProvider.translate(
+                                  'dashboard.disbursements.errorLoading',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 8),
@@ -246,7 +250,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                               const SizedBox(height: 16),
                               Text(
                                 localeProvider.translate(
-                                  'disbursements.noDisbursements',
+                                  'dashboard.disbursements.noDisbursements',
                                 ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
@@ -254,7 +258,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                               const SizedBox(height: 8),
                               Text(
                                 localeProvider.translate(
-                                  'disbursements.noDisbursementsDescription',
+                                  'dashboard.disbursements.noDisbursementsDescription',
                                 ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
@@ -321,7 +325,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   ),
                                                   const SizedBox(height: 4),
                                                   Text(
-                                                    'Application ID: ${disbursement.applicationId}',
+                                                    '${localeProvider.translate('dashboard.disbursements.labels.applicationId')}: ${disbursement.applicationId}',
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall
@@ -371,7 +375,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    disbursement.statusText,
+                                                    _getStatusText(
+                                                      disbursement.status,
+                                                    ),
                                                     style: TextStyle(
                                                       color: disbursement
                                                           .statusColor,
@@ -395,7 +401,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.person,
-                                                'Beneficiary',
+                                                localeProvider.translate(
+                                                  'dashboard.disbursements.labels.beneficiary',
+                                                ),
                                                 disbursement.beneficiaryId,
                                               ),
                                             ),
@@ -405,7 +413,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                 child: _buildDetailItem(
                                                   context,
                                                   Icons.calendar_today,
-                                                  'Date',
+                                                  localeProvider.translate(
+                                                    'dashboard.disbursements.labels.date',
+                                                  ),
                                                   disbursement.disbursementDate!
                                                       .toString()
                                                       .split(' ')[0],
@@ -416,8 +426,12 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                 child: _buildDetailItem(
                                                   context,
                                                   Icons.access_time,
-                                                  'Status',
-                                                  disbursement.statusText,
+                                                  localeProvider.translate(
+                                                    'dashboard.disbursements.labels.status',
+                                                  ),
+                                                  _getStatusText(
+                                                    disbursement.status,
+                                                  ),
                                                 ),
                                               ),
                                           ],
@@ -429,7 +443,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                           _buildDetailItem(
                                             context,
                                             Icons.receipt,
-                                            'Transaction ID',
+                                            localeProvider.translate(
+                                              'dashboard.disbursements.labels.transactionId',
+                                            ),
                                             disbursement.transactionId!,
                                           ),
                                         ],
@@ -455,6 +471,28 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
         ],
       ),
     );
+  }
+
+  String _getStatusText(DisbursementStatus status) {
+    final localeProvider = context.watch<LocaleProvider>();
+    switch (status) {
+      case DisbursementStatus.pending:
+        return localeProvider.translate(
+          'dashboard.disbursements.status.pending',
+        );
+      case DisbursementStatus.completed:
+        return localeProvider.translate(
+          'dashboard.disbursements.status.completed',
+        );
+      case DisbursementStatus.failed:
+        return localeProvider.translate(
+          'dashboard.disbursements.status.failed',
+        );
+      case DisbursementStatus.cancelled:
+        return localeProvider.translate(
+          'dashboard.disbursements.status.cancelled',
+        );
+    }
   }
 
   Widget _buildDetailItem(

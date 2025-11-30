@@ -371,9 +371,23 @@
       "pageSubtitle": "Track relief fund disbursements and transactions",
       "noDisbursements": "No disbursements found",
       "noDisbursementsDescription": "Your disbursements will appear here",
+      "errorLoading": "Error loading disbursements",
       "recentDisbursements": "Recent Disbursements",
       "approvedPayments": "Approved payments ready for transfer",
-      "latestPaymentTransactions": "Latest payment transactions"
+      "latestPaymentTransactions": "Latest payment transactions",
+      "labels": {
+        "beneficiary": "Beneficiary",
+        "date": "Date",
+        "status": "Status",
+        "transactionId": "Transaction ID",
+        "applicationId": "Application ID"
+      },
+      "status": {
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      }
     },
     "reports": {
       "generatedReports": "Generated Reports",
@@ -3126,6 +3140,8 @@
     "disbursement": {
       "applications_vs_disbursements": "Applications vs Disbursements",
       "disbursements": "Disbursements",
+      "pageTitle":"Disbursements",
+      "pageSubtitle":"Track relief fund disbursements and transactions",
       "formatnumberfiltereddataactwisebreakdownpcrdisbursements_dis": "{formatNumber(filteredData.actWiseBreakdown.pcr.disbursements)} Disbursed",
       "formatnumberfiltereddataactwisebreakdownpoadisbursements_dis": "{formatNumber(filteredData.actWiseBreakdown.poa.disbursements)} Disbursed",
       "statedisbursements_disbursed": "{state.disbursements} disbursed",

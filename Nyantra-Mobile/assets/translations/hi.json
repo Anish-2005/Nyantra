@@ -370,9 +370,23 @@
       "pageSubtitle": "राहत कोष वितरण और लेनदेन को ट्रैक करें",
       "noDisbursements": "कोई वितरण नहीं मिला",
       "noDisbursementsDescription": "आपके वितरण यहां दिखाई देंगे",
+      "errorLoading": "वितरण लोड करने में त्रुटि",
       "recentDisbursements": "हाल के वितरण",
       "approvedPayments": "स्थानांतरण के लिए तैयार स्वीकृत भुगतान",
-      "latestPaymentTransactions": "नवीनतम भुगतान लेनदेन"
+      "latestPaymentTransactions": "नवीनतम भुगतान लेनदेन",
+      "labels": {
+        "beneficiary": "लाभार्थी",
+        "date": "तारीख",
+        "status": "स्थिति",
+        "transactionId": "लेनदेन आईडी",
+        "applicationId": "आवेदन आईडी"
+      },
+      "status": {
+        "pending": "लंबित",
+        "completed": "पूर्ण",
+        "failed": "विफल",
+        "cancelled": "रद्द"
+      }
     },
     "reports": {
       "generatedReports": "जनित रिपोर्ट",
@@ -3120,6 +3134,8 @@
     "disbursement": {
       "applications_vs_disbursements": "आवेदन बनाम वितरण",
       "disbursements": "वितरण",
+      "pageTitle":"वितरण",
+      "pageSubtitle":"DBT वितरण प्रबंधन और निगरानी",
       "formatnumberfiltereddataactwisebreakdownpcrdisbursements_dis": "{formatNumber(filteredData.actWiseBreakdown.pcr.disbursements)} वितरित",
       "formatnumberfiltereddataactwisebreakdownpoadisbursements_dis": "{formatNumber(filteredData.actWiseBreakdown.poa.disbursements)} वितरित",
       "statedisbursements_disbursed": "{state.disbursements} वितरित",
