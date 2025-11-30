@@ -304,14 +304,23 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               child: Row(
                                                 children: [
                                                   Container(
-                                                    padding: const EdgeInsets.all(8),
+                                                    padding:
+                                                        const EdgeInsets.all(8),
                                                     decoration: BoxDecoration(
-                                                      color: application.statusColor.withValues(alpha: 51),
-                                                      borderRadius: BorderRadius.circular(8),
+                                                      color: application
+                                                          .statusColor
+                                                          .withValues(
+                                                            alpha: 51,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
                                                     ),
                                                     child: Icon(
                                                       Icons.description,
-                                                      color: application.statusColor,
+                                                      color: application
+                                                          .statusColor,
                                                       size: 16,
                                                     ),
                                                   ),
@@ -319,34 +328,43 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment:
-                                                          CrossAxisAlignment.start,
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
                                                         Text(
-                                                          application.applicantName ??
+                                                          application
+                                                                  .applicantName ??
                                                               'Unknown Applicant',
                                                           style: theme
                                                               .textTheme
                                                               .titleMedium
                                                               ?.copyWith(
                                                                 fontWeight:
-                                                                    FontWeight.w600,
+                                                                    FontWeight
+                                                                        .w600,
                                                               ),
                                                         ),
-                                                        const SizedBox(height: 4),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
                                                         Text(
-                                                    'ID: ${application.id}',
-                                                    style: theme
-                                                        .textTheme
-                                                        .bodySmall
-                                                        ?.copyWith(
-                                                          color: theme
+                                                          'ID: ${application.id}',
+                                                          style: theme
                                                               .textTheme
-                                                              .bodyMedium
-                                                              ?.color
-                                                              ?.withValues(
-                                                                alpha: 179,
+                                                              .bodySmall
+                                                              ?.copyWith(
+                                                                color: theme
+                                                                    .textTheme
+                                                                    .bodyMedium
+                                                                    ?.color
+                                                                    ?.withValues(
+                                                                      alpha:
+                                                                          179,
+                                                                    ),
                                                               ),
                                                         ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),

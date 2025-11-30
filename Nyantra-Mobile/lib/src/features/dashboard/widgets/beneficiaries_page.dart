@@ -304,10 +304,17 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: Row(
                                                 children: [
                                                   Container(
-                                                    padding: const EdgeInsets.all(8),
+                                                    padding:
+                                                        const EdgeInsets.all(8),
                                                     decoration: BoxDecoration(
-                                                      color: Colors.blue.withValues(alpha: 51),
-                                                      borderRadius: BorderRadius.circular(8),
+                                                      color: Colors.blue
+                                                          .withValues(
+                                                            alpha: 51,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
                                                     ),
                                                     child: Icon(
                                                       Icons.person,
@@ -319,7 +326,8 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment:
-                                                          CrossAxisAlignment.start,
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
                                                         Text(
                                                           beneficiary.name,
@@ -328,11 +336,15 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                               .titleMedium
                                                               ?.copyWith(
                                                                 fontWeight:
-                                                                    FontWeight.w600,
+                                                                    FontWeight
+                                                                        .w600,
                                                               ),
                                                         ),
-                                                        const SizedBox(height: 4),
-                                                        if (beneficiary.aadhaar !=
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        if (beneficiary
+                                                                .aadhaar !=
                                                             null)
                                                           Text(
                                                             'Aadhaar: ${beneficiary.aadhaar}',
@@ -345,7 +357,8 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                                       .bodyMedium
                                                                       ?.color
                                                                       ?.withValues(
-                                                                        alpha: 179,
+                                                                        alpha:
+                                                                            179,
                                                                       ),
                                                                 ),
                                                           ),
