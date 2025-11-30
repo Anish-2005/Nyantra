@@ -105,7 +105,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                 (isDark
                                         ? const Color(0xFF06B6D4)
                                         : const Color(0xFFFB7185))
-                                    .withValues(alpha: 77),
+                                    .withOpacity(0.3),
                             blurRadius: 20,
                             spreadRadius: 2,
                             offset: const Offset(0, 8),
@@ -122,10 +122,10 @@ class _GrievancePageState extends State<GrievancePage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 51),
+                                  color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withValues(alpha: 77),
+                                    color: Colors.white.withOpacity(0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -174,7 +174,7 @@ class _GrievancePageState extends State<GrievancePage> {
                           Text(
                                 'Track and manage all your grievance reports',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white,
+                                  color: Colors.white.withOpacity(0.9),
                                   height: 1.4,
                                 ),
                               )
@@ -327,16 +327,12 @@ class _GrievancePageState extends State<GrievancePage> {
                                   color: theme.cardColor,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: theme.dividerColor.withValues(
-                                      alpha: 26,
-                                    ),
+                                    color: theme.dividerColor.withOpacity(0.1),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: theme.shadowColor.withValues(
-                                        alpha: 26,
-                                      ),
+                                      color: theme.shadowColor.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
