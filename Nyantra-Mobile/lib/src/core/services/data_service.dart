@@ -414,6 +414,17 @@ class DataService {
     await _firestore.collection('grievances').add(grievance.toFirestore());
   }
 
+  // Append a communication message to a grievance's `communication` array
+  static Future<void> appendGrievanceMessage(
+    String grievanceId,
+    Map<String, dynamic> message,
+  ) async {
+    await _firestore.collection('grievances').doc(grievanceId).update({
+      'communication': FieldValue.arrayUnion([message]),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    });
+  }
+
   // User Profile
   static Future<UserModel?> getUserProfile(String userId) async {
     try {

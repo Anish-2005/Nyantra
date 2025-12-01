@@ -485,6 +485,16 @@ class _GrievancePageState extends State<GrievancePage> {
                               .fadeIn(duration: 600.ms)
                               .slideY(begin: -0.2, end: 0),
 
+                          // Add-grievance button in header
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              tooltip: 'Add grievance',
+                              icon: const Icon(Icons.add, color: Colors.white),
+                              onPressed: _showAddGrievanceDialog,
+                            ),
+                          ),
+
                           const SizedBox(height: 16),
 
                           // Title
@@ -680,7 +690,13 @@ class _GrievancePageState extends State<GrievancePage> {
                                 ),
                                 child: InkWell(
                                   onTap: () {
-                                    // TODO: Navigate to grievance details
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => GrievanceDetailsScreen(
+                                          grievance: grievance,
+                                        ),
+                                      ),
+                                    );
                                   },
                                   borderRadius: BorderRadius.circular(16),
                                   child: Padding(
@@ -958,6 +974,324 @@ class _GrievancePageState extends State<GrievancePage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class GrievanceDetailsScreen extends StatefulWidget {
+  final GrievanceModel grievance;
+
+  const GrievanceDetailsScreen({super.key, required this.grievance});
+
+  @override
+  State<GrievanceDetailsScreen> createState() => _GrievanceDetailsScreenState();
+}
+
+class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
+  final _messageCtrl = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _messageCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _messageCtrl.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _sending = true);
+
+    try {
+      final currentUser = context.read<app_auth.AuthProvider>().user;
+      if (currentUser == null) throw Exception('Not authenticated');
+
+      final message = {
+        'senderId': currentUser.uid,
+        'senderRole': 'user',
+        'text': text,
+        // Use client-side ISO timestamp so it can be stored inside arrayUnion
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      await DataService.appendGrievanceMessage(widget.grievance.id, message);
+      _messageCtrl.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (widget.grievance.id.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Grievance details')),
+        body: const Center(child: Text('Invalid grievance ID')),
+      );
+    }
+
+    final docRef = FirebaseFirestore.instance
+        .collection('grievances')
+        .doc(widget.grievance.id);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.grievance.title ?? 'Grievance details'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: docRef.snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Center(child: Text('Grievance not found'));
+                }
+
+                final data = snapshot.data!.data() as Map<String, dynamic>;
+                final comm = List<Map<String, dynamic>>.from(
+                  (data['communication'] as List<dynamic>?) ?? [],
+                );
+
+                // Sort by timestamp (support Timestamp or ISO timestamp string)
+                comm.sort((a, b) {
+                  final ta = a['timestamp'];
+                  final tb = b['timestamp'];
+
+                  DateTime? da;
+                  DateTime? db;
+
+                  if (ta is Timestamp)
+                    da = ta.toDate();
+                  else if (ta is String) {
+                    try {
+                      da = DateTime.parse(ta);
+                    } catch (_) {
+                      da = null;
+                    }
+                  }
+
+                  if (tb is Timestamp)
+                    db = tb.toDate();
+                  else if (tb is String) {
+                    try {
+                      db = DateTime.parse(tb);
+                    } catch (_) {
+                      db = null;
+                    }
+                  }
+
+                  if (da != null && db != null) return da.compareTo(db);
+                  if (da != null) return 1;
+                  if (db != null) return -1;
+                  return 0;
+                });
+
+                final currentUser = context.read<app_auth.AuthProvider>().user;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: comm.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Header block with basic grievance info
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ID: ${widget.grievance.id}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Status: ${widget.grievance.statusText}',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      );
+                    }
+
+                    final msg = comm[index - 1];
+
+                    // Support multiple message shapes used across web and mobile:
+                    // - Mobile: { senderId, senderRole, text, timestamp }
+                    // - Web: { user, text, createdAt, type }
+                    final senderId = msg['senderId'] as String?;
+                    String senderRole = 'officer';
+                    if (msg.containsKey('senderRole') &&
+                        msg['senderRole'] is String) {
+                      senderRole = msg['senderRole'] as String;
+                    } else if (msg.containsKey('type') &&
+                        msg['type'] is String) {
+                      senderRole = msg['type'] as String;
+                    } else if (msg.containsKey('user') &&
+                        msg['user'] is String) {
+                      final u = (msg['user'] as String).toLowerCase();
+                      if (u == 'you' || u == 'user') senderRole = 'user';
+                      if (u == 'officer' || u == 'admin')
+                        senderRole = 'officer';
+                    }
+
+                    final text =
+                        (msg['text'] ?? msg['message'] ?? msg['body'])
+                            as String? ??
+                        '';
+                    final ts = msg['timestamp'] ?? msg['createdAt'];
+                    final timeStr = (ts is Timestamp)
+                        ? ts.toDate().toString()
+                        : (ts is String ? ts : '');
+
+                    bool isMe = false;
+                    if (currentUser != null) {
+                      if (senderId != null && senderId == currentUser.uid) {
+                        isMe = true;
+                      } else if (senderRole.toLowerCase() == 'user') {
+                        isMe = true;
+                      } else if (msg.containsKey('user') &&
+                          msg['user'] is String) {
+                        final u = msg['user'] as String;
+                        final currentName =
+                            (currentUser.displayName ?? currentUser.email ?? '')
+                                .toString();
+                        if (u == 'You' || u == currentName) isMe = true;
+                      }
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      alignment: isMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75,
+                        ),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: isMe
+                                ? theme.colorScheme.primary
+                                : theme.cardColor,
+                            borderRadius: isMe
+                                ? const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(4),
+                                  )
+                                : const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                    bottomLeft: Radius.circular(4),
+                                    bottomRight: Radius.circular(16),
+                                  ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: isMe
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                // Show 'You' for messages from the current user, otherwise show role/name
+                                Text(
+                                  isMe
+                                      ? 'You'
+                                      : (senderRole != null &&
+                                                senderRole.isNotEmpty
+                                            ? (senderRole == 'officer'
+                                                  ? 'Officer'
+                                                  : senderRole)
+                                            : 'Officer'),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isMe
+                                        ? Colors.white70
+                                        : theme.textTheme.bodySmall?.color,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Align(
+                                  alignment: isMe
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    text,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isMe ? Colors.white : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  timeStr,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 10,
+                                    color: isMe
+                                        ? Colors.white70
+                                        : theme.textTheme.bodySmall?.color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          // Input area
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'Write a message to officer...',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      minLines: 1,
+                      maxLines: 4,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _sending ? null : _sendMessage,
+                    child: _sending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
