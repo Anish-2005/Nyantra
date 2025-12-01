@@ -295,8 +295,24 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                   ],
                                 ),
                                 child: InkWell(
-                                  onTap: () {
-                                    // TODO: Navigate to application details
+                                  onTap: () async {
+                                    final res = await Navigator.of(context)
+                                        .push(
+                                          MaterialPageRoute(
+                                            builder: (_) => ApplicationEditPage(
+                                              application: application,
+                                            ),
+                                          ),
+                                        );
+                                    if (res == true) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Application saved'),
+                                        ),
+                                      );
+                                    }
                                   },
                                   borderRadius: BorderRadius.circular(16),
                                   child: Padding(
@@ -394,7 +410,10 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     final canEdit =
                                                         currentUser != null &&
                                                         currentUser.uid ==
-                                                            application.userId;
+                                                            (application
+                                                                    .ownerId ??
+                                                                application
+                                                                    .userId);
                                                     if (!canEdit)
                                                       return const SizedBox();
                                                     return IconButton(
@@ -493,32 +512,6 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
-                                                Icons.calendar_today,
-                                                'Date',
-                                                application.applicationDate
-                                                    .toString()
-                                                    .split(' ')[0],
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.description,
-                                                'Description',
-                                                application.description ??
-                                                    'N/A',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 12),
-
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
                                                 Icons.category,
                                                 'Act Type',
                                                 application.actType ?? 'N/A',
@@ -527,13 +520,85 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
-                                                Icons.person,
-                                                'User ID',
-                                                application.userId ?? 'N/A',
+                                                Icons.priority_high,
+                                                'Priority',
+                                                application.priority ?? 'N/A',
                                               ),
                                             ),
                                           ],
                                         ),
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.location_on,
+                                                'District',
+                                                application.district ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.map,
+                                                'State',
+                                                application.state ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.event,
+                                                'Incident Date',
+                                                application.incidentDate ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.badge,
+                                                'Beneficiary ID',
+                                                application.beneficiaryId ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+
+                                        // Additional details: contact, beneficiary, owner, timestamps
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.phone,
+                                                'Phone',
+                                                application.contactNumber ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.email,
+                                                'Aadhaar',
+                                                application.aadhaar ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
                                       ],
                                     ),
                                   ),

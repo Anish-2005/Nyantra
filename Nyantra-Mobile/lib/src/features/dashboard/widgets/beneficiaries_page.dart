@@ -370,96 +370,8 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 ],
                                               ),
                                             ),
-                                            if (beneficiary.bankAccount != null)
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 5,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.green
-                                                      .withValues(alpha: 102),
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                  border: Border.all(
-                                                    color: Colors.green
-                                                        .withValues(alpha: 153),
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      Icons.account_balance,
-                                                      color: Colors.white,
-                                                      size: 14,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      localeProvider.translate(
-                                                        'beneficiaries.bankLinked',
-                                                      ),
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                    ),
-                                                    // Edit button if current user is owner
-                                                    Builder(
-                                                      builder: (context) {
-                                                        final currentUser =
-                                                            FirebaseAuth
-                                                                .instance
-                                                                .currentUser;
-                                                        final canEdit =
-                                                            currentUser !=
-                                                                null &&
-                                                            currentUser.uid ==
-                                                                beneficiary
-                                                                    .ownerId;
-                                                        if (!canEdit)
-                                                          return const SizedBox();
-                                                        return IconButton(
-                                                          icon: const Icon(
-                                                            Icons.edit,
-                                                            size: 20,
-                                                          ),
-                                                          onPressed: () async {
-                                                            final res =
-                                                                await Navigator.of(
-                                                                  context,
-                                                                ).push(
-                                                                  MaterialPageRoute(
-                                                                    builder: (_) =>
-                                                                        BeneficiaryEditPage(
-                                                                          beneficiary:
-                                                                              beneficiary,
-                                                                        ),
-                                                                  ),
-                                                                );
-                                                            if (res == true) {
-                                                              ScaffoldMessenger.of(
-                                                                context,
-                                                              ).showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Text(
-                                                                    'Beneficiary saved',
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            }
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                          ],
+                                        ),
                                           ],
                                         ),
 
@@ -482,6 +394,33 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 Icons.location_on,
                                                 'Address',
                                                 beneficiary.address ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.badge,
+                                                'Beneficiary ID',
+                                                beneficiary.id,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.event_available,
+                                                'Added',
+                                                beneficiary.createdAt != null
+                                                    ? beneficiary.createdAt!
+                                                          .toString()
+                                                          .split(' ')[0]
+                                                    : 'N/A',
                                               ),
                                             ),
                                           ],
