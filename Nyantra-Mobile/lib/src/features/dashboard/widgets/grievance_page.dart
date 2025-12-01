@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -37,6 +38,316 @@ class _GrievancePageState extends State<GrievancePage> {
   ];
 
   final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
+
+  @override
+  void dispose() {
+    _beneficiaryIdController.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _validateBeneficiaryId(String beneficiaryId) async {
+    if (beneficiaryId.trim().isEmpty) {
+      setState(() {
+        _selectedBeneficiary = null;
+        _isValidatingBeneficiary = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isValidatingBeneficiary = true;
+    });
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('beneficiaries')
+          .doc(beneficiaryId.trim())
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data() ?? {};
+        final beneficiary = BeneficiaryModel.fromFirestore(data, doc.id);
+
+        setState(() {
+          _selectedBeneficiary = beneficiary;
+          _isValidatingBeneficiary = false;
+        });
+      } else {
+        setState(() {
+          _selectedBeneficiary = null;
+          _isValidatingBeneficiary = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _selectedBeneficiary = null;
+        _isValidatingBeneficiary = false;
+      });
+    }
+  }
+
+  Future<void> _submitGrievance() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedBeneficiary == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid beneficiary ID')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final currentUser = context.read<app_auth.AuthProvider>().user;
+      if (currentUser == null) throw Exception('User not authenticated');
+
+      final grievance = GrievanceModel(
+        id: '',
+        beneficiaryId: _selectedBeneficiary!.id,
+        userId: currentUser.uid,
+        beneficiaryName: _selectedBeneficiary!.name,
+        phone: _selectedBeneficiary!.phone,
+        email: null,
+        district: _selectedBeneficiary!.district,
+        state: _selectedBeneficiary!.state,
+        actType: _selectedBeneficiary!.actType,
+        applicationId: null,
+        category: _selectedCategory,
+        subCategory: null,
+        priority: _selectedPriority,
+        status: GrievanceStatus.open,
+        assignedTo: null,
+        assignedDate: null,
+        createdDate: DateTime.now(),
+        lastUpdated: null,
+        resolvedDate: null,
+        expectedResolution: null,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        attachments: 0,
+        communication: [],
+        escalationLevel: 0,
+        satisfactionRating: null,
+        followUpRequired: false,
+        relatedGrievances: [],
+      );
+
+      await DataService.createGrievance(grievance);
+
+      // reset
+      _beneficiaryIdController.clear();
+      _titleController.clear();
+      _descriptionController.clear();
+      setState(() {
+        _selectedCategory = null;
+        _selectedPriority = null;
+        _selectedBeneficiary = null;
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Grievance submitted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit grievance: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  void _showAddGrievanceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Submit New Grievance'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _beneficiaryIdController,
+                    decoration: InputDecoration(
+                      labelText: 'Beneficiary ID *',
+                      hintText: 'Enter beneficiary ID',
+                      suffixIcon: _isValidatingBeneficiary
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : _selectedBeneficiary != null
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Beneficiary ID is required';
+                      }
+                      if (_selectedBeneficiary == null) {
+                        return 'Please enter a valid beneficiary ID';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) => _validateBeneficiaryId(value),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_selectedBeneficiary != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Beneficiary Details:',
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Name: ${_selectedBeneficiary!.name}'),
+                          if (_selectedBeneficiary!.phone != null)
+                            Text('Phone: ${_selectedBeneficiary!.phone}'),
+                          if (_selectedBeneficiary!.district != null)
+                            Text('District: ${_selectedBeneficiary!.district}'),
+                          if (_selectedBeneficiary!.state != null)
+                            Text('State: ${_selectedBeneficiary!.state}'),
+                          if (_selectedBeneficiary!.actType != null)
+                            Text('Act Type: ${_selectedBeneficiary!.actType}'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Title *',
+                      hintText: 'Brief title for the grievance',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Title is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category *',
+                      hintText: 'Select grievance category',
+                    ),
+                    items: _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Category is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  DropdownButtonFormField<String>(
+                    value: _selectedPriority,
+                    decoration: const InputDecoration(
+                      labelText: 'Priority *',
+                      hintText: 'Select priority level',
+                    ),
+                    items: _priorities.map((priority) {
+                      return DropdownMenuItem(
+                        value: priority,
+                        child: Text(priority),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPriority = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Priority is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description *',
+                      hintText: 'Detailed description of the grievance',
+                    ),
+                    maxLines: 4,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Description is required';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submitGrievance,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Submit'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
