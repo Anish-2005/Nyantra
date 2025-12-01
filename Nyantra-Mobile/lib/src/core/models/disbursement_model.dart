@@ -14,6 +14,12 @@ class DisbursementModel {
   final String? notes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // User editable fields
+  final String? userPhone;
+  final String? userEmail;
+  final String? userBankAccount;
+  final String? userIFSC;
+  final String? userAddress;
 
   DisbursementModel({
     required this.id,
@@ -26,6 +32,11 @@ class DisbursementModel {
     this.notes,
     this.createdAt,
     this.updatedAt,
+    this.userPhone,
+    this.userEmail,
+    this.userBankAccount,
+    this.userIFSC,
+    this.userAddress,
   });
 
   factory DisbursementModel.fromFirestore(
@@ -52,6 +63,11 @@ class DisbursementModel {
       updatedAt: data['updatedAt'] != null
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
+      userPhone: data['userPhone'] as String?,
+      userEmail: data['userEmail'] as String?,
+      userBankAccount: data['userBankAccount'] as String?,
+      userIFSC: data['userIFSC'] as String?,
+      userAddress: data['userAddress'] as String?,
     );
   }
 
@@ -67,6 +83,11 @@ class DisbursementModel {
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+      if (userPhone != null) 'userPhone': userPhone,
+      if (userEmail != null) 'userEmail': userEmail,
+      if (userBankAccount != null) 'userBankAccount': userBankAccount,
+      if (userIFSC != null) 'userIFSC': userIFSC,
+      if (userAddress != null) 'userAddress': userAddress,
     };
   }
 

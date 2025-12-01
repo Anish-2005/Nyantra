@@ -520,7 +520,8 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                         context,
                                                         Icons.phone,
                                                         'Phone Number',
-                                                        beneficiary?.phone ??
+                                                        disbursement
+                                                                .userPhone ??
                                                             'Not provided',
                                                       ),
                                                     ),
@@ -541,8 +542,8 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                         context,
                                                         Icons.account_balance,
                                                         'Bank Account',
-                                                        beneficiary
-                                                                ?.bankAccount ??
+                                                        disbursement
+                                                                .userBankAccount ??
                                                             'Not provided',
                                                       ),
                                                     ),
@@ -551,7 +552,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                         context,
                                                         Icons.code,
                                                         'IFSC Code',
-                                                        beneficiary?.ifsc ??
+                                                        disbursement.userIFSC ??
                                                             'Not provided',
                                                       ),
                                                     ),
@@ -565,7 +566,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   context,
                                                   Icons.location_on,
                                                   'Address',
-                                                  beneficiary?.address ??
+                                                  disbursement.userAddress ??
                                                       'Not provided',
                                                 ),
 

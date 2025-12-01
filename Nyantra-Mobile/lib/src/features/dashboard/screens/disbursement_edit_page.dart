@@ -25,10 +25,16 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
   @override
   void initState() {
     super.initState();
-    _phoneCtrl = TextEditingController();
-    _bankAccountCtrl = TextEditingController();
-    _ifscCtrl = TextEditingController();
-    _addressCtrl = TextEditingController();
+    _phoneCtrl = TextEditingController(
+      text: widget.disbursement.userPhone ?? '',
+    );
+    _bankAccountCtrl = TextEditingController(
+      text: widget.disbursement.userBankAccount ?? '',
+    );
+    _ifscCtrl = TextEditingController(text: widget.disbursement.userIFSC ?? '');
+    _addressCtrl = TextEditingController(
+      text: widget.disbursement.userAddress ?? '',
+    );
     _loadBeneficiaryData();
   }
 
@@ -55,10 +61,6 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
         );
         setState(() {
           _beneficiary = beneficiary;
-          _phoneCtrl.text = beneficiary.phone ?? '';
-          _bankAccountCtrl.text = beneficiary.bankAccount ?? '';
-          _ifscCtrl.text = beneficiary.ifsc ?? '';
-          _addressCtrl.text = beneficiary.address ?? '';
           _loading = false;
         });
       } else {
@@ -75,22 +77,20 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
   }
 
   Future<void> _save() async {
-    if (_beneficiary == null) return;
-
     setState(() => _saving = true);
     try {
       final updates = <String, dynamic>{
-        'phone': _phoneCtrl.text.trim(),
-        'bankAccount': _bankAccountCtrl.text.trim(),
-        'ifsc': _ifscCtrl.text.trim(),
-        'address': _addressCtrl.text.trim(),
+        'userPhone': _phoneCtrl.text.trim(),
+        'userBankAccount': _bankAccountCtrl.text.trim(),
+        'userIFSC': _ifscCtrl.text.trim(),
+        'userAddress': _addressCtrl.text.trim(),
       };
 
-      await DataService.updateBeneficiary(_beneficiary!.id, updates);
+      await DataService.updateDisbursement(widget.disbursement.id, updates);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Beneficiary details updated successfully'),
+            content: Text('Disbursement details updated successfully'),
           ),
         );
         Navigator.of(context).pop(true);
@@ -98,7 +98,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating beneficiary: $e')),
+          SnackBar(content: Text('Error updating disbursement: $e')),
         );
       }
     } finally {
@@ -110,7 +110,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Beneficiary Details'),
+        title: const Text('Edit Disbursement Details'),
         actions: [
           if (!_loading)
             TextButton(
@@ -135,7 +135,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Current Beneficiary Details',
+                    'Disbursement Details',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
