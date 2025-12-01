@@ -1210,8 +1210,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                                 Text(
                                   isMe
                                       ? 'You'
-                                      : (senderRole != null &&
-                                                senderRole.isNotEmpty
+                                      : (senderRole.isNotEmpty
                                             ? (senderRole == 'officer'
                                                   ? 'Officer'
                                                   : senderRole)
