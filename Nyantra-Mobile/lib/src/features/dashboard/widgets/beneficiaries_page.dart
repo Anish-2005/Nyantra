@@ -5,8 +5,8 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/beneficiary_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/beneficiary_edit_page.dart';
+import '../screens/beneficiary_form_page.dart';
 
 class BeneficiariesPage extends StatefulWidget {
   const BeneficiariesPage({super.key});
@@ -249,17 +249,31 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No beneficiaries found',
+                                'No beneficiary profile found',
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Beneficiary information will appear here',
+                                'Create your beneficiary profile to apply for relief',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
                                 textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: _addNewBeneficiary,
+                                icon: const Icon(Icons.add),
+                                label: const Text('Add Beneficiary Profile'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -656,6 +670,12 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _addNewBeneficiary() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const BeneficiaryFormPage()),
     );
   }
 
