@@ -289,8 +289,24 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                   ],
                                 ),
                                 child: InkWell(
-                                  onTap: () {
-                                    // TODO: Navigate to beneficiary details
+                                  onTap: () async {
+                                    final res = await Navigator.of(context)
+                                        .push(
+                                          MaterialPageRoute(
+                                            builder: (_) => BeneficiaryEditPage(
+                                              beneficiary: beneficiary,
+                                            ),
+                                          ),
+                                        );
+                                    if (res == true) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Beneficiary saved'),
+                                        ),
+                                      );
+                                    }
                                   },
                                   borderRadius: BorderRadius.circular(16),
                                   child: Padding(
@@ -372,8 +388,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                             ),
                                           ],
                                         ),
-                                          ],
-                                        ),
 
                                         const SizedBox(height: 16),
 
@@ -406,6 +420,29 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
+                                                Icons.location_city,
+                                                'District',
+                                                beneficiary.district ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.map,
+                                                'State',
+                                                beneficiary.state ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
                                                 Icons.badge,
                                                 'Beneficiary ID',
                                                 beneficiary.id,
@@ -421,6 +458,178 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                           .toString()
                                                           .split(' ')[0]
                                                     : 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.category,
+                                                'Act Type',
+                                                beneficiary.actType ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.attach_money,
+                                                'Relief Amount',
+                                                beneficiary.reliefAmount != null
+                                                    ? '₹${beneficiary.reliefAmount!.toStringAsFixed(0)}'
+                                                    : 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.label,
+                                                'Category',
+                                                beneficiary.category ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.date_range,
+                                                'Registration Date',
+                                                beneficiary.registrationDate !=
+                                                        null
+                                                    ? beneficiary
+                                                          .registrationDate!
+                                                          .toString()
+                                                          .split(' ')[0]
+                                                    : 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.info,
+                                                'Status',
+                                                beneficiary.status ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.family_restroom,
+                                                'Father\'s Name',
+                                                beneficiary.fatherName ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.confirmation_number,
+                                                'Case Number',
+                                                beneficiary.caseNumber ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.event,
+                                                'Incident Date',
+                                                beneficiary.incidentDate ?? 'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.person,
+                                                'Aadhaar',
+                                                beneficiary.aadhaar ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.cake,
+                                                'Age',
+                                                beneficiary.age?.toString() ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.wc,
+                                                'Gender',
+                                                beneficiary.gender ?? 'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.favorite,
+                                                'Marital Status',
+                                                beneficiary.maritalStatus ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.account_balance,
+                                                'Bank Account',
+                                                beneficiary.bankAccount ??
+                                                    'N/A',
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: _buildDetailItem(
+                                                context,
+                                                Icons.code,
+                                                'IFSC Code',
+                                                beneficiary.ifsc ?? 'N/A',
                                               ),
                                             ),
                                           ],
