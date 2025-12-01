@@ -173,6 +173,14 @@ class DataService {
     await _firestore.collection('applications').add(application.toFirestore());
   }
 
+  static Future<void> updateApplication(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    data['updatedAt'] = FieldValue.serverTimestamp();
+    await _firestore.collection('applications').doc(id).update(data);
+  }
+
   // Beneficiaries - filtered by current user
   static Stream<List<BeneficiaryModel>> getBeneficiaries() {
     final currentUser = _auth.currentUser;
@@ -193,6 +201,14 @@ class DataService {
 
   static Future<void> createBeneficiary(BeneficiaryModel beneficiary) async {
     await _firestore.collection('beneficiaries').add(beneficiary.toFirestore());
+  }
+
+  static Future<void> updateBeneficiary(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    data['updatedAt'] = FieldValue.serverTimestamp();
+    await _firestore.collection('beneficiaries').doc(id).update(data);
   }
 
   // Disbursements - filtered by current user's applications or user's beneficiaries
@@ -268,6 +284,14 @@ class DataService {
     await _firestore
         .collection('disbursements')
         .add(disbursement.toFirestore());
+  }
+
+  static Future<void> updateDisbursement(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    data['updatedAt'] = FieldValue.serverTimestamp();
+    await _firestore.collection('disbursements').doc(id).update(data);
   }
 
   // Grievances - proper implementation with user filtering and beneficiary filtering

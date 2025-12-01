@@ -5,6 +5,8 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/application_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../screens/application_edit_page.dart';
 
 class ApplicationsPage extends StatefulWidget {
   const ApplicationsPage({super.key});
@@ -382,6 +384,52 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.end,
                                               children: [
+                                                // Edit button shown only when the current user is owner/user
+                                                Builder(
+                                                  builder: (context) {
+                                                    final currentUser =
+                                                        FirebaseAuth
+                                                            .instance
+                                                            .currentUser;
+                                                    final canEdit =
+                                                        currentUser != null &&
+                                                        currentUser.uid ==
+                                                            application.userId;
+                                                    if (!canEdit)
+                                                      return const SizedBox();
+                                                    return IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () async {
+                                                        final res =
+                                                            await Navigator.of(
+                                                              context,
+                                                            ).push(
+                                                              MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    ApplicationEditPage(
+                                                                      application:
+                                                                          application,
+                                                                    ),
+                                                              ),
+                                                            );
+                                                        if (res == true) {
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                'Application saved',
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                    );
+                                                  },
+                                                ),
                                                 Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(

@@ -5,6 +5,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/disbursement_model.dart';
+import '../screens/disbursement_edit_page.dart';
 
 class DisbursementsPage extends StatefulWidget {
   const DisbursementsPage({super.key});
@@ -388,6 +389,39 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   ),
                                                 ],
                                               ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            // Edit button - page already filters items to user's related ones
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                size: 20,
+                                              ),
+                                              onPressed: () async {
+                                                final res =
+                                                    await Navigator.of(
+                                                      context,
+                                                    ).push(
+                                                      MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            DisbursementEditPage(
+                                                              disbursement:
+                                                                  disbursement,
+                                                            ),
+                                                      ),
+                                                    );
+                                                if (res == true) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Disbursement saved',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
                                             ),
                                           ],
                                         ),

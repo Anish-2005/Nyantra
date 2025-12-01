@@ -5,6 +5,8 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/beneficiary_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../screens/beneficiary_edit_page.dart';
 
 class BeneficiariesPage extends StatefulWidget {
   const BeneficiariesPage({super.key});
@@ -406,6 +408,54 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                         fontWeight:
                                                             FontWeight.w700,
                                                       ),
+                                                    ),
+                                                    // Edit button if current user is owner
+                                                    Builder(
+                                                      builder: (context) {
+                                                        final currentUser =
+                                                            FirebaseAuth
+                                                                .instance
+                                                                .currentUser;
+                                                        final canEdit =
+                                                            currentUser !=
+                                                                null &&
+                                                            currentUser.uid ==
+                                                                beneficiary
+                                                                    .ownerId;
+                                                        if (!canEdit)
+                                                          return const SizedBox();
+                                                        return IconButton(
+                                                          icon: const Icon(
+                                                            Icons.edit,
+                                                            size: 20,
+                                                          ),
+                                                          onPressed: () async {
+                                                            final res =
+                                                                await Navigator.of(
+                                                                  context,
+                                                                ).push(
+                                                                  MaterialPageRoute(
+                                                                    builder: (_) =>
+                                                                        BeneficiaryEditPage(
+                                                                          beneficiary:
+                                                                              beneficiary,
+                                                                        ),
+                                                                  ),
+                                                                );
+                                                            if (res == true) {
+                                                              ScaffoldMessenger.of(
+                                                                context,
+                                                              ).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                    'Beneficiary saved',
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                          },
+                                                        );
+                                                      },
                                                     ),
                                                   ],
                                                 ),
