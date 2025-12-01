@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/disbursement_model.dart';
+import '../../../core/models/beneficiary_model.dart';
 import '../screens/disbursement_edit_page.dart';
 
 class DisbursementsPage extends StatefulWidget {
@@ -313,20 +315,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    '₹${disbursement.reliefAmount.toStringAsFixed(0)}',
-                                                    style: theme
-                                                        .textTheme
-                                                        .titleMedium
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: theme
-                                                              .primaryColor,
-                                                        ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '${localeProvider.translate('dashboard.disbursements.labels.applicationId')}: ${disbursement.applicationId}',
+                                                    'Amount',
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall
@@ -338,6 +327,20 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                               ?.withOpacity(
                                                                 0.7,
                                                               ),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                  Text(
+                                                    '₹${disbursement.reliefAmount.toStringAsFixed(0)}',
+                                                    style: theme
+                                                        .textTheme
+                                                        .titleMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: theme
+                                                              .primaryColor,
                                                         ),
                                                   ),
                                                 ],
@@ -361,31 +364,51 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   width: 1,
                                                 ),
                                               ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
+                                              child: Column(
                                                 children: [
-                                                  Icon(
-                                                    disbursement.status ==
-                                                            DisbursementStatus
-                                                                .completed
-                                                        ? Icons.check_circle
-                                                        : Icons.pending,
-                                                    color: disbursement
-                                                        .statusColor,
-                                                    size: 16,
-                                                  ),
-                                                  const SizedBox(width: 4),
                                                   Text(
-                                                    _getStatusText(
-                                                      disbursement.status,
-                                                    ),
-                                                    style: TextStyle(
-                                                      color: disbursement
-                                                          .statusColor,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
+                                                    'Status',
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: theme
+                                                              .textTheme
+                                                              .bodyMedium
+                                                              ?.color
+                                                              ?.withOpacity(
+                                                                0.7,
+                                                              ),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        disbursement.status ==
+                                                                DisbursementStatus
+                                                                    .completed
+                                                            ? Icons.check_circle
+                                                            : Icons.pending,
+                                                        color: disbursement
+                                                            .statusColor,
+                                                        size: 16,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        disbursement.statusText,
+                                                        style: TextStyle(
+                                                          color: disbursement
+                                                              .statusColor,
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -428,61 +451,137 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
 
                                         const SizedBox(height: 16),
 
-                                        // Details row
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.person,
-                                                localeProvider.translate(
-                                                  'dashboard.disbursements.labels.beneficiary',
+                                        // Beneficiary Details
+                                        FutureBuilder<DocumentSnapshot>(
+                                          future: FirebaseFirestore.instance
+                                              .collection('beneficiaries')
+                                              .doc(disbursement.beneficiaryId)
+                                              .get(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const Center(
+                                                child: SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
                                                 ),
-                                                disbursement.beneficiaryId,
-                                              ),
-                                            ),
-                                            if (disbursement.disbursementDate !=
-                                                null)
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  context,
-                                                  Icons.calendar_today,
-                                                  localeProvider.translate(
-                                                    'dashboard.disbursements.labels.date',
-                                                  ),
-                                                  disbursement.disbursementDate!
-                                                      .toString()
-                                                      .split(' ')[0],
-                                                ),
-                                              )
-                                            else
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  context,
-                                                  Icons.access_time,
-                                                  localeProvider.translate(
-                                                    'dashboard.disbursements.labels.status',
-                                                  ),
-                                                  _getStatusText(
-                                                    disbursement.status,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
+                                              );
+                                            }
 
-                                        if (disbursement.transactionId !=
-                                            null) ...[
-                                          const SizedBox(height: 12),
-                                          _buildDetailItem(
-                                            context,
-                                            Icons.receipt,
-                                            localeProvider.translate(
-                                              'dashboard.disbursements.labels.transactionId',
-                                            ),
-                                            disbursement.transactionId!,
-                                          ),
-                                        ],
+                                            BeneficiaryModel? beneficiary;
+                                            if (snapshot.hasData &&
+                                                snapshot.data!.exists) {
+                                              beneficiary =
+                                                  BeneficiaryModel.fromFirestore(
+                                                    snapshot.data!.data()
+                                                        as Map<String, dynamic>,
+                                                    snapshot.data!.id,
+                                                  );
+                                            }
+
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Beneficiary Name and Amount section
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        context,
+                                                        Icons.person,
+                                                        'Beneficiary Name',
+                                                        beneficiary?.name ??
+                                                            'Unknown',
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        context,
+                                                        Icons.calendar_today,
+                                                        'Initiated Date',
+                                                        '30 Nov 2025',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                const SizedBox(height: 12),
+
+                                                // Contact Details
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        context,
+                                                        Icons.phone,
+                                                        'Phone Number',
+                                                        beneficiary?.phone ??
+                                                            'Not provided',
+                                                      ),
+                                                    ),
+                                                    const Expanded(
+                                                      child:
+                                                          SizedBox(), // Empty space for layout
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                const SizedBox(height: 12),
+
+                                                // Bank Details
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        context,
+                                                        Icons.account_balance,
+                                                        'Bank Account',
+                                                        beneficiary
+                                                                ?.bankAccount ??
+                                                            'Not provided',
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        context,
+                                                        Icons.code,
+                                                        'IFSC Code',
+                                                        beneficiary?.ifsc ??
+                                                            'Not provided',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                const SizedBox(height: 12),
+
+                                                // Address
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.location_on,
+                                                  'Address',
+                                                  beneficiary?.address ??
+                                                      'Not provided',
+                                                ),
+
+                                                const SizedBox(height: 12),
+
+                                                // Transaction ID
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.receipt,
+                                                  'Transaction ID',
+                                                  'TX01234',
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -505,28 +604,6 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
         ],
       ),
     );
-  }
-
-  String _getStatusText(DisbursementStatus status) {
-    final localeProvider = context.watch<LocaleProvider>();
-    switch (status) {
-      case DisbursementStatus.pending:
-        return localeProvider.translate(
-          'dashboard.disbursements.status.pending',
-        );
-      case DisbursementStatus.completed:
-        return localeProvider.translate(
-          'dashboard.disbursements.status.completed',
-        );
-      case DisbursementStatus.failed:
-        return localeProvider.translate(
-          'dashboard.disbursements.status.failed',
-        );
-      case DisbursementStatus.cancelled:
-        return localeProvider.translate(
-          'dashboard.disbursements.status.cancelled',
-        );
-    }
   }
 
   Widget _buildDetailItem(
