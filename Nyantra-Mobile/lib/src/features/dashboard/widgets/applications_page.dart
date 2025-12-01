@@ -46,17 +46,14 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
         children: [
           // Background decorative elements
           Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topLeft,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF06B6D4), Colors.transparent]
-                        : [const Color(0xFFFB7185), Colors.transparent],
-                  ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 1.5,
+                  colors: isDark
+                      ? [const Color(0xFF06B6D4), Colors.transparent]
+                      : [const Color(0xFFFB7185), Colors.transparent],
                 ),
               ),
             ),
@@ -67,7 +64,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
-                    center: Alignment.bottomRight,
+                    center: Alignment.topRight,
                     radius: 1.5,
                     colors: isDark
                         ? [const Color(0xFF8B5CF6), Colors.transparent]
@@ -221,11 +218,13 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 ),
                               ),
                               const SizedBox(height: 16),
+
                               Text(
-                                'Error loading applications',
+                                localeProvider.translate(
+                                  'extracted.errorLoading',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                               ),
-                              const SizedBox(height: 8),
                               Text(
                                 '${snapshot.error}',
                                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -254,7 +253,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               const SizedBox(height: 16),
                               Text(
                                 localeProvider.translate(
-                                  'applications.noApplications',
+                                  'extracted.noApplications',
                                 ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
@@ -262,7 +261,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               const SizedBox(height: 8),
                               Text(
                                 localeProvider.translate(
-                                  'applications.noApplicationsDescription',
+                                  'extracted.noApplicationsDescription',
                                 ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
@@ -310,8 +309,12 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Application saved'),
+                                        SnackBar(
+                                          content: Text(
+                                            localeProvider.translate(
+                                              'extracted.applicationSaved',
+                                            ),
+                                          ),
                                         ),
                                       );
                                     }
@@ -362,7 +365,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                                   .applicantName ??
                                                               localeProvider
                                                                   .translate(
-                                                                    'applications.unknownApplicant',
+                                                                    'extracted.unknownApplicant',
                                                                   ),
                                                           style: theme
                                                               .textTheme
@@ -444,9 +447,12 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                               ScaffoldMessenger.of(
                                                                 context,
                                                               ).showSnackBar(
-                                                                const SnackBar(
+                                                                SnackBar(
                                                                   content: Text(
-                                                                    'Application saved',
+                                                                    localeProvider
+                                                                        .translate(
+                                                                          'extracted.applicationSaved',
+                                                                        ),
                                                                   ),
                                                                 ),
                                                               );
@@ -531,16 +537,26 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.category,
-                                                'Act Type',
-                                                application.actType ?? 'N/A',
+                                                localeProvider.translate(
+                                                  'extracted.act_type',
+                                                ),
+                                                application.actType ??
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.priority_high,
-                                                'Priority',
-                                                application.priority ?? 'N/A',
+                                                localeProvider.translate(
+                                                  'extracted.priority',
+                                                ),
+                                                application.priority ??
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -553,16 +569,26 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.location_on,
-                                                'District',
-                                                application.district ?? 'N/A',
+                                                localeProvider.translate(
+                                                  'extracted.district',
+                                                ),
+                                                application.district ??
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.map,
-                                                'State',
-                                                application.state ?? 'N/A',
+                                                localeProvider.translate(
+                                                  'extracted.state',
+                                                ),
+                                                application.state ??
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -575,18 +601,26 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.event,
-                                                'Incident Date',
+                                                localeProvider.translate(
+                                                  'extracted.incidentDateHint',
+                                                ),
                                                 application.incidentDate ??
-                                                    'N/A',
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.badge,
-                                                'Beneficiary ID',
+                                                localeProvider.translate(
+                                                  'applications.beneficiaryId',
+                                                ),
                                                 application.beneficiaryId ??
-                                                    'N/A',
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -600,17 +634,26 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.phone,
-                                                'Phone',
+                                                localeProvider.translate(
+                                                  'extracted.phone_number',
+                                                ),
                                                 application.contactNumber ??
-                                                    'N/A',
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.email,
-                                                'Aadhaar',
-                                                application.aadhaar ?? 'N/A',
+                                                localeProvider.translate(
+                                                  'extracted.aadhaar',
+                                                ),
+                                                application.aadhaar ??
+                                                    localeProvider.translate(
+                                                      'common.na',
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -662,17 +705,20 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
   }
 
   void _showDeleteConfirmation(ApplicationModel application) {
+    final locale = context.read<LocaleProvider>();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Application'),
-        content: const Text(
-          'Are you sure you want to delete this application? This action cannot be undone.',
+        title: Text(locale.translate('extracted.confirmDeleteTitle')),
+        content: Text(
+          locale.translate('extracted.confirmDeleteMessage', {
+            'id': application.id,
+          }),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(locale.translate('cancel')),
           ),
           TextButton(
             onPressed: () async {
@@ -680,7 +726,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               await _deleteApplication(application);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(locale.translate('delete')),
           ),
         ],
       ),
@@ -691,14 +737,22 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
     try {
       await DataService.deleteApplication(application.id);
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Application deleted successfully')),
+          SnackBar(content: Text(locale.translate('extracted.deletedSuccess'))),
         );
       }
     } catch (e) {
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting application: $e')),
+          SnackBar(
+            content: Text(
+              locale.translate('extracted.errorDeleting', {
+                'error': e.toString(),
+              }),
+            ),
+          ),
         );
       }
     }
@@ -844,14 +898,18 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         setState(() {
           _beneficiaryValid = false;
           _checkingBeneficiary = false;
-          _beneficiaryError = 'Beneficiary not found';
+          final locale = context.read<LocaleProvider>();
+          _beneficiaryError = locale.translate('extracted.beneficiaryNotFound');
         });
       }
     } catch (e) {
       setState(() {
         _beneficiaryValid = false;
         _checkingBeneficiary = false;
-        _beneficiaryError = 'Error validating beneficiary';
+        final locale = context.read<LocaleProvider>();
+        _beneficiaryError = locale.translate(
+          'extracted.errorValidatingBeneficiary',
+        );
       });
     }
   }
@@ -861,8 +919,13 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
 
     // Check if beneficiary is valid
     if (!_beneficiaryValid) {
+      final locale = context.read<LocaleProvider>();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid Beneficiary ID')),
+        SnackBar(
+          content: Text(
+            locale.translate('extracted.pleaseEnterValidBeneficiary'),
+          ),
+        ),
       );
       return;
     }
@@ -901,15 +964,23 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Application created successfully')),
+          SnackBar(content: Text(locale.translate('extracted.createdSuccess'))),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final locale = context.read<LocaleProvider>();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              locale.translate('extracted.errorGeneral', {
+                'error': e.toString(),
+              }),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -919,6 +990,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localeProvider = context.watch<LocaleProvider>();
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -937,7 +1009,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                     Icon(Icons.add, color: theme.primaryColor),
                     const SizedBox(width: 12),
                     Text(
-                      'New Application',
+                      localeProvider.translate('extracted.newApplication'),
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -951,33 +1023,42 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                       children: [
                         TextFormField(
                           controller: _applicantNameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Applicant Name',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.applicant_name',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
-                          validator: (value) =>
-                              value?.isEmpty ?? true ? 'Required' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _aadhaarCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Aadhaar Number',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.aadhaar',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
-                          validator: (value) =>
-                              value?.isEmpty ?? true ? 'Required' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _phoneCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Phone Number',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.phone_number',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.phone,
-                          validator: (value) =>
-                              value?.isEmpty ?? true ? 'Required' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -985,24 +1066,34 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             Expanded(
                               child: TextFormField(
                                 controller: _districtCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'District',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'extracted.district',
+                                  ),
+                                  border: const OutlineInputBorder(),
                                 ),
-                                validator: (value) =>
-                                    value?.isEmpty ?? true ? 'Required' : null,
+                                validator: (value) => value?.isEmpty ?? true
+                                    ? localeProvider.translate(
+                                        'common.required',
+                                      )
+                                    : null,
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: TextFormField(
                                 controller: _stateCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'State',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'extracted.state',
+                                  ),
+                                  border: const OutlineInputBorder(),
                                 ),
-                                validator: (value) =>
-                                    value?.isEmpty ?? true ? 'Required' : null,
+                                validator: (value) => value?.isEmpty ?? true
+                                    ? localeProvider.translate(
+                                        'common.required',
+                                      )
+                                    : null,
                               ),
                             ),
                           ],
@@ -1010,18 +1101,23 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _actTypeCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Act Type',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.act_type',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
-                          validator: (value) =>
-                              value?.isEmpty ?? true ? 'Required' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _beneficiaryIdCtrl,
                           decoration: InputDecoration(
-                            labelText: 'Beneficiary ID',
+                            labelText: localeProvider.translate(
+                              'extracted.beneficiaryId',
+                            ),
                             border: const OutlineInputBorder(),
                             suffixIcon: _checkingBeneficiary
                                 ? const SizedBox(
@@ -1044,9 +1140,14 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             errorText: _beneficiaryError,
                           ),
                           validator: (value) {
-                            if (value?.isEmpty ?? true) return 'Required';
+                            if (value?.isEmpty ?? true)
+                              return localeProvider.translate(
+                                'common.required',
+                              );
                             if (!_beneficiaryValid)
-                              return 'Invalid Beneficiary ID';
+                              return localeProvider.translate(
+                                'extracted.invalidBeneficiary',
+                              );
                             return null;
                           },
                           onChanged: (value) {
@@ -1065,17 +1166,21 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _incidentDateCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Incident Date (dd-mm-yyyy)',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.incidentDateHint',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _amountCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Amount Requested (₹)',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: localeProvider.translate(
+                              'extracted.amountRequested',
+                            ),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                         ),
@@ -1091,7 +1196,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                       onPressed: _saving
                           ? null
                           : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(localeProvider.translate('cancel')),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
@@ -1106,7 +1211,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Create'),
+                          : Text(localeProvider.translate('create')),
                     ),
                   ],
                 ),
