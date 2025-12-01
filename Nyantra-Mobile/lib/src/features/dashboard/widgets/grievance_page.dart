@@ -6,6 +6,7 @@ import '../../../core/providers/auth_provider.dart' as app_auth;
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/grievance_model.dart';
+import '../../../core/models/beneficiary_model.dart';
 
 class GrievancePage extends StatefulWidget {
   const GrievancePage({super.key});
@@ -15,7 +16,27 @@ class GrievancePage extends StatefulWidget {
 }
 
 class _GrievancePageState extends State<GrievancePage> {
-  @override
+  // Form state variables
+  final _formKey = GlobalKey<FormState>();
+  final _beneficiaryIdController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String? _selectedCategory;
+  String? _selectedPriority;
+  BeneficiaryModel? _selectedBeneficiary;
+  bool _isValidatingBeneficiary = false;
+  bool _isSubmitting = false;
+
+  final List<String> _categories = [
+    'General',
+    'Payment Issue',
+    'Documentation',
+    'Technical Issue',
+    'Service Quality',
+    'Other',
+  ];
+
+  final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
