@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:math';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/application_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/application_edit_page.dart';
 
 class ApplicationsPage extends StatefulWidget {
@@ -416,36 +418,53 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                                     .userId);
                                                     if (!canEdit)
                                                       return const SizedBox();
-                                                    return IconButton(
-                                                      icon: const Icon(
-                                                        Icons.edit,
-                                                        size: 20,
-                                                      ),
-                                                      onPressed: () async {
-                                                        final res =
-                                                            await Navigator.of(
-                                                              context,
-                                                            ).push(
-                                                              MaterialPageRoute(
-                                                                builder: (_) =>
-                                                                    ApplicationEditPage(
-                                                                      application:
-                                                                          application,
-                                                                    ),
+                                                    return Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        IconButton(
+                                                          icon: const Icon(
+                                                            Icons.edit,
+                                                            size: 20,
+                                                          ),
+                                                          onPressed: () async {
+                                                            final res =
+                                                                await Navigator.of(
+                                                                  context,
+                                                                ).push(
+                                                                  MaterialPageRoute(
+                                                                    builder: (_) =>
+                                                                        ApplicationEditPage(
+                                                                          application:
+                                                                              application,
+                                                                        ),
+                                                                  ),
+                                                                );
+                                                            if (res == true) {
+                                                              ScaffoldMessenger.of(
+                                                                context,
+                                                              ).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                    'Application saved',
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                          },
+                                                        ),
+                                                        IconButton(
+                                                          icon: const Icon(
+                                                            Icons.delete,
+                                                            size: 20,
+                                                            color: Colors.red,
+                                                          ),
+                                                          onPressed: () =>
+                                                              _showDeleteConfirmation(
+                                                                application,
                                                               ),
-                                                            );
-                                                        if (res == true) {
-                                                          ScaffoldMessenger.of(
-                                                            context,
-                                                          ).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                'Application saved',
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }
-                                                      },
+                                                        ),
+                                                      ],
                                                     );
                                                   },
                                                 ),
@@ -482,12 +501,11 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     ),
                                                   ),
                                                 ),
-                                                if (application
-                                                        .amountRequested !=
+                                                if (application.amount !=
                                                     null) ...[
                                                   const SizedBox(height: 8),
                                                   Text(
-                                                    '₹${application.amountRequested!.toStringAsFixed(0)}',
+                                                    '₹${application.amount!.toStringAsFixed(0)}',
                                                     style: theme
                                                         .textTheme
                                                         .titleMedium
@@ -618,9 +636,72 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               ],
             ),
           ),
+
+          // Floating Action Button for adding new applications
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: _showNewApplicationDialog,
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              child: const Icon(Icons.add),
+            ).animate().scale(delay: 800.ms),
+          ),
         ],
       ),
     );
+  }
+
+  void _showNewApplicationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const NewApplicationDialog(),
+    );
+  }
+
+  void _showDeleteConfirmation(ApplicationModel application) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Application'),
+        content: const Text(
+          'Are you sure you want to delete this application? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _deleteApplication(application);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteApplication(ApplicationModel application) async {
+    try {
+      await DataService.deleteApplication(application.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Application deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting application: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildDetailItem(
@@ -665,6 +746,375 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class NewApplicationDialog extends StatefulWidget {
+  const NewApplicationDialog({super.key});
+
+  @override
+  State<NewApplicationDialog> createState() => _NewApplicationDialogState();
+}
+
+class _NewApplicationDialogState extends State<NewApplicationDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _applicantNameCtrl = TextEditingController();
+  final _aadhaarCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _districtCtrl = TextEditingController();
+  final _stateCtrl = TextEditingController();
+  final _actTypeCtrl = TextEditingController();
+  final _beneficiaryIdCtrl = TextEditingController();
+  final _incidentDateCtrl = TextEditingController();
+  final _amountCtrl = TextEditingController();
+  bool _saving = false;
+  bool _beneficiaryValid = false;
+  bool _checkingBeneficiary = false;
+  String? _beneficiaryError;
+
+  @override
+  void initState() {
+    super.initState();
+    _beneficiaryValid = false;
+    _checkingBeneficiary = false;
+    _beneficiaryError = null;
+  }
+
+  @override
+  void dispose() {
+    _applicantNameCtrl.dispose();
+    _aadhaarCtrl.dispose();
+    _phoneCtrl.dispose();
+    _districtCtrl.dispose();
+    _stateCtrl.dispose();
+    _actTypeCtrl.dispose();
+    _beneficiaryIdCtrl.dispose();
+    _incidentDateCtrl.dispose();
+    _amountCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _validateBeneficiary(String beneficiaryId) async {
+    if (beneficiaryId.trim().isEmpty) {
+      setState(() {
+        _beneficiaryValid = false;
+        _beneficiaryError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _checkingBeneficiary = true;
+      _beneficiaryError = null;
+    });
+
+    try {
+      final beneficiaryDoc = await FirebaseFirestore.instance
+          .collection('beneficiaries')
+          .doc(beneficiaryId.trim())
+          .get();
+
+      if (beneficiaryDoc.exists) {
+        final data = beneficiaryDoc.data()!;
+
+        // Auto-populate common fields from beneficiary data
+        setState(() {
+          _beneficiaryValid = true;
+          _checkingBeneficiary = false;
+
+          // Populate fields if they're empty
+          if (_applicantNameCtrl.text.isEmpty) {
+            _applicantNameCtrl.text = data['name'] ?? '';
+          }
+          if (_aadhaarCtrl.text.isEmpty) {
+            _aadhaarCtrl.text = data['aadhaar'] ?? '';
+          }
+          if (_phoneCtrl.text.isEmpty) {
+            _phoneCtrl.text = data['phone'] ?? '';
+          }
+          if (_districtCtrl.text.isEmpty) {
+            _districtCtrl.text = data['district'] ?? '';
+          }
+          if (_stateCtrl.text.isEmpty) {
+            _stateCtrl.text = data['state'] ?? '';
+          }
+        });
+      } else {
+        setState(() {
+          _beneficiaryValid = false;
+          _checkingBeneficiary = false;
+          _beneficiaryError = 'Beneficiary not found';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _beneficiaryValid = false;
+        _checkingBeneficiary = false;
+        _beneficiaryError = 'Error validating beneficiary';
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    // Check if beneficiary is valid
+    if (!_beneficiaryValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid Beneficiary ID')),
+      );
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) throw 'User not authenticated';
+
+      // Generate a random 13-digit number for the application ID
+      final random = Random();
+      final randomId =
+          '${random.nextInt(900000000) + 100000000}${random.nextInt(10000) + 1000}';
+
+      final application = ApplicationModel(
+        id: 'APP$randomId',
+        applicantName: _applicantNameCtrl.text.trim(),
+        aadhaar: _aadhaarCtrl.text.trim(),
+        contactNumber: _phoneCtrl.text.trim(),
+        district: _districtCtrl.text.trim(),
+        state: _stateCtrl.text.trim(),
+        actType: _actTypeCtrl.text.trim(),
+        beneficiaryId: _beneficiaryIdCtrl.text.trim(),
+        incidentDate: _incidentDateCtrl.text.trim(),
+        amount: double.tryParse(_amountCtrl.text.trim()),
+        status: ApplicationStatus.pending,
+        applicationDate: DateTime.now(),
+        priority: 'medium',
+        ownerId: currentUser.uid,
+        userId: currentUser.uid,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await DataService.createApplication(application);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Application created successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.add, color: theme.primaryColor),
+                    const SizedBox(width: 12),
+                    Text(
+                      'New Application',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _applicantNameCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Applicant Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) =>
+                              value?.isEmpty ?? true ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _aadhaarCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Aadhaar Number',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) =>
+                              value?.isEmpty ?? true ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _phoneCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone Number',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          validator: (value) =>
+                              value?.isEmpty ?? true ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _districtCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'District',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value?.isEmpty ?? true ? 'Required' : null,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _stateCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'State',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value?.isEmpty ?? true ? 'Required' : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _actTypeCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Act Type',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) =>
+                              value?.isEmpty ?? true ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _beneficiaryIdCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Beneficiary ID',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: _checkingBeneficiary
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : _beneficiaryIdCtrl.text.isNotEmpty
+                                ? Icon(
+                                    _beneficiaryValid
+                                        ? Icons.check_circle
+                                        : Icons.error,
+                                    color: _beneficiaryValid
+                                        ? Colors.green
+                                        : Colors.red,
+                                  )
+                                : null,
+                            errorText: _beneficiaryError,
+                          ),
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) return 'Required';
+                            if (!_beneficiaryValid)
+                              return 'Invalid Beneficiary ID';
+                            return null;
+                          },
+                          onChanged: (value) {
+                            // Debounce the validation
+                            Future.delayed(
+                              const Duration(milliseconds: 500),
+                              () {
+                                if (mounted &&
+                                    _beneficiaryIdCtrl.text == value) {
+                                  _validateBeneficiary(value);
+                                }
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _incidentDateCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Incident Date (dd-mm-yyyy)',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Amount Requested (₹)',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _saving
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _saving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: _saving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Create'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

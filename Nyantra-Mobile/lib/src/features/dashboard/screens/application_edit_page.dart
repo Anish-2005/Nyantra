@@ -41,7 +41,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     _nameCtrl = TextEditingController(text: widget.application.applicantName);
     _actCtrl = TextEditingController(text: widget.application.actType);
     _amountCtrl = TextEditingController(
-      text: widget.application.amountRequested?.toStringAsFixed(0) ?? '',
+      text: widget.application.amount?.toStringAsFixed(0) ?? '',
     );
     _descCtrl = TextEditingController(text: widget.application.description);
     _districtCtrl = TextEditingController(text: widget.application.district);
@@ -118,7 +118,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
       updates['applicantName'] = _nameCtrl.text.trim();
       updates['actType'] = _actCtrl.text.trim();
       final amount = double.tryParse(_amountCtrl.text.trim());
-      if (amount != null) updates['amountRequested'] = amount;
+      if (amount != null) updates['amount'] = amount;
       updates['description'] = _descCtrl.text.trim();
       updates['district'] = _districtCtrl.text.trim();
       updates['state'] = _stateCtrl.text.trim();
@@ -293,7 +293,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
     _nameCtrl = TextEditingController(text: widget.application.applicantName);
     _actCtrl = TextEditingController(text: widget.application.actType);
     _amountCtrl = TextEditingController(
-      text: widget.application.amountRequested?.toStringAsFixed(0) ?? '',
+      text: widget.application.amount?.toStringAsFixed(0) ?? '',
     );
     _descCtrl = TextEditingController(text: widget.application.description);
     _districtCtrl = TextEditingController(text: widget.application.district);
@@ -370,7 +370,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
       updates['applicantName'] = _nameCtrl.text.trim();
       updates['actType'] = _actCtrl.text.trim();
       final amount = double.tryParse(_amountCtrl.text.trim());
-      if (amount != null) updates['amountRequested'] = amount;
+      if (amount != null) updates['amount'] = amount;
       updates['description'] = _descCtrl.text.trim();
       updates['district'] = _districtCtrl.text.trim();
       updates['state'] = _stateCtrl.text.trim();

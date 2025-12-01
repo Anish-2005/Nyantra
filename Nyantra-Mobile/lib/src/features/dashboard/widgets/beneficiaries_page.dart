@@ -557,7 +557,8 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.event,
                                                 'Incident Date',
-                                                beneficiary.incidentDate ?? 'N/A',
+                                                beneficiary.incidentDate ??
+                                                    'N/A',
                                               ),
                                             ),
                                           ],

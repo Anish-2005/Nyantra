@@ -170,7 +170,10 @@ class DataService {
   }
 
   static Future<void> createApplication(ApplicationModel application) async {
-    await _firestore.collection('applications').add(application.toFirestore());
+    await _firestore
+        .collection('applications')
+        .doc(application.id)
+        .set(application.toFirestore());
   }
 
   static Future<void> updateApplication(
@@ -179,6 +182,10 @@ class DataService {
   ) async {
     data['updatedAt'] = FieldValue.serverTimestamp();
     await _firestore.collection('applications').doc(id).update(data);
+  }
+
+  static Future<void> deleteApplication(String id) async {
+    await _firestore.collection('applications').doc(id).delete();
   }
 
   // Beneficiaries - filtered by current user

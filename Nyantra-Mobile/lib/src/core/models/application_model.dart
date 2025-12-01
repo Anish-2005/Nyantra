@@ -9,7 +9,7 @@ class ApplicationModel {
   final String? actType;
   final ApplicationStatus status;
   final DateTime applicationDate;
-  final double? amountRequested;
+  final double? amount;
   final String? description;
   final String? userId;
   final String? ownerId;
@@ -48,7 +48,7 @@ class ApplicationModel {
     this.actType,
     required this.status,
     required this.applicationDate,
-    this.amountRequested,
+    this.amount,
     this.description,
     this.userId,
     this.ownerId,
@@ -101,7 +101,7 @@ class ApplicationModel {
       applicationDate: data['applicationDate'] != null
           ? (data['applicationDate'] as Timestamp).toDate()
           : DateTime.now(),
-      amountRequested: (data['amountRequested'] as num?)?.toDouble(),
+      amount: (data['amount'] as num?)?.toDouble(),
       description: data['description'] as String?,
       userId: data['userId'] as String?,
       ownerId: data['ownerId'] as String?,
@@ -157,7 +157,7 @@ class ApplicationModel {
       if (remarks != null) 'remarks': remarks,
       'status': status.name,
       'applicationDate': Timestamp.fromDate(applicationDate),
-      if (amountRequested != null) 'amountRequested': amountRequested,
+      if (amount != null) 'amount': amount,
       if (description != null) 'description': description,
       if (userId != null) 'userId': userId,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
