@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar } from 'lucide-react';
+import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -388,7 +388,7 @@ const GrievancePage = () => {
 
   // Sort feedbacks
   const sortedFeedbacks = useMemo(() => {
-    let sorted = [...feedbacks];
+    const sorted = [...feedbacks];
     sorted.sort((a, b) => {
       if (feedbackSortBy === 'rating') {
         const aRating = a.rating;
@@ -583,18 +583,6 @@ const GrievancePage = () => {
     };
     const key = (priority || '').toLowerCase() as keyof typeof colors;
     return colors[key] || 'text-gray-300 bg-gray-800';
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'open': AlertCircle,
-      'pending': Clock,
-      'in-progress': PlayCircle,
-      'resolved': CheckCircle,
-      'closed': Check,
-      'escalated': AlertOctagon
-    };
-    return icons[status as keyof typeof icons] || AlertCircle;
   };
 
   const getCategoryIcon = (category: string) => {
