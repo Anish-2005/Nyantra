@@ -372,6 +372,7 @@
     },
     "disbursements": {
       "pageTitle": "Disbursements",
+      "editDisburment": "Edit Disbursement",
       "pageSubtitle": "Track relief fund disbursements and transactions",
       "noDisbursements": "No disbursements found",
       "noDisbursementsDescription": "Your disbursements will appear here",

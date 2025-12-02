@@ -539,7 +539,9 @@ class _GrievancePageState extends State<GrievancePage> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Grievances',
+                                      localeProvider.translate(
+                                        'grievances.pageTitle',
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: Colors.white,
@@ -557,7 +559,9 @@ class _GrievancePageState extends State<GrievancePage> {
                           Align(
                             alignment: Alignment.topRight,
                             child: IconButton(
-                              tooltip: 'Add grievance',
+                              tooltip: localeProvider.translate(
+                                'grievances.addGrievance',
+                              ),
                               icon: const Icon(Icons.add, color: Colors.white),
                               onPressed: _showAddGrievanceDialog,
                             ),
@@ -627,7 +631,9 @@ class _GrievancePageState extends State<GrievancePage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Error loading grievances',
+                                localeProvider.translate(
+                                  'grievances.errorLoadingGrievances',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 8),
@@ -695,7 +701,9 @@ class _GrievancePageState extends State<GrievancePage> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      'To see grievances, add data to Firebase with your User ID:',
+                                      localeProvider.translate(
+                                        'grievances.firebaseInstruction',
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.w500,
@@ -711,7 +719,9 @@ class _GrievancePageState extends State<GrievancePage> {
                                       ),
                                       child: SelectableText(
                                         currentUser?.uid ??
-                                            'No user ID available',
+                                            localeProvider.translate(
+                                              'grievances.noUserId',
+                                            ),
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               fontFamily: 'monospace',
@@ -722,7 +732,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Create a grievance in Firebase Console with userId: "${currentUser?.uid ?? 'your-user-id'}"',
+                                      '${localeProvider.translate('grievances.firebaseConsoleInstruction')} "${currentUser?.uid ?? 'your-user-id'}"',
                                       style: theme.textTheme.bodySmall,
                                       textAlign: TextAlign.center,
                                     ),
@@ -822,7 +832,10 @@ class _GrievancePageState extends State<GrievancePage> {
                                                       children: [
                                                         Text(
                                                           grievance.title ??
-                                                              'Untitled Grievance',
+                                                              localeProvider
+                                                                  .translate(
+                                                                    'grievances.untitledGrievance',
+                                                                  ),
                                                           style: theme
                                                               .textTheme
                                                               .titleMedium
@@ -836,7 +849,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                                           height: 4,
                                                         ),
                                                         Text(
-                                                          'ID: ${grievance.id}',
+                                                          '${localeProvider.translate('grievances.idLabel')} ${grievance.id}',
                                                           style: theme
                                                               .textTheme
                                                               .bodySmall
@@ -897,7 +910,7 @@ class _GrievancePageState extends State<GrievancePage> {
                                                     null) ...[
                                                   const SizedBox(height: 8),
                                                   Text(
-                                                    'Priority: ${grievance.priority}',
+                                                    '${localeProvider.translate('grievances.priorityLabel')} ${localeProvider.translate('grievances.priorities.${grievance.priority}')}',
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall
@@ -917,7 +930,9 @@ class _GrievancePageState extends State<GrievancePage> {
                                         // Description
                                         Text(
                                           grievance.description ??
-                                              'No description provided',
+                                              localeProvider.translate(
+                                                'grievances.noDescription',
+                                              ),
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(height: 1.4),
                                           maxLines: 2,
@@ -933,19 +948,27 @@ class _GrievancePageState extends State<GrievancePage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.calendar_today,
-                                                'Date',
+                                                localeProvider.translate(
+                                                  'grievances.date',
+                                                ),
                                                 grievance.createdDate
                                                         ?.toString()
                                                         .split(' ')[0] ??
-                                                    'N/A',
+                                                    localeProvider.translate(
+                                                      'grievances.notAvailable',
+                                                    ),
                                               ),
                                             ),
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.category,
-                                                'Category',
-                                                grievance.category ?? 'General',
+                                                localeProvider.translate(
+                                                  'grievances.category',
+                                                ),
+                                                localeProvider.translate(
+                                                  'grievances.categories.${grievance.category ?? 'general'}',
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -959,8 +982,8 @@ class _GrievancePageState extends State<GrievancePage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.person,
-                                                'User ID',
-                                                grievance.userId ?? 'N/A',
+                                                localeProvider.translate('grievances.userId'),
+                                                grievance.userId ?? localeProvider.translate('grievances.notAvailable'),
                                               ),
                                             ),
                                             if (grievance.resolvedDate != null)
