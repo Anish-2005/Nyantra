@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/services/data_service.dart';
 import '../../../core/models/feedback_model.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -87,44 +88,441 @@ class _FeedbackPageState extends State<FeedbackPage>
     }
   }
 
+  Future<void> _editFeedback(
+    FeedbackModel feedback,
+    LocaleProvider localeProvider,
+  ) async {
+    final subjectController = TextEditingController(text: feedback.subject);
+    final messageController = TextEditingController(text: feedback.message);
+    int rating = feedback.rating;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(localeProvider.translate('feedback.editFeedback')),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  localeProvider.translate('feedback.rateExperience'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      onPressed: () {
+                        setState(() => rating = index + 1);
+                      },
+                      icon: Icon(
+                        index < rating ? Icons.star : Icons.star_border,
+                        size: 24,
+                        color: Colors.amber,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: subjectController,
+                  decoration: InputDecoration(
+                    labelText: localeProvider.translate('feedback.subject'),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: localeProvider.translate(
+                      'feedback.yourFeedback',
+                    ),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(localeProvider.translate('common.cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (subjectController.text.trim().isEmpty ||
+                    messageController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        localeProvider.translate('feedback.fillAllFields'),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await DataService.updateFeedback(
+                    feedback.id,
+                    {
+                      'subject': subjectController.text.trim(),
+                      'message': messageController.text.trim(),
+                      'rating': rating,
+                    },
+                  );
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          localeProvider.translate('feedback.updateSuccess'),
+                        ),
+                      ),
+                    );
+                    Navigator.of(context).pop(true);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${localeProvider.translate('feedback.updateError')}: $e',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(localeProvider.translate('common.save')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Clean up controllers
+    subjectController.dispose();
+    messageController.dispose();
+  }
+
+  Future<void> _deleteFeedback(
+    String feedbackId,
+    LocaleProvider localeProvider,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(localeProvider.translate('feedback.deleteFeedback')),
+        content: Text(localeProvider.translate('feedback.deleteConfirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(localeProvider.translate('common.cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: Text(localeProvider.translate('common.delete')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await DataService.deleteFeedback(feedbackId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(localeProvider.translate('feedback.deleteSuccess')),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${localeProvider.translate('feedback.deleteError')}: $e',
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF0F172A),
+                  const Color(0xFF1E293B),
+                  const Color(0xFF334155),
+                ]
+              : [
+                  const Color(0xFFF8FAFC),
+                  const Color(0xFFF0F9FF),
+                  const Color(0xFFE0F2FE),
+                ],
+        ),
+      ),
+      child: Stack(
         children: [
-          Text(
-            localeProvider.translate('nav.feedback'),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+          // Background decorative elements
+          Positioned.fill(
+            child: Opacity(
+              opacity: isDark ? 0.1 : 0.05,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topLeft,
+                    radius: 1.5,
+                    colors: isDark
+                        ? [const Color(0xFF8B5CF6), Colors.transparent]
+                        : [const Color(0xFFF59E0B), Colors.transparent],
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            localeProvider.translate('feedback.helpImprove'),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+          Positioned.fill(
+            child: Opacity(
+              opacity: isDark ? 0.1 : 0.05,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.bottomRight,
+                    radius: 1.5,
+                    colors: isDark
+                        ? [const Color(0xFF06B6D4), Colors.transparent]
+                        : [const Color(0xFFFB923C), Colors.transparent],
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: localeProvider.translate('feedback.submitTab')),
-              Tab(text: localeProvider.translate('feedback.myFeedbackTab')),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
+
+          // Main content
+          SafeArea(
+            child: Column(
               children: [
-                _buildSubmitFeedbackTab(theme, localeProvider),
-                _buildMyFeedbackTab(theme, localeProvider),
+                // Hero Header Section
+                Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF8B5CF6),
+                                  const Color(0xFF06B6D4),
+                                ]
+                              : [
+                                  const Color(0xFFF59E0B),
+                                  const Color(0xFFFB923C),
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (isDark
+                                        ? const Color(0xFF8B5CF6)
+                                        : const Color(0xFFF59E0B))
+                                    .withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Badge
+                          Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.feedback,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      localeProvider.translate('nav.feedback'),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                              .slideY(begin: -0.2, end: 0),
+
+                          const SizedBox(height: 16),
+
+                          // Title
+                          Text(
+                                localeProvider.translate('nav.feedback'),
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms, delay: 200.ms)
+                              .slideY(begin: -0.2, end: 0),
+
+                          const SizedBox(height: 8),
+
+                          // Subtitle
+                          Text(
+                                localeProvider.translate(
+                                  'feedback.helpImprove',
+                                ),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.4,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 600.ms, delay: 400.ms)
+                              .slideY(begin: -0.2, end: 0),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 800.ms)
+                    .slideY(begin: -0.1, end: 0),
+
+                // Feedback Content
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        // Tab Bar
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.dividerColor.withOpacity(0.1),
+                            ),
+                          ),
+                          child: TabBar(
+                            controller: _tabController,
+                            indicator: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: isDark
+                                    ? [
+                                        const Color(0xFF8B5CF6),
+                                        const Color(0xFF06B6D4),
+                                      ]
+                                    : [
+                                        const Color(0xFFF59E0B),
+                                        const Color(0xFFFB923C),
+                                      ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            labelColor: Colors.white,
+                            unselectedLabelColor:
+                                theme.textTheme.bodyMedium?.color,
+                            tabs: [
+                              Tab(
+                                child: Text(
+                                  localeProvider.translate(
+                                    'feedback.submitTab',
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Tab(
+                                child: Text(
+                                  localeProvider.translate(
+                                    'feedback.myFeedbackTab',
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Tab Content
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.cardColor.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.dividerColor.withOpacity(0.1),
+                              ),
+                            ),
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildSubmitFeedbackTab(theme, localeProvider),
+                                _buildMyFeedbackTab(theme, localeProvider),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -135,6 +533,7 @@ class _FeedbackPageState extends State<FeedbackPage>
 
   Widget _buildSubmitFeedbackTab(ThemeData theme, localeProvider) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Form(
         key: _formKey,
         child: Column(
@@ -363,6 +762,31 @@ class _FeedbackPageState extends State<FeedbackPage>
                               color: _getStatusColor(feedback.status),
                               fontWeight: FontWeight.w600,
                             ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () =>
+                              _editFeedback(feedback, localeProvider),
+                          icon: Icon(
+                            Icons.edit,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          tooltip: localeProvider.translate(
+                            'feedback.editButton',
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              _deleteFeedback(feedback.id, localeProvider),
+                          icon: Icon(
+                            Icons.delete,
+                            size: 20,
+                            color: theme.colorScheme.error,
+                          ),
+                          tooltip: localeProvider.translate(
+                            'feedback.deleteButton',
                           ),
                         ),
                       ],
