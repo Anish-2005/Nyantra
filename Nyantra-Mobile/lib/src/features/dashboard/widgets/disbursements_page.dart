@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -296,8 +298,29 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                   ],
                                 ),
                                 child: InkWell(
-                                  onTap: () {
-                                    // TODO: Navigate to disbursement details
+                                  onTap: () async {
+                                    final res = await Navigator.of(context)
+                                        .push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                DisbursementEditPage(
+                                                  disbursement: disbursement,
+                                                ),
+                                          ),
+                                        );
+                                    if (res == true) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            localeProvider.translate(
+                                              'dashboard.disbursements.savedSuccess',
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                   borderRadius: BorderRadius.circular(16),
                                   child: Padding(
@@ -416,41 +439,6 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            // Edit button - page already filters items to user's related ones
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.edit,
-                                                size: 20,
-                                              ),
-                                              onPressed: () async {
-                                                final res =
-                                                    await Navigator.of(
-                                                      context,
-                                                    ).push(
-                                                      MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            DisbursementEditPage(
-                                                              disbursement:
-                                                                  disbursement,
-                                                            ),
-                                                      ),
-                                                    );
-                                                if (res == true) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        localeProvider.translate(
-                                                          'dashboard.disbursements.savedSuccess',
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              },
                                             ),
                                           ],
                                         ),
