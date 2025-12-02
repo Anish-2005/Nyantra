@@ -158,7 +158,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
                       theme,
                       locale,
                       controller: _phoneCtrl,
-                      labelKey: 'dashboard.disbursements.labels.phoneNumber',
+                      labelKey: 'disbursements.labels.phoneNumber',
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 8),
@@ -166,21 +166,21 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
                       theme,
                       locale,
                       controller: _bankAccountCtrl,
-                      labelKey: 'dashboard.disbursements.labels.bankAccount',
+                      labelKey: 'disbursements.labels.bankAccount',
                     ),
                     const SizedBox(height: 8),
                     _buildInput(
                       theme,
                       locale,
                       controller: _ifscCtrl,
-                      labelKey: 'dashboard.disbursements.labels.ifscCode',
+                      labelKey: 'disbursements.labels.ifscCode',
                     ),
                     const SizedBox(height: 8),
                     _buildInput(
                       theme,
                       locale,
                       controller: _addressCtrl,
-                      labelKey: 'dashboard.disbursements.labels.address',
+                      labelKey: 'disbursements.labels.address',
                       maxLines: 3,
                     ),
                   ],
@@ -198,11 +198,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
   }) {
-    final label =
-        labelKey.startsWith('disbursements.') ||
-            labelKey.startsWith('extracted.')
-        ? locale.translate(labelKey)
-        : labelKey;
+    final label = locale.translate(labelKey);
 
     return TextField(
       controller: controller,

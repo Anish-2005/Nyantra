@@ -495,12 +495,14 @@ class DataService {
     return _firestore
         .collection('feedbacks')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
+          final feedbacks = snapshot.docs.map((doc) {
             return FeedbackModel.fromMap(doc.id, doc.data());
           }).toList();
+          // Sort client-side to avoid needing composite index
+          feedbacks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return feedbacks;
         });
   }
 
