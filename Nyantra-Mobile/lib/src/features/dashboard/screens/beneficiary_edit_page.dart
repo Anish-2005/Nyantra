@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/models/beneficiary_model.dart';
 import '../../../core/services/data_service.dart';
+import '../../../core/providers/locale_provider.dart';
 
 class BeneficiaryEditPage extends StatefulWidget {
   final BeneficiaryModel beneficiary;
@@ -126,118 +128,188 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = context.watch<LocaleProvider>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Beneficiary'),
+        title: Text(locale.translate('beneficiaries.editBeneficiary')),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
-            child: const Text('Save'),
+            child: _saving
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  )
+                : Text(locale.translate('extracted.save')),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
+              const SizedBox(height: 12),
+              _buildInput(
+                theme,
+                locale,
                 controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Full Name'),
+                labelKey: 'beneficiaries.fullName',
+                keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _fatherNameCtrl,
-                decoration: const InputDecoration(labelText: 'Father\'s Name'),
+                labelKey: 'beneficiaries.fatherName',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _aadhaarCtrl,
-                decoration: const InputDecoration(labelText: 'Aadhaar Number'),
+                labelKey: 'beneficiaries.aadhaarNumber',
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _phoneCtrl,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
+                labelKey: 'beneficiaries.phoneNumber',
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _districtCtrl,
-                decoration: const InputDecoration(labelText: 'District'),
+                labelKey: 'beneficiaries.district',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _stateCtrl,
-                decoration: const InputDecoration(labelText: 'State'),
+                labelKey: 'beneficiaries.state',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _addressCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Complete Address',
-                ),
+                labelKey: 'beneficiaries.completeAddress',
                 maxLines: 3,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _actTypeCtrl,
-                decoration: const InputDecoration(labelText: 'Act Type'),
+                labelKey: 'beneficiaries.actType',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _caseNumberCtrl,
-                decoration: const InputDecoration(labelText: 'Case Number'),
+                labelKey: 'beneficiaries.caseNumber',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _incidentDateCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Incident Date (dd-mm-yyyy)',
-                ),
+                labelKey: 'beneficiaries.incidentDate',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _reliefAmountCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Relief Amount (₹)',
-                ),
+                labelKey: 'beneficiaries.reliefAmount',
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _ageCtrl,
-                decoration: const InputDecoration(labelText: 'Age'),
+                labelKey: 'beneficiaries.age',
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _genderCtrl,
-                decoration: const InputDecoration(labelText: 'Gender'),
+                labelKey: 'beneficiaries.gender',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _categoryCtrl,
-                decoration: const InputDecoration(labelText: 'Category'),
+                labelKey: 'beneficiaries.category',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _maritalStatusCtrl,
-                decoration: const InputDecoration(labelText: 'Marital Status'),
+                labelKey: 'beneficiaries.maritalStatus',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _bankCtrl,
-                decoration: const InputDecoration(labelText: 'Bank Account'),
+                labelKey: 'beneficiaries.bankAccount',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _ifscCtrl,
-                decoration: const InputDecoration(labelText: 'IFSC Code'),
+                labelKey: 'beneficiaries.ifscCode',
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    final label =
+        labelKey.startsWith('beneficiaries.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

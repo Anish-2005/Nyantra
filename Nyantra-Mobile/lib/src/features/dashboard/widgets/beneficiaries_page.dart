@@ -526,7 +526,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.attach_money,
                                                 localeProvider.translate(
-                                                  'extracted.reliefAmountINR',
+                                                  'applications.reliefAmountINR',
                                                 ),
                                                 beneficiary.reliefAmount != null
                                                     ? '₹${beneficiary.reliefAmount!.toStringAsFixed(0)}'
@@ -555,7 +555,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.date_range,
                                                 localeProvider.translate(
-                                                  'beneficiaries.registration_date',
+                                                  'applications.registration_date',
                                                 ),
                                                 beneficiary.registrationDate !=
                                                         null
@@ -588,7 +588,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.family_restroom,
                                                 localeProvider.translate(
-                                                  'extracted.fatherName',
+                                                  'applications.fatherName',
                                                 ),
                                                 beneficiary.fatherName ?? 'N/A',
                                               ),
@@ -605,7 +605,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.confirmation_number,
                                                 localeProvider.translate(
-                                                  'extracted.caseNumber',
+                                                  'applications.caseNumber',
                                                 ),
                                                 beneficiary.caseNumber ?? 'N/A',
                                               ),
@@ -671,7 +671,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.favorite,
                                                 localeProvider.translate(
-                                                  'extracted.maritalStatus',
+                                                  'applications.maritalStatus',
                                                 ),
                                                 beneficiary.maritalStatus ??
                                                     'N/A',
@@ -689,7 +689,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.account_balance,
                                                 localeProvider.translate(
-                                                  'extracted.bankAccount',
+                                                  'applications.bankAccount',
                                                 ),
                                                 beneficiary.bankAccount ??
                                                     'N/A',
@@ -700,7 +700,7 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 context,
                                                 Icons.code,
                                                 localeProvider.translate(
-                                                  'extracted.ifsc',
+                                                  'applications.ifsc',
                                                 ),
                                                 beneficiary.ifsc ?? 'N/A',
                                               ),

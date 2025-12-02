@@ -468,6 +468,7 @@
     "title": "Applications Management",
     "searchApplications": "Search Applications",
     "allStatuses": "All Statuses",
+    "registration_date": "Registration Date",
     "description": "Track and manage DBT applications under PCR/PoA Acts",
     "export": "Export",
     "newApplication": "New Application",
@@ -482,6 +483,8 @@
     "ifsc": "IFSC",
     "applicant_name": "Applicant Name",
     "aadhaar": "Aadhaar",
+    "caseNumber": "Case Number",
+    "maritalStatus": "Marital Status",
     "phone_number": "Phone Number",
     "district": "District",
     "state": "State",
@@ -566,12 +569,30 @@
     "noBeneficiaries": "No beneficiaries found",
     "noBeneficiariesDescription": "Your beneficiaries will appear here",
     "bankLinked": "Bank Linked",
-    "aadhaarLabel": "Aadhaar:"
-    ,"errorLoading": "Error loading beneficiaries"
-    ,"createPrompt": "Create your beneficiary profile to apply for relief"
-    ,"addBeneficiaryButton": "Add Beneficiary Profile"
-    ,"savedSuccess": "Beneficiary saved"
-    ,"registration_date": "Registration Date"
+    "aadhaarLabel": "Aadhaar:",
+    "errorLoading": "Error loading beneficiaries",
+    "createPrompt": "Create your beneficiary profile to apply for relief",
+    "addBeneficiaryButton": "Add Beneficiary Profile",
+    "savedSuccess": "Beneficiary saved",
+    "registration_date": "Registration Date",
+    "editBeneficiary": "Edit Beneficiary",
+    "fullName": "Full Name",
+    "fatherName": "Father's Name",
+    "aadhaarNumber": "Aadhaar Number",
+    "phoneNumber": "Phone Number",
+    "district": "District",
+    "state": "State",
+    "completeAddress": "Complete Address",
+    "actType": "Act Type",
+    "caseNumber": "Case Number",
+    "incidentDate": "Incident Date (dd-mm-yyyy)",
+    "reliefAmount": "Relief Amount (₹)",
+    "age": "Age",
+    "gender": "Gender",
+    "category": "Category",
+    "maritalStatus": "Marital Status",
+    "bankAccount": "Bank Account",
+    "ifscCode": "IFSC Code"
   },
   "grievances": {
     "pageTitle": "Grievances",
@@ -586,14 +607,7 @@
     "act": "Act",
     "identification": "Identification",
     "phone": "Phone",
-    "act_type": "Act Type",
     "reliefAmountINR": "Relief Amount (₹)",
-    "fatherName": "Father Name",
-    "incidentDateHint": "Incident Date (dd-mm-yyyy)",
-    "aadhaar": "Aadhaar",
-    "age": "Age",
-    "gender": "Gender",
-    "ifsc": "IFSC",
     "amountRequested": "Amount Requested (₹)",
     "case_details": "Case Details",
     "enterPhoneNumber": "Enter phone number",
@@ -942,8 +956,7 @@
     ],
     "showing": "Showing",
     "to": "to",
-        "bankAccount": "Bank Account",
-
+    "bankAccount": "Bank Account",
     "applications_lowercase": "applications",
     "disbursed_lowercase": "disbursed",
     "success_lowercase": "success",
@@ -3420,4 +3433,6 @@
     "changeLanguage": "Change Language",
     "signOut": "Sign Out"
   }
+
+ 
 }

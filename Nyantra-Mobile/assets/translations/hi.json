@@ -468,6 +468,9 @@
     "title": "आवेदन प्रबंधन",
     "description": "PCR/PoA अधिनियमों के अंतर्गत DBT आवेदनों का ट्रैक और प्रबंधन करें",
     "export": "निर्यात करें",
+    "registration_date": "पंजीकरण तिथि",
+    "caseNumber": "मामला संख्या",
+    "maritalStatus": "वैवाहिक स्थिति",
     "newApplication": "नया आवेदन",
     "createANewReliefApplication": "नई राहत आवेदन बनाएं",
     "applicantInformation": "आवेदक जानकारी",
@@ -566,12 +569,30 @@
     "noBeneficiaries": "कोई लाभार्थी नहीं मिला",
     "noBeneficiariesDescription": "आपके लाभार्थी यहां दिखाई देंगे",
     "bankLinked": "बैंक लिंक",
-    "aadhaarLabel": "आधार:"
-    ,"errorLoading": "लाभार्थी लोड करने में त्रुटि"
-    ,"createPrompt": "राहत के लिए अपना लाभार्थी प्रोफ़ाइल बनाएं"
-    ,"addBeneficiaryButton": "लाभार्थी प्रोफ़ाइल जोड़ें"
-    ,"savedSuccess": "लाभार्थी सहेजा गया"
-    ,"registrationDate": "पंजीकरण तिथि"
+    "aadhaarLabel": "आधार:",
+    "errorLoading": "लाभार्थी लोड करने में त्रुटि",
+    "createPrompt": "राहत के लिए अपना लाभार्थी प्रोफ़ाइल बनाएं",
+    "addBeneficiaryButton": "लाभार्थी प्रोफ़ाइल जोड़ें",
+    "savedSuccess": "लाभार्थी सहेजा गया",
+    "registration_date": "पंजीकरण तिथि",
+    "editBeneficiary": "लाभार्थी संपादित करें",
+    "fullName": "पूरा नाम",
+    "fatherName": "पिता का नाम",
+    "aadhaarNumber": "आधार संख्या",
+    "phoneNumber": "फोन नंबर",
+    "district": "जिला",
+    "state": "राज्य",
+    "completeAddress": "पूर्ण पता",
+    "actType": "अधिनियम प्रकार",
+    "caseNumber": "मामला संख्या",
+    "incidentDate": "घटना तिथि (dd-mm-yyyy)",
+    "reliefAmount": "राहत राशि (₹)",
+    "age": "उम्र",
+    "gender": "लिंग",
+    "category": "श्रेणी",
+    "maritalStatus": "वैवाहिक स्थिति",
+    "bankAccount": "बैंक खाता",
+    "ifscCode": "IFSC कोड"
   },
   "grievances": {
     "pageTitle": "शिकायतें",
@@ -589,6 +610,7 @@
     "act": "अधिनियम",
     "identification": "पहचान",
     "phone": "फ़ोन",
+    "address": "पता",
     "act_type": "अधिनियम प्रकार",
     "reliefAmountINR": "राहत राशि (₹)",
     "fatherName": "पिता का नाम",
@@ -1511,8 +1533,7 @@
     "advanced_analytics_reporting_platform": "उन्नत विश्लेषण और रिपोर्टिंग प्लेटफ़ॉर्म",
     "generate_analyze_and_schedule_comprehensive_reports_for_dbt": "PCR/PoA अधिनियमों के तहत DBT के लिए व्यापक रिपोर्ट तैयार, विश्लेषण और शेड्यूल करें",
     "print": "प्रिंट",
-        "bankAccount": "बैंक खाता",
-
+    "bankAccount": "बैंक खाता",
     "report_analytics": "रिपोर्ट विश्लेषण",
     "report_categories": "{/* रिपोर्ट श्रेणियाँ */}",
     "categoryname": "{category.name}",
@@ -1941,8 +1962,7 @@
     "update_regarding_your_application": "आपके आवेदन के संबंध में अपडेट",
     "i_hours_ago": "{i} घंटे पहले",
     "children_1": "{children}",
-        "ifsc": "IFSC",
-
+    "ifsc": "IFSC",
     "exportDescription": "आवेदन को CSV या प्रिंटेबल PDF रिपोर्ट के रूप में निर्यात करें।",
     "submit_your_application_for_relief_this_is_a_clientonly_mock": "राहत के लिए अपना आवेदन सबमिट करें। यह केवल क्लाइंट मॉक है — सबमिशन आपके ब्राउज़र में स्थानीय रूप से संग्रहीत किए जाते हैं।",
     "tab_navigation": "{/* टैब नेविगेशन */}",
