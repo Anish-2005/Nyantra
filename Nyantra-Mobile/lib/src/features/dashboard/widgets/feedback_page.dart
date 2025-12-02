@@ -96,7 +96,7 @@ class _FeedbackPageState extends State<FeedbackPage>
     final messageController = TextEditingController(text: feedback.message);
     int rating = feedback.rating;
 
-    final confirmed = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
@@ -153,7 +153,7 @@ class _FeedbackPageState extends State<FeedbackPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(localeProvider.translate('common.cancel')),
+              child: Text(localeProvider.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -170,14 +170,11 @@ class _FeedbackPageState extends State<FeedbackPage>
                 }
 
                 try {
-                  await DataService.updateFeedback(
-                    feedback.id,
-                    {
-                      'subject': subjectController.text.trim(),
-                      'message': messageController.text.trim(),
-                      'rating': rating,
-                    },
-                  );
+                  await DataService.updateFeedback(feedback.id, {
+                    'subject': subjectController.text.trim(),
+                    'message': messageController.text.trim(),
+                    'rating': rating,
+                  });
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -201,7 +198,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                   }
                 }
               },
-              child: Text(localeProvider.translate('common.save')),
+              child: Text(localeProvider.translate('save')),
             ),
           ],
         ),
@@ -225,7 +222,7 @@ class _FeedbackPageState extends State<FeedbackPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localeProvider.translate('common.cancel')),
+            child: Text(localeProvider.translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
