@@ -61,22 +61,11 @@ class DataService {
         return true;
       }).toList();
 
-      // Get disbursements for user's applications
+      // Get disbursements for user's applications (sum completed amounts)
       final applicationIdsList = uniqueApplications
           .map((doc) => doc.id)
           .toList();
-      final disbursementsQuery = applicationIdsList.isNotEmpty
-          ? await _firestore
-                .collection('disbursements')
-                .where(
-                  'applicationId',
-                  whereIn: applicationIdsList.take(10),
-                ) // Firestore limit
-                .get()
-          : null;
-
       final applications = uniqueApplications;
-      final disbursements = disbursementsQuery?.docs ?? [];
 
       // Calculate stats
       final totalApplications = applications.length;
@@ -87,13 +76,9 @@ class DataService {
           .where((doc) => doc.data()['status'] == 'pending')
           .length;
 
-      final totalDisbursed = disbursements
-          .where((doc) => doc.data()['status'] == 'completed')
-          .fold<double>(
-            0.0,
-            (sum, doc) =>
-                sum + ((doc.data()['reliefAmount'] as num?)?.toDouble() ?? 0.0),
-          );
+      final totalDisbursed = await _sumCompletedDisbursementsForApplicationIds(
+        applicationIdsList,
+      );
 
       final beneficiariesCount = beneficiariesQuery.docs.length;
 
@@ -299,6 +284,39 @@ class DataService {
   ) async {
     data['updatedAt'] = FieldValue.serverTimestamp();
     await _firestore.collection('disbursements').doc(id).update(data);
+  }
+
+  // Sum completed disbursements for a list of application IDs. Handles Firestore
+  // `whereIn` 10-item limit by querying in batches.
+  static Future<double> _sumCompletedDisbursementsForApplicationIds(
+    List<String> applicationIds,
+  ) async {
+    if (applicationIds.isEmpty) return 0.0;
+
+    double total = 0.0;
+    const int batchSize = 10;
+    for (var i = 0; i < applicationIds.length; i += batchSize) {
+      final end = (i + batchSize) < applicationIds.length
+          ? i + batchSize
+          : applicationIds.length;
+      final chunk = applicationIds.sublist(i, end);
+
+      final snapshot = await _firestore
+          .collection('disbursements')
+          .where('applicationId', whereIn: chunk)
+          .where('status', isEqualTo: 'completed')
+          .get();
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        // Support both 'reliefAmount' and 'amount' naming
+        final num? amt =
+            (data['reliefAmount'] as num?) ?? (data['amount'] as num?);
+        if (amt != null) total += amt.toDouble();
+      }
+    }
+
+    return total;
   }
 
   // Grievances - proper implementation with user filtering and beneficiary filtering

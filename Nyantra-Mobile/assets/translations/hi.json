@@ -568,6 +568,9 @@
     "idLabel": "आईडी:"
   },
   "extracted": {
+    "newApplication": "नया आवेदन",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
     "grievance": "शिकायत",
     "contact": "संपर्क",
     "act": "अधिनियम",
@@ -1733,7 +1736,6 @@
     "notes": "नोट्स",
     "editing_update_beneficiary_add_beneficiary": "{editing ? 'लाभार्थी अपडेट करें' : 'लाभार्थी जोड़ें'}",
     "editing": "{editing && (",
-    "cancel": "रद्द करें",
     "optional": "वैकल्पिक",
     "select_payment_method": "भुगतान विधि चुनें",
     "all_fields_required_for_completion": "पूर्ण करने के लिए सभी फ़ील्ड भरना आवश्यक है",
@@ -2118,7 +2120,6 @@
     "divorced": "तलाकशुदा",
     "widowed": "विधवा / विधुर",
     "bank_account": "बैंक खाता",
-    "save": "सहेजें",
     "exportAll": "संपूर्ण डेटा निर्यात करें",
     "exportAllDescription": "सभी लाभार्थियों का संपूर्ण डेटा डाउनलोड या रिपोर्ट स्वरूप में निर्यात करें",
     "exportFiltered": "फ़िल्टर किए गए डेटा को निर्यात करें",

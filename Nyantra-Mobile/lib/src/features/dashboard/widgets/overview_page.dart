@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
@@ -44,9 +45,13 @@ class _OverviewPageState extends State<OverviewPage> {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
     final isDark = theme.brightness == Brightness.dark;
-
     if (_isLoading) {
       return LoadingState(message: localeProvider.translate('common.loading'));
+    }
+
+    // Ensure translations are loaded before rendering UI to avoid showing raw keys
+    if (!localeProvider.hasTranslations) {
+      return LoadingState(message: 'Loading...');
     }
 
     return Container(
@@ -261,7 +266,14 @@ class _OverviewPageState extends State<OverviewPage> {
                           ),
                           _buildStatCard(
                             context,
-                            '₹${(_stats['totalDisbursed'] as double? ?? 0.0).toStringAsFixed(0)}L',
+                            // Format total disbursed as Indian currency without 'L' suffix
+                            NumberFormat.currency(
+                              locale: 'en_IN',
+                              symbol: '₹',
+                              decimalDigits: 0,
+                            ).format(
+                              (_stats['totalDisbursed'] as double?) ?? 0.0,
+                            ),
                             localeProvider.translate(
                               'dashboard.stats.totalDisbursed',
                             ),
@@ -418,7 +430,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             const SizedBox(width: 12),
                             Text(
                               localeProvider.translate(
-                                'dashboard.recentActivity',
+                                'dashboard.recentActivity.recentActivity',
                               ),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -428,31 +440,41 @@ class _OverviewPageState extends State<OverviewPage> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildActivityItem(
-                          localeProvider.translate(
-                            'dashboard.activityItems.appSubmitted',
+                        // Constrain recent activity list height so it doesn't overflow
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 220),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                _buildActivityItem(
+                                  localeProvider.translate(
+                                    'dashboard.activityItems.appSubmitted',
+                                  ),
+                                  '2 ${localeProvider.translate('dashboard.timeAgo.hours')}',
+                                  Icons.check_circle,
+                                  Colors.green,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildActivityItem(
+                                  localeProvider.translate(
+                                    'dashboard.activityItems.docVerified',
+                                  ),
+                                  '1 ${localeProvider.translate('dashboard.timeAgo.days')}',
+                                  Icons.verified,
+                                  Colors.blue,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildActivityItem(
+                                  localeProvider.translate(
+                                    'dashboard.activityItems.beneficiaryUpdated',
+                                  ),
+                                  '3 ${localeProvider.translate('dashboard.timeAgo.days')}',
+                                  Icons.edit,
+                                  Colors.orange,
+                                ),
+                              ],
+                            ),
                           ),
-                          '2 ${localeProvider.translate('dashboard.timeAgo.hours')}',
-                          Icons.check_circle,
-                          Colors.green,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildActivityItem(
-                          localeProvider.translate(
-                            'dashboard.activityItems.docVerified',
-                          ),
-                          '1 ${localeProvider.translate('dashboard.timeAgo.days')}',
-                          Icons.verified,
-                          Colors.blue,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildActivityItem(
-                          localeProvider.translate(
-                            'dashboard.activityItems.beneficiaryUpdated',
-                          ),
-                          '3 ${localeProvider.translate('dashboard.timeAgo.days')}',
-                          Icons.edit,
-                          Colors.orange,
                         ),
                       ],
                     ),

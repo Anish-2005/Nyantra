@@ -995,9 +995,13 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
+        decoration: BoxDecoration(
+          color: theme.dialogBackgroundColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -1009,30 +1013,41 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                     Icon(Icons.add, color: theme.primaryColor),
                     const SizedBox(width: 12),
                     Text(
-                      localeProvider.translate('extracted.newApplication'),
+                      localeProvider.translate('applications.newApplication'),
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
                         TextFormField(
                           controller: _applicantNameCtrl,
+                          autofocus: true,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
                               'extracted.applicant_name',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            labelStyle: theme.textTheme.bodySmall,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
+                        const SizedBox(height: 16),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _aadhaarCtrl,
@@ -1040,12 +1055,21 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             labelText: localeProvider.translate(
                               'extracted.aadhaar',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
+                        const SizedBox(height: 16),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _phoneCtrl,
@@ -1053,7 +1077,15 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             labelText: localeProvider.translate(
                               'extracted.phone_number',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           keyboardType: TextInputType.phone,
                           validator: (value) => value?.isEmpty ?? true
@@ -1070,7 +1102,15 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                   labelText: localeProvider.translate(
                                     'extracted.district',
                                   ),
-                                  border: const OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
@@ -1087,7 +1127,15 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                   labelText: localeProvider.translate(
                                     'extracted.state',
                                   ),
-                                  border: const OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
@@ -1099,13 +1147,22 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _actTypeCtrl,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
                               'extracted.act_type',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
@@ -1118,7 +1175,12 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             labelText: localeProvider.translate(
                               'extracted.beneficiaryId',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
                             suffixIcon: _checkingBeneficiary
                                 ? const SizedBox(
                                     width: 20,
@@ -1138,6 +1200,9 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                   )
                                 : null,
                             errorText: _beneficiaryError,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           validator: (value) {
                             if (value?.isEmpty ?? true)
@@ -1164,23 +1229,41 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _incidentDateCtrl,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
                               'extracted.incidentDateHint',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 16),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _amountCtrl,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
-                              'extracted.amountRequested',
+                              'applications.amountRequested',
                             ),
-                            border: const OutlineInputBorder(),
+                            filled: true,
+                            fillColor: theme.cardColor.withOpacity(0.03),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           keyboardType: TextInputType.number,
                         ),
@@ -1192,26 +1275,42 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
+                    OutlinedButton(
                       onPressed: _saving
                           ? null
                           : () => Navigator.of(context).pop(),
-                      child: Text(localeProvider.translate('cancel')),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Text(localeProvider.translate('extracted.cancel')),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: _saving ? null : _save,
+                      icon: _saving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.save, size: 16),
+                      label: Text(localeProvider.translate('extracted.save')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primaryColor,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 18,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: _saving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(localeProvider.translate('create')),
                     ),
                   ],
                 ),
