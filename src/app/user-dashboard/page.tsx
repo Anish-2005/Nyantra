@@ -5,21 +5,24 @@ import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
 import LoadingState from '@/components/LoadingState';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 type Submission = {
   id: string;
-  name?: string;
+  applicantName?: string;
   anonymous?: boolean;
   phone?: string;
   aadhaar?: string;
-  firNumber: string;
+  firNumber?: string;
   policeStation?: string;
   courtCaseId?: string;
   amountRequested?: number;
   bankAccount?: string;
   ifsc?: string;
-  files?: string[]; // names only (client-only)
-  createdAt: string;
+  status?: string;
+  applicationDate?: any;
+  actType?: string;
 };
 
 const STORAGE_KEY = 'nyantra_user_applications_v1';
@@ -27,6 +30,7 @@ const STORAGE_KEY = 'nyantra_user_applications_v1';
 export default function UserDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { t } = useLocale();
 
   // Redirect logic kept minimal: only redirect unauthenticated users to login
   useEffect(() => {
@@ -34,546 +38,480 @@ export default function UserDashboard() {
     if (!user) router.push('/login');
   }, [user, loading, router]);
 
-  // Form state
-  const [name, setName] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [aadhaar, setAadhaar] = useState('');
-  const [firNumber, setFirNumber] = useState('');
-  const [policeStation, setPoliceStation] = useState('');
-  const [courtCaseId, setCourtCaseId] = useState('');
-  const [amountRequested, setAmountRequested] = useState<number | ''>('');
-  const [bankAccount, setBankAccount] = useState('');
-  const [ifsc, setIfsc] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<Submission | null>(null);
   const [recent, setRecent] = useState<Submission[]>([]);
-  const [activeTab, setActiveTab] = useState<'form' | 'recent'>('form');
-  const { t } = useLocale();
+  const [stats, setStats] = useState({
+    totalApplications: 0,
+    pendingApplications: 0,
+    approvedApplications: 0,
+    totalAmountRequested: 0,
+  });
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed: Submission[] = raw ? JSON.parse(raw) : [];
-      setRecent(parsed.slice().reverse().slice(0, 6));
-    } catch {
-      setRecent([]);
-    }
-  }, []);
+    if (!user) return;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const list = e.target.files;
-    if (!list) return;
-    const arr = Array.from(list).slice(0, 5); // limit to 5 files
-    setFiles(arr);
-  };
+    // Fetch user's applications from Firebase (same logic as applications page)
+    const applicationsQuery = query(
+      collection(db, 'applications'),
+      where('ownerId', '==', user.uid)
+    );
 
-  const validate = () => {
-    setError(null);
-    if (!anonymous && !name.trim()) return 'Name is required unless you choose anonymous mode.';
-    if (!firNumber.trim()) return 'FIR / Case number is required.';
-    if (aadhaar && !/^\d{12}$/.test(aadhaar)) return 'Aadhaar must be 12 digits (or leave blank).';
-    if (bankAccount && !/^\d{6,24}$/.test(bankAccount)) return 'Bank account looks invalid.';
-    if (ifsc && !/^[A-Za-z]{4}\d{7}$/.test(ifsc)) return 'IFSC looks invalid (format: 4 letters + 7 digits).';
-    if (amountRequested !== '' && Number(amountRequested) <= 0) return 'Requested amount must be greater than zero.';
-    return null;
-  };
+    const unsubscribe = onSnapshot(applicationsQuery, (snapshot) => {
+      const applications: Submission[] = [];
+      let totalAmount = 0;
+      let pendingCount = 0;
+      let approvedCount = 0;
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const v = validate();
-    if (v) {
-      setError(v);
-      return;
-    }
+      // Get all applications and sort client-side by applicationDate desc
+      const allDocs = snapshot.docs;
+      allDocs.sort((a, b) => {
+        const dateA = a.data().applicationDate?.toDate?.()?.getTime() || 0;
+        const dateB = b.data().applicationDate?.toDate?.()?.getTime() || 0;
+        return dateB - dateA; // newer first
+      });
 
-    setSubmitting(true);
-    setError(null);
+      // Get recent applications (limit to 6 for display)
+      const recentDocs = allDocs.slice(0, 6);
 
-    try {
-      // Client-only mock submit: create an object and store in localStorage
-      const id = `APP-${Date.now()}`;
-      const createdAt = new Date().toISOString();
-      const payload: Submission = {
-        id,
-        name: anonymous ? undefined : name.trim() || undefined,
-        anonymous,
-        phone: phone.trim() || undefined,
-        aadhaar: aadhaar.trim() || undefined,
-        firNumber: firNumber.trim(),
-        policeStation: policeStation.trim() || undefined,
-        courtCaseId: courtCaseId.trim() || undefined,
-        amountRequested: amountRequested === '' ? undefined : Number(amountRequested),
-        bankAccount: bankAccount.trim() || undefined,
-        ifsc: ifsc.trim() || undefined,
-        files: files.map(f => f.name),
-        createdAt,
-      };
+      recentDocs.forEach((doc) => {
+        const data = doc.data();
+        const app: Submission = {
+          id: doc.id,
+          applicantName: data.applicantName,
+          anonymous: data.anonymous,
+          phone: data.contactNumber || data.phone,
+          aadhaar: data.aadhaar,
+          firNumber: data.caseNumber,
+          policeStation: data.policeStation,
+          courtCaseId: data.courtCaseId,
+          amountRequested: data.amount,
+          bankAccount: data.bankAccount,
+          ifsc: data.ifsc || data.bankIfsc,
+          status: data.status,
+          applicationDate: data.applicationDate,
+          actType: data.actType,
+        };
+        applications.push(app);
+      });
 
-      // Simulate network latency
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Calculate stats from all applications
+      allDocs.forEach((doc) => {
+        const data = doc.data();
+        if (data.amount) totalAmount += data.amount;
+        if (data.status === 'pending') pendingCount++;
+        if (data.status === 'approved') approvedCount++;
+      });
 
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const arr: Submission[] = raw ? JSON.parse(raw) : [];
-      arr.push(payload);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      setRecent(applications);
+      setStats({
+        totalApplications: allDocs.length,
+        pendingApplications: pendingCount,
+        approvedApplications: approvedCount,
+        totalAmountRequested: totalAmount,
+      });
+    });
 
-      setSuccess(payload);
-      setRecent([payload, ...recent].slice(0, 6));
-      setActiveTab('recent');
-
-      // clear non-essential fields but keep name for convenience
-      setFirNumber('');
-      setPoliceStation('');
-      setCourtCaseId('');
-      setAmountRequested('');
-      setBankAccount('');
-      setIfsc('');
-      setFiles([]);
-    } catch{
-      setError('Failed to save application locally.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const resetForm = () => {
-    setName('');
-    setAnonymous(false);
-    setPhone('');
-    setAadhaar('');
-    setFirNumber('');
-    setPoliceStation('');
-    setCourtCaseId('');
-    setAmountRequested('');
-    setBankAccount('');
-    setIfsc('');
-    setFiles([]);
-    setError(null);
-    setSuccess(null);
-  };
+    return () => unsubscribe();
+  }, [user]);
 
   if (loading) {
-    return <LoadingState message="Loading your dashboard..." />;
+    return <LoadingState message={t('extracted.loading_dashboard') || "Loading your dashboard..."} />;
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 theme-bg-primary">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 md:mb-8"
-        >
-          <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            {t('extracted.applicant_portal')}
-          </h1>
-          <p className="theme-text-muted mt-2 text-sm md:text-base">
-            {t('extracted.submit_your_application_for_relief')}
-          </p>
-        </motion.div>
+    <div className="min-h-screen theme-bg-primary relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+      </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-6 theme-bg-card theme-border-glass rounded-xl p-1 border">
-          <button
-            onClick={() => setActiveTab('form')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'form'
-                ? 'accent-gradient text-white shadow-sm'
-                : 'theme-text-muted hover:theme-text-primary theme-bg-glass'
-            }`}
-          >
-            {t('extracted.new_application')}
-          </button>
-          <button
-            onClick={() => setActiveTab('recent')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'recent'
-                ? 'accent-gradient text-white shadow-sm'
-                : 'theme-text-muted hover:theme-text-primary theme-bg-glass'
-            }`}
-          >
-            {t('extracted.recent')} ({recent.length})
-          </button>
-        </div>
+      <div className="relative z-10">
+        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+          {/* Hero Welcome Section */}
+         <motion.div
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="mb-8 md:mb-12"
+>
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 dark:from-blue-500 dark:via-purple-600 dark:to-pink-500 p-8 md:p-12 text-white shadow-2xl">
+    {/* Background pattern */}
+    <div className="absolute inset-0 opacity-10">
+      <div className="absolute top-4 right-4 w-32 h-32 border-2 border-amber-200 rounded-full"></div>
+      <div className="absolute bottom-4 left-4 w-24 h-24 bg-amber-200 rounded-lg rotate-45"></div>
+    </div>
 
-        <div className="theme-bg-card theme-border-glass rounded-2xl border overflow-hidden">
-          {/* Form Tab */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'form' && (
+    <div className="relative z-10">
+      {/* Badge */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-2 mb-6"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
+        </svg>
+        <span className="text-sm font-medium text-white dark:text-white">{t('extracted.welcome_back') || 'Welcome Back'}</span>
+      </motion.div>
+
+      {/* Title */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-white dark:text-white"
+      >
+        {t('extracted.your_dashboard') || 'Your Dashboard'}
+      </motion.h1>
+
+      {/* Subtitle */}
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="text-lg md:text-xl text-white/90 dark:text-white/90 leading-relaxed max-w-2xl"
+      >
+        {t('extracted.track_applications') || 'Track your applications and monitor their progress in real-time.'}
+      </motion.p>
+    </div>
+  </div>
+</motion.div>
+
+          {/* Stats Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mb-8 md:mb-12"
+          >
+            <h2 className="text-2xl font-bold theme-text-primary mb-6">
+              {t('extracted.your_impact') || 'Your Impact'}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Total Applications */}
               <motion.div
-                key="form"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="p-4 md:p-6"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                  {/* Personal Information Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      {t('extracted.personal_information')}
-                    </h3>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 theme-bg-glass rounded-lg">
-                      <div className="flex-1">
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.full_name')}
-                        </label>
-                        <input 
-                          value={name} 
-                          onChange={e => setName(e.target.value)} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.applicant_name_1')} 
-                          disabled={anonymous} 
-                        />
-                      </div>
-                      <label className="inline-flex items-center space-x-3 p-2">
-                        <div className="relative inline-block w-10 h-5">
-                          <input 
-                            type="checkbox" 
-                            checked={anonymous} 
-                            onChange={e => setAnonymous(e.target.checked)}
-                            className="sr-only"
-                          />
-                          <div className={`block w-10 h-5 rounded-full transition-colors ${
-                            anonymous ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-300'
-                          }`}></div>
-                          <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${
-                            anonymous ? 'transform translate-x-5' : ''
-                          }`}></div>
-                        </div>
-                        <span className="text-sm font-medium theme-text-muted">
-                          {t('extracted.submit_anonymously')}
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.phone_optional')}
-                        </label>
-                        <input 
-                          value={phone} 
-                          onChange={e => setPhone(e.target.value)} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.mobile_number')} 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.aadhaar_optional')}
-                        </label>
-                        <input 
-                          value={aadhaar} 
-                          onChange={e => setAadhaar(e.target.value.replace(/\D/g, ''))} 
-                          maxLength={12} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.12digit_aadhaar')} 
-                        />
-                      </div>
-                    </div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
                   </div>
-
-                  {/* Case Information Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      {t('extracted.case_information')}
-                    </h3>
-                    
-                    <div>
-                      <label className="text-sm font-medium theme-text-muted block mb-2">
-                        {t('extracted.fir_case_number_required')}
-                      </label>
-                      <input 
-                        required 
-                        value={firNumber} 
-                        onChange={e => setFirNumber(e.target.value)} 
-                        className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                        placeholder={t('extracted.fir_or_case_number')} 
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.police_station')}
-                        </label>
-                        <input 
-                          value={policeStation} 
-                          onChange={e => setPoliceStation(e.target.value)} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.police_station_1')} 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.ecourts_case_id_optional')}
-                        </label>
-                        <input 
-                          value={courtCaseId} 
-                          onChange={e => setCourtCaseId(e.target.value)} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.case_id')} 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Financial Information Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold theme-text-primary border-b theme-border-glass pb-2">
-                      {t('extracted.financial_information')}
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.amount_requested_inr')}
-                        </label>
-                        <input 
-                          type="number" 
-                          min={0} 
-                          value={amountRequested as string | number} 
-                          onChange={e => setAmountRequested(e.target.value === '' ? '' : Number(e.target.value))} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.amount_in_inr')} 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.bank_account_optional')}
-                        </label>
-                        <input 
-                          value={bankAccount} 
-                          onChange={e => setBankAccount(e.target.value.replace(/\D/g, ''))} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.account_number')} 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.ifsc_optional')}
-                        </label>
-                        <input 
-                          value={ifsc} 
-                          onChange={e => setIfsc(e.target.value.toUpperCase())} 
-                          className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                          placeholder={t('extracted.aaaa0000000')} 
-                          maxLength={11} 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium theme-text-muted block mb-2">
-                          {t('extracted.supporting_documents_max_5')}
-                        </label>
-                        <div className="border-2 border-dashed theme-border-glass rounded-lg p-4 transition-colors hover:border-blue-400">
-                          <input 
-                            type="file" 
-                            multiple 
-                            onChange={handleFileChange} 
-                            className="w-full text-sm theme-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors" 
-                            accept="image/*,.pdf" 
-                          />
-                        </div>
-                        {files.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {files.map((f, i) => (
-                              <div key={i} className="flex items-center justify-between text-sm theme-bg-glass rounded-lg px-3 py-2">
-                                <span className="theme-text-primary truncate flex-1">{f.name}</span>
-                                <span className="theme-text-muted text-xs ml-2">
-                                  ({Math.round(f.size/1024)} KB)
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Error Message */}
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-4 bg-red-50 border border-red-200 rounded-lg"
-                    >
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-red-700">{error}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                    <button 
-                      type="submit" 
-                      disabled={submitting} 
-                      className="flex-1 accent-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {submitting ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          {t('extracted.submitting')}
-                        </>
-                      ) : (
-                        t('extracted.submit_application')
-                      )}
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={resetForm}
-                      className="px-6 py-3 border theme-border-glass theme-text-muted hover:theme-bg-glass font-medium rounded-lg transition-colors"
-                    >
-                      {t('extracted.reset_form')}
-                    </button>
-                  </div>
-                </form>
+                </div>
+                <div className="text-3xl font-bold theme-text-primary mb-2">
+                  {stats.totalApplications}
+                </div>
+                <div className="text-sm theme-text-muted">
+                  {t('extracted.total_applications') || 'Total Applications'}
+                </div>
               </motion.div>
-            )}
 
-            {/* Recent Submissions Tab */}
-            {activeTab === 'recent' && (
+              {/* Pending Applications */}
               <motion.div
-                key="recent"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="p-4 md:p-6"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.0 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold theme-text-primary">
-                    {t('extracted.recent_submissions')}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold theme-text-primary mb-2">
+                  {stats.pendingApplications}
+                </div>
+                <div className="text-sm theme-text-muted">
+                  {t('extracted.pending_applications') || 'Pending Applications'}
+                </div>
+              </motion.div>
+
+              {/* Approved Applications */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.1 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold theme-text-primary mb-2">
+                  {stats.approvedApplications}
+                </div>
+                <div className="text-sm theme-text-muted">
+                  {t('extracted.approved_applications') || 'Approved Applications'}
+                </div>
+              </motion.div>
+
+              {/* Total Amount Requested */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold theme-text-primary mb-2">
+                  ₹{stats.totalAmountRequested.toLocaleString()}
+                </div>
+                <div className="text-sm theme-text-muted">
+                  {t('extracted.total_requested') || 'Total Requested'}
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Quick Actions Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.4 }}
+            className="mb-8 md:mb-12"
+          >
+            <h2 className="text-2xl font-bold theme-text-primary mb-6">
+              {t('extracted.quick_actions') || 'Quick Actions'}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* New Application */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.5 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() => router.push('/user-dashboard?tab=form')}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-xl mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                    <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold theme-text-primary mb-2">
+                    {t('extracted.new_application') || 'New Application'}
                   </h3>
-                  <span className="text-sm theme-text-muted">
-                    {recent.length} {recent.length !== 1 ? t('extracted.applications') : t('extracted.application')}
-                  </span>
+                  <p className="text-sm theme-text-muted">
+                    {t('extracted.submit_new_application') || 'Submit a new relief application'}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Check Status */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.6 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() => router.push('/user-dashboard?tab=recent')}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-xl mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors">
+                    <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold theme-text-primary mb-2">
+                    {t('extracted.check_status') || 'Check Status'}
+                  </h3>
+                  <p className="text-sm theme-text-muted">
+                    {t('extracted.view_application_status') || 'View your application status'}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* File Grievance */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.7 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() => router.push('/grievance')}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-xl mb-4 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors">
+                    <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold theme-text-primary mb-2">
+                    {t('extracted.file_grievance') || 'File Grievance'}
+                  </h3>
+                  <p className="text-sm theme-text-muted">
+                    {t('extracted.report_issues') || 'Report issues or file complaints'}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* View Beneficiaries */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.8 }}
+                className="theme-bg-card theme-border-glass rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() => router.push('/beneficiaries')}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-xl mb-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">
+                    <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold theme-text-primary mb-2">
+                    {t('extracted.view_beneficiaries') || 'View Beneficiaries'}
+                  </h3>
+                  <p className="text-sm theme-text-muted">
+                    {t('extracted.see_beneficiary_list') || 'See the list of beneficiaries'}
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Recent Activity Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.0 }}
+          >
+            <div className="theme-bg-card theme-border-glass rounded-2xl border overflow-hidden shadow-xl">
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold theme-text-primary">
+                      {t('extracted.recent_activity') || 'Recent Activity'}
+                    </h3>
+                    <p className="text-sm theme-text-muted">
+                      {t('extracted.your_latest_submissions') || 'Your latest application submissions'}
+                    </p>
+                  </div>
                 </div>
 
                 {recent.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="mx-auto w-24 h-24 theme-bg-glass rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-10 h-10 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="mx-auto w-16 h-16 theme-bg-glass rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <p className="theme-text-muted mb-2">{t('extracted.no_submissions_yet')}</p>
+                    <p className="theme-text-muted mb-2">
+                      {t('extracted.no_submissions_yet') || 'No submissions yet'}
+                    </p>
                     <p className="text-sm theme-text-muted mb-4">
-                      {t('extracted.your_applications_will_appear_here')}
+                      {t('extracted.your_applications_will_appear_here') || 'Your applications will appear here once submitted'}
                     </p>
                     <button
-                      onClick={() => setActiveTab('form')}
-                      className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                      onClick={() => router.push('/user-dashboard?tab=form')}
+                      className="text-blue-600 hover:text-blue-700 font-medium text-sm underline"
                     >
-                      {t('extracted.create_your_first_application')}
+                      {t('extracted.create_your_first_application') || 'Create your first application'}
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {recent.map((r, index) => (
+                    {recent.map((submission, index) => (
                       <motion.div
-                        key={r.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="theme-bg-glass rounded-xl p-4 border theme-border-glass hover:theme-border-primary transition-colors"
+                        key={submission.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 2.1 + index * 0.1 }}
+                        className="flex items-center gap-4 p-4 theme-bg-glass rounded-xl border theme-border-glass hover:shadow-md transition-all duration-200"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold theme-text-primary truncate">
-                                {r.name ?? (r.anonymous ? t('extracted.anonymous') : '—')}
-                              </h4>
-                              {r.anonymous && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                  {t('extracted.anonymous')}
-                                </span>
+                        <div className="flex-shrink-0">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            submission.status === 'approved' ? 'bg-green-100 dark:bg-green-900/30' :
+                            submission.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' :
+                            submission.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                            'bg-gray-100 dark:bg-gray-900/30'
+                          }`}>
+                            <svg className={`w-5 h-5 ${
+                              submission.status === 'approved' ? 'text-green-600 dark:text-green-400' :
+                              submission.status === 'rejected' ? 'text-red-600 dark:text-red-400' :
+                              submission.status === 'pending' ? 'text-yellow-600 dark:text-yellow-400' :
+                              'text-gray-600 dark:text-gray-400'
+                            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {submission.status === 'approved' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              ) : submission.status === 'rejected' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              ) : submission.status === 'pending' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               )}
-                            </div>
-                            <div className="flex flex-wrap gap-4 text-sm theme-text-muted">
-                              <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                {r.firNumber}
-                              </span>
-                              {r.amountRequested && (
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                  </svg>
-                                  ₹{r.amountRequested.toLocaleString()}
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {new Date(r.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
+                            </svg>
                           </div>
-                          <div className="text-right">
-                            <div className="text-xs font-mono theme-text-muted theme-bg-card px-2 py-1 rounded border theme-border-glass">
-                              {r.id}
-                            </div>
-                            <div className="text-xs theme-text-muted mt-1">
-                              {new Date(r.createdAt).toLocaleTimeString()}
-                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-medium theme-text-primary truncate">
+                              {submission.applicantName ?? (submission.anonymous ? (t('extracted.anonymous') || 'Anonymous') : '—')}
+                            </p>
+                            {submission.anonymous && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                {t('extracted.anonymous') || 'Anonymous'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm theme-text-muted">
+                            <span className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              {submission.firNumber || '—'}
+                            </span>
+                            {submission.amountRequested && (
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                                ₹{submission.amountRequested.toLocaleString()}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {submission.applicationDate ? new Date(submission.applicationDate.toDate ? submission.applicationDate.toDate() : submission.applicationDate).toLocaleDateString() : '—'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <div className="text-xs font-mono theme-text-muted theme-bg-card px-2 py-1 rounded border theme-border-glass">
+                            {submission.id}
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Success Notification */}
-        <AnimatePresence>
-          {success && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed bottom-4 right-4 theme-bg-card theme-border-glass border rounded-lg p-4 shadow-lg max-w-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="font-semibold theme-text-primary">{t('extracted.application_submitted')} </h4>
-                  <p className="text-sm theme-text-muted">ID: {success.id}</p>
-                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
