@@ -472,6 +472,13 @@
     "newApplication": "New Application",
     "createANewReliefApplication": "Create a New Relief Application",
     "applicantInformation": "Applicant Information",
+    "email": "Email",
+    "address": "Address",
+    "fatherName": "Father Name",
+    "age": "Age",
+    "gender": "Gender",
+    "bankAccount": "Bank Account",
+    "ifsc": "IFSC",
     "applicant_name": "Applicant Name",
     "aadhaar": "Aadhaar",
     "phone_number": "Phone Number",
@@ -550,7 +557,6 @@
     "noApplications": "No applications found",
     "noApplicationsDescription": "Your submitted applications will appear here",
     "unknownApplicant": "Unknown Applicant",
-    
     "idLabel": "ID:"
   },
   "beneficiaries": {
@@ -574,7 +580,7 @@
     "act": "Act",
     "identification": "Identification",
     "phone": "Phone",
-    "amountRequested":"Amount Requested (₹)",
+    "amountRequested": "Amount Requested (₹)",
     "case_details": "Case Details",
     "enterPhoneNumber": "Enter phone number",
     "failed_to_submit_grievance": "Failed to submit grievance",
@@ -920,6 +926,8 @@
     ],
     "showing": "Showing",
     "to": "to",
+        "bankAccount": "Bank Account",
+
     "applications_lowercase": "applications",
     "disbursed_lowercase": "disbursed",
     "success_lowercase": "success",
@@ -1755,6 +1763,7 @@
     "editing_update_beneficiary_add_beneficiary": "{editing ? 'Update Beneficiary' : 'Add Beneficiary'}",
     "editing": "{editing && (",
     "cancel": "Cancel",
+    "fatherName": "Father Name",
     "optional": "Optional",
     "select_payment_method": "Select payment method",
     "all_fields_required_for_completion": "All fields must be filled to mark as completed",

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/models/application_model.dart';
 import '../../../core/services/data_service.dart';
+import '../../../core/providers/locale_provider.dart';
 
 class ApplicationEditPage extends StatefulWidget {
   final ApplicationModel application;
@@ -152,103 +154,216 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = context.watch<LocaleProvider>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Application'),
+        title: Text(locale.translate('applications.editANewReliefApplication')),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
             child: _saving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.onPrimary,
+                    ),
                   )
-                : const Text('Save'),
+                : Text(locale.translate('extracted.save')),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
+              const SizedBox(height: 12),
+              _buildInput(
+                theme,
+                locale,
                 controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Full Name'),
+                labelKey: 'applications.applicant_name',
+                keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _contactNumberCtrl,
+                labelKey: 'applications.phone_number',
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _aadhaarCtrl,
-                decoration: const InputDecoration(labelText: 'Aadhaar Number'),
+                labelKey: 'applications.aadhaar',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _beneficiaryIdCtrl,
-                decoration: const InputDecoration(labelText: 'Beneficiary ID'),
+                labelKey: 'applications.beneficiaryId',
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _districtCtrl,
-                decoration: const InputDecoration(labelText: 'District'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _districtCtrl,
+                      labelKey: 'applications.district',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _stateCtrl,
+                      labelKey: 'applications.state',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _stateCtrl,
-                decoration: const InputDecoration(labelText: 'State'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _actCtrl,
-                decoration: const InputDecoration(labelText: 'Act Type'),
+                labelKey: 'applications.act_type',
               ),
               const SizedBox(height: 8),
-              TextField(
+              _buildInput(
+                theme,
+                locale,
                 controller: _incidentDateCtrl,
-                decoration: const InputDecoration(labelText: 'Incident Date'),
+                labelKey: 'applications.incidentDateHint',
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _amountCtrl,
+                labelKey: 'applications.reliefAmountINR',
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _priorityCtrl,
+                labelKey: 'applications.priorityLevel',
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _emailCtrl,
+                labelKey: 'extracted.email',
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _fatherNameCtrl,
+                labelKey: 'applications.fatherName',
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: _amountCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Relief Amount (₹)',
+                controller: _addressCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: locale.translate('extracted.address'),
+                  filled: true,
+                  fillColor: theme.cardColor.withOpacity(0.03),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _stateCtrl,
-                decoration: const InputDecoration(labelText: 'State'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _ageCtrl,
+                      labelKey: 'extracted.age',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _genderCtrl,
+                      labelKey: 'extracted.gender',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _incidentDateCtrl,
-                decoration: const InputDecoration(labelText: 'Incident Date'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _bankAccountCtrl,
+                      labelKey: 'applications.bankAccount',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildInput(
+                      theme,
+                      locale,
+                      controller: _ifscCtrl,
+                      labelKey: 'applications.ifsc',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _priorityCtrl,
-                decoration: const InputDecoration(labelText: 'Priority Level'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _aadhaarCtrl,
-                decoration: const InputDecoration(labelText: 'Aadhaar Number'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _beneficiaryIdCtrl,
-                decoration: const InputDecoration(labelText: 'Beneficiary ID'),
-              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -410,7 +525,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
-        top: 16,
+        top: 24,
         bottom: bottom + 16,
       ),
       child: SingleChildScrollView(
@@ -437,7 +552,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
               controller: _nameCtrl,
               decoration: const InputDecoration(labelText: 'Applicant Name'),
