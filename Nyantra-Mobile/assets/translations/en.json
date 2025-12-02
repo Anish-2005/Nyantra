@@ -17,7 +17,8 @@
   },
   "common": {
     "loading": "Loading...",
-    "required": "Required"
+    "required": "Required",
+    "status": "Status"
   },
   "hero": {
     "badge": "Smart DBT Solution for Social Justice",
@@ -566,6 +567,11 @@
     "noBeneficiariesDescription": "Your beneficiaries will appear here",
     "bankLinked": "Bank Linked",
     "aadhaarLabel": "Aadhaar:"
+    ,"errorLoading": "Error loading beneficiaries"
+    ,"createPrompt": "Create your beneficiary profile to apply for relief"
+    ,"addBeneficiaryButton": "Add Beneficiary Profile"
+    ,"savedSuccess": "Beneficiary saved"
+    ,"registration_date": "Registration Date"
   },
   "grievances": {
     "pageTitle": "Grievances",
@@ -580,6 +586,14 @@
     "act": "Act",
     "identification": "Identification",
     "phone": "Phone",
+    "act_type": "Act Type",
+    "reliefAmountINR": "Relief Amount (₹)",
+    "fatherName": "Father Name",
+    "incidentDateHint": "Incident Date (dd-mm-yyyy)",
+    "aadhaar": "Aadhaar",
+    "age": "Age",
+    "gender": "Gender",
+    "ifsc": "IFSC",
     "amountRequested": "Amount Requested (₹)",
     "case_details": "Case Details",
     "enterPhoneNumber": "Enter phone number",
@@ -729,6 +743,8 @@
     "sub_category": "Sub-category",
     "optional_sub_category": "Optional sub-category",
     "category": "Category",
+    "caseNumber": "Case Number",
+    "maritalStatus": "Marital Status",
     "mathrounddataapplications_filtereddataoverviewtotalapplicati": "{Math.round((data.applications / filteredData.overview.totalApplications) * 100)}%",
     "formatnumberdataapplications_applications": "{formatNumber(data.applications)} applications",
     "formatnumberdatadisbursements_disbursed": "{formatNumber(data.disbursements)} disbursed",
@@ -1639,6 +1655,8 @@
     "ambient_glow": "{/* Ambient Glow */}",
     "our_promise": "Our Promise",
     "why_choose": "Why Choose",
+    "ifsc": "IFSC",
+    "reliefAmount": "Relief Amount",
     "delivering_measurable_meaningful_impact_with_cuttingedge_pre": "Delivering measurable, meaningful impact with cutting-edge precision.",
     "benefits_grid": "{/* Benefits Grid */}",
     "benefit_card": "{/* Benefit Card */}",

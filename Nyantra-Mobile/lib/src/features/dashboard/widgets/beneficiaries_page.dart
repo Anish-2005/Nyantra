@@ -140,7 +140,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Beneficiaries',
+                                      localeProvider.translate(
+                                        'beneficiaries.pageTitle',
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: Colors.white,
@@ -200,7 +202,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return LoadingState(
-                          message: localeProvider.translate('common.loading'),
+                          message: localeProvider.translate(
+                            'extracted.loading',
+                          ),
                         );
                       }
 
@@ -218,7 +222,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Error loading beneficiaries',
+                                localeProvider.translate(
+                                  'beneficiaries.errorLoading',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 8),
@@ -249,13 +255,17 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No beneficiary profile found',
+                                localeProvider.translate(
+                                  'beneficiaries.noBeneficiaries',
+                                ),
                                 style: theme.textTheme.headlineSmall,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Create your beneficiary profile to apply for relief',
+                                localeProvider.translate(
+                                  'beneficiaries.createPrompt',
+                                ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
@@ -265,7 +275,11 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                               ElevatedButton.icon(
                                 onPressed: _addNewBeneficiary,
                                 icon: const Icon(Icons.add),
-                                label: const Text('Add Beneficiary Profile'),
+                                label: Text(
+                                  localeProvider.translate(
+                                    'beneficiaries.addBeneficiaryButton',
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: theme.primaryColor,
                                   foregroundColor: Colors.white,
@@ -316,8 +330,12 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Beneficiary saved'),
+                                        SnackBar(
+                                          content: Text(
+                                            localeProvider.translate(
+                                              'beneficiaries.savedSuccess',
+                                            ),
+                                          ),
                                         ),
                                       );
                                     }
@@ -412,7 +430,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.phone,
-                                                'Phone',
+                                                localeProvider.translate(
+                                                  'extracted.phone',
+                                                ),
                                                 beneficiary.phone ?? 'N/A',
                                               ),
                                             ),
@@ -420,7 +440,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.location_on,
-                                                'Address',
+                                                localeProvider.translate(
+                                                  'extracted.address',
+                                                ),
                                                 beneficiary.address ?? 'N/A',
                                               ),
                                             ),
@@ -435,7 +457,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.location_city,
-                                                'District',
+                                                localeProvider.translate(
+                                                  'extracted.district',
+                                                ),
                                                 beneficiary.district ?? 'N/A',
                                               ),
                                             ),
@@ -443,7 +467,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.map,
-                                                'State',
+                                                localeProvider.translate(
+                                                  'extracted.state',
+                                                ),
                                                 beneficiary.state ?? 'N/A',
                                               ),
                                             ),
@@ -458,7 +484,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.badge,
-                                                'Beneficiary ID',
+                                                localeProvider.translate(
+                                                  'extracted.beneficiaryId',
+                                                ),
                                                 beneficiary.id,
                                               ),
                                             ),
@@ -466,7 +494,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.event_available,
-                                                'Added',
+                                                localeProvider.translate(
+                                                  'extracted.created',
+                                                ),
                                                 beneficiary.createdAt != null
                                                     ? beneficiary.createdAt!
                                                           .toString()
@@ -485,7 +515,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.category,
-                                                'Act Type',
+                                                localeProvider.translate(
+                                                  'extracted.act_type',
+                                                ),
                                                 beneficiary.actType ?? 'N/A',
                                               ),
                                             ),
@@ -493,7 +525,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.attach_money,
-                                                'Relief Amount',
+                                                localeProvider.translate(
+                                                  'extracted.reliefAmountINR',
+                                                ),
                                                 beneficiary.reliefAmount != null
                                                     ? '₹${beneficiary.reliefAmount!.toStringAsFixed(0)}'
                                                     : 'N/A',
@@ -510,7 +544,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.label,
-                                                'Category',
+                                                localeProvider.translate(
+                                                  'extracted.category',
+                                                ),
                                                 beneficiary.category ?? 'N/A',
                                               ),
                                             ),
@@ -518,7 +554,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.date_range,
-                                                'Registration Date',
+                                                localeProvider.translate(
+                                                  'beneficiaries.registration_date',
+                                                ),
                                                 beneficiary.registrationDate !=
                                                         null
                                                     ? beneficiary
@@ -539,7 +577,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.info,
-                                                'Status',
+                                                localeProvider.translate(
+                                                  'extracted.status',
+                                                ),
                                                 beneficiary.status ?? 'N/A',
                                               ),
                                             ),
@@ -547,7 +587,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.family_restroom,
-                                                'Father\'s Name',
+                                                localeProvider.translate(
+                                                  'extracted.fatherName',
+                                                ),
                                                 beneficiary.fatherName ?? 'N/A',
                                               ),
                                             ),
@@ -562,7 +604,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.confirmation_number,
-                                                'Case Number',
+                                                localeProvider.translate(
+                                                  'extracted.caseNumber',
+                                                ),
                                                 beneficiary.caseNumber ?? 'N/A',
                                               ),
                                             ),
@@ -570,7 +614,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.event,
-                                                'Incident Date',
+                                                localeProvider.translate(
+                                                  'extracted.incidentDateHint',
+                                                ),
                                                 beneficiary.incidentDate ??
                                                     'N/A',
                                               ),
@@ -586,7 +632,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.person,
-                                                'Aadhaar',
+                                                localeProvider.translate(
+                                                  'extracted.aadhaar',
+                                                ),
                                                 beneficiary.aadhaar ?? 'N/A',
                                               ),
                                             ),
@@ -594,7 +642,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.cake,
-                                                'Age',
+                                                localeProvider.translate(
+                                                  'extracted.age',
+                                                ),
                                                 beneficiary.age?.toString() ??
                                                     'N/A',
                                               ),
@@ -610,7 +660,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.wc,
-                                                'Gender',
+                                                localeProvider.translate(
+                                                  'extracted.gender',
+                                                ),
                                                 beneficiary.gender ?? 'N/A',
                                               ),
                                             ),
@@ -618,7 +670,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.favorite,
-                                                'Marital Status',
+                                                localeProvider.translate(
+                                                  'extracted.maritalStatus',
+                                                ),
                                                 beneficiary.maritalStatus ??
                                                     'N/A',
                                               ),
@@ -634,7 +688,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.account_balance,
-                                                'Bank Account',
+                                                localeProvider.translate(
+                                                  'extracted.bankAccount',
+                                                ),
                                                 beneficiary.bankAccount ??
                                                     'N/A',
                                               ),
@@ -643,7 +699,9 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.code,
-                                                'IFSC Code',
+                                                localeProvider.translate(
+                                                  'extracted.ifsc',
+                                                ),
                                                 beneficiary.ifsc ?? 'N/A',
                                               ),
                                             ),

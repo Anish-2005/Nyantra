@@ -17,7 +17,8 @@
   },
   "common": {
     "loading": "लोड हो रहा है...",
-    "required": "आवश्यक"
+    "required": "आवश्यक",
+    "status": "स्थिति"
   },
   "hero": {
     "badge": "सामाजिक न्याय के लिए स्मार्ट DBT समाधान",
@@ -566,6 +567,11 @@
     "noBeneficiariesDescription": "आपके लाभार्थी यहां दिखाई देंगे",
     "bankLinked": "बैंक लिंक",
     "aadhaarLabel": "आधार:"
+    ,"errorLoading": "लाभार्थी लोड करने में त्रुटि"
+    ,"createPrompt": "राहत के लिए अपना लाभार्थी प्रोफ़ाइल बनाएं"
+    ,"addBeneficiaryButton": "लाभार्थी प्रोफ़ाइल जोड़ें"
+    ,"savedSuccess": "लाभार्थी सहेजा गया"
+    ,"registrationDate": "पंजीकरण तिथि"
   },
   "grievances": {
     "pageTitle": "शिकायतें",
@@ -583,6 +589,14 @@
     "act": "अधिनियम",
     "identification": "पहचान",
     "phone": "फ़ोन",
+    "act_type": "अधिनियम प्रकार",
+    "reliefAmountINR": "राहत राशि (₹)",
+    "fatherName": "पिता का नाम",
+    "incidentDateHint": "घटना तिथि (dd-mm-yyyy)",
+    "aadhaar": "आधार",
+    "age": "उम्र",
+    "gender": "लिंग",
+    "ifsc": "IFSC",
     "case_details": "मामला विवरण",
     "enterPhoneNumber": "फ़ोन नंबर दर्ज करें",
     "failed_to_submit_grievance": "शिकायत जमा करने में विफल",
@@ -740,6 +754,8 @@
     "categorywise_distribution_1": "श्रेणी-वार वितरण",
     "beneficiary_categories": "लाभार्थी श्रेणियाँ",
     "category": "श्रेणी",
+    "caseNumber": "मामला संख्या",
+    "maritalStatus": "वैवाहिक स्थिति",
     "mathrounddataapplications_filtereddataoverviewtotalapplicati": "{Math.round((data.applications / filteredData.overview.totalApplications) * 100)}%",
     "formatnumberdataapplications_applications": "{formatNumber(data.applications)} आवेदन",
     "formatnumberdatadisbursements_disbursed": "{formatNumber(data.disbursements)} वितरित",
@@ -1925,6 +1941,8 @@
     "update_regarding_your_application": "आपके आवेदन के संबंध में अपडेट",
     "i_hours_ago": "{i} घंटे पहले",
     "children_1": "{children}",
+        "ifsc": "IFSC",
+
     "exportDescription": "आवेदन को CSV या प्रिंटेबल PDF रिपोर्ट के रूप में निर्यात करें।",
     "submit_your_application_for_relief_this_is_a_clientonly_mock": "राहत के लिए अपना आवेदन सबमिट करें। यह केवल क्लाइंट मॉक है — सबमिशन आपके ब्राउज़र में स्थानीय रूप से संग्रहीत किए जाते हैं।",
     "tab_navigation": "{/* टैब नेविगेशन */}",
