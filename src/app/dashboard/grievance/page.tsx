@@ -39,6 +39,18 @@ type Grievance = {
   relatedGrievances?: string[];
 };
 
+// Feedback type definition
+type Feedback = {
+  id: string;
+  userId: string;
+  subject: string;
+  message: string;
+  rating: number; // 1-5 stars
+  status: 'open' | 'in-review' | 'resolved';
+  createdAt: any;
+  updatedAt: any;
+};
+
 // Firestore-backed grievances: hook-like function to subscribe and set state
 const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Grievance[]>>) => {
   useEffect(() => {
@@ -293,8 +305,35 @@ const GrievancePage = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
+  // Feedback state
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbackSortBy, setFeedbackSortBy] = useState<'rating' | 'createdAt'>('createdAt');
+  const [feedbackSortOrder, setFeedbackSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // subscribe to Firestore grievances collection
   useFirestoreGrievances(setGrievances);
+
+  // Subscribe to Firestore feedback collection
+  useEffect(() => {
+    const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const items: Feedback[] = snapshot.docs.map((d) => {
+        const data = d.data() as any;
+        return {
+          id: d.id,
+          userId: data.userId,
+          subject: data.subject,
+          message: data.message,
+          rating: data.rating,
+          status: data.status,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        };
+      });
+      setFeedbacks(items);
+    });
+    return () => unsub();
+  }, []);
 
   // Filter and sort grievances (same logic as before)
   const filteredGrievances = useMemo(() => {
@@ -337,6 +376,24 @@ const GrievancePage = () => {
     });
     return filtered;
   }, [grievances, searchQuery, statusFilter, categoryFilter, priorityFilter, actTypeFilter, assignedToFilter, sortBy, sortOrder]);
+
+  // Sort feedbacks
+  const sortedFeedbacks = useMemo(() => {
+    let sorted = [...feedbacks];
+    sorted.sort((a, b) => {
+      if (feedbackSortBy === 'rating') {
+        const aRating = a.rating;
+        const bRating = b.rating;
+        return feedbackSortOrder === 'asc' ? aRating - bRating : bRating - aRating;
+      } else if (feedbackSortBy === 'createdAt') {
+        const aDate = a.createdAt?.toDate?.()?.getTime() || 0;
+        const bDate = b.createdAt?.toDate?.()?.getTime() || 0;
+        return feedbackSortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [feedbacks, feedbackSortBy, feedbackSortOrder]);
 
   // Pagination
   const paginatedGrievances = filteredGrievances.slice(
