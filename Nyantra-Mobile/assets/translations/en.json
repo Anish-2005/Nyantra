@@ -792,6 +792,19 @@
       "inReview": "In Review",
       "resolved": "Resolved"
     },
+    "feedback_analytics": {
+      "userFeedback": "User Feedback",
+      "submissions": "Submissions",
+      "averageRating": "Average {{rating}} ⭐",
+      "feedbackAnalytics": "Feedback Analytics",
+      "sortBy": "Sort by:",
+      "dateCreated": "📅 Date Created",
+      "totalFeedback": "Total Feedback",
+      "highRatings": "High Ratings (4-5⭐)",
+      "needsAttention": "Needs Attention (1-2⭐)",
+      "ratingDistribution": "Rating Distribution",
+      "insightsFromUserExperiences": "Insights from User Experiences"
+    },
     "applicant": "Applicant",
     "portal": "Portal",
     "status_badge": "{/* Status Badge */}",

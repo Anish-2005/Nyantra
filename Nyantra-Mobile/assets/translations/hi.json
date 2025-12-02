@@ -809,6 +809,19 @@
       "inReview": "समीक्षा में",
       "resolved": "हल किया गया"
     },
+    "feedback_analytics": {
+      "userFeedback": "उपयोगकर्ता प्रतिक्रिया",
+      "submissions": "सबमिशन",
+      "averageRating": "औसत {{rating}} ⭐",
+      "feedbackAnalytics": "प्रतिक्रिया विश्लेषण",
+      "sortBy": "इसके अनुसार क्रमबद्ध करें:",
+      "dateCreated": "📅 निर्माण तिथि",
+      "totalFeedback": "कुल प्रतिक्रिया",
+      "highRatings": "उच्च रेटिंग (4-5⭐)",
+      "needsAttention": "ध्यान देने की आवश्यकता (1-2⭐)",
+      "ratingDistribution": "रेटिंग वितरण",
+      "insightsFromUserExperiences": "उपयोगकर्ता अनुभवों से अंतर्दृष्टि"
+    },
     "applicant": "आवेदक",
     "portal": "पोर्टल",
     "status_badge": "{/* स्थिति बैज */}",
