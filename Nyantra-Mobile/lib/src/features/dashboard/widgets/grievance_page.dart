@@ -28,16 +28,16 @@ class _GrievancePageState extends State<GrievancePage> {
   bool _isValidatingBeneficiary = false;
   bool _isSubmitting = false;
 
-  final List<String> _categories = [
-    'General',
-    'Payment Issue',
-    'Documentation',
-    'Technical Issue',
-    'Service Quality',
-    'Other',
+  final List<String> _categoryKeys = [
+    'general',
+    'paymentIssue',
+    'documentation',
+    'technicalIssue',
+    'serviceQuality',
+    'other',
   ];
 
-  final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
+  final List<String> _priorityKeys = ['low', 'medium', 'high', 'urgent'];
 
   @override
   void dispose() {
@@ -89,11 +89,16 @@ class _GrievancePageState extends State<GrievancePage> {
   }
 
   Future<void> _submitGrievance() async {
+    final localeProvider = context.read<LocaleProvider>();
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedBeneficiary == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid beneficiary ID')),
+        SnackBar(
+          content: Text(
+            localeProvider.translate('grievances.invalidBeneficiaryId'),
+          ),
+        ),
       );
       return;
     }
@@ -152,13 +157,21 @@ class _GrievancePageState extends State<GrievancePage> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Grievance submitted successfully')),
+          SnackBar(
+            content: Text(
+              localeProvider.translate('grievances.grievanceSubmitted'),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit grievance: $e')),
+          SnackBar(
+            content: Text(
+              '${localeProvider.translate('grievances.failedToSubmitGrievance')}: $e',
+            ),
+          ),
         );
       }
     } finally {
@@ -169,11 +182,14 @@ class _GrievancePageState extends State<GrievancePage> {
   }
 
   void _showAddGrievanceDialog() {
+    final localeProvider = context.read<LocaleProvider>();
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Submit New Grievance'),
+          title: Text(
+            localeProvider.translate('grievances.submitNewGrievance'),
+          ),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -183,8 +199,12 @@ class _GrievancePageState extends State<GrievancePage> {
                   TextFormField(
                     controller: _beneficiaryIdController,
                     decoration: InputDecoration(
-                      labelText: 'Beneficiary ID *',
-                      hintText: 'Enter beneficiary ID',
+                      labelText: localeProvider.translate(
+                        'grievances.beneficiaryIdRequired',
+                      ),
+                      hintText: localeProvider.translate(
+                        'grievances.enterBeneficiaryId',
+                      ),
                       suffixIcon: _isValidatingBeneficiary
                           ? const SizedBox(
                               width: 20,
@@ -197,10 +217,14 @@ class _GrievancePageState extends State<GrievancePage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Beneficiary ID is required';
+                        return localeProvider.translate(
+                          'grievances.beneficiaryIdRequiredError',
+                        );
                       }
                       if (_selectedBeneficiary == null) {
-                        return 'Please enter a valid beneficiary ID';
+                        return localeProvider.translate(
+                          'grievances.invalidBeneficiaryId',
+                        );
                       }
                       return null;
                     },
@@ -222,20 +246,32 @@ class _GrievancePageState extends State<GrievancePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Beneficiary Details:',
+                            localeProvider.translate(
+                              'grievances.beneficiaryDetails',
+                            ),
                             style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
-                          Text('Name: ${_selectedBeneficiary!.name}'),
+                          Text(
+                            '${localeProvider.translate('grievances.name')}: ${_selectedBeneficiary!.name}',
+                          ),
                           if (_selectedBeneficiary!.phone != null)
-                            Text('Phone: ${_selectedBeneficiary!.phone}'),
+                            Text(
+                              '${localeProvider.translate('grievances.phone')}: ${_selectedBeneficiary!.phone}',
+                            ),
                           if (_selectedBeneficiary!.district != null)
-                            Text('District: ${_selectedBeneficiary!.district}'),
+                            Text(
+                              '${localeProvider.translate('grievances.district')}: ${_selectedBeneficiary!.district}',
+                            ),
                           if (_selectedBeneficiary!.state != null)
-                            Text('State: ${_selectedBeneficiary!.state}'),
+                            Text(
+                              '${localeProvider.translate('grievances.state')}: ${_selectedBeneficiary!.state}',
+                            ),
                           if (_selectedBeneficiary!.actType != null)
-                            Text('Act Type: ${_selectedBeneficiary!.actType}'),
+                            Text(
+                              '${localeProvider.translate('grievances.actType')}: ${_selectedBeneficiary!.actType}',
+                            ),
                         ],
                       ),
                     ),
@@ -244,13 +280,19 @@ class _GrievancePageState extends State<GrievancePage> {
 
                   TextFormField(
                     controller: _titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Title *',
-                      hintText: 'Brief title for the grievance',
+                    decoration: InputDecoration(
+                      labelText: localeProvider.translate(
+                        'grievances.titleRequired',
+                      ),
+                      hintText: localeProvider.translate(
+                        'grievances.briefTitleHint',
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Title is required';
+                        return localeProvider.translate(
+                          'grievances.titleRequiredError',
+                        );
                       }
                       return null;
                     },
@@ -259,14 +301,22 @@ class _GrievancePageState extends State<GrievancePage> {
 
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category *',
-                      hintText: 'Select grievance category',
+                    decoration: InputDecoration(
+                      labelText: localeProvider.translate(
+                        'grievances.categoryRequired',
+                      ),
+                      hintText: localeProvider.translate(
+                        'grievances.selectCategoryHint',
+                      ),
                     ),
-                    items: _categories.map((category) {
+                    items: _categoryKeys.map((categoryKey) {
                       return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
+                        value: categoryKey,
+                        child: Text(
+                          localeProvider.translate(
+                            'grievances.categories.$categoryKey',
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -276,7 +326,9 @@ class _GrievancePageState extends State<GrievancePage> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Category is required';
+                        return localeProvider.translate(
+                          'grievances.categoryRequiredError',
+                        );
                       }
                       return null;
                     },
@@ -285,14 +337,22 @@ class _GrievancePageState extends State<GrievancePage> {
 
                   DropdownButtonFormField<String>(
                     value: _selectedPriority,
-                    decoration: const InputDecoration(
-                      labelText: 'Priority *',
-                      hintText: 'Select priority level',
+                    decoration: InputDecoration(
+                      labelText: localeProvider.translate(
+                        'grievances.priorityRequired',
+                      ),
+                      hintText: localeProvider.translate(
+                        'grievances.selectPriorityHint',
+                      ),
                     ),
-                    items: _priorities.map((priority) {
+                    items: _priorityKeys.map((priorityKey) {
                       return DropdownMenuItem(
-                        value: priority,
-                        child: Text(priority),
+                        value: priorityKey,
+                        child: Text(
+                          localeProvider.translate(
+                            'grievances.priorities.$priorityKey',
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -302,7 +362,9 @@ class _GrievancePageState extends State<GrievancePage> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Priority is required';
+                        return localeProvider.translate(
+                          'grievances.priorityRequiredError',
+                        );
                       }
                       return null;
                     },
@@ -311,14 +373,20 @@ class _GrievancePageState extends State<GrievancePage> {
 
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description *',
-                      hintText: 'Detailed description of the grievance',
+                    decoration: InputDecoration(
+                      labelText: localeProvider.translate(
+                        'grievances.descriptionRequired',
+                      ),
+                      hintText: localeProvider.translate(
+                        'grievances.detailedDescriptionHint',
+                      ),
                     ),
                     maxLines: 4,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Description is required';
+                        return localeProvider.translate(
+                          'grievances.descriptionRequiredError',
+                        );
                       }
                       return null;
                     },
@@ -330,7 +398,7 @@ class _GrievancePageState extends State<GrievancePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(localeProvider.translate('grievances.cancel')),
             ),
             ElevatedButton(
               onPressed: _isSubmitting ? null : _submitGrievance,
@@ -340,7 +408,7 @@ class _GrievancePageState extends State<GrievancePage> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Submit'),
+                  : Text(localeProvider.translate('grievances.submit')),
             ),
           ],
         ),
