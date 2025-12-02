@@ -982,8 +982,13 @@ class _GrievancePageState extends State<GrievancePage> {
                                               child: _buildDetailItem(
                                                 context,
                                                 Icons.person,
-                                                localeProvider.translate('grievances.userId'),
-                                                grievance.userId ?? localeProvider.translate('grievances.notAvailable'),
+                                                localeProvider.translate(
+                                                  'grievances.userId',
+                                                ),
+                                                grievance.userId ??
+                                                    localeProvider.translate(
+                                                      'grievances.notAvailable',
+                                                    ),
                                               ),
                                             ),
                                             if (grievance.resolvedDate != null)
@@ -991,7 +996,9 @@ class _GrievancePageState extends State<GrievancePage> {
                                                 child: _buildDetailItem(
                                                   context,
                                                   Icons.check_circle,
-                                                  'Resolved',
+                                                  localeProvider.translate(
+                                                    'grievances.resolved',
+                                                  ),
                                                   grievance.resolvedDate!
                                                       .toString()
                                                       .split(' ')[0],
@@ -1110,9 +1117,14 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
       _messageCtrl.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+        final localeProvider = context.read<LocaleProvider>();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${localeProvider.translate('grievances.failedToSendMessage')}: $e',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -1122,11 +1134,18 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localeProvider = context.watch<LocaleProvider>();
 
     if (widget.grievance.id.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Grievance details')),
-        body: const Center(child: Text('Invalid grievance ID')),
+        appBar: AppBar(
+          title: Text(localeProvider.translate('grievances.grievanceDetails')),
+        ),
+        body: Center(
+          child: Text(
+            localeProvider.translate('grievances.invalidGrievanceId'),
+          ),
+        ),
       );
     }
 
@@ -1136,7 +1155,10 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.grievance.title ?? 'Grievance details'),
+        title: Text(
+          widget.grievance.title ??
+              localeProvider.translate('grievances.grievanceDetails'),
+        ),
       ),
       body: Column(
         children: [
@@ -1149,7 +1171,11 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                 }
 
                 if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(child: Text('Grievance not found'));
+                  return Center(
+                    child: Text(
+                      localeProvider.translate('grievances.grievanceNotFound'),
+                    ),
+                  );
                 }
 
                 final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -1203,12 +1229,12 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ID: ${widget.grievance.id}',
+                            '${localeProvider.translate('grievances.idLabel')} ${widget.grievance.id}',
                             style: theme.textTheme.bodySmall,
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Status: ${widget.grievance.statusText}',
+                            '${localeProvider.translate('grievances.status')}: ${widget.grievance.statusText}',
                             style: theme.textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
@@ -1300,12 +1326,18 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                                 // Show 'You' for messages from the current user, otherwise show role/name
                                 Text(
                                   isMe
-                                      ? 'You'
+                                      ? localeProvider.translate(
+                                          'grievances.you',
+                                        )
                                       : (senderRole.isNotEmpty
                                             ? (senderRole == 'officer'
-                                                  ? 'Officer'
+                                                  ? localeProvider.translate(
+                                                      'grievances.officer',
+                                                    )
                                                   : senderRole)
-                                            : 'Officer'),
+                                            : localeProvider.translate(
+                                                'grievances.officer',
+                                              )),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: isMe
@@ -1356,8 +1388,10 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageCtrl,
-                      decoration: const InputDecoration(
-                        hintText: 'Write a message to officer...',
+                      decoration: InputDecoration(
+                        hintText: localeProvider.translate(
+                          'grievances.writeMessageHint',
+                        ),
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),
