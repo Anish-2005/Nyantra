@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity, ChevronDown } from 'lucide-react';
+import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -1909,30 +1909,30 @@ const GrievancePage = () => {
                 </motion.div>
                 <div>
                   <h2 className="text-2xl font-bold theme-text-primary">
-                    User Feedback
+                    {t('extracted.feedback_analytics.userFeedback')}
                   </h2>
                   <p className="text-sm theme-text-secondary">
-                    {feedbacks.length} {feedbacks.length === 1 ? 'submission' : 'submissions'} • Average {sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '0.0'} ⭐
+                    {feedbacks.length} {feedbacks.length === 1 ? t('extracted.feedback_analytics.submissions').toLowerCase().slice(0, -1) : t('extracted.feedback_analytics.submissions').toLowerCase()} • {t('extracted.feedback_analytics.averageRating', { rating: sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '0.0' })}
                   </p>
                 </div>
               </div>
               <p className="theme-text-muted max-w-md mx-auto lg:mx-0">
-                Insights from user experiences and platform feedback
+                {t('extracted.feedback_analytics.insightsFromUserExperiences')}
               </p>
             </div>
 
             {/* Enhanced Sort Controls */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium theme-text-secondary hidden sm:inline">Sort by:</span>
+                <span className="text-sm font-medium theme-text-secondary hidden sm:inline">{t('extracted.feedback_analytics.sortBy')}</span>
                 <div className="relative">
                   <select
                     value={feedbackSortBy}
                     onChange={(e) => setFeedbackSortBy(e.target.value as 'rating' | 'createdAt')}
                     className="appearance-none px-4 py-2 pr-8 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all cursor-pointer hover:theme-bg-glass-hover"
                   >
-                    <option value="createdAt">📅 Date Created</option>
-                    <option value="rating">⭐ Rating</option>
+                    <option value="createdAt"><Calendar className="inline w-4 h-4 mr-2" />{t('extracted.feedback_analytics.dateCreated').replace('📅 ', '')}</option>
+                    <option value="rating"><Star className="inline w-4 h-4 mr-2" />{t('extracted.feedback_analytics.rating')}</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
                 </div>
@@ -1942,7 +1942,7 @@ const GrievancePage = () => {
                 className="p-2 rounded-xl theme-bg-glass theme-border-glass border hover:theme-bg-glass-hover transition-all duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                title={`Sort ${feedbackSortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                title={feedbackSortOrder === 'asc' ? t('extracted.feedback_analytics.sortDescending') : t('extracted.feedback_analytics.sortAscending')}
               >
                 <ArrowUpRight className={`w-4 h-4 theme-text-secondary transition-transform duration-200 ${feedbackSortOrder === 'asc' ? 'rotate-90' : '-rotate-90'}`} />
               </motion.button>
@@ -2060,8 +2060,8 @@ const GrievancePage = () => {
               className="mt-8 pt-8 border-t theme-border-glass"
             >
               <div className="mb-6 text-center">
-                <h3 className="text-lg font-semibold theme-text-primary mb-2">Feedback Analytics</h3>
-                <p className="text-sm theme-text-muted">Key insights from user feedback</p>
+                <h3 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.feedback_analytics.feedbackAnalytics')}</h3>
+                <p className="text-sm theme-text-muted">{t('extracted.feedback_analytics.insightsFromUserExperiences')}</p>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2076,8 +2076,8 @@ const GrievancePage = () => {
                   <div className="text-3xl font-bold theme-text-primary mb-1">
                     {sortedFeedbacks.length}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">Total Feedback</div>
-                  <div className="text-xs theme-text-muted mt-1">All submissions</div>
+                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.totalFeedback')}</div>
+                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.allSubmissions')}</div>
                 </motion.div>
 
                 {/* Average Rating */}
@@ -2091,8 +2091,8 @@ const GrievancePage = () => {
                   <div className="text-3xl font-bold theme-text-primary mb-1">
                     {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">Average Rating</div>
-                  <div className="text-xs theme-text-muted mt-1">Out of 5 stars</div>
+                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.averageRating', { rating: (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) }).replace('⭐', '')} <Star className="inline w-4 h-4" /></div>
+                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.outOf5Stars')}</div>
                 </motion.div>
 
                 {/* High Ratings */}
@@ -2106,8 +2106,8 @@ const GrievancePage = () => {
                   <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating >= 4).length}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">High Ratings</div>
-                  <div className="text-xs theme-text-muted mt-1">4-5 stars ({Math.round((sortedFeedbacks.filter(f => f.rating >= 4).length / sortedFeedbacks.length) * 100)}%)</div>
+                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.highRatings').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
+                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.starsRange', { range: '4-5', percentage: Math.round((sortedFeedbacks.filter(f => f.rating >= 4).length / sortedFeedbacks.length) * 100) })}</div>
                 </motion.div>
 
                 {/* Medium/Low Ratings */}
@@ -2121,14 +2121,14 @@ const GrievancePage = () => {
                   <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating < 4).length}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">Needs Attention</div>
-                  <div className="text-xs theme-text-muted mt-1">Below 4 stars ({Math.round((sortedFeedbacks.filter(f => f.rating < 4).length / sortedFeedbacks.length) * 100)}%)</div>
+                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.needsAttention').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
+                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.starsRange', { range: 'Below 4', percentage: Math.round((sortedFeedbacks.filter(f => f.rating < 4).length / sortedFeedbacks.length) * 100) })}</div>
                 </motion.div>
               </div>
 
               {/* Rating Distribution Chart */}
               <div className="mt-8 p-6 rounded-2xl theme-bg-glass theme-border-glass border">
-                <h4 className="text-md font-semibold theme-text-primary mb-4 text-center">Rating Distribution</h4>
+                <h4 className="text-md font-semibold theme-text-primary mb-4 text-center">{t('extracted.feedback_analytics.ratingDistribution')}</h4>
                 <div className="space-y-3">
                   {[5, 4, 3, 2, 1].map((rating) => {
                     const count = sortedFeedbacks.filter(f => f.rating === rating).length;
