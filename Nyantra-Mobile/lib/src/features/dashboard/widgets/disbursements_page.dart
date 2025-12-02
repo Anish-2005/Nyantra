@@ -315,7 +315,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    'Amount',
+                                                    localeProvider.translate(
+                                                      'dashboard.disbursements.labels.amount',
+                                                    ),
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall
@@ -367,7 +369,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                               child: Column(
                                                 children: [
                                                   Text(
-                                                    'Status',
+                                                    localeProvider.translate(
+                                                      'dashboard.disbursements.labels.status',
+                                                    ),
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall
@@ -437,9 +441,11 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   ScaffoldMessenger.of(
                                                     context,
                                                   ).showSnackBar(
-                                                    const SnackBar(
+                                                    SnackBar(
                                                       content: Text(
-                                                        'Disbursement saved',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.savedSuccess',
+                                                        ),
                                                       ),
                                                     ),
                                                   );
@@ -494,7 +500,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       child: _buildDetailItem(
                                                         context,
                                                         Icons.person,
-                                                        'Beneficiary Name',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.labels.beneficiaryName',
+                                                        ),
                                                         beneficiary?.name ??
                                                             'Unknown',
                                                       ),
@@ -503,7 +511,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       child: _buildDetailItem(
                                                         context,
                                                         Icons.calendar_today,
-                                                        'Initiated Date',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.labels.initiatedDate',
+                                                        ),
                                                         '30 Nov 2025',
                                                       ),
                                                     ),
@@ -519,7 +529,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       child: _buildDetailItem(
                                                         context,
                                                         Icons.phone,
-                                                        'Phone Number',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.labels.phoneNumber',
+                                                        ),
                                                         disbursement
                                                                 .userPhone ??
                                                             'Not provided',
@@ -541,7 +553,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       child: _buildDetailItem(
                                                         context,
                                                         Icons.account_balance,
-                                                        'Bank Account',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.labels.bankAccount',
+                                                        ),
                                                         disbursement
                                                                 .userBankAccount ??
                                                             'Not provided',
@@ -551,7 +565,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       child: _buildDetailItem(
                                                         context,
                                                         Icons.code,
-                                                        'IFSC Code',
+                                                        localeProvider.translate(
+                                                          'dashboard.disbursements.labels.ifscCode',
+                                                        ),
                                                         disbursement.userIFSC ??
                                                             'Not provided',
                                                       ),
@@ -565,7 +581,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                 _buildDetailItem(
                                                   context,
                                                   Icons.location_on,
-                                                  'Address',
+                                                  localeProvider.translate(
+                                                    'dashboard.disbursements.labels.address',
+                                                  ),
                                                   disbursement.userAddress ??
                                                       'Not provided',
                                                 ),
@@ -576,7 +594,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                 _buildDetailItem(
                                                   context,
                                                   Icons.receipt,
-                                                  'Transaction ID',
+                                                  localeProvider.translate(
+                                                    'dashboard.disbursements.labels.transactionId',
+                                                  ),
                                                   'TX01234',
                                                 ),
                                               ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/models/disbursement_model.dart';
 import '../../../core/models/beneficiary_model.dart';
 import '../../../core/services/data_service.dart';
+import '../../../core/providers/locale_provider.dart';
 
 class DisbursementEditPage extends StatefulWidget {
   final DisbursementModel disbursement;
@@ -69,8 +71,11 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading beneficiary data: $e')),
+          SnackBar(
+            content: Text(locale.translate('disbursements.errorLoading')),
+          ),
         );
       }
     }
@@ -88,17 +93,21 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
 
       await DataService.updateDisbursement(widget.disbursement.id, updates);
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Disbursement details updated successfully'),
+          SnackBar(
+            content: Text(locale.translate('disbursements.updateSuccess')),
           ),
         );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating disbursement: $e')),
+          SnackBar(
+            content: Text(locale.translate('disbursements.updateError')),
+          ),
         );
       }
     } finally {
@@ -108,65 +117,103 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = context.watch<LocaleProvider>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Disbursement Details'),
+        title: Text(locale.translate('disbursements.editDisbursement')),
         actions: [
           if (!_loading)
             TextButton(
               onPressed: _saving ? null : _save,
               child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.onPrimary,
+                      ),
                     )
-                  : const Text('Save'),
+                  : Text(locale.translate('extracted.save')),
             ),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _beneficiary == null
-          ? const Center(child: Text('Beneficiary data not found'))
+          ? Center(
+              child: Text(
+                locale.translate('disbursements.beneficiaryNotFound'),
+              ),
+            )
           : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Disbursement Details',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number',
+              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    _buildInput(
+                      theme,
+                      locale,
+                      controller: _phoneCtrl,
+                      labelKey: 'disbursements.labels.phoneNumber',
+                      keyboardType: TextInputType.phone,
                     ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _bankAccountCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Bank Account',
+                    const SizedBox(height: 8),
+                    _buildInput(
+                      theme,
+                      locale,
+                      controller: _bankAccountCtrl,
+                      labelKey: 'disbursements.labels.bankAccount',
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _ifscCtrl,
-                    decoration: const InputDecoration(labelText: 'IFSC Code'),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _addressCtrl,
-                    decoration: const InputDecoration(labelText: 'Address'),
-                    maxLines: 3,
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    _buildInput(
+                      theme,
+                      locale,
+                      controller: _ifscCtrl,
+                      labelKey: 'disbursements.labels.ifscCode',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInput(
+                      theme,
+                      locale,
+                      controller: _addressCtrl,
+                      labelKey: 'disbursements.labels.address',
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
             ),
+    );
+  }
+
+  Widget _buildInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    final label =
+        labelKey.startsWith('disbursements.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 }
