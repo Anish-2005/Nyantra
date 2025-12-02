@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:user_dashboard_app/src/core/services/data_service.dart';
-import 'package:user_dashboard_app/src/core/models/feedback_model.dart';
+import 'package:provider/provider.dart';
+import '../../../core/services/data_service.dart';
+import '../../../core/models/feedback_model.dart';
+import '../../../core/providers/locale_provider.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -33,13 +35,17 @@ class _FeedbackPageState extends State<FeedbackPage>
     super.dispose();
   }
 
-  Future<void> _submitFeedback() async {
+  Future<void> _submitFeedback(LocaleProvider localeProvider) async {
     if (!_formKey.currentState!.validate()) return;
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to submit feedback')),
+        SnackBar(
+          content: Text(
+            localeProvider.translate('feedback.loginRequiredSubmit'),
+          ),
+        ),
       );
       return;
     }
@@ -56,7 +62,9 @@ class _FeedbackPageState extends State<FeedbackPage>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thank you for your feedback!')),
+          SnackBar(
+            content: Text(localeProvider.translate('feedback.submitSuccess')),
+          ),
         );
         _subjectController.clear();
         _feedbackController.clear();
@@ -65,7 +73,11 @@ class _FeedbackPageState extends State<FeedbackPage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit feedback: $e')),
+          SnackBar(
+            content: Text(
+              '${localeProvider.translate('feedback.submitError')}: $e',
+            ),
+          ),
         );
       }
     } finally {
@@ -78,6 +90,7 @@ class _FeedbackPageState extends State<FeedbackPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localeProvider = context.watch<LocaleProvider>();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -85,14 +98,14 @@ class _FeedbackPageState extends State<FeedbackPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Feedback',
+            localeProvider.translate('nav.feedback'),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Help us improve by sharing your experience',
+            localeProvider.translate('feedback.helpImprove'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
@@ -100,9 +113,9 @@ class _FeedbackPageState extends State<FeedbackPage>
           const SizedBox(height: 24),
           TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: 'Submit Feedback'),
-              Tab(text: 'My Feedback'),
+            tabs: [
+              Tab(text: localeProvider.translate('feedback.submitTab')),
+              Tab(text: localeProvider.translate('feedback.myFeedbackTab')),
             ],
           ),
           const SizedBox(height: 24),
@@ -110,8 +123,8 @@ class _FeedbackPageState extends State<FeedbackPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildSubmitFeedbackTab(theme),
-                _buildMyFeedbackTab(theme),
+                _buildSubmitFeedbackTab(theme, localeProvider),
+                _buildMyFeedbackTab(theme, localeProvider),
               ],
             ),
           ),
@@ -120,7 +133,7 @@ class _FeedbackPageState extends State<FeedbackPage>
     );
   }
 
-  Widget _buildSubmitFeedbackTab(ThemeData theme) {
+  Widget _buildSubmitFeedbackTab(ThemeData theme, localeProvider) {
     return SingleChildScrollView(
       child: Form(
         key: _formKey,
@@ -128,7 +141,7 @@ class _FeedbackPageState extends State<FeedbackPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Rate your experience',
+              localeProvider.translate('feedback.rateExperience'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -151,7 +164,7 @@ class _FeedbackPageState extends State<FeedbackPage>
             ),
             const SizedBox(height: 32),
             Text(
-              'Subject',
+              localeProvider.translate('feedback.subject'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -160,7 +173,7 @@ class _FeedbackPageState extends State<FeedbackPage>
             TextFormField(
               controller: _subjectController,
               decoration: InputDecoration(
-                hintText: 'Brief description of your feedback...',
+                hintText: localeProvider.translate('feedback.subjectHint'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -169,14 +182,14 @@ class _FeedbackPageState extends State<FeedbackPage>
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a subject';
+                  return localeProvider.translate('feedback.subjectRequired');
                 }
                 return null;
               },
             ),
             const SizedBox(height: 32),
             Text(
-              'Your feedback',
+              localeProvider.translate('feedback.yourFeedback'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -186,7 +199,7 @@ class _FeedbackPageState extends State<FeedbackPage>
               controller: _feedbackController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Tell us what you think...',
+                hintText: localeProvider.translate('feedback.feedbackHint'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -195,7 +208,7 @@ class _FeedbackPageState extends State<FeedbackPage>
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your feedback';
+                  return localeProvider.translate('feedback.feedbackRequired');
                 }
                 return null;
               },
@@ -205,7 +218,9 @@ class _FeedbackPageState extends State<FeedbackPage>
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitFeedback,
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _submitFeedback(localeProvider),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -213,7 +228,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator()
-                    : const Text('Submit Feedback'),
+                    : Text(localeProvider.translate('feedback.submitButton')),
               ),
             ),
           ],
@@ -222,7 +237,7 @@ class _FeedbackPageState extends State<FeedbackPage>
     );
   }
 
-  Widget _buildMyFeedbackTab(ThemeData theme) {
+  Widget _buildMyFeedbackTab(ThemeData theme, LocaleProvider localeProvider) {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -237,7 +252,7 @@ class _FeedbackPageState extends State<FeedbackPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Please log in to view your feedback',
+              localeProvider.translate('feedback.loginRequired'),
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -265,7 +280,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Error loading feedback',
+                  localeProvider.translate('feedback.errorLoading'),
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -293,12 +308,12 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No feedback submitted yet',
+                  localeProvider.translate('feedback.noFeedback'),
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your submitted feedback will appear here',
+                  localeProvider.translate('feedback.noFeedbackDesc'),
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -343,7 +358,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                             ),
                           ),
                           child: Text(
-                            _getStatusText(feedback.status),
+                            _getStatusText(feedback.status, localeProvider),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: _getStatusColor(feedback.status),
                               fontWeight: FontWeight.w600,
@@ -413,14 +428,14 @@ class _FeedbackPageState extends State<FeedbackPage>
     }
   }
 
-  String _getStatusText(String status) {
+  String _getStatusText(String status, LocaleProvider localeProvider) {
     switch (status) {
       case 'open':
-        return 'Open';
+        return localeProvider.translate('feedback.status.open');
       case 'in-review':
-        return 'In Review';
+        return localeProvider.translate('feedback.status.inReview');
       case 'resolved':
-        return 'Resolved';
+        return localeProvider.translate('feedback.status.resolved');
       default:
         return status;
     }
