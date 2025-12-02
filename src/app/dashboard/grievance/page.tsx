@@ -1949,16 +1949,22 @@ const GrievancePage = () => {
             </div>
           </div>
 
-          {/* Feedback Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Enhanced Feedback Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {sortedFeedbacks.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 theme-bg-glass">
-                  <MessageSquare className="w-8 h-8 theme-text-muted" />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="col-span-full text-center py-16"
+              >
+                <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 theme-bg-glass border theme-border-glass">
+                  <MessageSquare className="w-10 h-10 theme-text-muted" />
                 </div>
-                <p className="theme-text-secondary mb-2">No feedback yet</p>
-                <p className="text-sm theme-text-muted">User feedback will appear here</p>
-              </div>
+                <h3 className="text-lg font-semibold theme-text-primary mb-2">No feedback yet</h3>
+                <p className="text-sm theme-text-muted max-w-sm mx-auto">
+                  User feedback and ratings will appear here once submissions start coming in
+                </p>
+              </motion.div>
             ) : (
               sortedFeedbacks.map((feedback, index) => (
                 <motion.div
@@ -1966,81 +1972,193 @@ const GrievancePage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="p-4 rounded-xl theme-bg-glass theme-border-glass border hover:shadow-lg transition-all duration-200"
+                  whileHover={{ y: -6, scale: 1.03 }}
+                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-2xl p-6"
                 >
-                  {/* Rating Stars */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${
-                            star <= feedback.rating
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
+                  {/* Enhanced gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <div className="relative z-10">
+                    {/* Rating Section */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <motion.div
+                              key={star}
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: (index * 0.1) + (star * 0.05) }}
+                            >
+                              <Star
+                                className={`w-5 h-5 transition-colors duration-200 ${
+                                  star <= feedback.rating
+                                    ? 'text-yellow-500 fill-current drop-shadow-sm'
+                                    : 'text-gray-400 dark:text-gray-600'
+                                }`}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+                        <div className="px-3 py-1.5 rounded-full bg-yellow-300 border border-yellow-500 dark:bg-yellow-900/30 dark:border-yellow-700">
+                          <span className="text-sm font-bold text-yellow-950 dark:text-yellow-300">
+                            {feedback.rating}/5
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status indicator */}
+                      <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
+                        feedback.status === 'resolved'
+                          ? 'bg-green-300 text-green-950 border-green-500 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700'
+                          : feedback.status === 'in-review'
+                          ? 'bg-blue-300 text-blue-950 border-blue-500 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700'
+                          : 'bg-gray-300 text-gray-950 border-gray-500 dark:bg-gray-900/40 dark:text-gray-300 dark:border-gray-700'
+                      }`}>
+                        {feedback.status === 'in-review' ? 'In Review' : feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
+                      </div>
                     </div>
-                    <span className="text-sm font-medium theme-text-primary">
-                      {feedback.rating}/5
-                    </span>
-                  </div>
 
-                  {/* Subject */}
-                  <h4 className="font-semibold theme-text-primary mb-2 line-clamp-2">
-                    {feedback.subject}
-                  </h4>
+                    {/* Subject */}
+                    <h4 className="font-bold theme-text-primary mb-3 text-lg leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {feedback.subject}
+                    </h4>
 
-                  {/* Message */}
-                  <p className="text-sm theme-text-secondary mb-3 line-clamp-3">
-                    {feedback.message}
-                  </p>
+                    {/* Message */}
+                    <p className="text-sm theme-text-secondary mb-4 line-clamp-3 leading-relaxed">
+                      {feedback.message}
+                    </p>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-xs theme-text-muted">
-                    <span>
-                      {feedback.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown date'}
-                    </span>
-                    <span className="font-mono">
-                      #{feedback.id.slice(-6)}
-                    </span>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
+                      <div className="flex items-center gap-2 text-xs theme-text-muted">
+                        <Clock className="w-3 h-3" />
+                        <span className="font-medium">
+                          {feedback.createdAt?.toDate?.()?.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          }) || 'Unknown date'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-mono font-semibold theme-text-secondary bg-gray-100 dark:bg-gray-100 border theme-border-glass px-2.5 py-1 rounded-lg">
+                        #{feedback.id.slice(-6)}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               ))
             )}
           </div>
 
-          {/* Feedback Statistics */}
+          {/* Enhanced Statistics Dashboard */}
           {sortedFeedbacks.length > 0 && (
-            <div className="mt-6 pt-6 border-t theme-border-glass">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold theme-text-primary">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8 pt-8 border-t theme-border-glass"
+            >
+              <div className="mb-6 text-center">
+                <h3 className="text-lg font-semibold theme-text-primary mb-2">Feedback Analytics</h3>
+                <p className="text-sm theme-text-muted">Key insights from user feedback</p>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Total Feedback */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold theme-text-primary mb-1">
                     {sortedFeedbacks.length}
                   </div>
-                  <div className="text-sm theme-text-secondary">Total Feedback</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold theme-text-primary">
+                  <div className="text-sm theme-text-secondary font-medium">Total Feedback</div>
+                  <div className="text-xs theme-text-muted mt-1">All submissions</div>
+                </motion.div>
+
+                {/* Average Rating */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Star className="w-6 h-6 text-white fill-current" />
+                  </div>
+                  <div className="text-3xl font-bold theme-text-primary mb-1">
                     {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
                   </div>
-                  <div className="text-sm theme-text-secondary">Average Rating</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-500">
+                  <div className="text-sm theme-text-secondary font-medium">Average Rating</div>
+                  <div className="text-xs theme-text-muted mt-1">Out of 5 stars</div>
+                </motion.div>
+
+                {/* High Ratings */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating >= 4).length}
                   </div>
-                  <div className="text-sm theme-text-secondary">High Ratings (4-5★)</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-500">
-                    {sortedFeedbacks.filter(f => f.rating >= 3 && f.rating < 4).length}
+                  <div className="text-sm theme-text-secondary font-medium">High Ratings</div>
+                  <div className="text-xs theme-text-muted mt-1">4-5 stars ({Math.round((sortedFeedbacks.filter(f => f.rating >= 4).length / sortedFeedbacks.length) * 100)}%)</div>
+                </motion.div>
+
+                {/* Medium/Low Ratings */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <AlertCircle className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-sm theme-text-secondary">Medium Ratings (3★)</div>
+                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                    {sortedFeedbacks.filter(f => f.rating < 4).length}
+                  </div>
+                  <div className="text-sm theme-text-secondary font-medium">Needs Attention</div>
+                  <div className="text-xs theme-text-muted mt-1">Below 4 stars ({Math.round((sortedFeedbacks.filter(f => f.rating < 4).length / sortedFeedbacks.length) * 100)}%)</div>
+                </motion.div>
+              </div>
+
+              {/* Rating Distribution Chart */}
+              <div className="mt-8 p-6 rounded-2xl theme-bg-glass theme-border-glass border">
+                <h4 className="text-md font-semibold theme-text-primary mb-4 text-center">Rating Distribution</h4>
+                <div className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const count = sortedFeedbacks.filter(f => f.rating === rating).length;
+                    const percentage = sortedFeedbacks.length > 0 ? (count / sortedFeedbacks.length) * 100 : 0;
+                    return (
+                      <div key={rating} className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 w-12">
+                          <span className="text-sm font-medium theme-text-secondary">{rating}</span>
+                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        </div>
+                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ delay: 0.5, duration: 0.8 }}
+                            className={`h-2 rounded-full ${
+                              rating >= 4 ? 'bg-green-500' :
+                              rating === 3 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                          />
+                        </div>
+                        <div className="text-xs theme-text-muted w-8 text-right">
+                          {count}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </motion.div>

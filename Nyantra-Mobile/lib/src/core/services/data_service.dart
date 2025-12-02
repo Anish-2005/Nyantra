@@ -6,6 +6,7 @@ import '../models/application_model.dart';
 import '../models/beneficiary_model.dart';
 import '../models/disbursement_model.dart';
 import '../models/grievance_model.dart';
+import '../models/feedback_model.dart';
 
 class DataService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -463,5 +464,65 @@ class DataService {
 
   static Future<void> createUserProfile(UserModel user) async {
     await _firestore.collection('users').doc(user.id).set(user.toFirestore());
+  }
+
+  // Feedback Methods
+  static Future<void> submitFeedback({
+    required String userId,
+    required String subject,
+    required String message,
+    required int rating,
+  }) async {
+    try {
+      final feedbackData = {
+        'userId': userId,
+        'subject': subject,
+        'message': message,
+        'rating': rating,
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore.collection('feedbacks').add(feedbackData);
+    } catch (e) {
+      print('Error submitting feedback: $e');
+      throw e;
+    }
+  }
+
+  static Stream<List<FeedbackModel>> getUserFeedbacks(String userId) {
+    return _firestore
+        .collection('feedbacks')
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            return FeedbackModel.fromMap(doc.id, doc.data());
+          }).toList();
+        });
+  }
+
+  static Future<void> updateFeedback(
+    String feedbackId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+      await _firestore.collection('feedbacks').doc(feedbackId).update(updates);
+    } catch (e) {
+      print('Error updating feedback: $e');
+      throw e;
+    }
+  }
+
+  static Future<void> deleteFeedback(String feedbackId) async {
+    try {
+      await _firestore.collection('feedbacks').doc(feedbackId).delete();
+    } catch (e) {
+      print('Error deleting feedback: $e');
+      throw e;
+    }
   }
 }
