@@ -2,8 +2,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity } from 'lucide-react';
+import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Users, Shield, Target, ArrowUpRight, Activity, ChevronDown } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -282,6 +283,7 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
 const GrievancePage = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
+  const { user, profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter] = useState('all');
   const [categoryFilter] = useState('all');
@@ -315,7 +317,12 @@ const GrievancePage = () => {
 
   // Subscribe to Firestore feedback collection
   useEffect(() => {
-    const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'));
+    // Only subscribe if user is authenticated and has officer role
+    if (!user || profile?.role !== 'officer') {
+      return;
+    }
+
+    const q = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snapshot) => {
       const items: Feedback[] = snapshot.docs.map((d) => {
         const data = d.data() as any;
@@ -331,9 +338,11 @@ const GrievancePage = () => {
         };
       });
       setFeedbacks(items);
+    }, (error) => {
+      console.error('Error fetching feedback:', error);
     });
     return () => unsub();
-  }, []);
+  }, [user, profile]);
 
   // Filter and sort grievances (same logic as before)
   const filteredGrievances = useMemo(() => {
@@ -1868,7 +1877,190 @@ const GrievancePage = () => {
         </motion.div>
       </div>
 
-      
+      {/* Feedback Section */}
+      {user && profile?.role === 'officer' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        >
+        {/* Animated gradient background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"
+        />
+
+        <div className="relative z-10">
+          {/* Enhanced Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+            <div className="text-center lg:text-left">
+              <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
+                <motion.div
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Star className="w-5 h-5 text-white" />
+                </motion.div>
+                <div>
+                  <h2 className="text-2xl font-bold theme-text-primary">
+                    User Feedback
+                  </h2>
+                  <p className="text-sm theme-text-secondary">
+                    {feedbacks.length} {feedbacks.length === 1 ? 'submission' : 'submissions'} • Average {sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '0.0'} ⭐
+                  </p>
+                </div>
+              </div>
+              <p className="theme-text-muted max-w-md mx-auto lg:mx-0">
+                Insights from user experiences and platform feedback
+              </p>
+            </div>
+
+            {/* Enhanced Sort Controls */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium theme-text-secondary hidden sm:inline">Sort by:</span>
+                <div className="relative">
+                  <select
+                    value={feedbackSortBy}
+                    onChange={(e) => setFeedbackSortBy(e.target.value as 'rating' | 'createdAt')}
+                    className="appearance-none px-4 py-2 pr-8 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all cursor-pointer hover:theme-bg-glass-hover"
+                  >
+                    <option value="createdAt">📅 Date Created</option>
+                    <option value="rating">⭐ Rating</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
+                </div>
+              </div>
+              <motion.button
+                onClick={() => setFeedbackSortOrder(feedbackSortOrder === 'asc' ? 'desc' : 'asc')}
+                className="p-2 rounded-xl theme-bg-glass theme-border-glass border hover:theme-bg-glass-hover transition-all duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title={`Sort ${feedbackSortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+              >
+                <ArrowUpRight className={`w-4 h-4 theme-text-secondary transition-transform duration-200 ${feedbackSortOrder === 'asc' ? 'rotate-90' : '-rotate-90'}`} />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Feedback Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sortedFeedbacks.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 theme-bg-glass">
+                  <MessageSquare className="w-8 h-8 theme-text-muted" />
+                </div>
+                <p className="theme-text-secondary mb-2">No feedback yet</p>
+                <p className="text-sm theme-text-muted">User feedback will appear here</p>
+              </div>
+            ) : (
+              sortedFeedbacks.map((feedback, index) => (
+                <motion.div
+                  key={feedback.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="p-4 rounded-xl theme-bg-glass theme-border-glass border hover:shadow-lg transition-all duration-200"
+                >
+                  {/* Rating Stars */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= feedback.rating
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium theme-text-primary">
+                      {feedback.rating}/5
+                    </span>
+                  </div>
+
+                  {/* Subject */}
+                  <h4 className="font-semibold theme-text-primary mb-2 line-clamp-2">
+                    {feedback.subject}
+                  </h4>
+
+                  {/* Message */}
+                  <p className="text-sm theme-text-secondary mb-3 line-clamp-3">
+                    {feedback.message}
+                  </p>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-xs theme-text-muted">
+                    <span>
+                      {feedback.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown date'}
+                    </span>
+                    <span className="font-mono">
+                      #{feedback.id.slice(-6)}
+                    </span>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+
+          {/* Feedback Statistics */}
+          {sortedFeedbacks.length > 0 && (
+            <div className="mt-6 pt-6 border-t theme-border-glass">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold theme-text-primary">
+                    {sortedFeedbacks.length}
+                  </div>
+                  <div className="text-sm theme-text-secondary">Total Feedback</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold theme-text-primary">
+                    {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
+                  </div>
+                  <div className="text-sm theme-text-secondary">Average Rating</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-500">
+                    {sortedFeedbacks.filter(f => f.rating >= 4).length}
+                  </div>
+                  <div className="text-sm theme-text-secondary">High Ratings (4-5★)</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-500">
+                    {sortedFeedbacks.filter(f => f.rating >= 3 && f.rating < 4).length}
+                  </div>
+                  <div className="text-sm theme-text-secondary">Medium Ratings (3★)</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        >
+          <div className="text-center py-12">
+            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 theme-bg-glass">
+              <Shield className="w-8 h-8 theme-text-muted" />
+            </div>
+            <p className="theme-text-secondary mb-2">Access Restricted</p>
+            <p className="text-sm theme-text-muted">Feedback management requires officer privileges</p>
+          </div>
+        </motion.div>
+      )}
+
     </div>
   );
 };
