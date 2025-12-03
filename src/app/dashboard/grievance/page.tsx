@@ -1919,8 +1919,8 @@ const GrievancePage = () => {
                     onChange={(e) => setFeedbackSortBy(e.target.value as 'rating' | 'createdAt')}
                     className="appearance-none px-4 py-2 pr-8 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all cursor-pointer hover:theme-bg-glass-hover"
                   >
-                    <option value="createdAt"><Calendar className="inline w-4 h-4 mr-2" />{t('extracted.feedback_analytics.dateCreated').replace('📅 ', '')}</option>
-                    <option value="rating"><Star className="inline w-4 h-4 mr-2" />{t('extracted.feedback_analytics.rating')}</option>
+                    <option value="createdAt">{t('extracted.feedback_analytics.dateCreated').replace('📅 ', '')}</option>
+                    <option value="rating">{t('extracted.feedback_analytics.rating')}</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
                 </div>

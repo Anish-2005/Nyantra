@@ -19,6 +19,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
   const [activeTab, setActiveTab] = useState('overview');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [isProgrammaticNavigation, setIsProgrammaticNavigation] = useState(false);
 
   // User-focused navigation: only pages relevant to applicants are included
   const navigationItems = [
@@ -163,20 +164,24 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
     })();
   }, [theme]);
 
-  // Keep active tab in sync with current pathname
+  // Update active tab based on pathname changes (but not during programmatic navigation)
   useEffect(() => {
-    if (!pathname) return;
-    const seg = pathname.split('/').filter(Boolean); // remove empty
-    if (seg[0] === 'user-dashboard') {
-      setActiveTab(seg[1] || 'overview');
+    if (!isProgrammaticNavigation && pathname) {
+      const seg = pathname.split('/').filter(Boolean); // remove empty
+      if (seg[0] === 'user-dashboard') {
+        setActiveTab(seg[1] || 'overview');
+      }
     }
-  }, [pathname]);
+  }, [pathname, isProgrammaticNavigation]);
 
   const handleSidebarChange = (id: string) => {
+    setIsProgrammaticNavigation(true);
     setActiveTab(id);
     if (id === 'overview') router.push('/user-dashboard');
     else router.push(`/user-dashboard/${id}`);
     setSidebarOpen(false);
+    // Reset the flag after navigation completes
+    setTimeout(() => setIsProgrammaticNavigation(false), 100);
   };
 
   const displayName = user?.displayName ?? (user?.email ? user.email.split('@')[0] : 'Guest');
