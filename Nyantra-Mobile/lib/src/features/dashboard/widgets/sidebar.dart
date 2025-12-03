@@ -176,7 +176,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Nyantra',
+                                      localeProvider.translate('nav.brandName'),
                                       style: theme.textTheme.titleMedium
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
@@ -431,7 +431,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Nyantra',
+                              localeProvider.translate('nav.brandName'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyLarge?.color,

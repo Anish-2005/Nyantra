@@ -60,7 +60,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final localeProvider = context.watch<LocaleProvider>();
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 1024;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -78,21 +77,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : null,
         title: Row(
           children: [
-            // Logo
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    isDark
-                        ? 'assets/images/Logo-Dark.png'
-                        : 'assets/images/Logo-Light.png',
-                  ),
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
             const SizedBox(width: 12),
             // Title
             Text(
