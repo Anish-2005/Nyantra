@@ -2243,7 +2243,10 @@
     "success_rate_label": "सफलता दर",
     "quick_actions_1": "त्वरित क्रियाएँ",
     "generate_disbursement": "वितरण उत्पन्न करें",
-    "schedule_weekly": "साप्ताहिक अनुसूची"
+    "schedule_weekly": "साप्ताहिक अनुसूची",
+    "no_reports_found": "कोई रिपोर्ट नहीं मिली",
+    "try_adjusting_filters": "अपने फ़िल्टर या खोज शब्द समायोजित करने का प्रयास करें",
+    "downloads": "डाउनलोड"
   },
   "extracted_grouped": {
     "misc": {

@@ -27,6 +27,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
     { id: 'applications', label: t('extracted.my_applications'), icon: FileText },
     { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
     { id: 'disbursements', label: t('extracted.payments'), icon: Wallet },
+    { id: 'reports', label: t('extracted.reports'), icon: FileText },
     { id: 'grievance', label: t('extracted.grievances'), icon: MessageCircle },
     { id: 'feedback', label: t('extracted.feedback'), icon: HelpCircle }
   ];

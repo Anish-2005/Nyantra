@@ -2248,7 +2248,10 @@
     "success_rate_label": "Success Rate",
     "quick_actions_1": "Quick Actions",
     "generate_disbursement": "Generate Disbursement",
-    "schedule_weekly": "Schedule Weekly"
+    "schedule_weekly": "Schedule Weekly",
+    "no_reports_found": "No reports found",
+    "try_adjusting_filters": "Try adjusting your filters or search terms",
+    "downloads": "Downloads"
   },
   "extracted_grouped": {
     "misc": {
