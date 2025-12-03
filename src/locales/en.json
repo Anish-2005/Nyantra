@@ -2168,7 +2168,7 @@
     "report_analytics": "Report Analytics",
     "completion_rate": "Completion Rate",
     "reports_completed": "{{count}} of {{total}} reports completed",
-    "download_engagement": "Download Engagement",
+    "download_engagement": "Total Downloads",
     "total_downloads": "{{count}} total downloads",
     "system_health": "System Health",
     "failed_reports": "{{count}} failed reports",

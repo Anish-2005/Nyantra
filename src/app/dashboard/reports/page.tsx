@@ -1675,21 +1675,24 @@ const ReportsPage = () => {
                     value: stats.successRate, 
                     color: 'bg-green-500', 
                     icon: CheckCircle,
-                    description: t('extracted.reports_completed', { count: stats.completed, total: stats.total })
+                    description: t('extracted.reports_completed', { count: stats.completed, total: stats.total }),
+                    showPercent: true
                   },
                   { 
                     labelKey: 'extracted.download_engagement', 
-                    value: stats.total > 0 ? Math.round((stats.totalDownloads / stats.total) * 100) : 0, 
+                    value: stats.totalDownloads, 
                     color: 'bg-blue-500', 
                     icon: Download,
-                    description: t('extracted.total_downloads', { count: stats.totalDownloads })
+                    description: t('extracted.total_downloads', { count: stats.totalDownloads }),
+                    showPercent: false
                   },
                   { 
                     labelKey: 'extracted.system_health', 
                     value: Math.max(0, Math.min(100, 100 - (stats.failed * 10))), 
                     color: stats.failed > 0 ? 'bg-red-500' : 'bg-green-500', 
                     icon: Activity,
-                    description: t('extracted.failed_reports', { count: stats.failed })
+                    description: t('extracted.failed_reports', { count: stats.failed }),
+                    showPercent: true
                   }
                 ].map((metric, idx) => (
                   <div key={idx} className="space-y-2">
@@ -1698,12 +1701,12 @@ const ReportsPage = () => {
                         <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
                         <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
                       </div>
-                      <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
+                      <span className="text-sm font-semibold theme-text-primary">{metric.value}{metric.showPercent ? '%' : ''}</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                       <div 
                         className={`h-1.5 rounded-full ${metric.color} transition-all duration-1000`}
-                        style={{ width: `${metric.value}%` }}
+                        style={{ width: metric.showPercent ? `${metric.value}%` : `${Math.min((metric.value / 10000) * 100, 100)}%` }}
                       ></div>
                     </div>
                     <div className="text-xs theme-text-muted">{metric.description}</div>

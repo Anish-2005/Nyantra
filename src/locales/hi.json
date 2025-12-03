@@ -2163,7 +2163,7 @@
     "report_analytics": "रिपोर्ट विश्लेषण",
     "completion_rate": "पूर्णता दर",
     "reports_completed": "{{count}} में से {{total}} रिपोर्ट पूर्ण",
-    "download_engagement": "डाउनलोड सहभागिता",
+    "download_engagement": "कुल डाउनलोड",
     "total_downloads": "{{count}} कुल डाउनलोड",
     "system_health": "सिस्टम स्वास्थ्य",
     "failed_reports": "{{count}} विफल रिपोर्ट",
