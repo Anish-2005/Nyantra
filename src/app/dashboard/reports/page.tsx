@@ -494,6 +494,18 @@ const ReportsPage = () => {
 
   // Recent Activities
   const recentActivities = useMemo(() => {
+    // Helper function to format time ago
+    const formatTimeAgo = (dateString: string) => {
+      const now = new Date();
+      const date = new Date(dateString);
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+      return `${Math.floor(diffInMinutes / 1440)} days ago`;
+    };
+
     const activities: Array<{
       action: string;
       user: string;
@@ -543,18 +555,6 @@ const ReportsPage = () => {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 3);
   }, [reports]);
-
-  // Helper function to format time ago
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
-    return `${Math.floor(diffInMinutes / 1440)} days ago`;
-  };
 
   // Three.js canvas background
   useEffect(() => {
