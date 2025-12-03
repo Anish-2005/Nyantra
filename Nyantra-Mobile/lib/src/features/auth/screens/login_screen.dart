@@ -259,37 +259,17 @@ class _LoginScreenState extends State<LoginScreen>
 
                   // Logo/Brand with enhanced animation
                   Container(
-                        padding: const EdgeInsets.all(32),
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: isDark
-                                ? [
-                                    const Color(0xFF06B6D4),
-                                    const Color(0xFF8B5CF6),
-                                  ]
-                                : [
-                                    const Color(0xFFFB7185),
-                                    const Color(0xFFFB923C),
-                                  ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  (isDark
-                                          ? const Color(0xFF06B6D4)
-                                          : const Color(0xFFFB7185))
-                                      .withOpacity(0.4),
-                              blurRadius: 30,
-                              spreadRadius: 5,
-                              offset: const Offset(0, 8),
+                          image: DecorationImage(
+                            image: AssetImage(
+                              isDark
+                                  ? 'assets/images/Logo-Dark.png'
+                                  : 'assets/images/Logo-Light.png',
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.account_balance,
-                          size: 80,
-                          color: Colors.white,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       )
                       .animate()
@@ -317,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ],
                         ).createShader(bounds),
                         child: Text(
-                          'Nyantra',
+                          localeProvider.translate('nav.brandName'),
                           style: theme.textTheme.displayMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

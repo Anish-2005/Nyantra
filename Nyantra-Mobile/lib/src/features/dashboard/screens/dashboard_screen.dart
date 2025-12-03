@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_content.dart';
@@ -59,7 +58,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 1024;
     final isDark = theme.brightness == Brightness.dark;
@@ -140,13 +138,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: DashboardContent(selectedIndex: _selectedIndex),
           ),
 
-          // Sidebar
-          Sidebar(
-            selectedIndex: _selectedIndex,
-            onItemSelected: _onItemSelected,
-            isOpen: _sidebarOpen,
-            onToggle: (bool value) => _toggleSidebar(),
-          ),
+          // Sidebar - positioned to cover full height on desktop
+          if (!isMobile)
+            Positioned(
+              top: 0,
+              left: 0,
+              bottom: 0,
+              child: Sidebar(
+                selectedIndex: _selectedIndex,
+                onItemSelected: _onItemSelected,
+                isOpen: _sidebarOpen,
+                onToggle: (bool value) => _toggleSidebar(),
+              ),
+            )
+          else
+            Sidebar(
+              selectedIndex: _selectedIndex,
+              onItemSelected: _onItemSelected,
+              isOpen: _sidebarOpen,
+              onToggle: (bool value) => _toggleSidebar(),
+            ),
         ],
       ),
     );
@@ -155,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _getPageTitle(LocaleProvider localeProvider) {
     switch (_selectedIndex) {
       case 0:
-        return localeProvider.translate('nav.dashboard');
+        return localeProvider.translate('nav.dashboardTitle');
       case 1:
         return localeProvider.translate('nav.applications');
       case 2:
@@ -169,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 6:
         return localeProvider.translate('nav.feedback');
       default:
-        return 'Dashboard';
+        return localeProvider.translate('nav.dashboardTitle');
     }
   }
 }
