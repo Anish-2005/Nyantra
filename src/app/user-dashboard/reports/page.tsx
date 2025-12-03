@@ -287,17 +287,17 @@ const UserReportsPage = () => {
                 transition={{ duration: 2, repeat: Infinity }}
               />
               <span className="text-sm font-medium theme-text-secondary">
-                {t('extracted.live_tracking')} • {t('extracted.report_hub')}
+                {t('extracted.reports')} • {t('extracted.download')}
               </span>
             </div>
             <h1 className="text-3xl font-bold theme-text-primary mb-2">
-              {t('extracted.report_hub')}{' '}
+              {t('extracted.reports')}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-2">
-                {t('extracted.monitoring_center')}
+                {t('extracted.download')}
               </span>
             </h1>
             <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">
-              {t('extracted.generate_analyze_schedule_comprehensive_reports')}
+              {t('extracted.access_download_view_available_reports')}
             </p>
           </div>
         </motion.div>

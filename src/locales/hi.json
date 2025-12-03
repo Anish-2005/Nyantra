@@ -395,7 +395,8 @@
       "verified": "सत्यापित",
       "completed": "पूर्ण",
       "processing": "प्रसंस्करण"
-    }
+    },
+    "access_download_view_available_reports": "अपने आवेदनों के लिए उपलब्ध रिपोर्ट्स तक पहुंचें और डाउनलोड करें"
   },
   "applications": {
     "title": "आवेदन प्रबंधन",
@@ -551,6 +552,8 @@
     "feedback": "फीडबैक",
     "applicant": "आवेदक",
     "portal": "पोर्टल",
+        "access_download_view_available_reports": "अपने आवेदनों के लिए उपलब्ध रिपोर्ट्स तक पहुंचें और डाउनलोड करें",
+
     "status_badge": "{/* स्थिति बैज */}",
     "smart_dbt_platform": "स्मार्ट डीबीटी प्लेटफ़ॉर्म",
     "role_selection": "{/* भूमिका चयन */}",

@@ -395,7 +395,8 @@
       "verified": "Verified",
       "completed": "Completed",
       "processing": "Processing"
-    }
+    },
+    "access_download_view_available_reports": "Access and download available reports for your applications"
   },
   "applications": {
     "title": "Applications Management",
