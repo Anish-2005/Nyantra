@@ -9,6 +9,7 @@
     "getStarted": "शुरू करें",
     "toggleTheme": "थीम बदलें",
     "dashboard": "डैशबोर्ड",
+    "reports":"रिपोर्ट",
     "applications": "आवेदन",
     "beneficiaries": "लाभार्थी",
     "disbursements": "वितरण",
@@ -622,7 +623,12 @@
     "weekly": "साप्ताहिक",
     "daily": "दैनिक",
     "once": "एक बार",
-    "quarterly": "त्रैमासिक"
+    "quarterly": "त्रैमासिक",
+    "generation_info": "जनन जानकारी",
+    "statistics": "सांख्यिकी",
+    "no_description_available": "कोई विवरण उपलब्ध नहीं।",
+    "download_report": "रिपोर्ट डाउनलोड करें",
+    "report_not_available": "रिपोर्ट उपलब्ध नहीं"
   },
   "beneficiaries": {
     "pageTitle": "लाभार्थी",

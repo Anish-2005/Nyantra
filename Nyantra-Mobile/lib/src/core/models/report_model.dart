@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Report {
   final String id;
   final String name;
@@ -48,6 +50,15 @@ class Report {
   });
 
   factory Report.fromJson(Map<String, dynamic> json, String id) {
+    // Helper function to convert Firestore timestamp to ISO string
+    String? toIsoString(dynamic value) {
+      if (value == null) return null;
+      if (value is Timestamp) {
+        return value.toDate().toIso8601String();
+      }
+      return value.toString();
+    }
+
     return Report(
       id: id,
       name: json['name'] ?? 'Unnamed Report',
@@ -57,11 +68,11 @@ class Report {
       status: json['status'] ?? 'completed',
       fileSize: json['fileSize'],
       fileFormat: json['fileFormat'] ?? 'PDF',
-      generatedDate: json['generatedDate']?.toString(),
+      generatedDate: toIsoString(json['generatedDate']),
       generatedBy: json['generatedBy'],
       schedule: json['schedule'],
-      lastRun: json['lastRun']?.toString(),
-      nextRun: json['nextRun']?.toString(),
+      lastRun: toIsoString(json['lastRun']),
+      nextRun: toIsoString(json['nextRun']),
       recordCount: json['recordCount'],
       description: json['description'] ?? '',
       parameters: json['parameters'],
@@ -69,8 +80,8 @@ class Report {
       isScheduled: json['isScheduled'] ?? false,
       recipients: List<String>.from(json['recipients'] ?? []),
       columns: List<String>.from(json['columns'] ?? []),
-      createdAt: json['createdAt']?.toString(),
-      updatedAt: json['updatedAt']?.toString(),
+      createdAt: toIsoString(json['createdAt']),
+      updatedAt: toIsoString(json['updatedAt']),
     );
   }
 

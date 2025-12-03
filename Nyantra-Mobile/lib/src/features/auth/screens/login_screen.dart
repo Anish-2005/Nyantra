@@ -352,35 +352,37 @@ class _LoginScreenState extends State<LoginScreen>
                   // Stats Cards (like web app)
                   Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width < 600
+                          horizontal: MediaQuery.of(context).size.width < 400
+                              ? 5
+                              : MediaQuery.of(context).size.width < 600
                               ? 10
                               : 20,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Expanded(
+                            Flexible(
                               child: _buildStatCard(
                                 '45K+',
-                                localeProvider.translate('stats.beneficiaries'),
+                                localeProvider.translate('stats.beneficiaries') ?? 'Beneficiaries',
                                 Icons.people,
                                 isDark,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
+                            SizedBox(width: MediaQuery.of(context).size.width < 400 ? 4 : 8),
+                            Flexible(
                               child: _buildStatCard(
                                 '₹250Cr',
-                                localeProvider.translate('stats.disbursed'),
+                                localeProvider.translate('stats.disbursed') ?? 'Disbursed',
                                 Icons.account_balance_wallet,
                                 isDark,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
+                            SizedBox(width: MediaQuery.of(context).size.width < 400 ? 4 : 8),
+                            Flexible(
                               child: _buildStatCard(
                                 '72hrs',
-                                localeProvider.translate('stats.avgTime'),
+                                localeProvider.translate('stats.avgTime') ?? 'Avg. Time',
                                 Icons.access_time,
                                 isDark,
                               ),
@@ -968,43 +970,52 @@ class _LoginScreenState extends State<LoginScreen>
     IconData icon,
     bool isDark,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185),
-            size: 24,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmallScreen = constraints.maxWidth < 120;
+        return Container(
+          padding: EdgeInsets.all(isSmallScreen ? 8 : 16),
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+              width: 1,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185),
+                size: isSmallScreen ? 20 : 24,
+              ),
+              SizedBox(height: isSmallScreen ? 4 : 8),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: isSmallScreen ? 2 : 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 10 : 12,
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -624,7 +624,12 @@
     "weekly": "Weekly",
     "daily": "Daily",
     "once": "Once",
-    "quarterly": "Quarterly"
+    "quarterly": "Quarterly",
+     "generation_info": "Generation Info",
+    "statistics": "Statistics",
+    "no_description_available": "No description available.",
+    "download_report": "Download Report",
+    "report_not_available": "Report Not Available"
   },
   "beneficiaries": {
     "pageTitle": "Beneficiaries",

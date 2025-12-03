@@ -21,6 +21,7 @@ class _ReportsPageState extends State<ReportsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'all';
   String _selectedStatus = 'all';
+  Report? _selectedReport;
 
   @override
   void dispose() {
@@ -64,22 +65,6 @@ class _ReportsPageState extends State<ReportsPage> {
                   colors: isDark
                       ? [const Color(0xFF06B6D4), Colors.transparent]
                       : [const Color(0xFFFB7185), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topRight,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF8B5CF6), Colors.transparent]
-                        : [const Color(0xFFFB923C), Colors.transparent],
-                  ),
                 ),
               ),
             ),
@@ -501,6 +486,7 @@ class _ReportsPageState extends State<ReportsPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
+        onTap: () => _showReportDetailModal(context, report),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -713,6 +699,381 @@ class _ReportsPageState extends State<ReportsPage> {
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  void _showReportDetailModal(BuildContext context, Report report) {
+    final theme = Theme.of(context);
+    final localeProvider = context.read<LocaleProvider>();
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _getCategoryColor(
+                        report.category,
+                      ).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      _getCategoryIcon(report.category),
+                      color: _getCategoryColor(report.category),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          report.name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          report.id,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: theme.iconTheme.color),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Status Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(report.status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _getStatusColor(
+                            report.status,
+                          ).withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        report.status.toUpperCase(),
+                        style: TextStyle(
+                          color: _getStatusColor(report.status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Report Details Section
+                    Text(
+                      localeProvider.translate('reports.report_details'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow(
+                            localeProvider.translate('reports.type'),
+                            report.type,
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.category'),
+                            report.category,
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.frequency'),
+                            report.frequency,
+                            theme,
+                          ),
+                          _buildDetailRow('Format', report.fileFormat, theme),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Generation Info Section
+                    Text(
+                      localeProvider.translate('reports.generation_info'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow(
+                            localeProvider.translate('reports.generated_by'),
+                            report.generatedBy ?? 'System',
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.generated_date'),
+                            _formatDateTime(report.generatedDate),
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.last_run'),
+                            _formatDateTime(report.lastRun),
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.next_run'),
+                            _formatDateTime(report.nextRun),
+                            theme,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Statistics Section
+                    Text(
+                      localeProvider.translate('reports.statistics'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow(
+                            localeProvider.translate('reports.record_count'),
+                            report.recordCount?.toString() ?? '--',
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.file_size'),
+                            report.fileSize ?? '--',
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.download_count'),
+                            report.downloadCount.toString(),
+                            theme,
+                          ),
+                          _buildDetailRow(
+                            localeProvider.translate('reports.is_scheduled'),
+                            report.isScheduled
+                                ? localeProvider.translate('reports.yes')
+                                : localeProvider.translate('reports.no'),
+                            theme,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Description Section
+                    Text(
+                      localeProvider.translate('reports.description'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Text(
+                        report.description.isNotEmpty
+                            ? report.description
+                            : localeProvider.translate(
+                                'reports.no_description_available',
+                              ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                            0.8,
+                          ),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Download Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: report.status == 'completed'
+                            ? () {
+                                Navigator.of(context).pop();
+                                _downloadReport(report);
+                              }
+                            : null,
+                        icon: const Icon(Icons.download),
+                        label: Text(
+                          report.status == 'completed'
+                              ? localeProvider.translate(
+                                  'reports.download_report',
+                                )
+                              : localeProvider.translate(
+                                  'reports.report_not_available',
+                                ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: report.status == 'completed'
+                              ? theme.primaryColor
+                              : theme.disabledColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.9),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(String? dateTimeString) {
+    if (dateTimeString == null || dateTimeString.isEmpty) return '--';
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      // If less than 24 hours ago, show relative time
+      if (difference.inHours < 24) {
+        if (difference.inHours > 0) {
+          return '${difference.inHours}h ago';
+        } else if (difference.inMinutes > 0) {
+          return '${difference.inMinutes}m ago';
+        } else {
+          return 'Just now';
+        }
+      }
+
+      // Otherwise show formatted date
+      return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return '--';
     }
   }
 
