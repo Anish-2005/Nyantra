@@ -724,18 +724,68 @@ const ReportsPage = () => {
   };
 
   const handleDownload = async (reportId: string) => {
+    console.log('handleDownload called with reportId:', reportId);
     try {
-      // Update download count
-      await updateDoc(doc(db, 'reports', reportId), {
-        downloadCount: (reports.find(r => r.id === reportId)?.downloadCount || 0) + 1,
-        lastUpdated: serverTimestamp()
-      });
-      
-      // In a real app, this would trigger the actual file download
-      console.log(`Downloading report: ${reportId}`);
-      // Show download progress/notification
+      const report = reports.find(r => r.id === reportId);
+      console.log('Found report:', report);
+      if (!report) {
+        console.error('Report not found');
+        return;
+      }
+
+      // Update download count (optional - don't fail if this fails)
+      try {
+        console.log('Updating download count...');
+        await updateDoc(doc(db, 'reports', reportId), {
+          downloadCount: (report.downloadCount || 0) + 1,
+          lastUpdated: serverTimestamp()
+        });
+        console.log('Download count updated');
+      } catch (updateError) {
+        console.warn('Failed to update download count:', updateError);
+        // Continue with download even if count update fails
+      }
+
+      // Generate PDF for the report
+      console.log('Creating PDF...');
+      const pdfDoc = new jsPDF({ unit: 'pt', format: 'a4' });
+      console.log('PDF document created');
+
+      // Simple test content
+      pdfDoc.setFontSize(20);
+      pdfDoc.text('Test Report Download', 40, 60);
+      pdfDoc.setFontSize(12);
+      pdfDoc.text('Report Name: ' + report.name, 40, 80);
+      pdfDoc.text('Report ID: ' + report.id, 40, 100);
+      pdfDoc.text('Generated at: ' + new Date().toLocaleString(), 40, 120);
+
+      console.log('Simple PDF content added');
+
+      // Save the PDF
+      const fileName = `${report.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${report.id}.pdf`;
+      console.log('Saving PDF with filename:', fileName);
+
+      // Try using blob method for better browser compatibility
+      try {
+        const pdfBlob = pdfDoc.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('PDF downloaded using blob method');
+      } catch (blobError) {
+        console.warn('Blob method failed, trying direct save:', blobError);
+        pdfDoc.save(fileName);
+        console.log('PDF saved using direct save method');
+      }
+
     } catch (error) {
       console.error('Download failed:', error);
+      alert('Failed to download report. Please try again.');
     }
   };
 
@@ -743,6 +793,35 @@ const ReportsPage = () => {
     const report = reports.find(r => r.id === reportId);
     if (report) {
       setSelectedReport(report);
+    }
+  };
+
+  const handleShare = async (report: Report) => {
+    const shareUrl = `${window.location.origin}/dashboard/reports?report=${report.id}`;
+    const shareData = {
+      title: `Report: ${report.name}`,
+      text: `Check out this ${report.category} report - ${report.description}`,
+      url: shareUrl
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Report link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Report link copied to clipboard!');
+      } catch (clipboardError) {
+        console.error('Error copying to clipboard:', clipboardError);
+        alert('Unable to share report. Please copy the URL manually.');
+      }
     }
   };
 
@@ -1187,7 +1266,14 @@ const ReportsPage = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleDownload(selectedReport.id)}
+              onClick={() => {
+                console.log('Download button clicked for report:', selectedReport.id, 'status:', selectedReport.status);
+                if (selectedReport.status === 'completed') {
+                  handleDownload(selectedReport.id);
+                } else {
+                  console.log('Report not completed, download disabled');
+                }
+              }}
               disabled={selectedReport.status !== 'completed'}
               className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                 selectedReport.status === 'completed'
@@ -1218,6 +1304,7 @@ const ReportsPage = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => handleShare(selectedReport)}
               className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                 theme === 'light'
                   ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
