@@ -3,6 +3,7 @@ import 'overview_page.dart';
 import 'applications_page.dart';
 import 'beneficiaries_page.dart';
 import 'disbursements_page.dart';
+import 'reports_page.dart';
 import 'grievance_page.dart';
 import 'feedback_page.dart';
 
@@ -24,6 +25,7 @@ class DashboardContent extends StatelessWidget {
           ApplicationsPage(),
           BeneficiariesPage(),
           DisbursementsPage(),
+          ReportsPage(),
           GrievancePage(),
           FeedbackPage(),
         ],

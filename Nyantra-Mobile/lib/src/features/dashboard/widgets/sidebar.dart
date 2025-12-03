@@ -85,6 +85,10 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
         'label': localeProvider.translate('nav.disbursements'),
       },
       {
+        'icon': Icons.bar_chart,
+        'label': localeProvider.translate('nav.reports'),
+      },
+      {
         'icon': Icons.message,
         'label': localeProvider.translate('nav.grievance'),
       },

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -135,8 +137,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 3:
         return localeProvider.translate('nav.disbursements');
       case 4:
-        return localeProvider.translate('nav.grievance');
+        return localeProvider.translate('nav.reports');
       case 5:
+        return localeProvider.translate('nav.grievance');
+      case 6:
         return localeProvider.translate('nav.feedback');
       default:
         return 'Dashboard';
