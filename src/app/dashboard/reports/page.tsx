@@ -1597,14 +1597,32 @@ const ReportsPage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Performance Metrics</h3>
-                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Report Analytics</h3>
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
               </div>
               <div className="space-y-3">
                 {[
-                  { label: 'Success Rate', value: stats.successRate, color: 'bg-green-500', icon: CheckCircle },
-                  { label: 'Processing Speed', value: Math.max(10, Math.min(100, 100 - (stats.processing * 5))), color: 'bg-blue-500', icon: Zap },
-                  { label: 'User Satisfaction', value: Math.max(70, Math.min(100, stats.successRate + 10)), color: 'bg-purple-500', icon: TrendingUp }
+                  { 
+                    label: 'Completion Rate', 
+                    value: stats.successRate, 
+                    color: 'bg-green-500', 
+                    icon: CheckCircle,
+                    description: `${stats.completed} of ${stats.total} reports completed`
+                  },
+                  { 
+                    label: 'Download Engagement', 
+                    value: stats.total > 0 ? Math.round((stats.totalDownloads / stats.total) * 100) : 0, 
+                    color: 'bg-blue-500', 
+                    icon: Download,
+                    description: `${stats.totalDownloads} total downloads`
+                  },
+                  { 
+                    label: 'System Health', 
+                    value: Math.max(0, Math.min(100, 100 - (stats.failed * 10))), 
+                    color: stats.failed > 0 ? 'bg-red-500' : 'bg-green-500', 
+                    icon: Activity,
+                    description: `${stats.failed} failed reports`
+                  }
                 ].map((metric, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -1620,6 +1638,7 @@ const ReportsPage = () => {
                         style={{ width: `${metric.value}%` }}
                       ></div>
                     </div>
+                    <div className="text-xs theme-text-muted">{metric.description}</div>
                   </div>
                 ))}
               </div>
