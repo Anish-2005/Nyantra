@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { theme, toggleTheme } = useTheme();
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [activeTab, setActiveTab] = useState('overview');
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [isProgrammaticNavigation, setIsProgrammaticNavigation] = useState(false);
     
     const navigationItems = [
         { id: 'overview', label: t('extracted.dashboard'), icon: Home },
@@ -32,6 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
     
     const router = useRouter();
+    const pathname = usePathname();
     const { user, loading, profile } = useAuth();
 
     // Compute a friendly display name from Firebase user
@@ -49,12 +52,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             }
         }
     }, [user, loading, profile, router]);
+
+    // Update active tab based on pathname changes (but not during programmatic navigation)
+    useEffect(() => {
+        if (!isProgrammaticNavigation) {
+            if (pathname === '/dashboard') {
+                setActiveTab('overview');
+            } else if (pathname.startsWith('/dashboard/')) {
+                const pathSegment = pathname.split('/dashboard/')[1]?.split('/')[0];
+                if (pathSegment && navigationItems.some(item => item.id === pathSegment)) {
+                    setActiveTab(pathSegment);
+                }
+            }
+        }
+    }, [pathname, navigationItems, isProgrammaticNavigation]);
     
     const handleSidebarChange = (id: string) => {
+        setIsProgrammaticNavigation(true);
         setActiveTab(id);
         if (id === 'overview') router.push('/dashboard');
         else router.push(`/dashboard/${id}`);
         setSidebarOpen(false);
+        // Reset the flag after navigation completes
+        setTimeout(() => setIsProgrammaticNavigation(false), 100);
     };
 
     const toggleSidebarCollapse = () => {
