@@ -107,35 +107,35 @@ const NewReportForm = ({ onClose, onCreated, initialData }: { onClose: () => voi
   const [error, setError] = useState<string | null>(null);
 
   const reportTypes = [
-    { value: 'disbursement', label: 'Disbursement Report' },
-    { value: 'verification', label: 'Verification Report' },
-    { value: 'grievance', label: 'Grievance Report' },
-    { value: 'financial', label: 'Financial Report' },
-    { value: 'performance', label: 'Performance Report' },
-    { value: 'analytical', label: 'Analytical Report' }
+    { value: 'disbursement', label: t('extracted.report_type_disbursement') },
+    { value: 'verification', label: t('extracted.report_type_verification') },
+    { value: 'grievance', label: t('extracted.report_type_grievance') },
+    { value: 'financial', label: t('extracted.report_type_financial') },
+    { value: 'performance', label: t('extracted.report_type_performance') },
+    { value: 'analytical', label: t('extracted.report_type_analytical') }
   ];
 
   const categories = [
-    { value: 'financial', label: 'Financial' },
-    { value: 'compliance', label: 'Compliance' },
-    { value: 'performance', label: 'Performance' },
-    { value: 'statistical', label: 'Statistical' },
-    { value: 'analytical', label: 'Analytical' },
-    { value: 'technical', label: 'Technical' }
+    { value: 'financial', label: t('extracted.category_financial') },
+    { value: 'compliance', label: t('extracted.category_compliance') },
+    { value: 'performance', label: t('extracted.category_performance') },
+    { value: 'statistical', label: t('extracted.category_statistical') },
+    { value: 'analytical', label: t('extracted.category_analytical') },
+    { value: 'technical', label: t('extracted.category_technical') }
   ];
 
   const frequencies = [
-    { value: 'once', label: 'Once' },
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'quarterly', label: 'Quarterly' }
+    { value: 'once', label: t('extracted.frequency_once') },
+    { value: 'daily', label: t('extracted.frequency_daily') },
+    { value: 'weekly', label: t('extracted.frequency_weekly') },
+    { value: 'monthly', label: t('extracted.frequency_monthly') },
+    { value: 'quarterly', label: t('extracted.frequency_quarterly') }
   ];
 
   const formats = [
-    { value: 'PDF', label: 'PDF' },
-    { value: 'Excel', label: 'Excel' },
-    { value: 'CSV', label: 'CSV' }
+    { value: 'PDF', label: t('extracted.format_pdf') },
+    { value: 'Excel', label: t('extracted.format_excel') },
+    { value: 'CSV', label: t('extracted.format_csv') }
   ];
 
   // Prefill when editing
@@ -187,7 +187,7 @@ const NewReportForm = ({ onClose, onCreated, initialData }: { onClose: () => voi
         const payload = {
           ...baseData,
           createdAt: serverTimestamp(),
-          generatedDate: null,
+          generatedDate: serverTimestamp(),
           generatedBy: 'System',
           fileSize: null,
           recordCount: null,
@@ -210,7 +210,7 @@ const NewReportForm = ({ onClose, onCreated, initialData }: { onClose: () => voi
           status: payload.status,
           fileSize: payload.fileSize,
           fileFormat: payload.fileFormat,
-          generatedDate: payload.generatedDate,
+          generatedDate: new Date().toISOString(),
           generatedBy: payload.generatedBy,
           schedule: payload.schedule,
           lastRun: payload.lastRun,
@@ -373,7 +373,6 @@ const ReportsPage = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [viewMode, setViewMode] = useState<'reports' | 'templates' | 'scheduled'>('reports');
-  const [activeTab] = useState('details');
   const [showNewReportModal, setShowNewReportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -492,6 +491,70 @@ const ReportsPage = () => {
       'technical': reports.filter(r => r.category === 'technical').length
     };
   }, [reports]);
+
+  // Recent Activities
+  const recentActivities = useMemo(() => {
+    const activities: Array<{
+      action: string;
+      user: string;
+      time: string;
+      status: 'success' | 'info' | 'error';
+      timestamp: number;
+    }> = [];
+
+    // Add activities based on reports
+    reports.forEach(report => {
+      // Report creation
+      if (report.createdAt) {
+        activities.push({
+          action: `${report.name} report created`,
+          user: report.generatedBy || 'System',
+          time: formatTimeAgo(report.createdAt),
+          status: 'info',
+          timestamp: new Date(report.createdAt).getTime()
+        });
+      }
+
+      // Report completion
+      if (report.status === 'completed' && report.generatedDate) {
+        activities.push({
+          action: `${report.name} report generated`,
+          user: report.generatedBy || 'System',
+          time: formatTimeAgo(report.generatedDate),
+          status: 'success',
+          timestamp: new Date(report.generatedDate).getTime()
+        });
+      }
+
+      // Report failure
+      if (report.status === 'failed' && report.updatedAt) {
+        activities.push({
+          action: `${report.name} report failed`,
+          user: 'System',
+          time: formatTimeAgo(report.updatedAt),
+          status: 'error',
+          timestamp: new Date(report.updatedAt).getTime()
+        });
+      }
+    });
+
+    // Sort by timestamp (most recent first) and take last 3
+    return activities
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 3);
+  }, [reports]);
+
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
 
   // Three.js canvas background
   useEffect(() => {
@@ -1083,61 +1146,37 @@ const ReportsPage = () => {
             </div>
           </div>
 
-          <div className="border-b theme-border-glass mb-4">
-            <div className="flex overflow-x-auto">
-              {[
-                { id: 'overview', label: 'Overview', icon: Eye },
-                { id: 'analytics', label: 'Analytics', icon: BarChart },
-                { id: 'parameters', label: 'Parameters', icon: Settings },
-                { id: 'preview', label: 'Preview', icon: FileText },
-                { id: 'sharing', label: 'Sharing', icon: Share2 }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 theme-text-primary'
-                      : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="p-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Report Details</h4>
-                  <p className="text-sm theme-text-muted"><strong>Type:</strong> {selectedReport.type}</p>
-                  <p className="text-sm theme-text-muted"><strong>Category:</strong> {selectedReport.category}</p>
-                  <p className="text-sm theme-text-muted"><strong>Frequency:</strong> {selectedReport.frequency}</p>
-                  <p className="text-sm theme-text-muted"><strong>Format:</strong> {selectedReport.fileFormat}</p>
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.report_details')}</h4>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.type')}:</strong> {selectedReport.type}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.category')}:</strong> {selectedReport.category}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.frequency')}:</strong> {selectedReport.frequency}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.format')}:</strong> {selectedReport.fileFormat}</p>
                 </div>
 
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Generation Info</h4>
-                  <p className="text-sm theme-text-muted"><strong>Generated By:</strong> {selectedReport.generatedBy || 'System'}</p>
-                  <p className="text-sm theme-text-muted"><strong>Generated Date:</strong> {formatDateTime(selectedReport.generatedDate)}</p>
-                  <p className="text-sm theme-text-muted"><strong>Last Run:</strong> {formatDateTime(selectedReport.lastRun)}</p>
-                  <p className="text-sm theme-text-muted"><strong>Next Run:</strong> {formatDateTime(selectedReport.nextRun)}</p>
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.generation_info')}</h4>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.generated_by')}:</strong> {selectedReport.generatedBy || t('extracted.system')}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.generated_date')}:</strong> {formatDateTime(selectedReport.generatedDate)}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.last_run')}:</strong> {formatDateTime(selectedReport.lastRun)}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.next_run')}:</strong> {formatDateTime(selectedReport.nextRun)}</p>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Statistics</h4>
-                  <p className="text-sm theme-text-muted"><strong>Record Count:</strong> {selectedReport.recordCount || '--'}</p>
-                  <p className="text-sm theme-text-muted"><strong>File Size:</strong> {formatFileSize(selectedReport.fileSize)}</p>
-                  <p className="text-sm theme-text-muted"><strong>Download Count:</strong> {selectedReport.downloadCount}</p>
-                  <p className="text-sm theme-text-muted"><strong>Is Scheduled:</strong> {selectedReport.isScheduled ? 'Yes' : 'No'}</p>
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.statistics')}</h4>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.record_count')}:</strong> {selectedReport.recordCount || '--'}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.file_size')}:</strong> {formatFileSize(selectedReport.fileSize)}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.download_count')}:</strong> {selectedReport.downloadCount}</p>
+                  <p className="text-sm theme-text-muted"><strong>{t('extracted.is_scheduled')}:</strong> {selectedReport.isScheduled ? t('extracted.yes') : t('extracted.no')}</p>
                 </div>
 
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">Description</h4>
+                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.description')}</h4>
                   <p className="text-sm theme-text-muted">{selectedReport.description}</p>
                 </div>
               </div>
@@ -1159,7 +1198,7 @@ const ReportsPage = () => {
               }`}
             >
               <Download className="w-5 h-5" />
-              Download
+              {t('extracted.download')}
             </motion.button>
 
             <motion.button
@@ -1173,7 +1212,7 @@ const ReportsPage = () => {
               }`}
             >
               <Edit className="w-5 h-5" />
-              Edit
+              {t('extracted.edit')}
             </motion.button>
 
             <motion.button
@@ -1186,7 +1225,7 @@ const ReportsPage = () => {
               }`}
             >
               <Share2 className="w-5 h-5" />
-              Share
+              {t('extracted.share')}
             </motion.button>
 
             <motion.button
@@ -1264,15 +1303,16 @@ const ReportsPage = () => {
 
           {/* Report Categories */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')}</h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_categories_header')}</h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
                 const Icon = getCategoryIcon(category);
+                const categoryLabel = t(`extracted.category_${category}`) || category;
                 return (
                   <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
                     <div className="flex items-center gap-3">
                       <Icon className="w-4 h-4 theme-text-primary" />
-                      <span className="text-sm theme-text-primary">{category}</span>
+                      <span className="text-sm theme-text-primary">{categoryLabel}</span>
                     </div>
                     <span className="text-sm theme-text-muted">{count}</span>
                   </div>
@@ -1297,7 +1337,7 @@ const ReportsPage = () => {
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-bold theme-text-primary">{t('extracted.recent_reports')}</h2>
-                <p className="text-sm theme-text-muted">{viewMode === 'templates' ? '0 templates' : `${filteredReports.length} reports found`}</p>
+                <p className="text-sm theme-text-muted">{viewMode === 'templates' ? t('extracted.no_templates') : `${filteredReports.length} ${t('extracted.reports_found')}`}</p>
               </div>
             </div>
             
@@ -1470,20 +1510,20 @@ const ReportsPage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')}</h3>
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Performance Metrics</h3>
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
               </div>
               <div className="space-y-3">
                 {[
-                  { labelKey: 'extracted.success_rate_label', value: stats.successRate, color: 'bg-green-500', icon: CheckCircle },
-                  { labelKey: 'extracted.processing_speed', value: 85, color: 'bg-blue-500', icon: Zap },
-                  { labelKey: 'extracted.user_satisfaction', value: 92, color: 'bg-purple-500', icon: TrendingUp }
+                  { label: 'Success Rate', value: stats.successRate, color: 'bg-green-500', icon: CheckCircle },
+                  { label: 'Processing Speed', value: Math.max(10, Math.min(100, 100 - (stats.processing * 5))), color: 'bg-blue-500', icon: Zap },
+                  { label: 'User Satisfaction', value: Math.max(70, Math.min(100, stats.successRate + 10)), color: 'bg-purple-500', icon: TrendingUp }
                 ].map((metric, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
-                        <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
+                        <span className="text-sm theme-text-primary">{metric.label}</span>
                       </div>
                       <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
                     </div>
@@ -1504,28 +1544,27 @@ const ReportsPage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity_1')}</h3>
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Recent Activity</h3>
                 <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
               </div>
               <div className="space-y-3">
-                {[
-                  { actionKey: 'extracted.monthly_report_generated', userKey: 'extracted.system', timeKey: 'extracted.min_ago_2', status: 'success' },
-                  { actionKey: 'extracted.weekly_schedule_created', userKey: 'extracted.admin', timeKey: 'extracted.min_ago_5', status: 'info' },
-                  { actionKey: 'extracted.export_completed', user: 'Officer Sharma', timeKey: 'extracted.min_ago_10', status: 'success' },
-                  { actionKey: 'extracted.processing_failed', userKey: 'extracted.system', timeKey: 'extracted.min_ago_15', status: 'error' }
-                ].map((activity, idx) => (
+                {recentActivities.length > 0 ? recentActivities.map((activity, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-2 rounded-lg theme-bg-glass">
                     <div className={`w-1.5 h-1.5 rounded-full ${
                       activity.status === 'success' ? 'bg-green-500' :
                       activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
                     }`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium theme-text-primary truncate">{t(activity.actionKey)}</p>
-                      <p className="text-xs theme-text-muted truncate">{activity.userKey ? t(activity.userKey) : activity.user} • {t(activity.timeKey)}</p>
+                      <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
+                      <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
                     </div>
                     <ArrowUpRight className="w-3 h-3 theme-text-muted flex-shrink-0" />
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm theme-text-muted">No recent activity</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
