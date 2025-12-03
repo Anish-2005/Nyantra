@@ -500,10 +500,10 @@ const ReportsPage = () => {
       const date = new Date(dateString);
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-      if (diffInMinutes < 1) return 'Just now';
-      if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
-      return `${Math.floor(diffInMinutes / 1440)} days ago`;
+      if (diffInMinutes < 1) return t('extracted.just_now');
+      if (diffInMinutes < 60) return t('extracted.min_ago', { time: diffInMinutes });
+      if (diffInMinutes < 1440) return t('extracted.hours_ago', { time: Math.floor(diffInMinutes / 60) });
+      return t('extracted.days_ago', { time: Math.floor(diffInMinutes / 1440) });
     };
 
     const activities: Array<{
@@ -519,8 +519,8 @@ const ReportsPage = () => {
       // Report creation
       if (report.createdAt) {
         activities.push({
-          action: `${report.name} report created`,
-          user: report.generatedBy || 'System',
+          action: t('extracted.report_created', { reportName: report.name }),
+          user: report.generatedBy || t('extracted.system'),
           time: formatTimeAgo(report.createdAt),
           status: 'info',
           timestamp: new Date(report.createdAt).getTime()
@@ -530,8 +530,8 @@ const ReportsPage = () => {
       // Report completion
       if (report.status === 'completed' && report.generatedDate) {
         activities.push({
-          action: `${report.name} report generated`,
-          user: report.generatedBy || 'System',
+          action: t('extracted.report_generated', { reportName: report.name }),
+          user: report.generatedBy || t('extracted.system'),
           time: formatTimeAgo(report.generatedDate),
           status: 'success',
           timestamp: new Date(report.generatedDate).getTime()
@@ -541,8 +541,8 @@ const ReportsPage = () => {
       // Report failure
       if (report.status === 'failed' && report.updatedAt) {
         activities.push({
-          action: `${report.name} report failed`,
-          user: 'System',
+          action: t('extracted.report_failed', { reportName: report.name }),
+          user: t('extracted.system'),
           time: formatTimeAgo(report.updatedAt),
           status: 'error',
           timestamp: new Date(report.updatedAt).getTime()
@@ -793,6 +793,22 @@ const ReportsPage = () => {
     const report = reports.find(r => r.id === reportId);
     if (report) {
       setSelectedReport(report);
+    }
+  };
+
+  const handleStatusUpdate = async (reportId: string, newStatus: Report['status']) => {
+    try {
+      console.log(`Updating report ${reportId} status to ${newStatus}`);
+      await updateDoc(doc(db, 'reports', reportId), {
+        status: newStatus,
+        updatedAt: serverTimestamp(),
+        ...(newStatus === 'completed' && { generatedDate: serverTimestamp() }),
+        ...(newStatus === 'failed' && { updatedAt: serverTimestamp() })
+      });
+      console.log(`Report ${reportId} status updated to ${newStatus} successfully`);
+    } catch (error) {
+      console.error('Failed to update report status:', error);
+      alert('Failed to update report status. Please try again.');
     }
   };
 
@@ -1195,111 +1211,145 @@ const ReportsPage = () => {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
+          className="theme-bg-card theme-border-glass border rounded-xl p-3 sm:p-4 mb-4"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
-                <BarChart3 className="w-8 h-8" />
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 flex-1">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg flex-shrink-0 mx-auto sm:mx-0">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold theme-text-primary">{selectedReport.name}</h2>
-                  <span className={`px-3 py-1 ${getStatusColor(selectedReport.status)} text-sm font-bold rounded-full`}>
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                  <h2 className="text-xl sm:text-2xl font-bold theme-text-primary">{selectedReport.name}</h2>
+                  <span className={`px-2 py-1 sm:px-3 sm:py-1 ${getStatusColor(selectedReport.status)} text-xs sm:text-sm font-bold rounded-full self-center sm:self-start`}>
                     {selectedReport.status.toUpperCase()}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 flex-wrap">
-                  <p className="theme-text-muted text-lg">{selectedReport.id}</p>
-                  <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted">{selectedReport.category} • {selectedReport.frequency}</p>
-                  <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted">Generated: {formatDateTime(selectedReport.generatedDate)}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
+                  <p className="theme-text-muted font-mono text-sm">{selectedReport.id}</p>
+                  <div className="hidden sm:flex items-center gap-4">
+                    <span className="text-sm theme-text-muted">•</span>
+                    <p className="theme-text-muted">{selectedReport.category} • {selectedReport.frequency}</p>
+                    <span className="text-sm theme-text-muted">•</span>
+                    <p className="theme-text-muted">Generated: {formatDateTime(selectedReport.generatedDate)}</p>
+                  </div>
+                  {/* Mobile version */}
+                  <div className="flex flex-col sm:hidden items-center gap-1 text-xs theme-text-muted">
+                    <p>{selectedReport.category} • {selectedReport.frequency}</p>
+                    <p>Generated: {formatDateTime(selectedReport.generatedDate)}</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setSelectedReport(null)} className="btn-cancel">
-                <X className="w-5 h-5" />
+            <div className="flex items-center justify-center sm:justify-end gap-2">
+              <button onClick={() => setSelectedReport(null)} className="btn-cancel p-2">
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
 
-          <div className="p-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="px-1 sm:px-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3">
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.report_details')}</h4>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.type')}:</strong> {selectedReport.type}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.category')}:</strong> {selectedReport.category}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.frequency')}:</strong> {selectedReport.frequency}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.format')}:</strong> {selectedReport.fileFormat}</p>
+                <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary mb-2">{t('extracted.report_details')}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p className="theme-text-muted"><strong>{t('extracted.type')}:</strong> {selectedReport.type}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.category')}:</strong> {selectedReport.category}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.frequency')}:</strong> {selectedReport.frequency}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.format')}:</strong> {selectedReport.fileFormat}</p>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.generation_info')}</h4>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.generated_by')}:</strong> {selectedReport.generatedBy || t('extracted.system')}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.generated_date')}:</strong> {formatDateTime(selectedReport.generatedDate)}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.last_run')}:</strong> {formatDateTime(selectedReport.lastRun)}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.next_run')}:</strong> {formatDateTime(selectedReport.nextRun)}</p>
+                <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary mb-2">{t('extracted.generation_info')}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p className="theme-text-muted"><strong>{t('extracted.generated_by')}:</strong> {selectedReport.generatedBy || t('extracted.system')}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.generated_date')}:</strong> {formatDateTime(selectedReport.generatedDate)}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.last_run')}:</strong> {formatDateTime(selectedReport.lastRun)}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.next_run')}:</strong> {formatDateTime(selectedReport.nextRun)}</p>
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.statistics')}</h4>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.record_count')}:</strong> {selectedReport.recordCount || '--'}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.file_size')}:</strong> {formatFileSize(selectedReport.fileSize)}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.download_count')}:</strong> {selectedReport.downloadCount}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.is_scheduled')}:</strong> {selectedReport.isScheduled ? t('extracted.yes') : t('extracted.no')}</p>
+                <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary mb-2">{t('extracted.statistics')}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p className="theme-text-muted"><strong>{t('extracted.record_count')}:</strong> {selectedReport.recordCount || '--'}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.file_size')}:</strong> {formatFileSize(selectedReport.fileSize)}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.download_count')}:</strong> {selectedReport.downloadCount}</p>
+                    <p className="theme-text-muted"><strong>{t('extracted.is_scheduled')}:</strong> {selectedReport.isScheduled ? t('extracted.yes') : t('extracted.no')}</p>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.description')}</h4>
-                  <p className="text-sm theme-text-muted">{selectedReport.description}</p>
+                <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
+                  <h4 className="text-sm font-semibold theme-text-primary mb-2">{t('extracted.description')}</h4>
+                  <p className="text-sm theme-text-muted leading-relaxed">{selectedReport.description}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                console.log('Download button clicked for report:', selectedReport.id, 'status:', selectedReport.status);
-                if (selectedReport.status === 'completed') {
-                  handleDownload(selectedReport.id);
-                } else {
-                  console.log('Report not completed, download disabled');
-                }
-              }}
-              disabled={selectedReport.status !== 'completed'}
-              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
-                selectedReport.status === 'completed'
-                  ? theme === 'light'
-                    ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-                    : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
-                  : 'opacity-50 cursor-not-allowed theme-bg-glass theme-border-glass'
-              }`}
-            >
-              <Download className="w-5 h-5" />
-              {t('extracted.download')}
-            </motion.button>
+          {/* Status Update Section */}
+          <div className="mt-4 px-1 sm:px-2">
+            <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <h4 className="text-sm font-semibold theme-text-primary mb-3">{t('extracted.update_status') || 'Update Status'}</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <label className="text-sm theme-text-primary">{t('extracted.status') || 'Status'}:</label>
+                <select
+                  value={selectedReport.status}
+                  onChange={(e) => handleStatusUpdate(selectedReport.id, e.target.value as Report['status'])}
+                  className="px-3 py-2 rounded-lg border theme-border-glass theme-bg-card theme-text-primary focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 min-w-[140px]"
+                >
+                  <option value="scheduled">{t('extracted.scheduled') || 'Scheduled'}</option>
+                  <option value="processing">{t('extracted.processing') || 'Processing'}</option>
+                  <option value="completed">{t('extracted.completed') || 'Completed'}</option>
+                  <option value="failed">{t('extracted.failed') || 'Failed'}</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { setShowNewReportModal(true); }}
-              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
-                theme === 'light'
-                  ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100'
-                  : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
-              }`}
-            >
-              <Edit className="w-5 h-5" />
-              {t('extracted.edit')}
-            </motion.button>
+          <div className="mt-4 px-1 sm:px-2 pb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  console.log('Download button clicked for report:', selectedReport.id, 'status:', selectedReport.status);
+                  if (selectedReport.status === 'completed') {
+                    handleDownload(selectedReport.id);
+                  } else {
+                    console.log('Report not completed, download disabled');
+                  }
+                }}
+                disabled={selectedReport.status !== 'completed'}
+                className={`px-2 sm:px-4 py-3 rounded-xl border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
+                  selectedReport.status === 'completed'
+                    ? theme === 'light'
+                      ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+                      : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
+                    : 'opacity-50 cursor-not-allowed theme-bg-glass theme-border-glass'
+                }`}
+              >
+                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-center">{t('extracted.download')}</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { setShowNewReportModal(true); }}
+                className={`px-2 sm:px-4 py-3 rounded-xl border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
+                  theme === 'light'
+                    ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100'
+                    : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
+                }`}
+              >
+                <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-center">{t('extracted.edit')}</span>
+              </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -1325,9 +1375,13 @@ const ReportsPage = () => {
               }`}
             >
               <Sparkles className="w-5 h-5" />
-              Analyze
+              {t('extracted.analyze')}
             </motion.button>
+
           </div>
+
+          </div>
+
         </motion.section>
       )}
 
@@ -1468,7 +1522,7 @@ const ReportsPage = () => {
           </div>
 
           {/* Reports Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {paginatedReports.map((report, idx) => (
               <motion.div
                 key={report.id}
@@ -1556,6 +1610,20 @@ const ReportsPage = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    <select
+                      value={report.status}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleStatusUpdate(report.id, e.target.value as Report['status']);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-2 py-1 text-xs rounded-md border theme-border-glass theme-bg-glass theme-text-primary focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="failed">Failed</option>
+                    </select>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -1597,38 +1665,38 @@ const ReportsPage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Report Analytics</h3>
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.report_analytics')}</h3>
                 <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
               </div>
               <div className="space-y-3">
                 {[
                   { 
-                    label: 'Completion Rate', 
+                    labelKey: 'extracted.completion_rate', 
                     value: stats.successRate, 
                     color: 'bg-green-500', 
                     icon: CheckCircle,
-                    description: `${stats.completed} of ${stats.total} reports completed`
+                    description: t('extracted.reports_completed', { count: stats.completed, total: stats.total })
                   },
                   { 
-                    label: 'Download Engagement', 
+                    labelKey: 'extracted.download_engagement', 
                     value: stats.total > 0 ? Math.round((stats.totalDownloads / stats.total) * 100) : 0, 
                     color: 'bg-blue-500', 
                     icon: Download,
-                    description: `${stats.totalDownloads} total downloads`
+                    description: t('extracted.total_downloads', { count: stats.totalDownloads })
                   },
                   { 
-                    label: 'System Health', 
+                    labelKey: 'extracted.system_health', 
                     value: Math.max(0, Math.min(100, 100 - (stats.failed * 10))), 
                     color: stats.failed > 0 ? 'bg-red-500' : 'bg-green-500', 
                     icon: Activity,
-                    description: `${stats.failed} failed reports`
+                    description: t('extracted.failed_reports', { count: stats.failed })
                   }
                 ].map((metric, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <metric.icon className={`w-3 h-3 ${metric.color.replace('bg-', 'text-')}`} />
-                        <span className="text-sm theme-text-primary">{metric.label}</span>
+                        <span className="text-sm theme-text-primary">{t(metric.labelKey)}</span>
                       </div>
                       <span className="text-sm font-semibold theme-text-primary">{metric.value}%</span>
                     </div>
@@ -1650,7 +1718,7 @@ const ReportsPage = () => {
               className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">Recent Activity</h3>
+                <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity')}</h3>
                 <Activity className="w-4 h-4 sm:w-5 sm:h-5 theme-text-muted" />
               </div>
               <div className="space-y-3">
@@ -1668,7 +1736,7 @@ const ReportsPage = () => {
                   </div>
                 )) : (
                   <div className="text-center py-4">
-                    <p className="text-sm theme-text-muted">No recent activity</p>
+                    <p className="text-sm theme-text-muted">{t('extracted.no_recent_activity')}</p>
                   </div>
                 )}
               </div>
