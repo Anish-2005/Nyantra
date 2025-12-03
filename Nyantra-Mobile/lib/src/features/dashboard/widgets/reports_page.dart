@@ -738,24 +738,57 @@ class _ReportsPageState extends State<ReportsPage> {
               children: [
                 pw.Header(
                   level: 0,
-                  child: pw.Text('Report Download', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                  child: pw.Text(
+                    'Report Download',
+                    style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                 ),
                 pw.SizedBox(height: 20),
-                pw.Text('Report Name: ${report.name}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Report Name: ${report.name}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text('Report ID: ${report.id}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Report ID: ${report.id}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text('Generated at: ${DateTime.now().toString()}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Generated at: ${DateTime.now().toString()}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text('Category: ${report.category}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Category: ${report.category}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text('Type: ${report.type}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Type: ${report.type}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text('Status: ${report.status}', style: const pw.TextStyle(fontSize: 14)),
+                pw.Text(
+                  'Status: ${report.status}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
                 pw.SizedBox(height: 20),
-                pw.Text('Description:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  'Description:',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
                 pw.SizedBox(height: 10),
-                pw.Text(report.description, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(
+                  report.description,
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
               ],
             );
           },
@@ -763,7 +796,8 @@ class _ReportsPageState extends State<ReportsPage> {
       );
 
       // Save the PDF
-      final fileName = '${report.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}_${report.id}.pdf';
+      final fileName =
+          '${report.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}_${report.id}.pdf';
       await Printing.sharePdf(bytes: await pdf.save(), filename: fileName);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
