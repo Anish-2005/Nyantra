@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_content.dart';
@@ -58,27 +59,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 1024;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: theme.appBarTheme.backgroundColor?.withOpacity(0.95),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            _sidebarOpen ? Icons.close : Icons.menu,
-            color: theme.appBarTheme.foregroundColor,
-          ),
-          onPressed: _toggleSidebar,
-        ),
-        title: Text(
-          _getPageTitle(localeProvider),
-          style: TextStyle(
-            color: theme.appBarTheme.foregroundColor,
-            fontWeight: FontWeight.w600,
-          ),
+        leading: isMobile
+            ? IconButton(
+                icon: Icon(
+                  _sidebarOpen ? Icons.close : Icons.menu,
+                  color: theme.appBarTheme.foregroundColor,
+                ),
+                onPressed: _toggleSidebar,
+              )
+            : null,
+        title: Row(
+          children: [
+            // Logo
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    isDark
+                        ? 'assets/images/Logo-Dark.png'
+                        : 'assets/images/Logo-Light.png',
+                  ),
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Title
+            Text(
+              _getPageTitle(localeProvider),
+              style: TextStyle(
+                color: theme.appBarTheme.foregroundColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         actions: [
           // User Menu

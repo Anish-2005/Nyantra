@@ -154,13 +154,15 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.account_balance,
-                                color: theme.primaryColor,
-                                size: 24,
+                                image: DecorationImage(
+                                  image: AssetImage(
+                                    isDark
+                                        ? 'assets/images/Logo-Dark.png'
+                                        : 'assets/images/Logo-Light.png',
+                                  ),
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -169,7 +171,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    localeProvider.translate('auth.applicant'),
+                                    'Nyantra',
                                     style: theme.textTheme.titleMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -395,13 +397,15 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: theme.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.account_balance,
-                          color: theme.primaryColor,
-                          size: 24,
+                          image: DecorationImage(
+                            image: AssetImage(
+                              isDark
+                                  ? 'assets/images/Logo-Dark.png'
+                                  : 'assets/images/Logo-Light.png',
+                            ),
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -410,7 +414,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              localeProvider.translate('auth.applicant'),
+                              'Nyantra',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyLarge?.color,
@@ -433,13 +437,15 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.account_balance,
-                        color: theme.primaryColor,
-                        size: 24,
+                        image: DecorationImage(
+                          image: AssetImage(
+                            isDark
+                                ? 'assets/images/Logo-Dark.png'
+                                : 'assets/images/Logo-Light.png',
+                          ),
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),

@@ -21,7 +21,6 @@ class _ReportsPageState extends State<ReportsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'all';
   String _selectedStatus = 'all';
-  Report? _selectedReport;
 
   @override
   void dispose() {
@@ -705,7 +704,6 @@ class _ReportsPageState extends State<ReportsPage> {
   void _showReportDetailModal(BuildContext context, Report report) {
     final theme = Theme.of(context);
     final localeProvider = context.read<LocaleProvider>();
-    final isDark = theme.brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,

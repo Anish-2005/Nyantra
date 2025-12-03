@@ -364,25 +364,33 @@ class _LoginScreenState extends State<LoginScreen>
                             Flexible(
                               child: _buildStatCard(
                                 '45K+',
-                                localeProvider.translate('stats.beneficiaries') ?? 'Beneficiaries',
+                                localeProvider.translate('stats.beneficiaries'),
                                 Icons.people,
                                 isDark,
                               ),
                             ),
-                            SizedBox(width: MediaQuery.of(context).size.width < 400 ? 4 : 8),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width < 400
+                                  ? 4
+                                  : 8,
+                            ),
                             Flexible(
                               child: _buildStatCard(
                                 '₹250Cr',
-                                localeProvider.translate('stats.disbursed') ?? 'Disbursed',
+                                localeProvider.translate('stats.disbursed'),
                                 Icons.account_balance_wallet,
                                 isDark,
                               ),
                             ),
-                            SizedBox(width: MediaQuery.of(context).size.width < 400 ? 4 : 8),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width < 400
+                                  ? 4
+                                  : 8,
+                            ),
                             Flexible(
                               child: _buildStatCard(
                                 '72hrs',
-                                localeProvider.translate('stats.avgTime') ?? 'Avg. Time',
+                                localeProvider.translate('stats.avgTime'),
                                 Icons.access_time,
                                 isDark,
                               ),
@@ -988,7 +996,9 @@ class _LoginScreenState extends State<LoginScreen>
             children: [
               Icon(
                 icon,
-                color: isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185),
+                color: isDark
+                    ? const Color(0xFF06B6D4)
+                    : const Color(0xFFFB7185),
                 size: isSmallScreen ? 20 : 24,
               ),
               SizedBox(height: isSmallScreen ? 4 : 8),
@@ -1006,7 +1016,9 @@ class _LoginScreenState extends State<LoginScreen>
                 label,
                 style: TextStyle(
                   fontSize: isSmallScreen ? 10 : 12,
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.7,
+                  ),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
