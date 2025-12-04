@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'src/core/services/firebase_service.dart';
+import 'src/core/services/sync_service.dart';
 import 'src/core/providers/theme_provider.dart';
 import 'src/core/providers/locale_provider.dart';
 import 'src/core/providers/auth_provider.dart';
+import 'src/core/providers/connectivity_provider.dart';
 import 'src/features/auth/screens/login_screen.dart';
 import 'src/features/dashboard/screens/dashboard_screen.dart';
 
@@ -13,6 +15,12 @@ void main() async {
 
   // Initialize Firebase
   await FirebaseService.initialize();
+
+  // Initialize sync service
+  final syncService = SyncService();
+  if (await syncService.isOnline()) {
+    await syncService.syncFromFirestore();
+  }
 
   runApp(const MyApp());
 }
@@ -27,6 +35,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, AuthProvider>(
         builder: (context, themeProvider, localeProvider, authProvider, child) {

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'sync_service.dart';
 import '../models/user_model.dart';
 import '../models/application_model.dart';
 import '../models/beneficiary_model.dart';
@@ -13,6 +14,11 @@ import '../models/feedback_model.dart';
 class DataService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final SyncService _syncService = SyncService();
+
+  static Future<bool> _isOnline() async {
+    return await _syncService.isOnline();
+  }
 
   // Dashboard Stats - filtered by current user
   static Future<Map<String, dynamic>> getDashboardStats() async {

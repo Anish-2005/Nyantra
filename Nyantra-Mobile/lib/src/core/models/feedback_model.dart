@@ -49,4 +49,30 @@ class FeedbackModel {
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
   }
+
+  factory FeedbackModel.fromJson(Map<String, dynamic> json) {
+    return FeedbackModel(
+      id: json['id'],
+      userId: json['userId'],
+      subject: json['subject'],
+      message: json['message'],
+      rating: json['rating'],
+      status: json['status'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'subject': subject,
+      'message': message,
+      'rating': rating,
+      'status': status,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
 }

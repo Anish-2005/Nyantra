@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/models/report_model.dart';
+import '../../../core/services/sync_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -364,11 +365,8 @@ class _ReportsPageState extends State<ReportsPage> {
 
                 // Reports List
                 Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('reports')
-                        .orderBy('createdAt', descending: true)
-                        .snapshots(),
+                  child: FutureBuilder<List<Report>>(
+                    future: SyncService().getReports(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const LoadingState();
@@ -383,40 +381,32 @@ class _ReportsPageState extends State<ReportsPage> {
                         );
                       }
 
-                      final reports =
-                          snapshot.data?.docs
-                              .map(
-                                (doc) => Report.fromJson(
-                                  doc.data() as Map<String, dynamic>,
-                                  doc.id,
-                                ),
-                              )
-                              .where((report) {
-                                // Apply filters
-                                final matchesSearch =
-                                    _searchController.text.isEmpty ||
-                                    report.name.toLowerCase().contains(
-                                      _searchController.text.toLowerCase(),
-                                    ) ||
-                                    report.description.toLowerCase().contains(
-                                      _searchController.text.toLowerCase(),
-                                    );
+                      final reports = snapshot.data ?? [];
 
-                                final matchesCategory =
-                                    _selectedCategory == 'all' ||
-                                    report.category == _selectedCategory;
-                                final matchesStatus =
-                                    _selectedStatus == 'all' ||
-                                    report.status == _selectedStatus;
+                      // Apply filters
+                      final filteredReports = reports.where((report) {
+                        final matchesSearch =
+                            _searchController.text.isEmpty ||
+                            report.name.toLowerCase().contains(
+                              _searchController.text.toLowerCase(),
+                            ) ||
+                            report.description.toLowerCase().contains(
+                              _searchController.text.toLowerCase(),
+                            );
 
-                                return matchesSearch &&
-                                    matchesCategory &&
-                                    matchesStatus;
-                              })
-                              .toList() ??
-                          [];
+                        final matchesCategory =
+                            _selectedCategory == 'all' ||
+                            report.category == _selectedCategory;
+                        final matchesStatus =
+                            _selectedStatus == 'all' ||
+                            report.status == _selectedStatus;
 
-                      if (reports.isEmpty) {
+                        return matchesSearch &&
+                            matchesCategory &&
+                            matchesStatus;
+                      }).toList();
+
+                      if (filteredReports.isEmpty) {
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -449,9 +439,9 @@ class _ReportsPageState extends State<ReportsPage> {
 
                       return ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: reports.length,
+                        itemCount: filteredReports.length,
                         itemBuilder: (context, index) {
-                          final report = reports[index];
+                          final report = filteredReports[index];
                           return _buildReportCard(
                             context,
                             report,

@@ -181,6 +181,97 @@ class ApplicationModel {
     };
   }
 
+  factory ApplicationModel.fromJson(Map<String, dynamic> json) {
+    return ApplicationModel(
+      id: json['id'],
+      applicantName: json['applicantName'],
+      actType: json['actType'],
+      status: ApplicationStatus.values.firstWhere(
+        (e) => e.name == (json['status'] ?? 'pending'),
+        orElse: () => ApplicationStatus.pending,
+      ),
+      applicationDate: DateTime.parse(json['applicationDate']),
+      amount: json['amount'],
+      description: json['description'],
+      userId: json['userId'],
+      ownerId: json['ownerId'],
+      beneficiaryId: json['beneficiaryId'],
+      contactNumber: json['contactNumber'],
+      contactEmail: json['contactEmail'],
+      address: json['address'],
+      bankAccount: json['bankAccount'],
+      bankIfsc: json['bankIfsc'],
+      aadhaar: json['aadhaar'],
+      attachments: json['attachments'] != null
+          ? List<String>.from(json['attachments'])
+          : null,
+      remarks: json['remarks'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
+      district: json['district'],
+      state: json['state'],
+      incidentDate: json['incidentDate'],
+      priority: json['priority'],
+      assignedOfficer: json['assignedOfficer'],
+      documents: json['documents'],
+      lastUpdate: json['lastUpdate'],
+      fatherName: json['fatherName'],
+      email: json['email'],
+      caseNumber: json['caseNumber'],
+      registrationDate: json['registrationDate'],
+      category: json['category'],
+      age: json['age'],
+      gender: json['gender'],
+      maritalStatus: json['maritalStatus'],
+      ifsc: json['ifsc'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'applicantName': applicantName,
+      'actType': actType,
+      'status': status.name,
+      'applicationDate': applicationDate.toIso8601String(),
+      'amount': amount,
+      'description': description,
+      'userId': userId,
+      'ownerId': ownerId,
+      'beneficiaryId': beneficiaryId,
+      'contactNumber': contactNumber,
+      'contactEmail': contactEmail,
+      'address': address,
+      'bankAccount': bankAccount,
+      'bankIfsc': bankIfsc,
+      'aadhaar': aadhaar,
+      'attachments': attachments,
+      'remarks': remarks,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'district': district,
+      'state': state,
+      'incidentDate': incidentDate,
+      'priority': priority,
+      'assignedOfficer': assignedOfficer,
+      'documents': documents,
+      'lastUpdate': lastUpdate,
+      'fatherName': fatherName,
+      'email': email,
+      'caseNumber': caseNumber,
+      'registrationDate': registrationDate,
+      'category': category,
+      'age': age,
+      'gender': gender,
+      'maritalStatus': maritalStatus,
+      'ifsc': ifsc,
+    };
+  }
+
   String get statusText {
     switch (status) {
       case ApplicationStatus.pending:

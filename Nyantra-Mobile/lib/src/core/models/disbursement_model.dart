@@ -91,6 +91,55 @@ class DisbursementModel {
     };
   }
 
+  factory DisbursementModel.fromJson(Map<String, dynamic> json) {
+    return DisbursementModel(
+      id: json['id'],
+      beneficiaryId: json['beneficiaryId'],
+      applicationId: json['applicationId'],
+      reliefAmount: json['reliefAmount'],
+      status: DisbursementStatus.values.firstWhere(
+        (e) => e.name == (json['status'] ?? 'pending'),
+        orElse: () => DisbursementStatus.pending,
+      ),
+      disbursementDate: json['disbursementDate'] != null
+          ? DateTime.parse(json['disbursementDate'])
+          : null,
+      transactionId: json['transactionId'],
+      notes: json['notes'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
+      userPhone: json['userPhone'],
+      userEmail: json['userEmail'],
+      userBankAccount: json['userBankAccount'],
+      userIFSC: json['userIFSC'],
+      userAddress: json['userAddress'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'beneficiaryId': beneficiaryId,
+      'applicationId': applicationId,
+      'reliefAmount': reliefAmount,
+      'status': status.name,
+      'disbursementDate': disbursementDate?.toIso8601String(),
+      'transactionId': transactionId,
+      'notes': notes,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'userPhone': userPhone,
+      'userEmail': userEmail,
+      'userBankAccount': userBankAccount,
+      'userIFSC': userIFSC,
+      'userAddress': userAddress,
+    };
+  }
+
   String get statusText {
     switch (status) {
       case DisbursementStatus.pending:

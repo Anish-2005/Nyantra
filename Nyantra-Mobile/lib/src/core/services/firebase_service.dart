@@ -28,6 +28,11 @@ class FirebaseService {
         measurementId: 'G-NV8KH8EKNX',
       ),
     );
+
+    // Enable offline persistence for Firestore
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+    );
   }
 
   static Future<UserCredential> signInWithGoogle() async {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/connectivity_provider.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_content.dart';
 
@@ -89,6 +90,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
+          // Connectivity Indicator
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) {
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: connectivityProvider.isOnline
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: connectivityProvider.isOnline
+                        ? Colors.green
+                        : Colors.red,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      connectivityProvider.isOnline
+                          ? Icons.wifi
+                          : Icons.wifi_off,
+                      size: 16,
+                      color: connectivityProvider.isOnline
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      connectivityProvider.isOnline ? 'Online' : 'Offline',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: connectivityProvider.isOnline
+                            ? Colors.green
+                            : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           // User Menu
           PopupMenuButton<String>(
             onSelected: (value) {

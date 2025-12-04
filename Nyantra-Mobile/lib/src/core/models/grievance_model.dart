@@ -147,6 +147,81 @@ class GrievanceModel {
     };
   }
 
+  factory GrievanceModel.fromJson(Map<String, dynamic> json) {
+    return GrievanceModel(
+      id: json['id'],
+      beneficiaryId: json['beneficiaryId'],
+      userId: json['userId'],
+      beneficiaryName: json['beneficiaryName'],
+      phone: json['phone'],
+      email: json['email'],
+      district: json['district'],
+      state: json['state'],
+      actType: json['actType'],
+      applicationId: json['applicationId'],
+      category: json['category'],
+      subCategory: json['subCategory'],
+      priority: json['priority'],
+      status: GrievanceStatus.values.firstWhere(
+        (e) => e.name == (json['status'] ?? 'open'),
+        orElse: () => GrievanceStatus.open,
+      ),
+      assignedTo: json['assignedTo'],
+      assignedDate: json['assignedDate'],
+      createdDate: json['createdDate'] != null
+          ? DateTime.parse(json['createdDate'])
+          : null,
+      lastUpdated: json['lastUpdated'],
+      resolvedDate: json['resolvedDate'] != null
+          ? DateTime.parse(json['resolvedDate'])
+          : null,
+      expectedResolution: json['expectedResolution'],
+      title: json['title'],
+      description: json['description'],
+      attachments: json['attachments'],
+      communication: json['communication'],
+      escalationLevel: json['escalationLevel'],
+      satisfactionRating: json['satisfactionRating'],
+      followUpRequired: json['followUpRequired'] == 1,
+      relatedGrievances: json['relatedGrievances'] != null
+          ? List<String>.from(json['relatedGrievances'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'beneficiaryId': beneficiaryId,
+      'userId': userId,
+      'beneficiaryName': beneficiaryName,
+      'phone': phone,
+      'email': email,
+      'district': district,
+      'state': state,
+      'actType': actType,
+      'applicationId': applicationId,
+      'category': category,
+      'subCategory': subCategory,
+      'priority': priority,
+      'status': status.name,
+      'assignedTo': assignedTo,
+      'assignedDate': assignedDate,
+      'createdDate': createdDate?.toIso8601String(),
+      'lastUpdated': lastUpdated,
+      'resolvedDate': resolvedDate?.toIso8601String(),
+      'expectedResolution': expectedResolution,
+      'title': title,
+      'description': description,
+      'attachments': attachments,
+      'communication': communication,
+      'escalationLevel': escalationLevel,
+      'satisfactionRating': satisfactionRating,
+      'followUpRequired': followUpRequired == true ? 1 : 0,
+      'relatedGrievances': relatedGrievances,
+    };
+  }
+
   String get statusText {
     switch (status) {
       case GrievanceStatus.open:

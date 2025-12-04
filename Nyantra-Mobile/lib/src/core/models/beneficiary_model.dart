@@ -112,4 +112,66 @@ class BeneficiaryModel {
       if (maritalStatus != null) 'maritalStatus': maritalStatus,
     };
   }
+
+  factory BeneficiaryModel.fromJson(Map<String, dynamic> json) {
+    return BeneficiaryModel(
+      id: json['id'],
+      name: json['name'],
+      phone: json['phone'],
+      aadhaar: json['aadhaar'],
+      address: json['address'],
+      bankAccount: json['bankAccount'],
+      ifsc: json['ifsc'],
+      ownerId: json['ownerId'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
+      actType: json['actType'],
+      reliefAmount: json['reliefAmount'],
+      category: json['category'],
+      registrationDate: json['registrationDate'] != null
+          ? DateTime.parse(json['registrationDate'])
+          : null,
+      status: json['status'],
+      fatherName: json['fatherName'],
+      caseNumber: json['caseNumber'],
+      district: json['district'],
+      state: json['state'],
+      incidentDate: json['incidentDate'],
+      age: json['age'],
+      gender: json['gender'],
+      maritalStatus: json['maritalStatus'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'phone': phone,
+      'aadhaar': aadhaar,
+      'address': address,
+      'bankAccount': bankAccount,
+      'ifsc': ifsc,
+      'ownerId': ownerId,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'actType': actType,
+      'reliefAmount': reliefAmount,
+      'category': category,
+      'registrationDate': registrationDate?.toIso8601String(),
+      'status': status,
+      'fatherName': fatherName,
+      'caseNumber': caseNumber,
+      'district': district,
+      'state': state,
+      'incidentDate': incidentDate,
+      'age': age,
+      'gender': gender,
+      'maritalStatus': maritalStatus,
+    };
+  }
 }
