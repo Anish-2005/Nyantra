@@ -725,7 +725,7 @@ class _ReportsPageState extends State<ReportsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor.withOpacity(0.9),
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: BoxDecoration(
