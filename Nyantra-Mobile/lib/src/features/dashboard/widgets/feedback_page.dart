@@ -270,23 +270,6 @@ class _FeedbackPageState extends State<FeedbackPage>
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF0F172A),
-                  const Color(0xFF1E293B),
-                  const Color(0xFF334155),
-                ]
-              : [
-                  const Color(0xFFF8FAFC),
-                  const Color(0xFFF0F9FF),
-                  const Color(0xFFE0F2FE),
-                ],
-        ),
-      ),
       child: Stack(
         children: [
           // Background decorative elements

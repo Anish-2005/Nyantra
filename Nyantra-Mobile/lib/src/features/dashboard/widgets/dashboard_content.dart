@@ -17,7 +17,7 @@ class DashboardContent extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      color: theme.scaffoldBackgroundColor,
+      color: Colors.transparent,
       child: IndexedStack(
         index: selectedIndex,
         children: const [

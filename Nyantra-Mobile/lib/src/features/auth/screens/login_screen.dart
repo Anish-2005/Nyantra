@@ -7,6 +7,7 @@ import 'dart:math';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../components/AnimatedBackground.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,27 +19,26 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   bool _isLoading = false;
-  late AnimationController _particleController;
   late AnimationController _backgroundController;
+  late AnimationController _particleController;
 
   @override
   void initState() {
     super.initState();
+    _backgroundController = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
+    )..repeat();
     _particleController = AnimationController(
       duration: const Duration(seconds: 20),
       vsync: this,
     )..repeat();
-
-    _backgroundController = AnimationController(
-      duration: const Duration(seconds: 10),
-      vsync: this,
-    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _particleController.dispose();
     _backgroundController.dispose();
+    _particleController.dispose();
     super.dispose();
   }
 
@@ -100,153 +100,7 @@ class _LoginScreenState extends State<LoginScreen>
       body: Stack(
         children: [
           // Animated Background
-          AnimatedBuilder(
-            animation: _backgroundController,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [
-                            Color.lerp(
-                              const Color(0xFF0F172A),
-                              const Color(0xFF1E1B4B),
-                              _backgroundController.value,
-                            )!,
-                            Color.lerp(
-                              const Color(0xFF1E293B),
-                              const Color(0xFF312E81),
-                              _backgroundController.value,
-                            )!,
-                            Color.lerp(
-                              const Color(0xFF334155),
-                              const Color(0xFF4338CA),
-                              _backgroundController.value,
-                            )!,
-                          ]
-                        : [
-                            Color.lerp(
-                              const Color(0xFFF8FAFC),
-                              const Color(0xFFF0F9FF),
-                              _backgroundController.value,
-                            )!,
-                            Color.lerp(
-                              const Color(0xFFF1F5F9),
-                              const Color(0xFFE0F2FE),
-                              _backgroundController.value,
-                            )!,
-                            Color.lerp(
-                              const Color(0xFFE2E8F0),
-                              const Color(0xFFBAE6FD),
-                              _backgroundController.value,
-                            )!,
-                          ],
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Animated Particles Background
-          AnimatedBuilder(
-            animation: _particleController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: ParticlePainter(
-                  animation: _particleController,
-                  isDark: isDark,
-                ),
-                size: MediaQuery.of(context).size,
-              );
-            },
-          ),
-
-          // Floating Decorative Elements
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.1,
-            left: MediaQuery.of(context).size.width * 0.1,
-            child: AnimatedBuilder(
-              animation: _backgroundController,
-              builder: (context, child) {
-                return Transform.rotate(
-                  angle: _backgroundController.value * 2 * pi,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [
-                                const Color(0xFF06B6D4).withOpacity(0.3),
-                                const Color(0xFF8B5CF6).withOpacity(0.3),
-                              ]
-                            : [
-                                const Color(0xFFFB7185).withOpacity(0.2),
-                                const Color(0xFFFB923C).withOpacity(0.2),
-                              ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (isDark
-                                      ? const Color(0xFF06B6D4)
-                                      : const Color(0xFFFB7185))
-                                  .withOpacity(0.3),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          Positioned(
-            bottom: MediaQuery.of(context).size.height * 0.15,
-            right: MediaQuery.of(context).size.width * 0.15,
-            child: AnimatedBuilder(
-              animation: _backgroundController,
-              builder: (context, child) {
-                return Transform.rotate(
-                  angle: -_backgroundController.value * 2 * pi,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [
-                                const Color(0xFFF59E0B).withOpacity(0.3),
-                                const Color(0xFF8B5CF6).withOpacity(0.3),
-                              ]
-                            : [
-                                const Color(0xFFFB923C).withOpacity(0.2),
-                                const Color(0xFFF59E0B).withOpacity(0.2),
-                              ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (isDark
-                                      ? const Color(0xFFF59E0B)
-                                      : const Color(0xFFFB923C))
-                                  .withOpacity(0.3),
-                          blurRadius: 15,
-                          spreadRadius: 3,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          AnimatedBackground(isDark: isDark),
 
           // Main Content
           SafeArea(
@@ -1041,34 +895,3 @@ class GridPainter extends CustomPainter {
 }
 
 // Custom Particle Painter for animated background particles
-class ParticlePainter extends CustomPainter {
-  final Animation<double> animation;
-  final bool isDark;
-
-  ParticlePainter({required this.animation, required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = (isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185))
-          .withOpacity(0.1);
-
-    final random = Random(42); // Fixed seed for consistent pattern
-
-    for (int i = 0; i < 50; i++) {
-      final x =
-          (random.nextDouble() * size.width + animation.value * 100) %
-          size.width;
-      final y =
-          (random.nextDouble() * size.height + animation.value * 50) %
-          size.height;
-      final radius = random.nextDouble() * 3 + 1;
-
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
