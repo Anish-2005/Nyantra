@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseService {
   static FirebaseAuth? _auth;
@@ -36,14 +37,30 @@ class FirebaseService {
   }
 
   static Future<UserCredential> signInWithGoogle() async {
-    // Create a new provider
-    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+    // For mobile platforms, use Google Sign-In plugin
+    final GoogleSignIn googleSignIn = GoogleSignIn();
 
-    // Add scopes if needed (optional)
-    googleProvider.addScope('email');
-    googleProvider.addScope('profile');
+    // Attempt to sign in
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-    // For web, use signInWithPopup
-    return await FirebaseAuth.instance.signInWithPopup(googleProvider);
+    if (googleUser == null) {
+      throw FirebaseAuthException(
+        code: 'ERROR_ABORTED_BY_USER',
+        message: 'Sign in aborted by user',
+      );
+    }
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    // Sign in to Firebase with the credential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 }
