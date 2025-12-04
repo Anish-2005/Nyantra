@@ -285,12 +285,12 @@ class _FeedbackPageState extends State<FeedbackPage>
                         gradient: LinearGradient(
                           colors: isDark
                               ? [
-                                  const Color(0xFF8B5CF6),
                                   const Color(0xFF06B6D4),
+                                  const Color(0xFF8B5CF6),
                                 ]
                               : [
+                                  const Color(0xFFFB7185),
                                   const Color(0xFFFB923C),
-                                  const Color(0xFFF59E0B),
                                 ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -409,11 +409,11 @@ class _FeedbackPageState extends State<FeedbackPage>
                               gradient: LinearGradient(
                                 colors: isDark
                                     ? [
-                                        const Color(0xFF8B5CF6),
                                         const Color(0xFF06B6D4),
+                                        const Color(0xFF8B5CF6),
                                       ]
                                     : [
-                                        const Color(0xFFF59E0B),
+                                        const Color(0xFFFB7185),
                                         const Color(0xFFFB923C),
                                       ],
                               ),
