@@ -895,3 +895,32 @@ class GridPainter extends CustomPainter {
 }
 
 // Custom Particle Painter for animated background particles
+class ParticlePainter extends CustomPainter {
+  final Animation<double> animation;
+  final bool isDark;
+
+  ParticlePainter({required this.animation, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = (isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185))
+          .withOpacity(0.2);
+
+    final random = Random(42); // Fixed seed for consistent pattern
+    for (int i = 0; i < 50; i++) {
+      final x =
+          (random.nextDouble() * size.width + animation.value * 100) %
+          size.width;
+      final y =
+          (random.nextDouble() * size.height + animation.value * 50) %
+          size.height;
+      final radius = random.nextDouble() * 3 + 1;
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}

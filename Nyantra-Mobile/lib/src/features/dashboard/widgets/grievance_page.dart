@@ -559,418 +559,537 @@ class _GrievancePageState extends State<GrievancePage> {
 
                 // Grievances List
                 Expanded(
-                  child: StreamBuilder<List<GrievanceModel>>(
-                    stream: DataService.getGrievances(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return LoadingState(
-                          message: localeProvider.translate('common.loading'),
-                        );
-                      }
-
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: theme.colorScheme.error.withValues(
-                                  alpha: 128,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                localeProvider.translate(
-                                  'grievances.errorLoadingGrievances',
-                                ),
-                                style: theme.textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${snapshot.error}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.textTheme.bodySmall?.color,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        // Search Bar
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.dividerColor.withOpacity(0.1),
+                            ),
                           ),
-                        );
-                      }
-
-                      final grievances = snapshot.data ?? [];
-
-                      if (grievances.isEmpty) {
-                        final currentUser = context
-                            .watch<app_auth.AuthProvider>()
-                            .user;
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.report_problem_outlined,
-                                size: 64,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText:
+                                  localeProvider.translate(
+                                    'grievances.searchGrievances',
+                                  ) ??
+                                  'Search grievances...',
+                              prefixIcon: Icon(
+                                Icons.search,
                                 color: theme.textTheme.bodyMedium?.color
-                                    ?.withValues(alpha: 77),
+                                    ?.withOpacity(0.6),
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                localeProvider.translate(
-                                  'grievances.noGrievances',
-                                ),
-                                style: theme.textTheme.headlineSmall,
-                                textAlign: TextAlign.center,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                localeProvider.translate(
-                                  'grievances.noGrievancesDescription',
-                                ),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.textTheme.bodySmall?.color,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: theme.dividerColor.withValues(
-                                      alpha: 77,
-                                    ),
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      localeProvider.translate(
-                                        'grievances.firebaseInstruction',
-                                      ),
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: theme.scaffoldBackgroundColor,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: SelectableText(
-                                        currentUser?.uid ??
-                                            localeProvider.translate(
-                                              'grievances.noUserId',
-                                            ),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontFamily: 'monospace',
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '${localeProvider.translate('grievances.firebaseConsoleInstruction')} "${currentUser?.uid ?? 'your-user-id'}"',
-                                      style: theme.textTheme.bodySmall,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
+                            style: theme.textTheme.bodyMedium,
                           ),
-                        ).animate().fadeIn(duration: 600.ms, delay: 300.ms);
-                      }
+                        ),
 
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: grievances.length,
-                        itemBuilder: (context, index) {
-                          final grievance = grievances[index];
-                          return Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                decoration: BoxDecoration(
-                                  color: theme.cardColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: theme.dividerColor.withOpacity(0.1),
-                                    width: 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: theme.shadowColor.withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                        // Grievances Grid/List Content
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.cardColor.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.dividerColor.withOpacity(0.1),
+                              ),
+                            ),
+                            child: StreamBuilder<List<GrievanceModel>>(
+                              stream: DataService.getGrievances(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return LoadingState(
+                                    message: localeProvider.translate(
+                                      'common.loading',
                                     ),
-                                  ],
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => GrievanceDetailsScreen(
-                                          grievance: grievance,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
+                                  );
+                                }
+
+                                if (snapshot.hasError) {
+                                  return Center(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        // Header with status
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: grievance
-                                                          .statusColor
-                                                          .withValues(
-                                                            alpha: 51,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                    child: Icon(
-                                                      grievance.status ==
-                                                              GrievanceStatus
-                                                                  .resolved
-                                                          ? Icons.check_circle
-                                                          : grievance.status ==
-                                                                GrievanceStatus
-                                                                    .inProgress
-                                                          ? Icons.hourglass_top
-                                                          : grievance.status ==
-                                                                GrievanceStatus
-                                                                    .closed
-                                                          ? Icons.cancel
-                                                          : Icons
-                                                                .report_problem,
-                                                      color:
-                                                          grievance.statusColor,
-                                                      size: 16,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          grievance.title ??
-                                                              localeProvider
-                                                                  .translate(
-                                                                    'grievances.untitledGrievance',
-                                                                  ),
-                                                          style: theme
-                                                              .textTheme
-                                                              .titleMedium
-                                                              ?.copyWith(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Text(
-                                                          '${localeProvider.translate('grievances.idLabel')} ${grievance.id}',
-                                                          style: theme
-                                                              .textTheme
-                                                              .bodySmall
-                                                              ?.copyWith(
-                                                                color: theme
-                                                                    .textTheme
-                                                                    .bodyMedium
-                                                                    ?.color
-                                                                    ?.withValues(
-                                                                      alpha:
-                                                                          179,
-                                                                    ),
-                                                              ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 5,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: grievance.statusColor
-                                                        .withValues(alpha: 102),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          16,
-                                                        ),
-                                                    border: Border.all(
-                                                      color: grievance
-                                                          .statusColor
-                                                          .withValues(
-                                                            alpha: 153,
-                                                          ),
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    grievance.statusText,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                ),
-                                                if (grievance.priority !=
-                                                    null) ...[
-                                                  const SizedBox(height: 8),
-                                                  Text(
-                                                    '${localeProvider.translate('grievances.priorityLabel')} ${localeProvider.translate('grievances.priorities.${grievance.priority}')}',
-                                                    style: theme
-                                                        .textTheme
-                                                        .bodySmall
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                          ],
+                                        Icon(
+                                          Icons.error_outline,
+                                          size: 64,
+                                          color: Colors.white.withOpacity(0.7),
                                         ),
-
                                         const SizedBox(height: 16),
-
-                                        // Description
                                         Text(
-                                          grievance.description ??
-                                              localeProvider.translate(
-                                                'grievances.noDescription',
-                                              ),
+                                          localeProvider.translate(
+                                            'grievances.errorLoadingGrievances',
+                                          ),
+                                          style: theme.textTheme.headlineSmall,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          '${snapshot.error}',
                                           style: theme.textTheme.bodyMedium
-                                              ?.copyWith(height: 1.4),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-
-                                        const SizedBox(height: 16),
-
-                                        // Details row
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.calendar_today,
-                                                localeProvider.translate(
-                                                  'grievances.date',
-                                                ),
-                                                grievance.createdDate
-                                                        ?.toString()
-                                                        .split(' ')[0] ??
-                                                    localeProvider.translate(
-                                                      'grievances.notAvailable',
-                                                    ),
+                                              ?.copyWith(
+                                                color: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.color,
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.category,
-                                                localeProvider.translate(
-                                                  'grievances.category',
-                                                ),
-                                                localeProvider.translate(
-                                                  'grievances.categories.${grievance.category ?? 'general'}',
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 12),
-
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.person,
-                                                localeProvider.translate(
-                                                  'grievances.userId',
-                                                ),
-                                                grievance.userId ??
-                                                    localeProvider.translate(
-                                                      'grievances.notAvailable',
-                                                    ),
-                                              ),
-                                            ),
-                                            if (grievance.resolvedDate != null)
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  context,
-                                                  Icons.check_circle,
-                                                  localeProvider.translate(
-                                                    'grievances.resolved',
-                                                  ),
-                                                  grievance.resolvedDate!
-                                                      .toString()
-                                                      .split(' ')[0],
-                                                ),
-                                              ),
-                                          ],
+                                          textAlign: TextAlign.center,
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ),
-                              )
-                              .animate()
-                              .fadeIn(
-                                duration: 600.ms,
-                                delay: Duration(milliseconds: index * 100),
-                              )
-                              .slideY(begin: 0.1, end: 0);
-                        },
-                      );
-                    },
+                                  );
+                                }
+
+                                final grievances = snapshot.data ?? [];
+
+                                if (grievances.isEmpty) {
+                                  final currentUser = context
+                                      .watch<app_auth.AuthProvider>()
+                                      .user;
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.report_problem_outlined,
+                                          size: 64,
+                                          color: theme
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.color
+                                              ?.withValues(alpha: 77),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          localeProvider.translate(
+                                            'grievances.noGrievances',
+                                          ),
+                                          style: theme.textTheme.headlineSmall,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          localeProvider.translate(
+                                            'grievances.noGrievancesDescription',
+                                          ),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.color,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 32,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: theme.cardColor,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: theme.dividerColor
+                                                  .withValues(alpha: 77),
+                                            ),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                localeProvider.translate(
+                                                  'grievances.firebaseInstruction',
+                                                ),
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: theme
+                                                      .scaffoldBackgroundColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: SelectableText(
+                                                  currentUser?.uid ??
+                                                      localeProvider.translate(
+                                                        'grievances.noUserId',
+                                                      ),
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontFamily: 'monospace',
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                '${localeProvider.translate('grievances.firebaseConsoleInstruction')} "${currentUser?.uid ?? 'your-user-id'}"',
+                                                style:
+                                                    theme.textTheme.bodySmall,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ).animate().fadeIn(
+                                    duration: 600.ms,
+                                    delay: 300.ms,
+                                  );
+                                }
+
+                                return ListView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  itemCount: grievances.length,
+                                  itemBuilder: (context, index) {
+                                    final grievance = grievances[index];
+                                    return Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: theme.cardColor,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            border: Border.all(
+                                              color: theme.dividerColor
+                                                  .withOpacity(0.1),
+                                              width: 1,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: theme.shadowColor
+                                                    .withOpacity(0.1),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      GrievanceDetailsScreen(
+                                                        grievance: grievance,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  // Header with status
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              padding:
+                                                                  const EdgeInsets.all(
+                                                                    8,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color: grievance
+                                                                    .statusColor
+                                                                    .withValues(
+                                                                      alpha: 51,
+                                                                    ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                              ),
+                                                              child: Icon(
+                                                                grievance.status ==
+                                                                        GrievanceStatus
+                                                                            .resolved
+                                                                    ? Icons
+                                                                          .check_circle
+                                                                    : grievance
+                                                                              .status ==
+                                                                          GrievanceStatus
+                                                                              .inProgress
+                                                                    ? Icons
+                                                                          .hourglass_top
+                                                                    : grievance
+                                                                              .status ==
+                                                                          GrievanceStatus
+                                                                              .closed
+                                                                    ? Icons
+                                                                          .cancel
+                                                                    : Icons
+                                                                          .report_problem,
+                                                                color: grievance
+                                                                    .statusColor,
+                                                                size: 16,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 12,
+                                                            ),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    grievance
+                                                                            .title ??
+                                                                        localeProvider.translate(
+                                                                          'grievances.untitledGrievance',
+                                                                        ),
+                                                                    style: theme
+                                                                        .textTheme
+                                                                        .titleMedium
+                                                                        ?.copyWith(
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                        ),
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    height: 4,
+                                                                  ),
+                                                                  Text(
+                                                                    '${localeProvider.translate('grievances.idLabel')} ${grievance.id}',
+                                                                    style: theme.textTheme.bodySmall?.copyWith(
+                                                                      color: theme
+                                                                          .textTheme
+                                                                          .bodyMedium
+                                                                          ?.color
+                                                                          ?.withValues(
+                                                                            alpha:
+                                                                                179,
+                                                                          ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .end,
+                                                        children: [
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      10,
+                                                                  vertical: 5,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: grievance
+                                                                  .statusColor
+                                                                  .withValues(
+                                                                    alpha: 102,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    16,
+                                                                  ),
+                                                              border: Border.all(
+                                                                color: grievance
+                                                                    .statusColor
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          153,
+                                                                    ),
+                                                                width: 1,
+                                                              ),
+                                                            ),
+                                                            child: Text(
+                                                              grievance
+                                                                  .statusText,
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 11,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          if (grievance
+                                                                  .priority !=
+                                                              null) ...[
+                                                            const SizedBox(
+                                                              height: 8,
+                                                            ),
+                                                            Text(
+                                                              '${localeProvider.translate('grievances.priorityLabel')} ${localeProvider.translate('grievances.priorities.${grievance.priority}')}',
+                                                              style: theme
+                                                                  .textTheme
+                                                                  .bodySmall
+                                                                  ?.copyWith(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                  ),
+                                                            ),
+                                                          ],
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+
+                                                  const SizedBox(height: 16),
+
+                                                  // Description
+                                                  Text(
+                                                    grievance.description ??
+                                                        localeProvider.translate(
+                                                          'grievances.noDescription',
+                                                        ),
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(height: 1.4),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+
+                                                  const SizedBox(height: 16),
+
+                                                  // Details row
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: _buildDetailItem(
+                                                          context,
+                                                          Icons.calendar_today,
+                                                          localeProvider
+                                                              .translate(
+                                                                'grievances.date',
+                                                              ),
+                                                          grievance.createdDate
+                                                                  ?.toString()
+                                                                  .split(
+                                                                    ' ',
+                                                                  )[0] ??
+                                                              localeProvider
+                                                                  .translate(
+                                                                    'grievances.notAvailable',
+                                                                  ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: _buildDetailItem(
+                                                          context,
+                                                          Icons.category,
+                                                          localeProvider.translate(
+                                                            'grievances.category',
+                                                          ),
+                                                          localeProvider.translate(
+                                                            'grievances.categories.${grievance.category ?? 'general'}',
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+
+                                                  const SizedBox(height: 12),
+
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: _buildDetailItem(
+                                                          context,
+                                                          Icons.person,
+                                                          localeProvider.translate(
+                                                            'grievances.userId',
+                                                          ),
+                                                          grievance.userId ??
+                                                              localeProvider
+                                                                  .translate(
+                                                                    'grievances.notAvailable',
+                                                                  ),
+                                                        ),
+                                                      ),
+                                                      if (grievance
+                                                              .resolvedDate !=
+                                                          null)
+                                                        Expanded(
+                                                          child: _buildDetailItem(
+                                                            context,
+                                                            Icons.check_circle,
+                                                            localeProvider
+                                                                .translate(
+                                                                  'grievances.resolved',
+                                                                ),
+                                                            grievance
+                                                                .resolvedDate!
+                                                                .toString()
+                                                                .split(' ')[0],
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .animate()
+                                        .fadeIn(
+                                          duration: 600.ms,
+                                          delay: Duration(
+                                            milliseconds: index * 100,
+                                          ),
+                                        )
+                                        .slideY(begin: 0.1, end: 0);
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -991,11 +1110,7 @@ class _GrievancePageState extends State<GrievancePage> {
 
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 153),
-        ),
+        Icon(icon, size: 16, color: Colors.white.withOpacity(0.6)),
         const SizedBox(width: 6),
         Expanded(
           child: Column(

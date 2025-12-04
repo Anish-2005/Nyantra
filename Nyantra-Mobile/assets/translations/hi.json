@@ -705,6 +705,7 @@
     "firebaseInstruction": "शिकायतें देखने के लिए, अपने उपयोगकर्ता आईडी के साथ Firebase में डेटा जोड़ें:",
     "noUserId": "कोई उपयोगकर्ता आईडी उपलब्ध नहीं",
     "firebaseConsoleInstruction": "Firebase कंसोल में userId के साथ एक शिकायत बनाएं:",
+    "searchGrievances": "शिकायतें खोजें...",
     "untitledGrievance": "शीर्षकहीन शिकायत",
     "priorityLabel": "प्राथमिकता:",
     "noDescription": "कोई विवरण प्रदान नहीं किया गया",
@@ -726,6 +727,7 @@
       "documentation": "दस्तावेजीकरण",
       "technicalIssue": "तकनीकी समस्या",
       "serviceQuality": "सेवा गुणवत्ता",
+      "officer-behavior": "अधिकारी व्यवहार",
       "other": "अन्य"
     },
     "priorities": {

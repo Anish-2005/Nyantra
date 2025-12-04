@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/connectivity_provider.dart';
-import '../../../core/providers/theme_provider.dart';
 import '../../../components/AnimatedBackground.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_content.dart';
@@ -61,7 +60,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 1024;
     final isDark = theme.brightness == Brightness.dark;

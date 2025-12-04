@@ -289,8 +289,8 @@ class _FeedbackPageState extends State<FeedbackPage>
                                   const Color(0xFF06B6D4),
                                 ]
                               : [
-                                  const Color(0xFFF59E0B),
                                   const Color(0xFFFB923C),
+                                  const Color(0xFFF59E0B),
                                 ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,

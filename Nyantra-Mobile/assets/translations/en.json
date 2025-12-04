@@ -706,6 +706,7 @@
     "firebaseInstruction": "To see grievances, add data to Firebase with your User ID:",
     "noUserId": "No user ID available",
     "firebaseConsoleInstruction": "Create a grievance in Firebase Console with userId:",
+    "searchGrievances": "Search grievances...",
     "untitledGrievance": "Untitled Grievance",
     "priorityLabel": "Priority:",
     "noDescription": "No description provided",
@@ -727,6 +728,7 @@
       "documentation": "Documentation",
       "technicalIssue": "Technical Issue",
       "serviceQuality": "Service Quality",
+      "officer-behavior": "Officer Behavior",
       "other": "Other"
     },
     "priorities": {

@@ -158,268 +158,314 @@ class _ReportsPageState extends State<ReportsPage> {
                 // Search and Filters
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.dividerColor.withOpacity(0.1),
-                    ),
-                  ),
                   child: Column(
                     children: [
-                      // Search
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: localeProvider.translate(
-                            'reports.searchReports',
+                      // Search Bar
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.dividerColor.withOpacity(0.1),
                           ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: theme.iconTheme.color?.withOpacity(0.6),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: theme.inputDecorationTheme.fillColor,
                         ),
-                        onChanged: (value) => setState(() {}),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: localeProvider.translate(
+                              'reports.searchReports',
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(0.6),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          onChanged: (value) => setState(() {}),
+                        ),
                       ),
 
-                      const SizedBox(height: 16),
-
                       // Filters
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _selectedCategory,
-                              decoration: InputDecoration(
-                                labelText: localeProvider.translate(
-                                  'reports.category',
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: 'all',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.allCategories',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'financial',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.financial',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'compliance',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.compliance',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'performance',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.performance',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'statistical',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.statistical',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'analytical',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.analytical',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'technical',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.technical',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) =>
-                                  setState(() => _selectedCategory = value!),
-                            ),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.dividerColor.withOpacity(0.1),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _selectedStatus,
-                              decoration: InputDecoration(
-                                labelText: localeProvider.translate(
-                                  'reports.status',
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedCategory,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'reports.category',
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      theme.inputDecorationTheme.fillColor,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
                                 ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.allCategories',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'financial',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.financial',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'compliance',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.compliance',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'performance',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.performance',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'statistical',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.statistical',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'analytical',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.analytical',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'technical',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.technical',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) =>
+                                    setState(() => _selectedCategory = value!),
                               ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: 'all',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.allStatuses',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'completed',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.completed',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'processing',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.processing',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'scheduled',
-                                  child: Text(
-                                    localeProvider.translate(
-                                      'reports.scheduled',
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'failed',
-                                  child: Text(
-                                    localeProvider.translate('reports.failed'),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) =>
-                                  setState(() => _selectedStatus = value!),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedStatus,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'reports.status',
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      theme.inputDecorationTheme.fillColor,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.allStatuses',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'completed',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.completed',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'processing',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.processing',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'scheduled',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.scheduled',
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'failed',
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'reports.failed',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) =>
+                                    setState(() => _selectedStatus = value!),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
                 // Reports List
                 Expanded(
-                  child: FutureBuilder<List<Report>>(
-                    future: SyncService().getReports(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const LoadingState();
-                      }
-
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Error loading reports: ${snapshot.error}',
-                            style: TextStyle(color: theme.colorScheme.error),
-                          ),
-                        );
-                      }
-
-                      final reports = snapshot.data ?? [];
-
-                      // Apply filters
-                      final filteredReports = reports.where((report) {
-                        final matchesSearch =
-                            _searchController.text.isEmpty ||
-                            report.name.toLowerCase().contains(
-                              _searchController.text.toLowerCase(),
-                            ) ||
-                            report.description.toLowerCase().contains(
-                              _searchController.text.toLowerCase(),
-                            );
-
-                        final matchesCategory =
-                            _selectedCategory == 'all' ||
-                            report.category == _selectedCategory;
-                        final matchesStatus =
-                            _selectedStatus == 'all' ||
-                            report.status == _selectedStatus;
-
-                        return matchesSearch &&
-                            matchesCategory &&
-                            matchesStatus;
-                      }).toList();
-
-                      if (filteredReports.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.file_copy_outlined,
-                                size: 64,
-                                color: theme.iconTheme.color?.withOpacity(0.5),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                localeProvider.translate('reports.noReports'),
-                                style: theme.textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                localeProvider.translate(
-                                  'reports.noReportsDescription',
-                                ),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.textTheme.bodyMedium?.color
-                                      ?.withOpacity(0.7),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: filteredReports.length,
-                        itemBuilder: (context, index) {
-                          final report = filteredReports[index];
-                          return _buildReportCard(
-                            context,
-                            report,
-                            localeProvider,
-                            theme,
-                            isDark,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: FutureBuilder<List<Report>>(
+                      future: SyncService().getReports(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return LoadingState(
+                            message: localeProvider.translate('common.loading'),
                           );
-                        },
-                      );
-                    },
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 64,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error loading reports: ${snapshot.error}',
+                                  style: theme.textTheme.headlineSmall,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        final reports = snapshot.data ?? [];
+
+                        // Apply filters
+                        final filteredReports = reports.where((report) {
+                          final matchesSearch =
+                              _searchController.text.isEmpty ||
+                              report.name.toLowerCase().contains(
+                                _searchController.text.toLowerCase(),
+                              ) ||
+                              report.description.toLowerCase().contains(
+                                _searchController.text.toLowerCase(),
+                              );
+
+                          final matchesCategory =
+                              _selectedCategory == 'all' ||
+                              report.category == _selectedCategory;
+                          final matchesStatus =
+                              _selectedStatus == 'all' ||
+                              report.status == _selectedStatus;
+
+                          return matchesSearch &&
+                              matchesCategory &&
+                              matchesStatus;
+                        }).toList();
+
+                        if (filteredReports.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.file_copy_outlined,
+                                  size: 64,
+                                  color: theme.textTheme.bodyMedium?.color
+                                      ?.withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  localeProvider.translate('reports.noReports'),
+                                  style: theme.textTheme.headlineSmall,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  localeProvider.translate(
+                                    'reports.noReportsDescription',
+                                  ),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.textTheme.bodySmall?.color,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(0),
+                          itemCount: filteredReports.length,
+                          itemBuilder: (context, index) {
+                            final report = filteredReports[index];
+                            return _buildReportCard(
+                              context,
+                              report,
+                              localeProvider,
+                              theme,
+                              isDark,
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -437,15 +483,18 @@ class _ReportsPageState extends State<ReportsPage> {
     ThemeData theme,
     bool isDark,
   ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: theme.cardColor.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => _showReportDetailModal(context, report),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -453,19 +502,20 @@ class _ReportsPageState extends State<ReportsPage> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: _getCategoryColor(
                         report.category,
                       ).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       _getCategoryIcon(report.category),
                       color: _getCategoryColor(report.category),
+                      size: 24,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,12 +538,12 @@ class _ReportsPageState extends State<ReportsPage> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 12,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(report.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       report.status,
@@ -507,7 +557,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Description
               Text(
@@ -519,7 +569,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 overflow: TextOverflow.ellipsis,
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Stats
               Row(
@@ -544,7 +594,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Footer
               Row(
@@ -560,7 +610,13 @@ class _ReportsPageState extends State<ReportsPage> {
                     onPressed: report.status == 'completed'
                         ? () => _downloadReport(report)
                         : null,
-                    icon: const Icon(Icons.download, size: 16),
+                    icon: Icon(
+                      Icons.download,
+                      size: 16,
+                      color: report.status == 'completed'
+                          ? Colors.white
+                          : theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+                    ),
                     label: Text(localeProvider.translate('reports.download')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: report.status == 'completed'
@@ -568,10 +624,13 @@ class _ReportsPageState extends State<ReportsPage> {
                           : theme.disabledColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                        horizontal: 16,
+                        vertical: 10,
                       ),
                       textStyle: const TextStyle(fontSize: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
