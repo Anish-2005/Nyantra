@@ -38,21 +38,6 @@ class _ReportsPageState extends State<ReportsPage> {
     return Container(
       child: Stack(
         children: [
-          // Background decorative elements
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topLeft,
-                  radius: 1.5,
-                  colors: isDark
-                      ? [const Color(0xFF06B6D4), Colors.transparent]
-                      : [const Color(0xFFFB7185), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-
           // Main content
           SafeArea(
             child: Column(

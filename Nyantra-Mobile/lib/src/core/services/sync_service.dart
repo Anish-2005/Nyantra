@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'database_helper.dart';
@@ -171,7 +173,24 @@ class SyncService {
 
   // Get data with fallback to local DB if offline
   Future<List<UserModel>> getUsers() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+        final userDoc = await FirebaseService.firestore
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        if (userDoc.exists) {
+          return [UserModel.fromFirestore(userDoc.data()!, userDoc.id)];
+        }
+        return [];
+      } catch (e) {
+        print('Error fetching users from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -179,7 +198,23 @@ class SyncService {
   }
 
   Future<List<ApplicationModel>> getApplications() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+        final applicationsSnapshot = await FirebaseService.firestore
+            .collection('applications')
+            .where('ownerId', isEqualTo: currentUser.uid)
+            .get();
+        return applicationsSnapshot.docs
+            .map((doc) => ApplicationModel.fromFirestore(doc.data(), doc.id))
+            .toList();
+      } catch (e) {
+        print('Error fetching applications from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -187,7 +222,23 @@ class SyncService {
   }
 
   Future<List<BeneficiaryModel>> getBeneficiaries() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+        final beneficiariesSnapshot = await FirebaseService.firestore
+            .collection('beneficiaries')
+            .where('ownerId', isEqualTo: currentUser.uid)
+            .get();
+        return beneficiariesSnapshot.docs
+            .map((doc) => BeneficiaryModel.fromFirestore(doc.data(), doc.id))
+            .toList();
+      } catch (e) {
+        print('Error fetching beneficiaries from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -195,7 +246,38 @@ class SyncService {
   }
 
   Future<List<DisbursementModel>> getDisbursements() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+
+        // First get user's applications to get application IDs
+        final applicationsSnapshot = await FirebaseService.firestore
+            .collection('applications')
+            .where('ownerId', isEqualTo: currentUser.uid)
+            .get();
+
+        if (applicationsSnapshot.docs.isEmpty) return [];
+
+        final applicationIds = applicationsSnapshot.docs
+            .map((doc) => doc.id)
+            .toList();
+
+        // Then get disbursements for these applications
+        final disbursementsSnapshot = await FirebaseService.firestore
+            .collection('disbursements')
+            .where('applicationId', whereIn: applicationIds)
+            .get();
+
+        return disbursementsSnapshot.docs
+            .map((doc) => DisbursementModel.fromFirestore(doc.data(), doc.id))
+            .toList();
+      } catch (e) {
+        print('Error fetching disbursements from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -203,7 +285,56 @@ class SyncService {
   }
 
   Future<List<GrievanceModel>> getGrievances() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+
+        // Get grievances created by user
+        final grievancesQuery1 = await FirebaseService.firestore
+            .collection('grievances')
+            .where('userId', isEqualTo: currentUser.uid)
+            .get();
+
+        List grievances = [...grievancesQuery1.docs];
+
+        // Get user's beneficiaries to get beneficiary IDs
+        final beneficiariesSnapshot = await FirebaseService.firestore
+            .collection('beneficiaries')
+            .where('ownerId', isEqualTo: currentUser.uid)
+            .get();
+
+        if (beneficiariesSnapshot.docs.isNotEmpty) {
+          final beneficiaryIds = beneficiariesSnapshot.docs
+              .map((doc) => doc.id)
+              .toList();
+
+          // Get grievances related to user's beneficiaries
+          final grievancesQuery2 = await FirebaseService.firestore
+              .collection('grievances')
+              .where('beneficiaryId', whereIn: beneficiaryIds)
+              .get();
+
+          grievances.addAll(grievancesQuery2.docs);
+        }
+
+        // Remove duplicates
+        final grievanceIds = <String>{};
+        final uniqueGrievances = grievances.where((doc) {
+          if (grievanceIds.contains(doc.id)) return false;
+          grievanceIds.add(doc.id);
+          return true;
+        }).toList();
+
+        return uniqueGrievances
+            .map((doc) => GrievanceModel.fromFirestore(doc.data(), doc.id))
+            .toList();
+      } catch (e) {
+        print('Error fetching grievances from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -211,7 +342,23 @@ class SyncService {
   }
 
   Future<List<FeedbackModel>> getFeedback() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final currentUser = FirebaseService.auth.currentUser;
+        if (currentUser == null) return [];
+        final feedbackSnapshot = await FirebaseService.firestore
+            .collection('feedback')
+            .where('userId', isEqualTo: currentUser.uid)
+            .get();
+        return feedbackSnapshot.docs
+            .map((doc) => FeedbackModel.fromMap(doc.id, doc.data()))
+            .toList();
+      } catch (e) {
+        print('Error fetching feedback from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -219,7 +366,20 @@ class SyncService {
   }
 
   Future<List<Report>> getReports() async {
-    if (kIsWeb) return [];
+    if (kIsWeb) {
+      // On web, fetch directly from Firebase
+      try {
+        final reportsSnapshot = await FirebaseService.firestore
+            .collection('reports')
+            .get();
+        return reportsSnapshot.docs
+            .map((doc) => Report.fromJson(doc.data(), doc.id))
+            .toList();
+      } catch (e) {
+        print('Error fetching reports from Firebase: $e');
+        return [];
+      }
+    }
     if (await isOnline()) {
       await syncFromFirestore();
     }
