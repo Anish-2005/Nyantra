@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'database_helper.dart';
 import 'firebase_service.dart';
@@ -22,7 +24,7 @@ class SyncService {
   }
 
   Future<bool> isOnline() async {
-    var connectivityResults = await Connectivity().checkConnectivity();
+    var connectivityResults = await _connectivity!.checkConnectivity();
     return connectivityResults.isNotEmpty &&
         connectivityResults.any((result) => result != ConnectivityResult.none);
   }
