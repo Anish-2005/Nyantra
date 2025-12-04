@@ -1,5 +1,4 @@
-// ignore_for_file: avoid_print
-
+import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'database_helper.dart';
 import 'firebase_service.dart';
@@ -31,60 +30,113 @@ class SyncService {
 
   // Sync data from Firestore to local DB
   Future<void> syncFromFirestore() async {
+    if (kIsWeb) return;
     if (!await isOnline()) return;
 
+    final currentUser = FirebaseService.auth.currentUser;
+    if (currentUser == null) return;
     try {
-      // Sync users
-      final usersSnapshot = await FirebaseService.firestore
+      // Sync current user's profile
+      final userDoc = await FirebaseService.firestore
           .collection('users')
+          .doc(currentUser.uid)
           .get();
-      for (var doc in usersSnapshot.docs) {
-        final user = UserModel.fromFirestore(doc.data(), doc.id);
+      if (userDoc.exists) {
+        final user = UserModel.fromFirestore(userDoc.data()!, userDoc.id);
         await _dbHelper!.insertUser(user);
       }
 
-      // Sync applications
-      final applicationsSnapshot = await FirebaseService.firestore
-          .collection('applications')
-          .get();
-      for (var doc in applicationsSnapshot.docs) {
-        final application = ApplicationModel.fromFirestore(doc.data(), doc.id);
-        await _dbHelper!.insertApplication(application);
-      }
-
-      // Sync beneficiaries
+      // Sync user's beneficiaries
       final beneficiariesSnapshot = await FirebaseService.firestore
           .collection('beneficiaries')
+          .where('ownerId', isEqualTo: currentUser.uid)
           .get();
       for (var doc in beneficiariesSnapshot.docs) {
         final beneficiary = BeneficiaryModel.fromFirestore(doc.data(), doc.id);
         await _dbHelper!.insertBeneficiary(beneficiary);
       }
 
-      // Sync disbursements
-      final disbursementsSnapshot = await FirebaseService.firestore
-          .collection('disbursements')
+      final beneficiaryIds = beneficiariesSnapshot.docs
+          .map((doc) => doc.id)
+          .toList();
+
+      // Sync applications owned by user or related to user's beneficiaries
+      final applicationsQuery1 = await FirebaseService.firestore
+          .collection('applications')
+          .where('ownerId', isEqualTo: currentUser.uid)
           .get();
-      for (var doc in disbursementsSnapshot.docs) {
-        final disbursement = DisbursementModel.fromFirestore(
-          doc.data(),
-          doc.id,
-        );
-        await _dbHelper!.insertDisbursement(disbursement);
+
+      List applications = [...applicationsQuery1.docs];
+
+      if (beneficiaryIds.isNotEmpty) {
+        final applicationsQuery2 = await FirebaseService.firestore
+            .collection('applications')
+            .where('beneficiaryId', whereIn: beneficiaryIds)
+            .get();
+        applications.addAll(applicationsQuery2.docs);
       }
 
-      // Sync grievances
-      final grievancesSnapshot = await FirebaseService.firestore
+      // Remove duplicates
+      final applicationIds = <String>{};
+      final uniqueApplications = applications.where((doc) {
+        if (applicationIds.contains(doc.id)) return false;
+        applicationIds.add(doc.id);
+        return true;
+      }).toList();
+
+      for (var doc in uniqueApplications) {
+        final application = ApplicationModel.fromFirestore(doc.data(), doc.id);
+        await _dbHelper!.insertApplication(application);
+      }
+
+      // Sync disbursements for user's applications
+      if (applicationIds.isNotEmpty) {
+        final disbursementsSnapshot = await FirebaseService.firestore
+            .collection('disbursements')
+            .where('applicationId', whereIn: applicationIds.toList())
+            .get();
+        for (var doc in disbursementsSnapshot.docs) {
+          final disbursement = DisbursementModel.fromFirestore(
+            doc.data(),
+            doc.id,
+          );
+          await _dbHelper!.insertDisbursement(disbursement);
+        }
+      }
+
+      // Sync grievances created by user or related to user's beneficiaries
+      final grievancesQuery1 = await FirebaseService.firestore
           .collection('grievances')
+          .where('userId', isEqualTo: currentUser.uid)
           .get();
-      for (var doc in grievancesSnapshot.docs) {
+
+      List grievances = [...grievancesQuery1.docs];
+
+      if (beneficiaryIds.isNotEmpty) {
+        final grievancesQuery2 = await FirebaseService.firestore
+            .collection('grievances')
+            .where('beneficiaryId', whereIn: beneficiaryIds)
+            .get();
+        grievances.addAll(grievancesQuery2.docs);
+      }
+
+      // Remove duplicates
+      final grievanceIds = <String>{};
+      final uniqueGrievances = grievances.where((doc) {
+        if (grievanceIds.contains(doc.id)) return false;
+        grievanceIds.add(doc.id);
+        return true;
+      }).toList();
+
+      for (var doc in uniqueGrievances) {
         final grievance = GrievanceModel.fromFirestore(doc.data(), doc.id);
         await _dbHelper!.insertGrievance(grievance);
       }
 
-      // Sync feedback
+      // Sync user's feedback
       final feedbackSnapshot = await FirebaseService.firestore
           .collection('feedback')
+          .where('userId', isEqualTo: currentUser.uid)
           .get();
       for (var doc in feedbackSnapshot.docs) {
         final feedback = FeedbackModel.fromMap(doc.id, doc.data());
@@ -119,6 +171,7 @@ class SyncService {
 
   // Get data with fallback to local DB if offline
   Future<List<UserModel>> getUsers() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -126,6 +179,7 @@ class SyncService {
   }
 
   Future<List<ApplicationModel>> getApplications() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -133,6 +187,7 @@ class SyncService {
   }
 
   Future<List<BeneficiaryModel>> getBeneficiaries() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -140,6 +195,7 @@ class SyncService {
   }
 
   Future<List<DisbursementModel>> getDisbursements() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -147,6 +203,7 @@ class SyncService {
   }
 
   Future<List<GrievanceModel>> getGrievances() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -154,6 +211,7 @@ class SyncService {
   }
 
   Future<List<FeedbackModel>> getFeedback() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }
@@ -161,6 +219,7 @@ class SyncService {
   }
 
   Future<List<Report>> getReports() async {
+    if (kIsWeb) return [];
     if (await isOnline()) {
       await syncFromFirestore();
     }

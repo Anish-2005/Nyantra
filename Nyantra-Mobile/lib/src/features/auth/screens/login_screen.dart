@@ -347,6 +347,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 localeProvider.translate('stats.beneficiaries'),
                                 Icons.people,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                             SizedBox(
@@ -360,6 +361,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 localeProvider.translate('stats.disbursed'),
                                 Icons.account_balance_wallet,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                             SizedBox(
@@ -373,6 +375,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 localeProvider.translate('stats.avgTime'),
                                 Icons.access_time,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                           ],
@@ -825,6 +828,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 'Applications',
                                 Icons.assignment,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -834,6 +838,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 'Disbursed',
                                 Icons.account_balance_wallet,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -843,6 +848,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 'Pending',
                                 Icons.pending,
                                 isDark,
+                                MediaQuery.of(context).size.width < 400,
                               ),
                             ),
                           ],
@@ -957,68 +963,89 @@ class _LoginScreenState extends State<LoginScreen>
     String label,
     IconData icon,
     bool isDark,
+    bool isSmallScreen,
   ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmallScreen = constraints.maxWidth < 120;
-        return Container(
-          padding: EdgeInsets.all(isSmallScreen ? 8 : 16),
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-              width: 1,
+    return Container(
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185),
+            size: isSmallScreen ? 24 : 28,
+          ),
+          SizedBox(height: isSmallScreen ? 6 : 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 18 : 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: isDark
-                    ? const Color(0xFF06B6D4)
-                    : const Color(0xFFFB7185),
-                size: isSmallScreen ? 20 : 24,
-              ),
-              SizedBox(height: isSmallScreen ? 4 : 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 16 : 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: isSmallScreen ? 2 : 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 10 : 12,
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(
-                    0.7,
-                  ),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+          SizedBox(height: isSmallScreen ? 4 : 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 12 : 14,
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
 
-// Custom Particle Painter for animated background
+// Custom Grid Painter for subtle background pattern
+class GridPainter extends CustomPainter {
+  final bool isDark;
+
+  GridPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5
+      ..color = (isDark ? Colors.white : Colors.black).withOpacity(0.03);
+
+    const double spacing = 30;
+
+    // Draw vertical lines
+    for (double x = 0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    // Draw horizontal lines
+    for (double y = 0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Custom Particle Painter for animated background particles
 class ParticlePainter extends CustomPainter {
   final Animation<double> animation;
   final bool isDark;
 
-  ParticlePainter({required this.animation, required this.isDark})
-    : super(repaint: animation);
+  ParticlePainter({required this.animation, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1039,22 +1066,6 @@ class ParticlePainter extends CustomPainter {
       final radius = random.nextDouble() * 3 + 1;
 
       canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-
-    // Draw connecting lines
-    final linePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5
-      ..color = (isDark ? const Color(0xFF8B5CF6) : const Color(0xFFFB923C))
-          .withOpacity(0.1);
-
-    for (int i = 0; i < 20; i++) {
-      final x1 = random.nextDouble() * size.width;
-      final y1 = random.nextDouble() * size.height;
-      final x2 = x1 + (random.nextDouble() - 0.5) * 100;
-      final y2 = y1 + (random.nextDouble() - 0.5) * 100;
-
-      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), linePaint);
     }
   }
 

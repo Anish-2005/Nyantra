@@ -80,11 +80,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const SizedBox(width: 12),
             // Title
-            Text(
-              _getPageTitle(localeProvider),
-              style: TextStyle(
-                color: theme.appBarTheme.foregroundColor,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                _getPageTitle(localeProvider),
+                style: TextStyle(
+                  color: theme.appBarTheme.foregroundColor,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'src/core/services/firebase_service.dart';
 import 'src/core/services/sync_service.dart';
 import 'src/core/providers/theme_provider.dart';
@@ -16,10 +18,16 @@ void main() async {
   // Initialize Firebase
   await FirebaseService.initialize();
 
-  // Initialize sync service
-  final syncService = SyncService();
-  if (await syncService.isOnline()) {
-    await syncService.syncFromFirestore();
+  // Initialize sync service only if user is authenticated and not on web
+  if (!kIsWeb) {
+    final syncService = SyncService();
+    firebase_auth.FirebaseAuth.instance.authStateChanges().listen((
+      firebase_auth.User? user,
+    ) {
+      if (user != null) {
+        syncService.syncFromFirestore();
+      }
+    });
   }
 
   runApp(const MyApp());
@@ -51,7 +59,7 @@ class MyApp extends StatelessWidget {
             supportedLocales: const [Locale('en'), Locale('hi')],
             home: authProvider.isLoading
                 ? const SplashScreen()
-                : authProvider.isAuthenticated
+                : firebase_auth.FirebaseAuth.instance.currentUser != null
                 ? const DashboardScreen()
                 : const LoginScreen(),
             debugShowCheckedModeBanner: false,
