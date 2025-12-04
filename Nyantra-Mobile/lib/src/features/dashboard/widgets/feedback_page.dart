@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -272,40 +272,6 @@ class _FeedbackPageState extends State<FeedbackPage>
     return Container(
       child: Stack(
         children: [
-          // Background decorative elements
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topLeft,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF8B5CF6), Colors.transparent]
-                        : [const Color(0xFFF59E0B), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.bottomRight,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF06B6D4), Colors.transparent]
-                        : [const Color(0xFFFB923C), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // Main content
           SafeArea(
             child: Column(

@@ -426,40 +426,6 @@ class _GrievancePageState extends State<GrievancePage> {
     return Container(
       child: Stack(
         children: [
-          // Background decorative elements
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topLeft,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF06B6D4), Colors.transparent]
-                        : [const Color(0xFFFB7185), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.1 : 0.05,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.bottomRight,
-                    radius: 1.5,
-                    colors: isDark
-                        ? [const Color(0xFF8B5CF6), Colors.transparent]
-                        : [const Color(0xFFFB923C), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // Main content
           SafeArea(
             child: Column(

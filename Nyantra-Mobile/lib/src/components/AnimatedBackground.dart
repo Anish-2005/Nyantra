@@ -91,6 +91,38 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
           },
         ),
 
+        // Background decorative gradients (dark mode only)
+        if (widget.isDark) ...[
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.1,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topLeft,
+                    radius: 1.5,
+                    colors: [const Color(0xFF06B6D4), Colors.transparent],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.1,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.bottomRight,
+                    radius: 1.5,
+                    colors: [const Color(0xFF8B5CF6), Colors.transparent],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+
         // Animated Particles Background
         AnimatedBuilder(
           animation: _particleController,
