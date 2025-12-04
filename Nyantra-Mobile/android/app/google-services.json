@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "680451659563",
+    "project_id": "nyantara-388dd",
+    "storage_bucket": "nyantara-388dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:680451659563:android:299f22898984a2d419976e",
+        "android_client_info": {
+          "package_name": "com.example.user_nyantra"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "680451659563-dq8tnf8buh16vrpvdfhmqkldtg6fck05.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsrLOjbXf40ZiE63XIsN832IKmvepPSA0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "680451659563-dq8tnf8buh16vrpvdfhmqkldtg6fck05.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
