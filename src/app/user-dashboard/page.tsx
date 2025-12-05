@@ -162,15 +162,15 @@ export default function UserDashboard() {
       </div>
 
       <div className="relative z-10">
-        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-6 lg:p-8">
           {/* Hero Welcome Section */}
          <motion.div
   initial={{ opacity: 0, y: -20 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.6 }}
-  className="mb-8 md:mb-12"
+  className="mb-6 sm:mb-8 md:mb-12"
 >
-            <div className="relative overflow-hidden rounded-2xl p-8 md:p-12 text-white shadow-2xl" style={{ background: currentColors.bgGradient }}>
+            <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 md:p-12 text-white shadow-2xl" style={{ background: currentColors.bgGradient }}>
     {/* Background pattern */}
     <div className="absolute inset-0 opacity-10">
       <div className="absolute top-4 right-4 w-32 h-32 border-2 border-amber-200 rounded-full"></div>
@@ -183,12 +183,12 @@ export default function UserDashboard() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
-        className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-2 mb-6"
+        className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 sm:mb-6"
       >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
         </svg>
-        <span className="text-sm font-medium text-white dark:text-white">{t('extracted.welcome_back') || 'Welcome Back'}</span>
+        <span className="text-xs sm:text-sm font-medium text-white dark:text-white">{t('extracted.welcome_back') || 'Welcome Back'}</span>
       </motion.div>
 
       {/* Title */}
@@ -196,7 +196,7 @@ export default function UserDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-white dark:text-white"
+        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight text-white dark:text-white"
       >
         {t('extracted.your_dashboard') || 'Your Dashboard'}
       </motion.h1>
@@ -206,7 +206,7 @@ export default function UserDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="text-lg md:text-xl text-white/90 dark:text-white/90 leading-relaxed max-w-2xl"
+        className="text-base sm:text-lg md:text-xl text-white/90 dark:text-white/90 leading-relaxed max-w-2xl"
       >
         {t('extracted.track_applications') || 'Track your applications and monitor their progress in real-time.'}
       </motion.p>
@@ -219,32 +219,32 @@ export default function UserDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="mb-8 md:mb-12"
+            className="mb-6 sm:mb-8 md:mb-12"
           >
-            <h2 className="text-2xl font-bold mb-6" style={{ color: currentColors.textPrimary }}>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
               {t('extracted.your_impact') || 'Your Impact'}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* Total Applications */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.totalApplications}
                 </div>
-                <div className="text-sm" style={{ color: currentColors.textMuted }}>
+                <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                   {t('extracted.total_applications') || 'Total Applications'}
                 </div>
               </motion.div>
@@ -254,20 +254,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.0 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.pendingApplications}
                 </div>
-                <div className="text-sm" style={{ color: currentColors.textMuted }}>
+                <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                   {t('extracted.pending_applications') || 'Pending Applications'}
                 </div>
               </motion.div>
@@ -277,20 +277,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.1 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.approvedApplications}
                 </div>
-                <div className="text-sm" style={{ color: currentColors.textMuted }}>
+                <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                   {t('extracted.approved_applications') || 'Approved Applications'}
                 </div>
               </motion.div>
@@ -300,20 +300,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.2 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   ₹{stats.totalAmountRequested.toLocaleString()}
                 </div>
-                <div className="text-sm" style={{ color: currentColors.textMuted }}>
+                <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                   {t('extracted.total_requested') || 'Total Requested'}
                 </div>
               </motion.div>
@@ -325,32 +325,32 @@ export default function UserDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.4 }}
-            className="mb-8 md:mb-12"
+            className="mb-6 sm:mb-8 md:mb-12"
           >
-            <h2 className="text-2xl font-bold mb-6" style={{ color: currentColors.textPrimary }}>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
               {t('extracted.quick_actions') || 'Quick Actions'}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* New Application */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.5 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/user-dashboard/applications')}
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-xl mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bfdbfe' : 'rgba(30, 58, 138, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)'}>
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }}>
+                  <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bfdbfe' : 'rgba(30, 58, 138, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)'}>
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
-                  <h3 className="font-semibold mb-2" style={{ color: currentColors.textPrimary }}>
+                  <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base" style={{ color: currentColors.textPrimary }}>
                     {t('extracted.new_application') || 'New Application'}
                   </h3>
-                  <p className="text-sm" style={{ color: currentColors.textMuted }}>
+                  <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                     {t('extracted.submit_new_application') || 'Submit a new relief application'}
                   </p>
                 </div>
@@ -361,20 +361,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.6 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/user-dashboard/applications')}
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-xl mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bbf7d0' : 'rgba(20, 83, 45, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)'}>
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#16a34a' : '#4ade80' }}>
+                  <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bbf7d0' : 'rgba(20, 83, 45, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)'}>
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#16a34a' : '#4ade80' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
-                  <h3 className="font-semibold mb-2" style={{ color: currentColors.textPrimary }}>
+                  <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base" style={{ color: currentColors.textPrimary }}>
                     {t('extracted.check_status') || 'Check Status'}
                   </h3>
-                  <p className="text-sm" style={{ color: currentColors.textMuted }}>
+                  <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                     {t('extracted.view_application_status') || 'View your application status'}
                   </p>
                 </div>
@@ -385,20 +385,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.7 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/user-dashboard/grievance')}
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-xl mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fee2e2' : 'rgba(127, 29, 29, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)'}>
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#dc2626' : '#f87171' }}>
+                  <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fee2e2' : 'rgba(127, 29, 29, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)'}>
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#dc2626' : '#f87171' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
-                  <h3 className="font-semibold mb-2" style={{ color: currentColors.textPrimary }}>
+                  <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base" style={{ color: currentColors.textPrimary }}>
                     {t('extracted.file_grievance') || 'File Grievance'}
                   </h3>
-                  <p className="text-sm" style={{ color: currentColors.textMuted }}>
+                  <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                     {t('extracted.report_issues') || 'Report issues or file complaints'}
                   </p>
                 </div>
@@ -409,20 +409,20 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.8 }}
-                className="rounded-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/user-dashboard/beneficiaries')}
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-xl mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#f3e8ff' : 'rgba(88, 28, 135, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)'}>
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#9333ea' : '#c084fc' }}>
+                  <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#f3e8ff' : 'rgba(88, 28, 135, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)'}>
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#9333ea' : '#c084fc' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <h3 className="font-semibold mb-2" style={{ color: currentColors.textPrimary }}>
+                  <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base" style={{ color: currentColors.textPrimary }}>
                     {t('extracted.view_beneficiaries') || 'View Beneficiaries'}
                   </h3>
-                  <p className="text-sm" style={{ color: currentColors.textMuted }}>
+                  <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                     {t('extracted.see_beneficiary_list') || 'See the list of beneficiaries'}
                   </p>
                 </div>
@@ -437,62 +437,62 @@ export default function UserDashboard() {
             transition={{ delay: 2.0 }}
           >
             <div className="rounded-2xl border overflow-hidden shadow-xl" style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}>
-              <div className="p-6 md:p-8">
-                <div className="flex items-center gap-3 mb-6">
+              <div className="p-4 sm:p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
                   <div className="p-2 rounded-lg" style={{ backgroundColor: theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)' }}>
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }}>
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold" style={{ color: currentColors.textPrimary }}>
+                    <h3 className="text-lg sm:text-xl font-bold" style={{ color: currentColors.textPrimary }}>
                       {t('extracted.recent_activity') || 'Recent Activity'}
                     </h3>
-                    <p className="text-sm" style={{ color: currentColors.textMuted }}>
+                    <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                       {t('extracted.your_latest_submissions') || 'Your latest application submissions'}
                     </p>
                   </div>
                 </div>
 
                 {recent.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: currentColors.glassBg, border: `1px solid ${currentColors.glassBorder}` }}>
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: currentColors.textMuted }}>
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4" style={{ backgroundColor: currentColors.glassBg, border: `1px solid ${currentColors.glassBorder}` }}>
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: currentColors.textMuted }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <p className="mb-2" style={{ color: currentColors.textMuted }}>
+                    <p className="mb-2 text-sm sm:text-base" style={{ color: currentColors.textMuted }}>
                       {t('extracted.no_submissions_yet') || 'No submissions yet'}
                     </p>
-                    <p className="text-sm mb-4" style={{ color: currentColors.textMuted }}>
+                    <p className="text-xs sm:text-sm mb-3 sm:mb-4" style={{ color: currentColors.textMuted }}>
                       {t('extracted.your_applications_will_appear_here') || 'Your applications will appear here once submitted'}
                     </p>
                     <button
                       onClick={() => router.push('/user-dashboard?tab=form')}
-                      className="text-blue-600 hover:text-blue-700 font-medium text-sm underline"
+                      className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm underline"
                     >
                       {t('extracted.create_your_first_application') || 'Create your first application'}
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {recent.map((submission, index) => (
                       <motion.div
                         key={submission.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 2.1 + index * 0.1 }}
-                        className="flex items-center gap-4 p-4 rounded-xl border hover:shadow-md transition-all duration-200"
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border hover:shadow-md transition-all duration-200"
                         style={{ backgroundColor: currentColors.glassBg, borderColor: currentColors.glassBorder }}
                       >
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                        <div className="flex-shrink-0 self-start sm:self-center">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center" style={{
                             backgroundColor: submission.status === 'approved' ? (theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)') :
                                            submission.status === 'rejected' ? (theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)') :
                                            submission.status === 'pending' ? (theme === 'light' ? '#fefce8' : 'rgba(113, 63, 18, 0.3)') :
                                            (theme === 'light' ? '#f3f4f6' : 'rgba(31, 41, 55, 0.3)')
                           }}>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{
                               color: submission.status === 'approved' ? (theme === 'light' ? '#16a34a' : '#4ade80') :
                                     submission.status === 'rejected' ? (theme === 'light' ? '#dc2626' : '#f87171') :
                                     submission.status === 'pending' ? (theme === 'light' ? '#ca8a04' : '#facc15') :
@@ -511,49 +511,49 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium truncate" style={{ color: currentColors.textPrimary }}>
-                              {submission.applicantName ?? (submission.anonymous ? (t('extracted.anonymous') || 'Anonymous') : '—')}
-                            </p>
-                            {submission.anonymous && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{
-                                backgroundColor: theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)',
-                                color: theme === 'light' ? '#6b21a8' : '#c084fc'
-                              }}>
-                                {t('extracted.anonymous') || 'Anonymous'}
-                              </span>
-                            )}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <p className="font-medium truncate text-sm sm:text-base" style={{ color: currentColors.textPrimary }}>
+                                {submission.applicantName ?? (submission.anonymous ? (t('extracted.anonymous') || 'Anonymous') : '—')}
+                              </p>
+                              {submission.anonymous && (
+                                <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0" style={{
+                                  backgroundColor: theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)',
+                                  color: theme === 'light' ? '#6b21a8' : '#c084fc'
+                                }}>
+                                  {t('extracted.anonymous') || 'Anonymous'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs font-mono px-2 py-1 rounded border flex-shrink-0" style={{
+                              color: currentColors.textMuted,
+                              backgroundColor: currentColors.cardBg,
+                              borderColor: currentColors.cardBorder
+                            }}>
+                              {submission.id}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 text-sm" style={{ color: currentColors.textMuted }}>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
                             <span className="flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               </svg>
                               {submission.firNumber || '—'}
                             </span>
                             {submission.amountRequested && (
                               <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                 </svg>
                                 ₹{submission.amountRequested.toLocaleString()}
                               </span>
                             )}
                             <span className="flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                               {submission.applicationDate ? new Date(submission.applicationDate.toDate ? submission.applicationDate.toDate() : submission.applicationDate).toLocaleDateString() : '—'}
                             </span>
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-xs font-mono px-2 py-1 rounded border" style={{
-                            color: currentColors.textMuted,
-                            backgroundColor: currentColors.cardBg,
-                            borderColor: currentColors.cardBorder
-                          }}>
-                            {submission.id}
                           </div>
                         </div>
                       </motion.div>

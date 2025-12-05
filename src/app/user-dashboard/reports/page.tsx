@@ -258,12 +258,12 @@ const UserReportsPage = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 lg:p-6 space-y-6">
+      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -280,26 +280,26 @@ const UserReportsPage = () => {
           />
 
           <div className="relative z-10 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+            <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
               <motion.div
-                className="w-3 h-3 rounded-full bg-indigo-500"
+                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-indigo-500"
                 animate={{
                   scale: [1, 1.2, 1],
                   opacity: [1, 0.8, 1]
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <span className="text-sm font-medium theme-text-secondary">
+              <span className="text-xs sm:text-sm font-medium theme-text-secondary">
                 {t('extracted.reports')} • {t('extracted.download')}
               </span>
             </div>
-            <h1 className="text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
               {t('extracted.reports')}{' '}
-              <span className="text-accent-gradient inline-block leading-normal ml-2">
+              <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.download')}
               </span>
             </h1>
-            <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">
+            <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
               {t('extracted.access_download_view_available_reports')}
             </p>
           </div>
@@ -334,10 +334,10 @@ const UserReportsPage = () => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-4">
-              <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm font-semibold theme-text-primary mb-2">
                   {t('extracted.report_details')}
                 </h4>
@@ -361,7 +361,7 @@ const UserReportsPage = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm font-semibold theme-text-primary mb-2">
                   {t('extracted.generation_info')}
                 </h4>
@@ -387,7 +387,7 @@ const UserReportsPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm font-semibold theme-text-primary mb-2">
                   {t('extracted.statistics')}
                 </h4>
@@ -413,7 +413,7 @@ const UserReportsPage = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm font-semibold theme-text-primary mb-2">
                   {t('extracted.description')}
                 </h4>
@@ -425,7 +425,7 @@ const UserReportsPage = () => {
           </div>
 
           {/* Status and Download */}
-          <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg theme-bg-glass theme-border-glass border">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
             <div>
               <h4 className="text-sm font-semibold theme-text-primary mb-1">
                 {t('extracted.status')}
@@ -460,13 +460,13 @@ const UserReportsPage = () => {
                 }
               }}
               disabled={selectedReport.status !== 'completed'}
-              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
                 selectedReport.status === 'completed'
                   ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              <Download className="w-5 h-5" />
+              <Download className="w-4 sm:w-5 h-4 sm:h-5" />
               {t('extracted.download')}
             </motion.button>
           </div>
@@ -482,11 +482,11 @@ const UserReportsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
+          className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
         >
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+          <div className="flex flex-col space-y-4">
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
               <input
                 type="text"
@@ -498,51 +498,53 @@ const UserReportsPage = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Filter className="w-4 h-4 theme-text-muted" />
                 <span className="text-sm theme-text-primary">
                   {t('extracted.filters')}:
                 </span>
               </div>
 
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              >
-                <option value="all">{t('extracted.all_acts')}</option>
-                {reportTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-wrap gap-2 flex-1">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                >
+                  <option value="all">{t('extracted.all_acts')}</option>
+                  {reportTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              >
-                <option value="all">{t('extracted.all_categories')}</option>
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                >
+                  <option value="all">{t('extracted.all_categories')}</option>
+                  {categories.map(cat => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              >
-                <option value="all">{t('extracted.all_statuses')}</option>
-                <option value="completed">{t('extracted.completed')}</option>
-                <option value="processing">{t('extracted.processing')}</option>
-                <option value="scheduled">{t('extracted.scheduled')}</option>
-                <option value="failed">{t('extracted.failed')}</option>
-              </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                >
+                  <option value="all">{t('extracted.all_statuses')}</option>
+                  <option value="completed">{t('extracted.completed')}</option>
+                  <option value="processing">{t('extracted.processing')}</option>
+                  <option value="scheduled">{t('extracted.scheduled')}</option>
+                  <option value="failed">{t('extracted.failed')}</option>
+                </select>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -552,7 +554,7 @@ const UserReportsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex items-center justify-between"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0"
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium theme-text-primary">
@@ -568,7 +570,7 @@ const UserReportsPage = () => {
                 }`}
               >
                 <Grid3X3 className="w-4 h-4" />
-                {t('extracted.grid')}
+                <span className="hidden xs:inline">{t('extracted.grid')}</span>
               </button>
               <button
                 onClick={() => setViewMode('table')}
@@ -579,11 +581,11 @@ const UserReportsPage = () => {
                 }`}
               >
                 <Table className="w-4 h-4" />
-                {t('extracted.table')}
+                <span className="hidden xs:inline">{t('extracted.table')}</span>
               </button>
             </div>
           </div>
-          <div className="text-sm theme-text-muted">
+          <div className="text-sm theme-text-muted text-center sm:text-right">
             {filteredReports.length} {t('extracted.reports_found')}
           </div>
         </motion.div>
@@ -594,7 +596,7 @@ const UserReportsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {filteredReports.map((report, idx) => (
               <motion.div
@@ -603,7 +605,7 @@ const UserReportsPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.03 }}
                 whileHover={{ y: -4, scale: 1.01 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
+                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
                 onClick={() => setSelectedReport(report)}
               >
                 {/* Header */}
@@ -660,7 +662,8 @@ const UserReportsPage = () => {
                               : '#9ca3af'
                         }}
                       />
-                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      <span className="hidden sm:inline">{report.status.charAt(0).toUpperCase() + report.status.slice(1)}</span>
+                      <span className="sm:hidden">{report.status.charAt(0).toUpperCase()}</span>
                     </div>
                   </div>
                 </div>
@@ -742,164 +745,293 @@ const UserReportsPage = () => {
                     }`}
                   >
                     <Download className="w-4 h-4" />
-                    {t('extracted.download')}
+                    <span className="hidden sm:inline">{t('extracted.download')}</span>
                   </motion.button>
                 </div>
               </motion.div>
             ))}
           </motion.div>
         ) : (
-          /* Table View */
+          /* Table View - Desktop, Card View - Mobile */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="theme-bg-card theme-border-glass border rounded-2xl overflow-hidden glass-effect"
+            className="space-y-4 sm:space-y-6"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="theme-bg-glass">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.report')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.type')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.category')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.status')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.records')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.size')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.generated_date')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                      {t('extracted.actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border-glass">
-                  {filteredReports.map((report, idx) => (
-                    <motion.tr
-                      key={report.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.02 }}
-                      className="hover:theme-bg-glass cursor-pointer transition-colors"
-                      onClick={() => setSelectedReport(report)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
-                            {(() => {
-                              const Icon = getCategoryIcon(report.category) || FileText;
-                              return <Icon className="w-4 h-4" />;
-                            })()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium theme-text-primary truncate">
-                              {report.name}
+            {/* Desktop Table View */}
+            <div className="hidden md:block theme-bg-card theme-border-glass border rounded-2xl overflow-hidden glass-effect">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="theme-bg-glass">
+                    <tr>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.report')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.type')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.category')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.status')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.records')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.size')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.generated_date')}
+                      </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                        {t('extracted.actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y theme-border-glass">
+                    {filteredReports.map((report, idx) => (
+                      <motion.tr
+                        key={report.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="hover:theme-bg-glass cursor-pointer transition-colors"
+                        onClick={() => setSelectedReport(report)}
+                      >
+                        <td className="px-4 lg:px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                              {(() => {
+                                const Icon = getCategoryIcon(report.category) || FileText;
+                                return <Icon className="w-4 h-4" />;
+                              })()}
                             </div>
-                            <div className="text-xs theme-text-muted truncate">
-                              {report.id}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium theme-text-primary truncate">
+                                {report.name}
+                              </div>
+                              <div className="text-xs theme-text-muted truncate">
+                                {report.id}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm theme-text-primary capitalize">
-                          {report.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm theme-text-primary capitalize">
-                          {report.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                report.status === 'completed'
-                                  ? '#10b981'
-                                  : report.status === 'processing'
-                                  ? '#3b82f6'
-                                  : report.status === 'scheduled'
-                                  ? '#f59e0b'
-                                  : report.status === 'failed'
-                                  ? '#ef4444'
-                                  : '#9ca3af'
-                            }}
-                          />
-                          <span
-                            className="text-sm font-medium capitalize"
-                            style={{
-                              color:
-                                report.status === 'completed'
-                                  ? (theme === 'dark' ? '#10b981' : '#059669')
-                                  : report.status === 'processing'
-                                  ? (theme === 'dark' ? '#3b82f6' : '#2563eb')
-                                  : report.status === 'scheduled'
-                                  ? (theme === 'dark' ? '#f59e0b' : '#d97706')
-                                  : report.status === 'failed'
-                                  ? (theme === 'dark' ? '#ef4444' : '#dc2626')
-                                  : (theme === 'dark' ? '#9ca3af' : '#6b7280')
-                            }}
-                          >
-                            {report.status}
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <span className="text-sm theme-text-primary capitalize">
+                            {report.type}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm theme-text-primary">
-                          {report.recordCount ?? '--'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm theme-text-primary">
-                          {formatFileSize(report.fileSize)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm theme-text-primary">
-                          {formatDate(report.generatedDate)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (report.status === 'completed') {
-                              handleDownload(report.id);
-                            }
-                          }}
-                          disabled={report.status !== 'completed'}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <span className="text-sm theme-text-primary capitalize">
+                            {report.category}
+                          </span>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  report.status === 'completed'
+                                    ? '#10b981'
+                                    : report.status === 'processing'
+                                    ? '#3b82f6'
+                                    : report.status === 'scheduled'
+                                    ? '#f59e0b'
+                                    : report.status === 'failed'
+                                    ? '#ef4444'
+                                    : '#9ca3af'
+                              }}
+                            />
+                            <span
+                              className="text-sm font-medium capitalize"
+                              style={{
+                                color:
+                                  report.status === 'completed'
+                                    ? (theme === 'dark' ? '#10b981' : '#059669')
+                                    : report.status === 'processing'
+                                    ? (theme === 'dark' ? '#3b82f6' : '#2563eb')
+                                    : report.status === 'scheduled'
+                                    ? (theme === 'dark' ? '#f59e0b' : '#d97706')
+                                    : report.status === 'failed'
+                                    ? (theme === 'dark' ? '#ef4444' : '#dc2626')
+                                    : (theme === 'dark' ? '#9ca3af' : '#6b7280')
+                              }}
+                            >
+                              {report.status}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <span className="text-sm theme-text-primary">
+                            {report.recordCount ?? '--'}
+                          </span>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <span className="text-sm theme-text-primary">
+                            {formatFileSize(report.fileSize)}
+                          </span>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <span className="text-sm theme-text-primary">
+                            {formatDate(report.generatedDate)}
+                          </span>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (report.status === 'completed') {
+                                handleDownload(report.id);
+                              }
+                            }}
+                            disabled={report.status !== 'completed'}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              report.status === 'completed'
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                          >
+                            <Download className="w-4 h-4" />
+                            {t('extracted.download')}
+                          </motion.button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {filteredReports.map((report, idx) => (
+                <motion.div
+                  key={report.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="theme-bg-card theme-border-glass border rounded-2xl p-4 glass-effect cursor-pointer hover:shadow-lg transition-all duration-300"
+                  onClick={() => setSelectedReport(report)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                        {(() => {
+                          const Icon = getCategoryIcon(report.category) || FileText;
+                          return <Icon className="w-5 h-5" />;
+                        })()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold theme-text-primary text-base truncate">
+                          {report.name}
+                        </h3>
+                        <p className="theme-text-muted text-sm truncate">
+                          {report.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
+                      <div
+                        className="px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1"
+                        style={{
+                          backgroundColor:
                             report.status === 'completed'
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }`}
-                        >
-                          <Download className="w-4 h-4" />
-                          {t('extracted.download')}
-                        </motion.button>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+                              ? (theme === 'dark' ? '#16a34a' : '#059669')
+                              : report.status === 'processing'
+                              ? (theme === 'dark' ? '#2563eb' : '#2563eb')
+                              : report.status === 'scheduled'
+                              ? (theme === 'dark' ? '#d97706' : '#d97706')
+                              : report.status === 'failed'
+                              ? (theme === 'dark' ? '#dc2626' : '#dc2626')
+                              : (theme === 'dark' ? '#6b7280' : '#6b7280'),
+                          color: 'white',
+                          boxShadow:
+                            theme === 'light'
+                              ? '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              : '0 1px 3px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        <div
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor:
+                              report.status === 'completed'
+                                ? '#10b981'
+                                : report.status === 'processing'
+                                ? '#3b82f6'
+                                : report.status === 'scheduled'
+                                ? '#f59e0b'
+                                : report.status === 'failed'
+                                ? '#ef4444'
+                                : '#9ca3af'
+                          }}
+                        />
+                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="text-center p-2 rounded-lg theme-bg-glass">
+                      <p className="text-sm font-bold theme-text-primary">
+                        {report.recordCount ?? '--'}
+                      </p>
+                      <p className="theme-text-muted text-xs">
+                        {t('extracted.records')}
+                      </p>
+                    </div>
+                    <div className="text-center p-2 rounded-lg theme-bg-glass">
+                      <p className="text-sm font-bold theme-text-primary">
+                        {formatFileSize(report.fileSize)}
+                      </p>
+                      <p className="theme-text-muted text-xs">
+                        {t('extracted.size')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs theme-text-muted mb-3">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(report.generatedDate)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="capitalize">{report.type}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                    <div className="text-xs theme-text-muted">
+                      {report.category.charAt(0).toUpperCase() + report.category.slice(1)}
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (report.status === 'completed') {
+                          handleDownload(report.id);
+                        }
+                      }}
+                      disabled={report.status !== 'completed'}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        report.status === 'completed'
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <Download className="w-4 h-4" />
+                      {t('extracted.download')}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
