@@ -646,7 +646,7 @@ const stats = useMemo(() => {
               {t('extracted.live_tracking')} • {filteredIntegrations.length} {t('extracted.active_integrations')}
             </span>
           </div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
             {t('extracted.integration')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_integration_tracking_description')}</p>
@@ -654,7 +654,7 @@ const stats = useMemo(() => {
         
         <div className="relative z-10 flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
           {/* View mode toggle */}
-          <div className="hidden sm:flex items-center gap-2 mr-2">
+          <div className="flex items-center gap-2 mr-2">
             <button
               onClick={() => setViewMode('grid')}
               className={`px-3 py-2 rounded-xl text-sm font-semibold ${viewMode === 'grid' ? 'accent-gradient text-white' : (theme === 'light' ? 'bg-white/90 text-black border border-gray-200' : 'theme-bg-glass theme-text-primary')}`}
@@ -701,13 +701,13 @@ const stats = useMemo(() => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 12 }}
       transition={{ duration: 0.2 }}
-      className="mt-4 sm:mt-6 w-full"
+      className="mt-4 sm:mt-6 w-full fixed inset-0 z-50 sm:relative sm:inset-auto"
     >
       <motion.div
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
-        className={`border rounded-2xl w-full mx-auto my-6 overflow-visible glass-effect shadow-2xl ${
+        className={`border rounded-none w-full h-full mx-0 my-0 overflow-visible glass-effect shadow-2xl sm:rounded-2xl sm:mx-auto sm:my-6 ${
           theme === 'light'
             ? 'bg-white border-gray-200'
             : 'theme-bg-card theme-border-glass'
@@ -903,7 +903,7 @@ const stats = useMemo(() => {
 
         {/* Content – Scrollable if too long */}
         <div
-          className={`p-4 sm:p-8 space-y-8 max-h-[70vh] overflow-y-auto ${
+          className={`p-4 sm:p-8 space-y-8 max-h-full sm:max-h-[70vh] overflow-y-auto ${
             theme === 'light' ? 'bg-white' : ''
           }`}
         >
@@ -1954,7 +1954,7 @@ const stats = useMemo(() => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
       >
         {[
           { labelKey: 'extracted.active', value: stats.active, icon: Activity, color: 'from-green-500 to-emerald-500', statusColor: 'bg-green-500' },
@@ -2042,10 +2042,10 @@ const stats = useMemo(() => {
                     className="w-full px-2.5 sm:px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm"
                   >
                     <option value="all">{t('extracted.all_categories')}</option>
-                    <option value="identity-verification">{t('extracted.identity')}</option>
-                    <option value="document-verification">{t('extracted.document')}</option>
-                    <option value="payment-services">{t('extracted.payments')}</option>
-                    <option value="banking-services">{t('extracted.banking')}</option>
+                    <option value="identity-verification">{t('extracted.identity_verification')}</option>
+                    <option value="document-verification">{t('extracted.document_verification')}</option>
+                    <option value="payment-services">{t('extracted.payment_services')}</option>
+                    <option value="banking-services">{t('extracted.banking_services')}</option>
                   </select>
                 </div>
 
@@ -2085,7 +2085,7 @@ const stats = useMemo(() => {
 
           {/* Category Overview */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.categories')} </h3>
+            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('categories')} </h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count]) => {
                 const Icon = getCategoryIcon(category);
@@ -2453,14 +2453,14 @@ const stats = useMemo(() => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-stretch justify-stretch sm:items-center sm:justify-center"
     >
       <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
       <motion.div
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
-        className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+        className="relative w-full h-full max-w-none mx-0 p-4 rounded-none theme-border-glass border shadow-lg sm:max-w-3xl sm:mx-4 sm:p-6 sm:rounded-xl"
         style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
       >
         <div className="flex items-start justify-between mb-6">

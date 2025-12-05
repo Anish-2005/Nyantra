@@ -866,7 +866,7 @@ const GrievancePage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 p-4 lg:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -936,7 +936,7 @@ const GrievancePage = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-6">
@@ -952,7 +952,7 @@ const GrievancePage = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
                 <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
                   <div className="flex items-start justify-between">
                     <div>
@@ -1386,13 +1386,13 @@ const GrievancePage = () => {
       )}
 
       {/* Dashboard Grid - New Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-6">
         {/* Analytics Sidebar */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="xl:col-span-1 space-y-6"
+          className="xl:col-span-1 order-2 xl:order-1"
         >
           {/* Quick Stats */}
           <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
@@ -1423,9 +1423,9 @@ const GrievancePage = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')} </h3>
-            <div className="space-y-3">
+          <div className="my-8 theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect">
+            <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.quick_actions_1')} </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-3">
               {[
                 { labelKey: 'extracted.assign_cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
                 { labelKey: 'extracted.bulk_update', icon: Edit, color: 'bg-purple-500/20 text-purple-400' },
@@ -1435,29 +1435,29 @@ const GrievancePage = () => {
                 <motion.button
                   key={idx}
                   whileHover={{ x: 4 }}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl ${action.color} transition-colors`}
+                  className={`w-full flex flex-col lg:flex-row items-center gap-1 lg:gap-3 p-2 lg:p-3 rounded-lg lg:rounded-xl ${action.color} transition-colors`}
                 >
-                  <action.icon className="w-5 h-5" />
-                  <span className="font-medium text-sm">{t(action.labelKey)}</span>
+                  <action.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <span className="font-medium text-xs lg:text-sm text-center lg:text-left">{t(action.labelKey)}</span>
                 </motion.button>
               ))}
             </div>
           </div>
 
           {/* Category Distribution */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_categories')} </h3>
-            <div className="space-y-3">
+          <div className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect">
+            <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.case_categories')} </h3>
+            <div className="space-y-2 lg:space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
                 const Icon = getCategoryIcon(category);
                 const categoryKey = `extracted.${category.replace('-', '_')}`;
                 return (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg theme-bg-glass">
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 theme-text-primary" />
-                      <span className="text-sm theme-text-primary">{t(categoryKey)}</span>
+                  <div key={idx} className="flex items-center justify-between p-2 lg:p-3 rounded-lg lg:rounded-xl theme-bg-glass">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                      <Icon className="w-4 h-4 lg:w-5 lg:h-5 theme-text-primary" />
+                      <span className="text-sm lg:text-base theme-text-primary">{t(categoryKey)}</span>
                     </div>
-                    <span className="text-sm theme-text-muted">{count}</span>
+                    <span className="text-sm lg:text-base theme-text-muted">{count}</span>
                   </div>
                 );
               })}
@@ -1470,26 +1470,26 @@ const GrievancePage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="xl:col-span-3 space-y-6"
+          className="xl:col-span-3 order-1 xl:order-2 space-y-4 lg:space-y-6"
           >
           {/* View Controls */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold theme-text-primary">
-                {t('extracted.active_cases')} <span className="theme-text-muted text-lg">({filteredGrievances.length})</span>
+              <h2 className="text-xl lg:text-2xl font-bold theme-text-primary">
+                {t('extracted.active_cases')} <span className="theme-text-muted text-lg lg:text-xl">({filteredGrievances.length})</span>
               </h2>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               {/* Search */}
-              <div className="relative flex-1 lg:flex-none">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
                 <input
                   type="text"
                   placeholder={t('extracted.search_cases')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full lg:w-64 pl-10 pr-4 py-2.5 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary"
+                  className="w-full sm:w-64 pl-9 lg:pl-10 pr-4 py-2.5 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm lg:text-base"
                 />
               </div>
 
@@ -1504,7 +1504,7 @@ const GrievancePage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(mode as 'dashboard' | 'list')}
-                    className={`px-4 py-2 rounded-lg ${
+                    className={`px-3 lg:px-4 py-2 rounded-lg text-sm lg:text-base ${
                       viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
                     }`}
                   >
@@ -1517,7 +1517,7 @@ const GrievancePage = () => {
 
           {/* Cases Grid / List - separate dashboard and list layouts */}
           {viewMode === 'dashboard' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               {paginatedGrievances.map((grievance, idx) => (
                 <motion.div
                   key={grievance.id}
@@ -1525,96 +1525,96 @@ const GrievancePage = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.06 }}
                   whileHover={{ y: -6, scale: 1.02 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect cursor-pointer group"
+                  className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect cursor-pointer group"
                   onClick={() => setSelectedGrievance(grievance)}
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-                        <div className="text-sm font-bold">
+                  <div className="flex items-start justify-between mb-3 lg:mb-4">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                        <div className="text-xs lg:text-sm font-bold">
                           {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
                         </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold theme-text-primary group-hover:text-accent-gradient transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold theme-text-primary group-hover:text-accent-gradient transition-colors text-sm lg:text-base line-clamp-1">
                           {grievance.beneficiaryName}
                         </h3>
-                        <p className="theme-text-muted text-sm">{grievance.id}</p>
+                        <p className="theme-text-muted text-xs lg:text-sm">{grievance.id}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 ${getPriorityColor(grievance.priority)} text-xs font-bold rounded-full`}>
+                    <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
+                      <span className={`px-2 lg:px-3 py-1 text-xs font-bold rounded-full ${getPriorityColor(grievance.priority)}`}>
                         {grievance.priority ? grievance.priority.toUpperCase() : '-'}
                       </span>
                       <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass">
-                        <MoreVertical className="w-4 h-4 theme-text-primary" />
+                        <MoreVertical className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
                       </button>
                     </div>
                   </div>
 
                   {/* Description */}
-                  <p className="theme-text-secondary text-sm mb-4 line-clamp-2">
+                  <p className="theme-text-secondary text-xs lg:text-sm mb-3 lg:mb-4 line-clamp-2">
                     {grievance.description}
                   </p>
 
                   {/* Stats */}
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-3 lg:mb-4">
                     <div className="text-center">
-                      <p className="text-lg font-bold theme-text-primary">{grievance.attachments}</p>
+                      <p className="text-sm lg:text-lg font-bold theme-text-primary">{grievance.attachments}</p>
                       <p className="theme-text-muted text-xs">{t('extracted.files')} </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold theme-text-primary">{grievance.communication?.length ?? 0}</p>
+                      <p className="text-sm lg:text-lg font-bold theme-text-primary">{grievance.communication?.length ?? 0}</p>
                       <p className="theme-text-muted text-xs">{t('extracted.messages')} </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold theme-text-primary">L{grievance.escalationLevel}</p>
+                      <p className="text-sm lg:text-lg font-bold theme-text-primary">L{grievance.escalationLevel}</p>
                       <p className="theme-text-muted text-xs">{t('extracted.escalation')} </p>
                     </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
-                      <div>
+                  <div className="flex items-center justify-between pt-3 lg:pt-4 border-t theme-border-glass">
+                      <div className="flex-1 mr-2">
                         <select
                           onClick={(e) => e.stopPropagation()}
                           value={grievance.status}
                           onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(grievance.id, e.target.value); }}
-                          className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'light' ? 'bg-white border' : 'theme-bg-glass theme-border-glass'} ${getStatusColor(grievance.status)}`}
+                          className={`w-full px-2 lg:px-3 py-1 rounded-full text-xs font-bold ${theme === 'light' ? 'bg-white border' : 'theme-bg-glass theme-border-glass'} ${getStatusColor(grievance.status)}`}
                         >
                           {statuses.map(s => (
                             <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>
                           ))}
                         </select>
                       </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
-                        className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors border theme-border-glass"
+                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors border theme-border-glass"
                         aria-label={`View ${grievance.id}`}
                       >
-                        <Eye className="w-4 h-4 theme-text-primary" />
+                        <Eye className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); setShowNewCaseModal(true); }}
-                        className="p-2 rounded-lg theme-bg-glass hover:bg-yellow-500/20 transition-colors border theme-border-glass"
+                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-yellow-500/20 transition-colors border theme-border-glass"
                         aria-label={`Edit ${grievance.id}`}
                       >
-                        <Edit className="w-4 h-4 theme-text-primary" />
+                        <Edit className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => { e.stopPropagation(); /* placeholder for call action */ }}
-                        className="p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors border theme-border-glass"
+                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors border theme-border-glass"
                         aria-label={`Call ${grievance.id}`}
                       >
-                        <PhoneCall className="w-4 h-4 theme-text-primary" />
+                        <PhoneCall className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
                       </motion.button>
                     </div>
                   </div>
@@ -1622,92 +1622,92 @@ const GrievancePage = () => {
               ))}
             </div>
           ) : (
-            // List view: stacked cards on mobile, table on desktop
+            // List view: responsive layout
             <div>
-              {isMobile ? (
-                <div className="space-y-4">
-                  {paginatedGrievances.map((g) => (
-                    <div key={g.id} className="theme-bg-card theme-border-glass border rounded-2xl p-4 glass-effect">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold theme-text-primary">{g.beneficiaryName}</p>
-                          <p className="text-xs theme-text-muted">{g.id} • {g.district}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
-                          <div className="mt-2 flex items-center justify-end gap-2">
-                                <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-                                  {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                                </select>
-                                <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass">
-                                  <Edit className="w-4 h-4 theme-text-primary" />
-                                </button>
-                                <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass">
-                                  <Eye className="w-4 h-4 theme-text-primary" />
-                                </button>
-                          </div>
+              {/* Mobile/Tablet Card View */}
+              <div className="block lg:hidden space-y-3 lg:space-y-4">
+                {paginatedGrievances.map((g) => (
+                  <div key={g.id} className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-3 lg:p-4 glass-effect">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold theme-text-primary text-sm lg:text-base line-clamp-1">{g.beneficiaryName}</p>
+                        <p className="text-xs theme-text-muted">{g.id} • {g.district}</p>
+                      </div>
+                      <div className="text-right ml-2">
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
+                        <div className="mt-2 flex items-center justify-end gap-1">
+                          <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className={`px-2 py-1 rounded-md text-xs ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
+                            {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                          </select>
+                          <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-1.5 rounded-lg theme-bg-glass border theme-border-glass">
+                            <Edit className="w-3 h-3 theme-text-primary" />
+                          </button>
+                          <button onClick={() => setSelectedGrievance(g)} className="p-1.5 rounded-lg theme-bg-glass border theme-border-glass">
+                            <Eye className="w-3 h-3 theme-text-primary" />
+                          </button>
                         </div>
                       </div>
-                      <p className="theme-text-secondary text-sm mt-2 line-clamp-2">{g.description}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="theme-bg-card theme-border-glass border rounded-2xl overflow-auto">
-                  <table className="min-w-full table-fixed">
-                      <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
-                        <tr>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} </th>
-                          <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
-                          <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedGrievances.map((g) => (
-                          <tr key={g.id} className={`border-b ${theme === 'light' ? 'border-gray-200 hover:bg-gray-50' : 'theme-border-glass hover:bg-theme-bg-glass'} transition-colors`}>
-                            <td className="px-4 py-3 text-sm theme-text-primary">{g.id}</td>
-                            <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
-                            <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
-                            <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
-                            <td className="px-4 py-3 text-sm theme-text-muted">
-                              <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-                                {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right">
-                              <div className="inline-flex items-center gap-2">
-                                <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`Edit ${g.id}`}>
-                                  <Edit className="w-4 h-4 theme-text-primary" />
-                                </button>
-                                <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`View ${g.id}`}>
-                                  <Eye className="w-4 h-4 theme-text-primary" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                </div>
-              )}
+                    <p className="theme-text-secondary text-xs lg:text-sm mt-2 line-clamp-2">{g.description}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden lg:block theme-bg-card theme-border-glass border rounded-2xl overflow-auto">
+                <table className="min-w-full table-fixed">
+                  <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
+                    <tr>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} </th>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
+                      <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedGrievances.map((g) => (
+                      <tr key={g.id} className={`border-b ${theme === 'light' ? 'border-gray-200 hover:bg-gray-50' : 'theme-border-glass hover:bg-theme-bg-glass'} transition-colors`}>
+                        <td className="px-4 py-3 text-sm theme-text-primary">{g.id}</td>
+                        <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
+                        <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
+                        <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
+                        <td className="px-4 py-3 text-sm theme-text-muted">
+                          <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
+                            {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right">
+                          <div className="inline-flex items-center gap-2">
+                            <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`Edit ${g.id}`}>
+                              <Edit className="w-4 h-4 theme-text-primary" />
+                            </button>
+                            <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`View ${g.id}`}>
+                              <Eye className="w-4 h-4 theme-text-primary" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* Performance Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
             {/* Resolution Metrics */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect"
             >
-              <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
-                <Target className="w-5 h-5 theme-text-muted" />
+              <div className="flex items-center justify-between mb-4 lg:mb-6">
+                          <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
+                <Target className="w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
               </div>
-                        <div className="space-y-4">
+                        <div className="space-y-3 lg:space-y-4">
                           {/* Compute SLA buckets dynamically */}
                           {(() => {
                             const totalWithExpected = grievances.filter(g => g.expectedResolution).length || grievances.length || 1;
@@ -1737,14 +1737,14 @@ const GrievancePage = () => {
                               { label: t('extracted.breached_sla'), value: breachedPct, color: 'bg-red-500' }
                             ];
                             return metrics.map((metric) => (
-                              <div key={metric.label} className="space-y-2">
+                              <div key={metric.label} className="space-y-1 lg:space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
-                                  <span className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
+                                  <span className={`text-xs lg:text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
+                                  <span className={`text-xs lg:text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
                                 </div>
-                                <div className={`w-full rounded-full h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
+                                <div className={`w-full rounded-full h-1.5 lg:h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
                                   <div 
-                                    className={`h-2 rounded-full ${metric.color} transition-all duration-1000`}
+                                    className={`h-1.5 lg:h-2 rounded-full ${metric.color} transition-all duration-1000`}
                                     style={{ width: `${metric.value}%` }}
                                   ></div>
                                 </div>
@@ -1757,13 +1757,13 @@ const GrievancePage = () => {
             {/* Recent Activity */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.recent_updates')} </h3>
-                <Activity className="w-5 h-5 theme-text-muted" />
+              <div className="flex items-center justify-between mb-4 lg:mb-6">
+                <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.recent_updates')} </h3>
+                <Activity className="w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3 lg:space-y-4">
                 {(() => {
                   // Build recent activities from grievances
                   const now = new Date();
@@ -1938,7 +1938,7 @@ const GrievancePage = () => {
           </div>
 
           {/* Enhanced Feedback Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
             {sortedFeedbacks.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -1961,15 +1961,15 @@ const GrievancePage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -6, scale: 1.03 }}
-                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-2xl p-6"
+                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-xl lg:rounded-2xl p-4 lg:p-6"
                 >
                   {/* Enhanced gradient overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                   <div className="relative z-10">
                     {/* Rating Section */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between mb-3 lg:mb-4">
+                      <div className="flex items-center gap-2 lg:gap-3">
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <motion.div
@@ -1979,7 +1979,7 @@ const GrievancePage = () => {
                               transition={{ delay: (index * 0.1) + (star * 0.05) }}
                             >
                               <Star
-                                className={`w-5 h-5 transition-colors duration-200 ${
+                                className={`w-4 h-4 lg:w-5 lg:h-5 transition-colors duration-200 ${
                                   star <= feedback.rating
                                     ? 'text-yellow-500 fill-current drop-shadow-sm'
                                     : 'text-gray-400 dark:text-gray-600'
@@ -1988,15 +1988,15 @@ const GrievancePage = () => {
                             </motion.div>
                           ))}
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-yellow-300 border border-yellow-500 dark:bg-yellow-900/30 dark:border-yellow-700">
-                          <span className="text-sm font-bold text-yellow-950 dark:text-yellow-300">
+                        <div className="px-2 lg:px-3 py-1 lg:py-1.5 rounded-full bg-yellow-300 border border-yellow-500 dark:bg-yellow-900/30 dark:border-yellow-700">
+                          <span className="text-xs lg:text-sm font-bold text-yellow-950 dark:text-yellow-300">
                             {feedback.rating}/5
                           </span>
                         </div>
                       </div>
 
                       {/* Status indicator */}
-                      <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
+                      <div className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-xs font-semibold border-2 ${
                         feedback.status === 'resolved'
                           ? 'bg-green-300 text-green-950 border-green-500 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700'
                           : feedback.status === 'in-review'
@@ -2008,17 +2008,17 @@ const GrievancePage = () => {
                     </div>
 
                     {/* Subject */}
-                    <h4 className="font-bold theme-text-primary mb-3 text-lg leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="font-bold theme-text-primary mb-2 lg:mb-3 text-base lg:text-lg leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {feedback.subject}
                     </h4>
 
                     {/* Message */}
-                    <p className="text-sm theme-text-secondary mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-sm theme-text-secondary mb-3 lg:mb-4 line-clamp-3 leading-relaxed">
                       {feedback.message}
                     </p>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
+                    <div className="flex items-center justify-between pt-3 lg:pt-4 border-t theme-border-glass">
                       <div className="flex items-center gap-2 text-xs theme-text-muted">
                         <Clock className="w-3 h-3" />
                         <span className="font-medium">
@@ -2029,7 +2029,7 @@ const GrievancePage = () => {
                           }) || 'Unknown date'}
                         </span>
                       </div>
-                      <div className="text-xs font-mono font-semibold theme-text-secondary bg-gray-100 dark:bg-gray-100 border theme-border-glass px-2.5 py-1 rounded-lg">
+                      <div className="text-xs font-mono font-semibold theme-text-secondary bg-gray-100 dark:bg-gray-100 border theme-border-glass px-2 lg:px-2.5 py-1 rounded-lg">
                         #{feedback.id.slice(-6)}
                       </div>
                     </div>
@@ -2052,49 +2052,47 @@ const GrievancePage = () => {
                 <p className="text-sm theme-text-muted">{t('extracted.feedback_analytics.insightsFromUserExperiences')}</p>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total Feedback */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-6">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <MessageSquare className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <MessageSquare className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-3xl font-bold theme-text-primary mb-1">
+                  <div className="text-2xl lg:text-3xl font-bold theme-text-primary mb-1">
                     {sortedFeedbacks.length}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.totalFeedback')}</div>
+                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.totalFeedback')}</div>
                   <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.allSubmissions')}</div>
                 </motion.div>
 
-                {/* Average Rating */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Star className="w-6 h-6 text-white fill-current" />
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white fill-current" />
                   </div>
-                  <div className="text-3xl font-bold theme-text-primary mb-1">
+                  <div className="text-2xl lg:text-3xl font-bold theme-text-primary mb-1">
                     {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.averageRating', { rating: (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) }).replace('⭐', '')} <Star className="inline w-4 h-4" /></div>
+                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.averageRating', { rating: (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) }).replace('⭐', '')} <Star className="inline w-3 h-3 lg:w-4 lg:h-4" /></div>
                   <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.outOf5Stars')}</div>
                 </motion.div>
 
                 {/* High Ratings */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  <div className="text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating >= 4).length}
                   </div>
-                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.highRatings').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
+                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.highRatings').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
                   <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.starsRange', { range: '4-5', percentage: Math.round((sortedFeedbacks.filter(f => f.rating >= 4).length / sortedFeedbacks.length) * 100) })}</div>
                 </motion.div>
 
@@ -2115,30 +2113,30 @@ const GrievancePage = () => {
               </div>
 
               {/* Rating Distribution Chart */}
-              <div className="mt-8 p-6 rounded-2xl theme-bg-glass theme-border-glass border">
-                <h4 className="text-md font-semibold theme-text-primary mb-4 text-center">{t('extracted.feedback_analytics.ratingDistribution')}</h4>
-                <div className="space-y-3">
+              <div className="mt-6 lg:mt-8 p-4 lg:p-6 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border">
+                <h4 className="text-sm lg:text-md font-semibold theme-text-primary mb-3 lg:mb-4 text-center">{t('extracted.feedback_analytics.ratingDistribution')}</h4>
+                <div className="space-y-2 lg:space-y-3">
                   {[5, 4, 3, 2, 1].map((rating) => {
                     const count = sortedFeedbacks.filter(f => f.rating === rating).length;
                     const percentage = sortedFeedbacks.length > 0 ? (count / sortedFeedbacks.length) * 100 : 0;
                     return (
-                      <div key={rating} className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 w-12">
-                          <span className="text-sm font-medium theme-text-secondary">{rating}</span>
-                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                      <div key={rating} className="flex items-center gap-2 lg:gap-3">
+                        <div className="flex items-center gap-1 lg:gap-2 w-8 lg:w-12">
+                          <span className="text-xs lg:text-sm font-medium theme-text-secondary">{rating}</span>
+                          <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-400 fill-current" />
                         </div>
-                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div className="flex-1 bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 lg:h-2">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${percentage}%` }}
                             transition={{ delay: 0.5, duration: 0.8 }}
-                            className={`h-2 rounded-full ${
+                            className={`h-1.5 lg:h-2 rounded-full ${
                               rating >= 4 ? 'bg-green-500' :
                               rating === 3 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                           />
                         </div>
-                        <div className="text-xs theme-text-muted w-8 text-right">
+                        <div className="text-xs lg:text-sm theme-text-muted w-6 lg:w-8 text-right">
                           {count}
                         </div>
                       </div>

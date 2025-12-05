@@ -252,13 +252,13 @@ const AnalyticsPage = () => {
 
       if (existing) {
         existing.applications += 1;
-        existing.disbursements += disbursements.length;
+        existing.disbursements += completed.length;
         existing.amount += amount;
       } else {
         acc.push({
           state,
           applications: 1,
-          disbursements: disbursements.length,
+          disbursements: completed.length,
           amount,
           successRate: disbursements.length > 0 ? (completed.length / disbursements.length) * 100 : 0
         });
@@ -291,13 +291,13 @@ const AnalyticsPage = () => {
 
       if (existing) {
         existing.applications += 1;
-        existing.disbursements += disbursements.length;
+        existing.disbursements += completed.length;
       } else {
         acc.push({
           district,
           state,
           applications: 1,
-          disbursements: disbursements.length,
+          disbursements: completed.length,
           successRate: disbursements.length > 0 ? (completed.length / disbursements.length) * 100 : 0
         });
       }
@@ -1585,7 +1585,7 @@ const AnalyticsPage = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold theme-text-primary">{state.disbursements} {t('extracted.disbursed_lowercase')}</p>
+                  <p className="font-semibold theme-text-primary">{state.disbursements} {t('extracted.disbursements_lowercase')}</p>
                   <p className="text-xs theme-text-muted">{state.successRate}% {t('extracted.success_lowercase')}</p>
                 </div>
               </div>
@@ -1714,7 +1714,7 @@ const AnalyticsPage = () => {
                 onClick={exportToPDF}
                 className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:bg-blue-500/10"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4 theme-text-primary" />
                 <span className="text-sm">{t('extracted.export')}</span>
               </motion.button>
               <div className="flex items-center gap-2">
@@ -1799,9 +1799,17 @@ const AnalyticsPage = () => {
                   <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">{district.disbursements}</td>
                   <td className="hidden lg:table-cell px-4 py-3">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                      district.successRate >= 80 ? 'bg-green-100 text-green-800' :
-                      district.successRate >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                      district.successRate >= 80
+                        ? theme === 'dark'
+                          ? 'bg-green-900/30 text-green-300 border border-green-700/50'
+                          : 'bg-green-100 text-green-800'
+                        : district.successRate >= 60
+                        ? theme === 'dark'
+                          ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
+                          : 'bg-yellow-100 text-yellow-800'
+                        : theme === 'dark'
+                        ? 'bg-red-900/30 text-red-300 border border-red-700/50'
+                        : 'bg-red-100 text-red-800'
                     }`}>
                       {district.successRate.toFixed(1)}%
                     </span>
@@ -1814,7 +1822,7 @@ const AnalyticsPage = () => {
                         className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors border theme-border-glass"
                         title={t('extracted.view_details')}
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4 h-4 theme-text-primary" />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -1822,7 +1830,7 @@ const AnalyticsPage = () => {
                         className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500 hover:text-white transition-colors border theme-border-glass"
                         title={t('extracted.export_data')}
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 theme-text-primary" />
                       </motion.button>
                     </div>
                   </td>
