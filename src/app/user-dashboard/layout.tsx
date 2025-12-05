@@ -305,11 +305,11 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:block">
-                    <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.applicant_portal')} </h1>
-                    <p className="text-sm theme-text-muted">{t('extracted.applicant_tools_and_status')} </p>
+                    <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.nyantra')} </h1>
+                    <p className="text-sm theme-text-muted">{t('extracted.applicant_portal')} </p>
                   </div>
                   <div className="sm:hidden">
-                    <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.applicant')} </h1>
+                    <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('extracted.nyantra')} </h1>
                   </div>
                 </div>
               </div>

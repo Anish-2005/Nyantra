@@ -538,6 +538,7 @@
     "feedback": "Feedback",
     "applicant": "Applicant",
     "portal": "Portal",
+    "nyantra_applicant_portal": "Nyantra Applicant Portal",
     "status_badge": "{/* Status Badge */}",
     "smart_dbt_platform": "Smart DBT Platform",
     "role_selection": "{/* Role Selection */}",

@@ -63,10 +63,12 @@ export default function UserSidebar({
               <Image src={logoSrc} alt={t('extracted.nyantra')} fill className="object-contain" />
             </div>
             <div>
-        <div className="text-lg font-bold theme-text-primary">
-          {t('extracted.applicant')}
-        </div>
-        <div className="text-xs theme-text-muted">{t('extracted.your_portal')}</div>
+              <div className="text-xl font-bold theme-text-primary">
+                {t('extracted.nyantra')}
+              </div>
+              <div className="text-xs theme-text-muted">
+                {t('extracted.applicant_portal')}
+              </div>
             </div>
           </div>
           <button
@@ -149,11 +151,13 @@ export default function UserSidebar({
               <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
                 <Image src={logoSrc} alt={t('extracted.nyantra')} width={30} height={30} className="object-contain" />
               </div>
-                <div>
-                <div className="text-lg font-bold theme-text-primary">
-                  {t('extracted.applicant')}
+              <div>
+                <div className="text-xl font-bold theme-text-primary">
+                  {t('extracted.nyantra')}
                 </div>
-                <div className="text-xs theme-text-muted">{t('extracted.portal')}</div>
+                <div className="text-xs theme-text-muted">
+                  {t('extracted.applicant_portal')}
+                </div>
               </div>
             </div>
           ) : (
