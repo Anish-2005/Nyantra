@@ -27,7 +27,7 @@ import {
   Timer,
   Shield,
   X,
-  BadgeCheck
+  BadgeCheck, Fingerprint, MapPin, Scale, DollarSign, Banknote, User
 } from 'lucide-react';
 
 // Minimal in-file platform logos reused from the Integrations page so

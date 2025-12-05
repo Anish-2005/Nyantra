@@ -16,6 +16,7 @@ export default function AnalyticsChart({
   const chartRef = useRef<any>(null);
   const { theme } = useTheme();
   const [componentsLoaded, setComponentsLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [LineComp, setLineComp] = useState<any>(null);
   const [BarComp, setBarComp] = useState<any>(null);
 
@@ -29,6 +30,11 @@ export default function AnalyticsChart({
     dataSets && dataSets.length
       ? dataSets
       : [{ id: "applications", label: "Applications", points: mock }];
+
+  // Set mobile state on client side
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+  }, []);
 
   // Dynamically import chart.js + react-chartjs-2 to avoid SSR issues
   useEffect(() => {
@@ -80,7 +86,6 @@ export default function AnalyticsChart({
   }, []);
 
   // Shape datasets depending on chartType
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
   const chartData = {
     datasets: sets.map((s, i) => {
       const base = {
