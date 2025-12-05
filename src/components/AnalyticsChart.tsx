@@ -65,36 +65,22 @@ export default function AnalyticsChart({
     };
   }, []);
 
-  // Create gradient after chart mount and on theme change
+  // Handle window resize for responsive chart updates
   useEffect(() => {
-    if (!componentsLoaded) return;
-    const chart = chartRef.current?.chartInstance || chartRef.current?.chart || chartRef.current;
-    if (!chart) return;
-
-    try {
-      const ctx = chart.ctx as CanvasRenderingContext2D;
-      const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
-      if (theme === "dark") {
-        gradient.addColorStop(0, "rgba(139,92,246,0.28)");
-        gradient.addColorStop(1, "rgba(139,92,246,0.02)");
-      } else {
-        gradient.addColorStop(0, "rgba(59,130,246,0.28)");
-        gradient.addColorStop(1, "rgba(59,130,246,0.02)");
+    const handleResize = () => {
+      const chart = chartRef.current?.chartInstance || chartRef.current?.chart || chartRef.current;
+      if (chart) {
+        chart.resize();
+        chart.update();
       }
+    };
 
-      const datasets = (chart.data?.datasets ?? []) as any[];
-      datasets.forEach((ds, idx: number) => {
-        if (idx === 0) ds.backgroundColor = gradient;
-        ds.borderColor = ds.borderColor || (theme === "dark" ? "rgba(139,92,246,1)" : "rgba(59,130,246,1)");
-      });
-
-      chart.update();
-    } catch {
-      // ignore gradient errors
-    }
-  }, [theme, componentsLoaded]);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Shape datasets depending on chartType
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
   const chartData = {
     datasets: sets.map((s, i) => {
       const base = {
@@ -105,13 +91,20 @@ export default function AnalyticsChart({
           s.color || (i === 0 ? (theme === "dark" ? "rgba(139,92,246,1)" : "rgba(59,130,246,1)") : `rgba(99,102,241,${0.8 - i * 0.2})`),
         backgroundColor: s.color ? s.color : theme === "dark" ? "rgba(139,92,246,0.2)" : "rgba(59,130,246,0.12)",
         tension: 0.3,
-        pointRadius: 3,
-        pointHoverRadius: 5,
+        pointRadius: isMobile ? 2 : 3,
+        pointHoverRadius: isMobile ? 4 : 5,
         hoverBorderWidth: 2,
+        borderWidth: isMobile ? 1.5 : 2,
       };
 
       if (chartType === "bar" || chartType === "stacked") {
-        return { ...base, type: "bar" as const, borderWidth: 1 };
+        return {
+          ...base,
+          type: "bar" as const,
+          borderWidth: isMobile ? 1 : 1,
+          barThickness: isMobile ? 8 : undefined,
+          maxBarThickness: isMobile ? 12 : undefined
+        };
       }
 
       return { ...base, fill: chartType === "area", tension: 0.3 };
@@ -123,26 +116,92 @@ export default function AnalyticsChart({
     maintainAspectRatio: false,
     interaction: { mode: "nearest", axis: "x", intersect: false },
     plugins: {
-      legend: { display: true, position: "top", labels: { color: theme === "dark" ? "#cbd5e1" : "#0f172a" } },
-      tooltip: { enabled: true, mode: "nearest", intersect: false },
+      legend: {
+        display: true,
+        position: window.innerWidth < 640 ? "bottom" : "top",
+        labels: {
+          color: theme === "dark" ? "#cbd5e1" : "#0f172a",
+          font: {
+            size: window.innerWidth < 640 ? 10 : 12
+          },
+          padding: window.innerWidth < 640 ? 8 : 16,
+          boxWidth: window.innerWidth < 640 ? 8 : 12,
+          boxHeight: window.innerWidth < 640 ? 8 : 12
+        }
+      },
+      tooltip: {
+        enabled: true,
+        mode: "nearest",
+        intersect: false,
+        backgroundColor: theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
+        titleColor: theme === "dark" ? "#f1f5f9" : "#0f172a",
+        bodyColor: theme === "dark" ? "#cbd5e1" : "#475569",
+        borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: window.innerWidth < 640 ? 8 : 12,
+        titleFont: {
+          size: window.innerWidth < 640 ? 12 : 14
+        },
+        bodyFont: {
+          size: window.innerWidth < 640 ? 11 : 13
+        }
+      },
       title: { display: true, text: "", color: theme === "dark" ? "#cbd5e1" : "#0f172a" },
-      zoom: { pan: { enabled: true, mode: "x", modifierKey: "ctrl" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" } },
+      zoom: {
+        pan: {
+          enabled: window.innerWidth >= 640,
+          mode: "x",
+          modifierKey: "ctrl"
+        },
+        zoom: {
+          wheel: { enabled: window.innerWidth >= 640 },
+          pinch: { enabled: true },
+          mode: "x"
+        }
+      },
     },
     scales: {
       x: {
         type: "time",
         time: { unit: "day", tooltipFormat: "PP" },
-        ticks: { color: theme === "dark" ? "#94a3b8" : "#475569" },
+        ticks: {
+          color: theme === "dark" ? "#94a3b8" : "#475569",
+          font: {
+            size: window.innerWidth < 640 ? 10 : 12
+          },
+          maxTicksLimit: window.innerWidth < 640 ? 5 : 7
+        },
         grid: { color: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(15,23,42,0.03)" },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: theme === "dark" ? "#94a3b8" : "#475569" },
+        ticks: {
+          color: theme === "dark" ? "#94a3b8" : "#475569",
+          font: {
+            size: window.innerWidth < 640 ? 10 : 12
+          },
+          maxTicksLimit: window.innerWidth < 640 ? 4 : 6
+        },
         grid: { color: theme === "dark" ? "rgba(255,255,255,0.02)" : "rgba(15,23,42,0.02)" },
         stacked: chartType === "stacked",
       },
     },
   };
+
+  // Handle window resize for responsive chart updates
+  useEffect(() => {
+    const handleResize = () => {
+      const chart = chartRef.current?.chartInstance || chartRef.current?.chart || chartRef.current;
+      if (chart) {
+        chart.resize();
+        chart.update();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!componentsLoaded || (!LineComp && !BarComp)) {
     return (
@@ -156,7 +215,7 @@ export default function AnalyticsChart({
   const BarC = BarComp;
 
   return (
-    <div className="w-full h-64 sm:h-80 md:h-96 relative rounded-lg overflow-hidden shadow-sm">
+    <div className="w-full h-48 sm:h-64 md:h-80 lg:h-96 relative rounded-lg overflow-hidden shadow-sm">
       {chartType === "bar" || chartType === "stacked" ? (
         <BarC ref={chartRef} data={chartData} options={options} />
       ) : (

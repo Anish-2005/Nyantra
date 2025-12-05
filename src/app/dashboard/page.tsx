@@ -118,6 +118,21 @@ const Dashboard = () => {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-IN').format(num);
   };
+
+
+ 
+  const formatActType = (val?: string) => {
+    if (!val) return '—';
+    const v = String(val).toLowerCase();
+    if (v.includes('pcr')) return 'PCR Act';
+    if (v.includes('poa') || v.includes('poa')) return 'PoA Act';
+    return val;
+  };
+
+  const formatCurrency = (n?: number | null) => {
+    if (n == null || Number.isNaN(n)) return '₹0';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n as number);
+  };
   const [activeTab, setActiveTab] = useState('overview');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -781,10 +796,18 @@ const Dashboard = () => {
           return {
             id: doc.id,
             name: data.name || data.fullName || 'Unknown',
-            code: data.beneficiaryId || data.code || '',
-            location: `${data.district || data.city || ''}${data.scheme ? ' • ' + data.scheme : ''}`,
-            status: data.verified ? 'verified' : 'unverified',
-            amount: data.assistanceAmount || data.amount || 0
+            beneficiaryId: data.beneficiaryId || data.code || doc.id,
+            aadhaarNumber: data.aadhaarNumber || '',
+            district: data.district || '',
+            state: data.state || '',
+            actType: data.actType || '',
+            reliefAmount: data.reliefAmount || data.assistanceAmount || 0,
+            disbursedAmount: data.disbursedAmount || 0,
+            assignedOfficer: data.assignedOfficer || '',
+            category: data.category || 'SC',
+            status: data.status || 'active',
+            verificationStatus: data.verificationStatus || 'verified',
+            verified: data.verified || true
           };
         });
         setBeneficiaries(bens);
@@ -1108,50 +1131,56 @@ const Dashboard = () => {
                   exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
-                  {/* Real-Time Monitoring Header */}
+                  {/* Real-Time Monitoring Header - Mobile Optimized */}
                   <motion.div
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
-                    className="theme-bg-card theme-border-glass border rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden"
+                    className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl -z-10" />
-                    
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3">
-                          <motion.div
-                            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500"
-                            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          <span className="text-xs sm:text-sm font-medium theme-text-secondary truncate">
-                            {t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {currentTime}
-                          </span>
-                        </div>
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold theme-text-primary mb-2 leading-tight">
+                    {/* Mobile-optimized background orb */}
+                    <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-2xl sm:blur-3xl -z-10" />
+
+                    {/* Mobile-first layout */}
+                    <div className="flex flex-col gap-4 lg:gap-6">
+                      {/* Status indicator and time - mobile centered */}
+                      <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3">
+                        <motion.div
+                          className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500"
+                          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                        <span className="text-xs sm:text-sm font-medium theme-text-secondary text-center lg:text-left">
+                          {t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {currentTime}
+                        </span>
+                      </div>
+
+                      {/* Main content - centered on mobile */}
+                      <div className="text-center lg:text-left">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold theme-text-primary mb-3 leading-tight">
                           <span className="text-accent-gradient">{t('extracted.realtime_monitoring_dashboard')}</span>
                         </h1>
-                        <p className="theme-text-secondary text-sm sm:text-base leading-relaxed">
+                        <p className="theme-text-secondary text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
                           {t('extracted.comprehensive_oversight_description')}
                         </p>
                       </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+
+                      {/* Action buttons - mobile stacked, desktop side by side */}
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                         <motion.button
-                          className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-xs sm:text-sm flex-1 sm:flex-initial"
+                          className="px-4 sm:px-6 py-3 sm:py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base flex-1 sm:flex-initial"
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="whitespace-nowrap">{t('extracted.auto_refresh')} {t('extracted.on')}</span>
                         </motion.button>
                         <motion.button
-                          className="px-3 sm:px-4 py-2 sm:py-2.5 accent-gradient rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-xs sm:text-sm flex-1 sm:flex-initial"
+                          className="px-4 sm:px-6 py-3 sm:py-3.5 accent-gradient rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base flex-1 sm:flex-initial"
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="whitespace-nowrap">{t('extracted.new_application')}</span>
                         </motion.button>
                       </div>
@@ -1163,7 +1192,7 @@ const Dashboard = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
                   >
                     {loading ? (
                       // Loading skeleton for quick stats
@@ -1171,10 +1200,10 @@ const Dashboard = () => {
                         <motion.div
                           key={idx}
                           variants={itemVariants}
-                          className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm animate-pulse"
+                          className="theme-bg-card theme-border-glass border rounded-2xl sm:rounded-3xl p-4 sm:p-5 backdrop-blur-xl shadow-sm animate-pulse"
                         >
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-xl bg-gray-300"></div>
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gray-300"></div>
                             <div className="flex-1">
                               <div className="h-4 bg-gray-300 rounded mb-2"></div>
                               <div className="h-6 bg-gray-300 rounded"></div>
@@ -1204,41 +1233,41 @@ const Dashboard = () => {
                         </div>
 
                         {/* Main Card */}
-                        <div className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-5 backdrop-blur-xl overflow-hidden">
+                        <div className="relative theme-bg-card theme-border-glass border-2 rounded-2xl sm:rounded-3xl p-4 sm:p-5 backdrop-blur-xl overflow-hidden">
                           {/* Animated Corner Accent */}
                           <motion.div
-                            className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-full`}
+                            className={`absolute top-0 right-0 w-12 h-12 sm:w-20 sm:h-20 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-full`}
                             animate={{ scale: [1, 1.2, 1], rotate: [0, 10, 0] }}
                             transition={{ duration: 3, repeat: Infinity }}
                           />
                           
                           {/* Floating Status Badge */}
                           <motion.div
-                            className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg"
+                            className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg"
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
                           >
                             <motion.div
-                              className={`w-3 h-3 rounded-full ${stat.trend === 'up' ? 'bg-green-500' : 'bg-amber-500'}`}
+                              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${stat.trend === 'up' ? 'bg-green-500' : 'bg-amber-500'}`}
                               animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
                               transition={{ duration: 2, repeat: Infinity }}
                             />
                           </motion.div>
 
                           {/* Icon with Orbital Ring */}
-                          <div className="relative w-16 h-16 mb-4">
+                          <div className="relative w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4">
                             <motion.div
                               className="absolute inset-0 rounded-full border-2 border-dashed opacity-20"
                               style={{ borderColor: `var(--${stat.trend === 'up' ? 'green' : 'amber'}-500)` }}
                             />
-                            <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl`}>
-                              <stat.icon className="w-8 h-8 text-white" />
+                            <div className={`w-full h-full rounded-xl sm:rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-xl`}>
+                              <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                             </div>
                           </div>
 
                           {/* Value with Counting Animation Effect */}
                           <motion.h3 
-                            className="text-3xl font-black theme-text-primary mb-1 tracking-tight"
+                            className="text-xl sm:text-2xl lg:text-3xl font-black theme-text-primary mb-1 tracking-tight"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
@@ -1246,7 +1275,7 @@ const Dashboard = () => {
                             {stat.value}
                           </motion.h3>
                           
-                          <p className="text-sm font-medium theme-text-muted mb-3">{stat.title}</p>
+                          <p className="text-xs sm:text-sm font-medium theme-text-muted mb-2 sm:mb-3">{stat.title}</p>
 
                           {/* Trend Indicator Bar */}
                           <div className="flex items-center gap-2">
@@ -1269,7 +1298,7 @@ const Dashboard = () => {
                   {/* Live Application Tracking */}
                   <motion.div
                     variants={itemVariants}
-                    className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
+                    className="theme-bg-card theme-border-glass border-2 rounded-2xl sm:rounded-3xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
                   >
                     {/* Animated Background Pattern */}
                     <div className="absolute inset-0 opacity-5">
@@ -1285,31 +1314,31 @@ const Dashboard = () => {
                     </div>
 
                     <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
                           <motion.div
-                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
                           >
-                            <Activity className="w-7 h-7 text-white" />
+                            <Activity className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                             <motion.div
-                              className="absolute inset-0 rounded-2xl border-2 border-blue-400"
+                              className="absolute inset-0 rounded-xl sm:rounded-2xl border-2 border-blue-400"
                               animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
                               transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
                             />
                             <motion.div
-                              className="absolute inset-0 rounded-2xl border-2 border-cyan-400"
+                              className="absolute inset-0 rounded-xl sm:rounded-2xl border-2 border-cyan-400"
                               animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
                               transition={{ duration: 2, repeat: Infinity, delay: 1, repeatDelay: 0.5 }}
                             />
                           </motion.div>
                           <div>
-                            <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.liveTracking.liveApplicationTracking')}</h3>
+                            <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.liveTracking.liveApplicationTracking')}</h3>
                             <p className="text-sm theme-text-muted">{t('dashboard.liveTracking.trackRealTime')}</p>
                           </div>
                         </div>
                         <motion.button
                           onClick={() => router.push('/dashboard/applications')}
-                          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
                           whileHover={{ scale: 1.05, x: 5 }}
                           whileTap={{ scale: 0.95 }}
                         >
@@ -1319,19 +1348,19 @@ const Dashboard = () => {
                       </div>
 
                       {/* Live Tracking Stats */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         {loading ? (
                           // Loading skeleton for live tracking stats
                           Array.from({ length: 4 }).map((_, idx) => (
                             <motion.div
                               key={idx}
-                              className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass animate-pulse"
+                              className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl theme-bg-glass border theme-border-glass animate-pulse"
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: idx * 0.1 }}
                             >
                               <div className="flex items-center gap-3 mb-2">
-                                <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-300"></div>
                                 <div className="flex-1">
                                   <div className="h-3 bg-gray-300 rounded w-20 mb-1"></div>
                                   <div className="h-4 bg-gray-300 rounded w-12"></div>
@@ -1344,7 +1373,7 @@ const Dashboard = () => {
                           liveTrackingStats.map((metric, idx) => (
                           <motion.div
                             key={metric.label}
-                            className="relative p-4 rounded-2xl theme-bg-glass border theme-border-glass group/metric overflow-hidden"
+                            className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl theme-bg-glass border theme-border-glass group/metric overflow-hidden"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: idx * 0.1, type: "spring" }}
@@ -1360,12 +1389,12 @@ const Dashboard = () => {
                             </div>
 
                             <div className="relative z-10">
-                              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-3 shadow-lg`}>
-                                <metric.icon className="w-5 h-5 text-white" />
+                              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-2 sm:mb-3 shadow-lg`}>
+                                <metric.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                               </div>
                               <p className="text-xs theme-text-muted font-medium mb-1">{metric.label}</p>
                               <div className="flex items-center justify-between">
-                                <p className="text-lg font-bold theme-text-primary">{metric.value}</p>
+                                <p className="text-base sm:text-lg font-bold theme-text-primary">{metric.value}</p>
                                 <span className={`text-xs font-semibold ${metric.trend === 'up' ? 'text-green-500' : 'text-amber-500'}`}>
                                   {metric.change}
                                 </span>
@@ -1384,62 +1413,62 @@ const Dashboard = () => {
                       </div>
 
                       {/* Live Activity Feed */}
-<div className="mt-6">
-  <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
-    <motion.div
-      className="w-2 h-2 rounded-full bg-green-500"
-      animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-      transition={{ duration: 2, repeat: Infinity }}
-    />
-    {t('dashboard.recentActivity.liveUpdates')}
-  </h4>
-  <div className="space-y-2">
-    {loading ? (
-      // Loading skeleton for recent activity
-      Array.from({ length: 4 }).map((_, idx) => (
-        <motion.div
-          key={idx}
-          className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: idx * 0.1 }}
-        >
-          <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
-          <div className="flex-1">
-            <div className="h-3 bg-gray-300 rounded w-32 mb-1"></div>
-            <div className="h-2 bg-gray-300 rounded w-24"></div>
-          </div>
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
-        </motion.div>
-      ))
-    ) : (
-      recentActivity.map((activity, idx) => (
-        <motion.div
-          key={idx}
-          className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          whileHover={{ scale: 1.02, x: 5 }}
-        >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            activity.type === 'application' ? 'bg-blue-500' :
-            activity.type === 'grievance' ? 'bg-amber-500' : 'bg-green-500'
-          }`}>
-            {activity.type === 'application' ? <FileText className="w-4 h-4 text-white" /> :
-             activity.type === 'grievance' ? <AlertCircle className="w-4 h-4 text-white" /> :
-             <CheckCircle className="w-4 h-4 text-white" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
-            <p className="text-xs theme-text-muted">by {activity.user}</p>
-          </div>
-          <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
-        </motion.div>
-      ))
-    )}
-  </div>
-</div>
+                      <div className="mt-4 sm:mt-6">
+                        <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-green-500"
+                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          {t('dashboard.recentActivity.liveUpdates')}
+                        </h4>
+                        <div className="space-y-2">
+                          {loading ? (
+                            // Loading skeleton for recent activity
+                            Array.from({ length: 4 }).map((_, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
+                                <div className="flex-1">
+                                  <div className="h-3 bg-gray-300 rounded w-32 mb-1"></div>
+                                  <div className="h-2 bg-gray-300 rounded w-24"></div>
+                                </div>
+                                <div className="h-4 bg-gray-300 rounded w-16"></div>
+                              </motion.div>
+                            ))
+                          ) : (
+                            recentActivity.map((activity, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ scale: 1.02, x: 5 }}
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                  activity.type === 'application' ? 'bg-blue-500' :
+                                  activity.type === 'grievance' ? 'bg-amber-500' : 'bg-green-500'
+                                }`}>
+                                  {activity.type === 'application' ? <FileText className="w-4 h-4 text-white" /> :
+                                   activity.type === 'grievance' ? <AlertCircle className="w-4 h-4 text-white" /> :
+                                   <CheckCircle className="w-4 h-4 text-white" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
+                                  <p className="text-xs theme-text-muted">by {activity.user}</p>
+                                </div>
+                                <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
+                              </motion.div>
+                            ))
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Decorative Elements */}
@@ -1453,7 +1482,7 @@ const Dashboard = () => {
                     <div className="xl:col-span-2 space-y-4 lg:space-y-6">
                       <motion.div
                         variants={itemVariants}
-                        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group"
+                        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-4 sm:p-6 backdrop-blur-xl overflow-hidden group"
                       >
                         {/* Animated Background Grid */}
                         <div className="absolute inset-0 opacity-5">
@@ -1472,7 +1501,7 @@ const Dashboard = () => {
                               <Activity className="w-6 h-6 text-white" />
                             </motion.div>
                             <div>
-                              <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.analytics.performanceAnalytics')}</h3>
+                              <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.analytics.performanceAnalytics')}</h3>
                               <div className="flex items-center gap-2 mt-1">
                                 <motion.div
                                   className="w-2 h-2 bg-green-500 rounded-full"
@@ -1786,7 +1815,7 @@ const Dashboard = () => {
                                 <Users className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.beneficiaries.verifiedBeneficiaries')}</h3>
+                                <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.beneficiaries.verifiedBeneficiaries')}</h3>
                                 <p className="text-sm theme-text-muted">{t('dashboard.beneficiaries.activeProfilesWithFullVerification')}</p>
                               </div>
                             </div>
@@ -1801,119 +1830,105 @@ const Dashboard = () => {
                             </motion.button>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 gap-3 sm:gap-4">
                             {beneficiaries.map((beneficiary: any, idx: number) => {
-                              const avatar = beneficiary.avatar || (beneficiary.name ? beneficiary.name.split(' ').map((n: string) => n[0]).join('') : 'U');
-                              const bid = beneficiary.id || beneficiary.code || beneficiary.beneficiaryId || '—';
-                              const parts = (beneficiary.district || beneficiary.location || '').split(' • ');
-                              const district = parts[0] || beneficiary.district || '';
-                              const type = parts[1] || beneficiary.type || '';
-                              const color = beneficiary.color || (beneficiary.status === 'verified' ? 'from-green-500 to-emerald-500' : 'from-gray-500 to-gray-600');
-                              const amount = beneficiary.amount !== undefined ? (typeof beneficiary.amount === 'number' ? '₹' + beneficiary.amount.toLocaleString() : beneficiary.amount) : '—';
+                              const StatusIcon = beneficiary.status === 'verified' ? CheckCircle : Clock;
+                              const VerificationIcon = beneficiary.verificationStatus === 'verified' ? CheckCircle : Clock;
+
                               return (
-                              <motion.div
-                                key={bid + idx}
-                                className="relative p-5 rounded-2xl theme-bg-glass border-2 theme-border-glass group/card overflow-hidden shadow-xl"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1, type: "spring" }}
-                                whileHover={{ scale: 1.05, y: -8 }}
-                              >
-                                {/* Animated Background Pattern */}
-                                <div className="absolute inset-0 opacity-10 pointer-events-none">
-                                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                                    <defs>
-                                      <pattern id={`ben-bg-${idx}`} x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-                                        <circle cx="15" cy="15" r="1" fill="currentColor" />
-                                        <line x1="15" y1="15" x2="30" y2="15" stroke="currentColor" strokeWidth="0.5" />
-                                        <line x1="15" y1="15" x2="15" y2="30" stroke="currentColor" strokeWidth="0.5" />
-                                      </pattern>
-                                    </defs>
-                                    <rect width="100%" height="100%" fill={`url(#ben-bg-${idx})`} />
-                                  </svg>
-                                </div>
-
-                                {/* Status Accent Bar */}
                                 <motion.div
-                                  className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${color}`}
-                                  initial={{ height: 0 }}
-                                  animate={{ height: '100%' }}
-                                  transition={{ delay: 0.2 + idx * 0.1, duration: 0.5 }}
-                                />
-
-                                {/* Avatar with Glow Effect */}
-                                <div className="flex items-center gap-4 mb-4">
-                                  <div className="relative">
-                                    <motion.div
-                                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}
-                                      whileHover={{ rotate: [0, -5, 5, -5, 0] }}
-                                      transition={{ duration: 0.5 }}
-                                    >
-                                      {avatar}
-                                    </motion.div>
-                                    {/* Verification Badge */}
-                                    <motion.div
-                                      className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-2 theme-bg-card flex items-center justify-center shadow-lg"
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{ delay: 0.4 + idx * 0.1, type: "spring" }}
-                                    >
-                                      <CheckCircle className="w-3 h-3 text-white" />
-                                    </motion.div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-bold theme-text-primary text-base truncate mb-1">{beneficiary.name}</p>
-                                    <p className="text-xs theme-text-muted mb-1">{bid}</p>
-                                    <p className="text-xs theme-text-muted">{district} {district && type ? '• ' : ''}{type}</p>
-                                  </div>
-                                </div>
-
-                                {/* Status and Amount Row */}
-                                <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
-                                  <motion.div
-                                    className="flex items-center gap-2"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 + idx * 0.1 }}
-                                  >
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
-                                      <CheckCircle className="w-3 h-3" />
-                                      {getStatusText(beneficiary.status || 'verified')}
+                                  key={beneficiary.id}
+                                  initial={{ opacity: 0, y: 8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.03 }}
+                                  whileTap={{ scale: 0.995 }}
+                                  className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
+                                >
+                                  {/* Header Row */}
+                                  <div className="flex items-start justify-between gap-3 mb-3">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
+                                        {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
+                                        <p className="text-xs theme-text-muted truncate">{beneficiary.beneficiaryId}</p>
+                                      </div>
+                                    </div>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${
+                                      beneficiary.category === 'SC' ? 'text-purple-700 bg-purple-100 border-purple-300 dark:text-purple-300 dark:bg-purple-900/30 dark:border-purple-700' :
+                                      beneficiary.category === 'ST' ? 'text-blue-700 bg-blue-100 border-blue-300 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-700' :
+                                      'text-gray-700 bg-gray-100 border-gray-300 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600'
+                                    }`}>
+                                      {beneficiary.category}
                                     </span>
-                                  </motion.div>
-                                  <motion.span
-                                    className="font-bold theme-text-primary text-lg"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.4 + idx * 0.1 }}
-                                  >
-                                    {amount}
-                                  </motion.span>
-                                </div>
-
-                                {/* Progress Indicator */}
-                                <div className="mt-3">
-                                  <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <motion.div
-                                      className={`h-full bg-gradient-to-r ${beneficiary.color}`}
-                                      initial={{ width: 0 }}
-                                      animate={{ width: '100%' }}
-                                      transition={{ delay: 0.5 + idx * 0.1, duration: 0.8, ease: "easeOut" }}
-                                    />
                                   </div>
-                                </div>
 
-                                {/* Shine Effect */}
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/card:opacity-10"
-                                  initial={{ x: '-100%' }}
-                                  whileHover={{ x: '100%' }}
-                                  transition={{ duration: 0.6 }}
-                                />
+                                  {/* Info Grid */}
+                                  <div className="space-y-2 mb-3">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <Fingerprint className="w-3.5 h-3.5" />
+                                        Aadhaar
+                                      </span>
+                                      <span className="theme-text-primary font-mono text-[10px]">{beneficiary.aadhaarNumber || '—'}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5" />
+                                        Location
+                                      </span>
+                                      <span className="theme-text-primary font-medium">{beneficiary.district}, {beneficiary.state}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <Scale className="w-3.5 h-3.5" />
+                                        Act Type
+                                      </span>
+                                      <span className="theme-text-primary font-medium">{formatActType(beneficiary.actType)}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <DollarSign className="w-3.5 h-3.5" />
+                                        Relief Amount
+                                      </span>
+                                      <span className="theme-text-primary font-bold">{formatCurrency(beneficiary.reliefAmount)}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <Banknote className="w-3.5 h-3.5" />
+                                        Disbursed
+                                      </span>
+                                      <span className="theme-text-primary font-medium">{formatCurrency(beneficiary.disbursedAmount)}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="theme-text-muted flex items-center gap-1.5">
+                                        <User className="w-3.5 h-3.5" />
+                                        Assigned Officer
+                                      </span>
+                                      <span className="theme-text-primary font-medium truncate max-w-[150px]">{beneficiary.assignedOfficer || '—'}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Status Badges */}
+                                  <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b theme-border-glass">
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
+                                      <StatusIcon className="w-3 h-3" />
+                                      <span className="capitalize">{beneficiary.status.replace('-', ' ')}</span>
+                                    </span>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                                      <VerificationIcon className="w-3 h-3" />
+                                      <span className="capitalize">{beneficiary.verificationStatus.replace('-', ' ')}</span>
+                                    </span>
+                                  </div>
                                 </motion.div>
-                                  );
-                              })}
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -2191,7 +2206,7 @@ const Dashboard = () => {
                                 <FileText className="w-7 h-7 text-white" />
                               </motion.div>
                               <div>
-                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.reports.generatedReports')}</h3>
+                                <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.reports.generatedReports')}</h3>
                                 <p className="text-sm theme-text-muted">{t('dashboard.reports.latestSystemReports')}</p>
                               </div>
                             </div>
@@ -2514,79 +2529,7 @@ const Dashboard = () => {
                         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
                       </motion.div>
 
-                        {/* Verified Beneficiaries Preview */}
-                        <motion.div
-                          variants={itemVariants}
-                          className="theme-bg-card theme-border-glass border-2 rounded-2xl p-4 sm:p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
-                        >
-                          <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                                  <BadgeCheck className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                <h3 className="text-lg font-semibold theme-text-primary">Beneficiaries</h3>
-                                <p className="text-xs theme-text-muted">Active profiles preview (all verification statuses)</p>
-                              </div>
-                              </div>
-                              <motion.button
-                                onClick={() => router.push('/dashboard/beneficiaries')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-xs shadow-lg hover:shadow-xl transition-shadow"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <span>View Full</span>
-                                <ArrowRight className="w-3 h-3" />
-                              </motion.button>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm">
-                                <thead className="theme-bg-glass border-b theme-border-glass">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">ID</th>
-                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">Beneficiary</th>
-                                    <th className="hidden sm:table-cell px-3 py-2 text-left font-semibold theme-text-primary">Aadhaar</th>
-                                    <th className="hidden md:table-cell px-3 py-2 text-left font-semibold theme-text-primary">District</th>
-                                    <th className="px-3 py-2 text-left font-semibold theme-text-primary">Verification</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {previewBeneficiaries.length ? previewBeneficiaries.map((b: any, idx: number) => (
-                                    <tr key={b.id || idx} className="border-b theme-border-glass hover:theme-bg-glass transition-colors">
-                                      <td className="px-3 py-2 text-sm font-medium theme-text-primary">{b.id}</td>
-                                      <td className="px-3 py-2">
-                                        <div className="flex items-center gap-3">
-                                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                                            {String(b.name || '').split(' ').map((n: string) => n[0]).join('')}
-                                          </div>
-                                          <div>
-                                            <p className="text-sm font-medium theme-text-primary">{b.name}</p>
-                                            <p className="text-xs theme-text-muted">{b.category}</p>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td className="hidden sm:table-cell px-3 py-2 theme-text-primary">{b.aadhaarNumber || '—'}</td>
-                                      <td className="hidden md:table-cell px-3 py-2"><p className="text-sm theme-text-primary">{b.district || '—'}</p></td>
-                                      <td className="px-3 py-2">
-                                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getVerificationColor(b.verificationStatus)}`}>
-                                          {(() => { const V = getVerificationIcon(b.verificationStatus); return <V className="w-3 h-3" />; })()}
-                                          {b.verificationStatus?.replace('-', ' ') || '—'}
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  )) : (
-                                    <tr>
-                                      <td colSpan={5} className="p-4 text-sm theme-text-muted">No verified beneficiaries</td>
-                                    </tr>
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                          <div className="absolute -top-8 -right-8 w-28 h-28 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl" />
-                        </motion.div>
+                        
 
                         {/* Grievance Hub Preview */}
                       <motion.div

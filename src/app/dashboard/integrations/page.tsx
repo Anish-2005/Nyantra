@@ -620,7 +620,7 @@ const stats = useMemo(() => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -629,7 +629,7 @@ const stats = useMemo(() => {
             opacity: [0.3, 0.5, 0.3]
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"
+          className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"
         />
         
         <div className="relative z-10 text-center lg:text-left">
@@ -652,7 +652,7 @@ const stats = useMemo(() => {
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_integration_tracking_description')}</p>
         </div>
         
-        <div className="relative z-10 flex items-center justify-center lg:justify-end gap-2 sm:gap-3">
+        <div className="relative z-10 flex flex-col items-center gap-2 sm:flex-row sm:justify-end sm:gap-3">
           {/* View mode toggle */}
           <div className="flex items-center gap-2 mr-2">
             <button
@@ -707,10 +707,10 @@ const stats = useMemo(() => {
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
-        className={`border rounded-none w-full h-full mx-0 my-0 overflow-visible glass-effect shadow-2xl sm:rounded-2xl sm:mx-auto sm:my-6 ${
+        className={`border rounded-none w-full h-full mx-0 my-0 overflow-visible shadow-2xl sm:rounded-2xl sm:mx-auto sm:my-6 ${
           theme === 'light'
             ? 'bg-white border-gray-200'
-            : 'theme-bg-card theme-border-glass'
+            : 'bg-slate-900 border-gray-700'
         }`}
       >
         {/* Header */}
@@ -2461,7 +2461,7 @@ const stats = useMemo(() => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
         className="relative w-full h-full max-w-none mx-0 p-4 rounded-none theme-border-glass border shadow-lg sm:max-w-3xl sm:mx-4 sm:p-6 sm:rounded-xl"
-        style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+        style={{ background: theme === 'light' ? 'rgba(255,255,255,1)' : 'rgba(6,8,20,1)' }}
       >
         <div className="flex items-start justify-between mb-6">
           <div>
