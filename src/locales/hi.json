@@ -263,7 +263,10 @@
       "todaysApplications": "आज के आवेदन",
       "pendingReview": "समीक्षा लंबित",
       "weekDisbursed": "इस सप्ताह वितरित",
-      "satisfactionRate": "संतुष्टि दर"
+      "satisfactionRate": "संतुष्टि दर",
+      "totalApplications": "कुल आवेदन",
+      "approvedToday": "आज स्वीकृत",
+      "totalDisbursed": "कुल वितरित"
     },
     "sections": {
       "recentApplications": "हाल के आवेदन",
@@ -371,7 +374,8 @@
       "tabManagement": "{{tab}} प्रबंधन",
       "tabManagementDescription": "{{tab}} प्रबंधन इंटरफेस जिसमें विस्तृत तालिकाएं, फॉर्म और विश्लेषण हैं।",
       "viewAllTracking": "सभी ट्रैकिंग देखें",
-      "view": "देखें:"
+      "view": "देखें:",
+      "vsLastPeriod": "बनाम पिछला अवधि"
     },
     "liveTracking": {
       "liveApplicationTracking": "लाइव आवेदन ट्रैकिंग",
@@ -1155,6 +1159,9 @@
     "clear_filters": "फ़िल्टर साफ़ करें",
     "grid": "ग्रिड",
     "list": "सूची",
+    "compact": "सघन",
+    "bar": "बार",
+    "pie": "पाई",
     "integrationendpoints": "{integration.endpoints}",
     "endpoints": "एंडपॉइंट्स",
     "pagination": "{/* पृष्ठांकन */}",

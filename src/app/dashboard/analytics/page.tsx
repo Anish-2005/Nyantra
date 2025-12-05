@@ -10,7 +10,7 @@ import {
   Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users, Banknote,
   DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon,
   Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3, Target,
-  Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter
+  Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter, ChevronDown
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -991,29 +991,22 @@ const AnalyticsPage = () => {
             <CalendarIcon className="w-5 h-5 theme-text-muted" />
             <span className="text-sm font-medium theme-text-primary">{t('extracted.time_period')} </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: 'week', labelKey: 'extracted.last_week' },
-              { value: 'month', labelKey: 'extracted.last_month' },
-              { value: 'quarter', labelKey: 'extracted.last_quarter' },
-              { value: 'year', labelKey: 'extracted.last_year' },
-              { value: 'custom', labelKey: 'extracted.custom_range' }
-            ].map((period) => (
-              <motion.button
-                key={period.value}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setTimeRange(period.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  timeRange === period.value 
-                    ? 'accent-gradient text-white' 
-                    : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                }`}
-                style={timeRange !== period.value && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[160px] appearance-none"
+                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
               >
-                {t(period.labelKey)}
-              </motion.button>
-            ))}
+                <option value="week">{t('extracted.last_week')}</option>
+                <option value="month">{t('extracted.last_month')}</option>
+                <option value="quarter">{t('extracted.last_quarter')}</option>
+                <option value="year">{t('extracted.last_year')}</option>
+                <option value="custom">{t('extracted.custom_range')}</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
+            </div>
           </div>
           {timeRange === 'custom' && (
             <motion.div
@@ -1059,27 +1052,18 @@ const AnalyticsPage = () => {
               <Eye className="w-4 h-4 theme-text-muted" />
               <span className="text-sm font-medium theme-text-primary">{t('extracted.view_mode')}</span>
             </div>
-            <div className="flex gap-1">
-              {[
-                { value: 'grid', label: 'Grid', icon: Layers },
-                { value: 'list', label: 'List', icon: FileText },
-                { value: 'compact', label: 'Compact', icon: Target }
-              ].map((mode) => (
-                <motion.button
-                  key={mode.value}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode(mode.value as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
-                    viewMode === mode.value
-                      ? 'accent-gradient text-white'
-                      : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                  }`}
-                >
-                  <mode.icon className="w-3 h-3" />
-                  {mode.label}
-                </motion.button>
-              ))}
+            <div className="relative">
+              <select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value as any)}
+                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[120px] appearance-none"
+                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+              >
+                <option value="grid">{t('extracted.grid')}</option>
+                <option value="list">{t('extracted.list')}</option>
+                <option value="compact">{t('extracted.compact')}</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
             </div>
           </div>
 
@@ -1089,28 +1073,19 @@ const AnalyticsPage = () => {
               <BarChart3 className="w-4 h-4 theme-text-muted" />
               <span className="text-sm font-medium theme-text-primary">{t('extracted.chart_type')}</span>
             </div>
-            <div className="flex gap-1">
-              {[
-                { value: 'bar', label: 'Bar', icon: BarChart3 },
-                { value: 'line', label: 'Line', icon: Activity },
-                { value: 'area', label: 'Area', icon: TrendingUp },
-                { value: 'pie', label: 'Pie', icon: PieChart }
-              ].map((type) => (
-                <motion.button
-                  key={type.value}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setChartType(type.value as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
-                    chartType === type.value
-                      ? 'accent-gradient text-white'
-                      : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                  }`}
-                >
-                  <type.icon className="w-3 h-3" />
-                  {type.label}
-                </motion.button>
-              ))}
+            <div className="relative">
+              <select
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value as any)}
+                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[120px] appearance-none"
+                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+              >
+                <option value="bar">{t('extracted.bar')}</option>
+                <option value="line">{t('extracted.line')}</option>
+                <option value="area">{t('extracted.area')}</option>
+                <option value="pie">{t('extracted.pie')}</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../context/LocaleContext';
 import LanguageToggle from '../components/LanguageToggle';
+import BackgroundAnimation from '../components/BackgroundAnimation';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, Mail, Phone, MapPinned, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Send, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
@@ -15,7 +16,6 @@ const NyantraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mousePositionRef = useRef({ x: 0, y: 0 });
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { scrollYProgress } = useScroll();
   const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
@@ -30,109 +30,6 @@ const NyantraLanding = () => {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const { user, profile, loading } = useAuth();
-
-  // Enhanced Three.js Scene with theme-aware colors
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      alpha: true,
-      antialias: true
-    });
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    camera.position.z = 5;
-    // Ensure canvas is transparent so underlying CSS gradient shows through
-    renderer.setClearColor(0x000000, 0);
-
-  // Theme-aware colors: read CSS vars so accents control particle colors
-  let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-  let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
-    try {
-      const style = getComputedStyle(document.documentElement);
-      const a = (style.getPropertyValue('--accent-primary') || '').trim();
-      const b = (style.getPropertyValue('--accent-secondary') || '').trim();
-      if (a) particleColor = new THREE.Color(a);
-      if (b) lineColor = new THREE.Color(b);
-  } catch {}
-
-    const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 1500;
-    const posArray = new Float32Array(particlesCount * 3);
-
-    for (let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 15;
-    }
-
-    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-    const particlesMaterial = new THREE.PointsMaterial({
-      size: theme === 'dark' ? 0.015 : 0.012,
-      color: particleColor,
-      transparent: true,
-      opacity: theme === 'dark' ? 0.8 : 0.6,
-      blending: THREE.AdditiveBlending
-    });
-
-    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-    scene.add(particlesMesh);
-
-    // Create connecting lines
-    const linesGeometry = new THREE.BufferGeometry();
-    const linesMaterial = new THREE.LineBasicMaterial({
-      color: lineColor,
-      transparent: true,
-      opacity: theme === 'dark' ? 0.2 : 0.15
-    });
-
-    const linesPositions = [];
-    for (let i = 0; i < 100; i++) {
-      const x1 = (Math.random() - 0.5) * 10;
-      const y1 = (Math.random() - 0.5) * 10;
-      const z1 = (Math.random() - 0.5) * 10;
-      const x2 = x1 + (Math.random() - 0.5) * 2;
-      const y2 = y1 + (Math.random() - 0.5) * 2;
-      const z2 = z1 + (Math.random() - 0.5) * 2;
-      linesPositions.push(x1, y1, z1, x2, y2, z2);
-    }
-
-    linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-    const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-    scene.add(linesMesh);
-
-    let animationId: number | null = null;
-    const animate = () => {
-      animationId = requestAnimationFrame(animate);
-      particlesMesh.rotation.y += 0.0005;
-      particlesMesh.rotation.x += 0.0002;
-      linesMesh.rotation.y -= 0.0003;
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (animationId !== null) cancelAnimationFrame(animationId);
-      renderer.dispose();
-      particlesGeometry.dispose();
-      particlesMaterial.dispose();
-      linesGeometry.dispose();
-      linesMaterial.dispose();
-    };
-  }, [theme]);
 
   // Mouse tracking
   useEffect(() => {
@@ -454,11 +351,7 @@ const NyantraLanding = () => {
       `}</style>
 
       {/* Three.js Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-        style={{ zIndex: 0, background: 'transparent' }}
-      />
+      <BackgroundAnimation />
 
       {/* Enhanced Gradient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>

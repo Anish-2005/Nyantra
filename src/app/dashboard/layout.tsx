@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import BackgroundAnimation from '@/components/BackgroundAnimation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { theme, toggleTheme } = useTheme();
@@ -143,6 +144,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     background-clip: text;
                 }
             `}</style>
+
+            {/* Three.js Background Animation */}
+            <BackgroundAnimation />
 
             {/* Enhanced Gradient Orbs */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>

@@ -8,6 +8,7 @@ import { collection, query, orderBy, limit, getDocs, where } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';
+import BackgroundAnimation from '@/components/BackgroundAnimation';
 import type * as THREE from 'three';
 import { JSX } from 'react';
 import {
@@ -143,7 +144,6 @@ const Dashboard = () => {
   const [generatedReports, setGeneratedReports] = useState<any[]>([]);
 
   // Refs
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -261,117 +261,6 @@ const Dashboard = () => {
     a.click();
     URL.revokeObjectURL(url);
   }, [dataSets]);
-
-  // Enhanced Three.js Background
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    let cancelled = false;
-
-    (async () => {
-      const THREE = await import('three');
-      if (cancelled) return;
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({
-        canvas: canvasRef.current!,
-        alpha: true,
-        antialias: true
-      });
-
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      camera.position.z = 5;
-      renderer.setClearColor(0x000000, 0);
-
-      // Theme-aware colors
-      let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-      let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
-      try {
-        const style = getComputedStyle(document.documentElement);
-        const a = (style.getPropertyValue('--accent-primary') || '').trim();
-        const b = (style.getPropertyValue('--accent-secondary') || '').trim();
-        if (a) particleColor = new THREE.Color(a);
-        if (b) lineColor = new THREE.Color(b);
-      } catch { }
-
-      const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = window.innerWidth < 768 ? 500 : 1000; // Reduce particles on mobile
-      const posArray = new Float32Array(particlesCount * 3);
-
-      for (let i = 0; i < particlesCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 10;
-      }
-
-      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-      const particlesMaterial = new THREE.PointsMaterial({
-        size: theme === 'dark' ? 0.012 : 0.008,
-        color: particleColor,
-        transparent: true,
-        opacity: theme === 'dark' ? 0.6 : 0.4,
-        blending: THREE.AdditiveBlending
-      });
-
-      const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-      scene.add(particlesMesh);
-
-      // Create connecting lines
-      const linesGeometry = new THREE.BufferGeometry();
-      const linesMaterial = new THREE.LineBasicMaterial({
-        color: lineColor,
-        transparent: true,
-        opacity: theme === 'dark' ? 0.15 : 0.1
-      });
-
-      const linesPositions: number[] = [];
-      const lineCount = window.innerWidth < 768 ? 40 : 80; // Reduce lines on mobile
-      for (let i = 0; i < lineCount; i++) {
-        const x1 = (Math.random() - 0.5) * 8;
-        const y1 = (Math.random() - 0.5) * 8;
-        const z1 = (Math.random() - 0.5) * 8;
-        const x2 = x1 + (Math.random() - 0.5) * 1.5;
-        const y2 = y1 + (Math.random() - 0.5) * 1.5;
-        const z2 = z1 + (Math.random() - 0.5) * 1.5;
-        linesPositions.push(x1, y1, z1, x2, y2, z2);
-      }
-
-      linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-      const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-      scene.add(linesMesh);
-
-      let animationId: number | null = null;
-      const animate = () => {
-        if (cancelled) return;
-        animationId = requestAnimationFrame(animate);
-        particlesMesh.rotation.y += 0.0003;
-        particlesMesh.rotation.x += 0.0001;
-        linesMesh.rotation.y -= 0.0002;
-        renderer.render(scene, camera);
-      };
-
-      animate();
-
-      const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      return () => {
-        cancelled = true;
-        window.removeEventListener('resize', handleResize);
-        if (animationId !== null) cancelAnimationFrame(animationId);
-        renderer.dispose();
-        particlesGeometry.dispose();
-        particlesMaterial.dispose();
-        linesGeometry.dispose();
-        linesMaterial.dispose();
-      };
-    })();
-  }, [theme]);
 
   // Data fetching functions
   const fetchDashboardData = useCallback(async () => {
@@ -1161,13 +1050,6 @@ const Dashboard = () => {
         }
       `}</style>
 
-      {/* Three.js Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-        style={{ zIndex: 0, background: 'transparent' }}
-      />
-
       {/* Enhanced Gradient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
         <motion.div
@@ -1235,40 +1117,42 @@ const Dashboard = () => {
                   >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl -z-10" />
                     
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-3">
                           <motion.div
-                            className="w-3 h-3 rounded-full bg-green-500"
+                            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500"
                             animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
                           />
-                          <span className="text-sm font-semibold theme-text-secondary">{t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {currentTime}</span>
+                          <span className="text-xs sm:text-sm font-medium theme-text-secondary truncate">
+                            {t('extracted.live_monitoring')} • {t('extracted.last_updated')}: {currentTime}
+                          </span>
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
-                          {t('extracted.realtime_monitoring_dashboard').split(' ')[0]} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.realtime_monitoring_dashboard').split(' ').slice(1).join(' ')}</span>
-                        </h2>
-                        <p className="theme-text-secondary text-sm sm:text-base">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold theme-text-primary mb-2 leading-tight">
+                          <span className="text-accent-gradient">{t('extracted.realtime_monitoring_dashboard')}</span>
+                        </h1>
+                        <p className="theme-text-secondary text-sm sm:text-base leading-relaxed">
                           {t('extracted.comprehensive_oversight_description')}
                         </p>
                       </div>
                       
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                         <motion.button
-                          className="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold text-white flex items-center gap-2 shadow-lg text-sm"
+                          className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-xs sm:text-sm flex-1 sm:flex-initial"
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{t('extracted.auto_refresh')} {t('extracted.on')}</span>
+                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="whitespace-nowrap">{t('extracted.auto_refresh')} {t('extracted.on')}</span>
                         </motion.button>
                         <motion.button
-                          className="px-4 py-2.5 accent-gradient rounded-xl font-semibold text-white flex items-center gap-2 shadow-lg text-sm"
+                          className="px-3 sm:px-4 py-2 sm:py-2.5 accent-gradient rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg text-xs sm:text-sm flex-1 sm:flex-initial"
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <Plus className="w-4 h-4" />
-                          <span>{t('extracted.new_application')}</span>
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="whitespace-nowrap">{t('extracted.new_application')}</span>
                         </motion.button>
                       </div>
                     </div>
@@ -1370,7 +1254,7 @@ const Dashboard = () => {
                               {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                               <span>{stat.change}</span>
                             </div>
-                            <div className="flex-1 text-xs theme-text-muted">vs last period</div>
+                            <div className="flex-1 text-xs theme-text-muted">{t('dashboard.common.vsLastPeriod')}</div>
                           </div>
 
                           {/* Hover Overlay */}
@@ -1722,7 +1606,7 @@ const Dashboard = () => {
                         {/* Chart Area with Enhanced Styling */}
                         <div className="relative z-10">
                           {/* Chart Statistics Bar */}
-                          <div className="grid grid-cols-3 gap-4 mb-6">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                             {[
                               { label: t('dashboard.analytics.peakValue'), value: '1,247', color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
                               { label: t('dashboard.analytics.average'), value: '856', color: 'from-purple-500 to-pink-500', icon: Activity },
@@ -1733,15 +1617,15 @@ const Dashboard = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="theme-bg-glass rounded-2xl p-4 border theme-border-glass"
+                                className="theme-bg-glass rounded-2xl p-3 sm:p-4 border theme-border-glass"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
                                     <stat.icon className="w-5 h-5 text-white" />
                                   </div>
                                   <div>
-                                    <p className="text-xs theme-text-muted">{stat.label}</p>
-                                    <p className="text-xl font-bold theme-text-primary">{stat.value}</p>
+                                    <p className="text-xs sm:text-sm theme-text-muted">{stat.label}</p>
+                                    <p className="text-lg sm:text-xl font-bold theme-text-primary">{stat.value}</p>
                                   </div>
                                 </div>
                               </motion.div>

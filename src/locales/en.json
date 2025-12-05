@@ -263,7 +263,10 @@
       "todaysApplications": "Today's Applications",
       "pendingReview": "Pending Review",
       "weekDisbursed": "This Week Disbursed",
-      "satisfactionRate": "Satisfaction Rate"
+      "satisfactionRate": "Satisfaction Rate",
+      "totalApplications": "Total Applications",
+      "approvedToday": "Approved Today",
+      "totalDisbursed": "Total Disbursed"
     },
     "sections": {
       "recentApplications": "Recent Applications",
@@ -371,7 +374,8 @@
       "tabManagement": "{{tab}} Management",
       "tabManagementDescription": "{{tab}} management interface with detailed tables, forms, and analytics.",
       "viewAllTracking": "View All Tracking",
-      "view": "View:"
+      "view": "View:",
+      "vsLastPeriod": "vs last period"
     },
     "liveTracking": {
       "liveApplicationTracking": "Live Application Tracking",
@@ -1151,6 +1155,9 @@
     "provider": "Provider",
     "grid": "Grid",
     "list": "List",
+    "compact": "Compact",
+    "bar": "Bar",
+    "pie": "Pie",
     "clear_filters": "Clear Filters",
     "integrationendpoints": "{integration.endpoints}",
     "endpoints": "Endpoints",
