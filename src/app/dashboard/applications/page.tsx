@@ -766,7 +766,7 @@ const ApplicationsPage = () => {
         return () => unsubscribe();
     }, []);
 
-    // Three.js canvas background (particles + connecting lines) — theme-aware
+    // Enhanced Three.js Background
     useEffect(() => {
         if (!canvasRef.current) return;
         let cancelled = false;
@@ -777,14 +777,18 @@ const ApplicationsPage = () => {
 
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current!, alpha: true, antialias: true });
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvasRef.current!,
+                alpha: true,
+                antialias: true
+            });
 
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             camera.position.z = 5;
             renderer.setClearColor(0x000000, 0);
 
-            // Theme-aware colors - subtle
+            // Theme-aware colors
             let particleColor: THREE.Color | number = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
             let lineColor: THREE.Color | number = theme === 'dark' ? 0xf59e0b : 0xd97706;
             try {
@@ -796,7 +800,7 @@ const ApplicationsPage = () => {
             } catch { }
 
             const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 200; // Reduced for subtlety
+            const particlesCount = window.innerWidth < 768 ? 500 : 1000; // Reduce particles on mobile
             const posArray = new Float32Array(particlesCount * 3);
 
             for (let i = 0; i < particlesCount * 3; i++) {
@@ -806,41 +810,47 @@ const ApplicationsPage = () => {
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
             const particlesMaterial = new THREE.PointsMaterial({
-                size: theme === 'dark' ? 0.005 : 0.003, // Smaller
+                size: theme === 'dark' ? 0.012 : 0.008,
                 color: particleColor,
                 transparent: true,
-                opacity: theme === 'dark' ? 0.3 : 0.2, // Less opacity
+                opacity: theme === 'dark' ? 0.6 : 0.4,
                 blending: THREE.AdditiveBlending
             });
 
             const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
             scene.add(particlesMesh);
 
-            // Remove connecting lines for cleaner look
-            // const linesGeometry = new THREE.BufferGeometry();
-            // const linesMaterial = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: theme === 'dark' ? 0.15 : 0.1 });
+            // Create connecting lines
+            const linesGeometry = new THREE.BufferGeometry();
+            const linesMaterial = new THREE.LineBasicMaterial({
+                color: lineColor,
+                transparent: true,
+                opacity: theme === 'dark' ? 0.15 : 0.1
+            });
 
-            // const linesPositions: number[] = [];
-            // for (let i = 0; i < 80; i++) {
-            //     const x1 = (Math.random() - 0.5) * 8;
-            //     const y1 = (Math.random() - 0.5) * 8;
-            //     const z1 = (Math.random() - 0.5) * 8;
-            //     const x2 = x1 + (Math.random() - 0.5) * 1.5;
-            //     const y2 = y1 + (Math.random() - 0.5) * 1.5;
-            //     const z2 = z1 + (Math.random() - 0.5) * 1.5;
-            //     linesPositions.push(x1, y1, z1, x2, y2, z2);
-            // }
+            const linesPositions: number[] = [];
+            const lineCount = window.innerWidth < 768 ? 40 : 80; // Reduce lines on mobile
+            for (let i = 0; i < lineCount; i++) {
+                const x1 = (Math.random() - 0.5) * 8;
+                const y1 = (Math.random() - 0.5) * 8;
+                const z1 = (Math.random() - 0.5) * 8;
+                const x2 = x1 + (Math.random() - 0.5) * 1.5;
+                const y2 = y1 + (Math.random() - 0.5) * 1.5;
+                const z2 = z1 + (Math.random() - 0.5) * 1.5;
+                linesPositions.push(x1, y1, z1, x2, y2, z2);
+            }
 
-            // linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-            // const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-            // scene.add(linesMesh);
+            linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
+            const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
+            scene.add(linesMesh);
 
             let animationId: number | null = null;
             const animate = () => {
+                if (cancelled) return;
                 animationId = requestAnimationFrame(animate);
-                particlesMesh.rotation.y += 0.0001; // Slower
-                particlesMesh.rotation.x += 0.00005;
-                // linesMesh.rotation.y -= 0.0002;
+                particlesMesh.rotation.y += 0.0003;
+                particlesMesh.rotation.x += 0.0001;
+                linesMesh.rotation.y -= 0.0002;
                 renderer.render(scene, camera);
             };
 
@@ -858,15 +868,11 @@ const ApplicationsPage = () => {
                 cancelled = true;
                 window.removeEventListener('resize', handleResize);
                 if (animationId !== null) cancelAnimationFrame(animationId);
-                try {
-                    // Force context loss to ensure programs/uniforms aren't reused across renderers
-                    (renderer as any).forceContextLoss?.();
-                } catch {}
-                try { renderer.dispose(); } catch {}
+                renderer.dispose();
                 particlesGeometry.dispose();
                 particlesMaterial.dispose();
-                // linesGeometry.dispose();
-                // linesMaterial.dispose();
+                linesGeometry.dispose();
+                linesMaterial.dispose();
             };
         })();
     }, [theme]);
@@ -1006,26 +1012,118 @@ const ApplicationsPage = () => {
 return (
   <div
     data-theme={theme}
-    className="p-4 lg:p-6 space-y-6"
+    className="relative z-10 p-4 lg:p-6 space-y-6"
     style={{
       marginLeft: "0",
       width: "100%",
       maxWidth: "100%",
-      flex: "1",
+      flex: "1"
     }}
   >
-    {/* Three.js Canvas Background (theme-aware) */}
+    {/* Three.js Canvas Background */}
     <canvas
       ref={canvasRef}
-      id="applications-three-canvas"
       className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500"
-      style={{
-        zIndex: 0,
-        background: "transparent",
-        left: "0",
-        width: "100%",
-      }}
+      style={{ zIndex: 0, background: 'transparent' }}
     />
+
+    {/* Enhanced Gradient Orbs - Subtle Background Animation */}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+      <motion.div
+        className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-5' : 'opacity-8'}`}
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div
+        className={`absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-4' : 'opacity-6'}`}
+        animate={{
+          x: [0, -25, 0],
+          y: [0, 15, 0],
+          scale: [1, 0.9, 1],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div
+        className={`absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-3' : 'opacity-5'}`}
+        animate={{
+          x: [0, -15, 0],
+          y: [0, 25, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 30,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </div>
+
+    {/* Enhanced Theme Variables */}
+    <style jsx global>{`
+      [data-theme="dark"] {
+        --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%),
+                       radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%),
+                       linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+        --card-bg: rgba(15, 23, 42, 0.7);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --nav-bg: rgba(15, 23, 42, 0.95);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --accent-primary: #06b6d4;
+        --accent-secondary: #8b5cf6;
+        --glass-bg: rgba(15, 23, 42, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.1);
+      }
+
+      [data-theme="light"] {
+        --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%),
+                       radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%),
+                       linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
+        --card-bg: rgba(255, 255, 255, 0.8);
+        --card-border: rgba(0, 0, 0, 0.06);
+        --nav-bg: rgba(255, 255, 255, 0.95);
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --accent-primary: #fb7185;
+        --accent-secondary: #fb923c;
+        --glass-bg: rgba(255, 255, 255, 0.6);
+        --glass-border: rgba(0, 0, 0, 0.08);
+      }
+
+      .theme-text-primary { color: var(--text-primary) !important; }
+      .theme-text-secondary { color: var(--text-secondary) !important; }
+      .theme-text-muted { color: var(--text-muted) !important; }
+      .theme-bg-card { background: var(--card-bg) !important; }
+      .theme-border-card { border-color: var(--card-border) !important; }
+      .theme-bg-glass { background: var(--glass-bg) !important; }
+      .theme-border-glass { border-color: var(--glass-border) !important; }
+      .theme-bg-nav { background: var(--nav-bg) !important; }
+
+      .accent-gradient {
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+      }
+
+      .text-accent-gradient {
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    `}</style>
 
     {/* Print Header - Only visible when printing */}
     <div className="print-only hidden">
