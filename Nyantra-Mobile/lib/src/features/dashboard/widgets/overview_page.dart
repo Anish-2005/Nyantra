@@ -9,7 +9,9 @@ import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
 
 class OverviewPage extends StatefulWidget {
-  const OverviewPage({super.key});
+  final Function(int)? onNavigate;
+
+  const OverviewPage({super.key, this.onNavigate});
 
   @override
   State<OverviewPage> createState() => _OverviewPageState();
@@ -292,7 +294,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             Icons.add,
                             () {
                               // Navigate to applications page
-                              // This will be handled by parent widget
+                              widget.onNavigate?.call(1);
                             },
                             isDark,
                             0,
@@ -308,6 +310,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             Icons.search,
                             () {
                               // Navigate to applications page
+                              widget.onNavigate?.call(1);
                             },
                             isDark,
                             1,
@@ -323,6 +326,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             Icons.message,
                             () {
                               // Navigate to grievance page
+                              widget.onNavigate?.call(5);
                             },
                             isDark,
                             2,
@@ -338,6 +342,7 @@ class _OverviewPageState extends State<OverviewPage> {
                             Icons.people,
                             () {
                               // Navigate to beneficiaries page
+                              widget.onNavigate?.call(2);
                             },
                             isDark,
                             3,

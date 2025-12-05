@@ -267,7 +267,6 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                                   ),
                                   onTap: () {
                                     widget.onItemSelected(index);
-                                    widget.onToggle?.call(false);
                                   },
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(

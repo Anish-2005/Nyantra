@@ -1301,6 +1301,7 @@
     "profile": "प्रोफ़ाइल",
     "settings": "सेटिंग्स",
     "help_support": "सहायता और समर्थन",
+    "logout": "लॉग आउट",
     "breadcrumb_section": "{/* ब्रेडक्रंब सेक्शन */}",
     "dashboard": "डैशबोर्ड",
     "activetabreplace": "{activeTab.replace('-', ' ')}",

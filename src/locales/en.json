@@ -1288,6 +1288,7 @@
     "profile": "Profile",
     "settings": "Settings",
     "help_support": "Help & Support",
+    "logout": "Logout",
     "breadcrumb_section": "{/* Breadcrumb Section */}",
     "dashboard": "Dashboard",
     "activetabreplace": "{activeTab.replace('-', ' ')}",

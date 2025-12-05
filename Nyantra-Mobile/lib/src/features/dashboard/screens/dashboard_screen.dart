@@ -160,26 +160,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     // User Menu
                     PopupMenuButton<String>(
+                      color: theme.cardColor.withOpacity(0.95),
+                      elevation: 12,
+                      shadowColor: theme.shadowColor.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: theme.dividerColor.withOpacity(0.1),
+                          width: 1,
+                        ),
+                      ),
                       onSelected: (value) {
                         if (value == 'logout') {
                           context.read<AuthProvider>().signOut();
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'profile',
-                          child: Text('Profile'),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person,
+                                color: theme.textTheme.bodyMedium?.color,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                localeProvider.translate('profile'),
+                                style: TextStyle(
+                                  color: theme.textTheme.bodyMedium?.color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'settings',
-                          child: Text('Settings'),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.settings,
+                                color: theme.textTheme.bodyMedium?.color,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                localeProvider.translate('settings'),
+                                style: TextStyle(
+                                  color: theme.textTheme.bodyMedium?.color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const PopupMenuDivider(),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'logout',
-                          child: Text('Logout'),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.logout,
+                                color: theme.colorScheme.error,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                localeProvider.translate('logout'),
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: theme.appBarTheme.foregroundColor,
+                        size: 24,
+                      ),
                     ),
                   ],
                 ),
@@ -199,6 +262,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: DashboardContent(
                             selectedIndex: _selectedIndex,
+                            onNavigate: _onItemSelected,
                           ),
                         ),
                       ],

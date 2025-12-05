@@ -9,8 +9,13 @@ import 'feedback_page.dart';
 
 class DashboardContent extends StatelessWidget {
   final int selectedIndex;
+  final Function(int)? onNavigate;
 
-  const DashboardContent({super.key, required this.selectedIndex});
+  const DashboardContent({
+    super.key,
+    required this.selectedIndex,
+    this.onNavigate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +23,8 @@ class DashboardContent extends StatelessWidget {
       color: Colors.transparent,
       child: IndexedStack(
         index: selectedIndex,
-        children: const [
-          OverviewPage(),
+        children: [
+          OverviewPage(onNavigate: onNavigate),
           ApplicationsPage(),
           BeneficiariesPage(),
           DisbursementsPage(),
