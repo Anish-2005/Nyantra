@@ -167,7 +167,7 @@ export default function FeedbackPage() {
           </svg>
         ))}
         <span className="ml-1 text-sm font-medium" style={{ color: currentColors.textPrimary }}>
-          {rating}/5
+          {rating}/ 5
         </span>
       </div>
     );
@@ -221,7 +221,7 @@ export default function FeedbackPage() {
                   {/* Star Rating */}
                   <div>
                     <label className="text-sm font-medium block mb-3" style={{ color: currentColors.textMuted }}>
-                      Rating *
+                      {t('extracted.feedback_analytics.rating')} *
                     </label>
                     <div className="flex items-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -241,7 +241,7 @@ export default function FeedbackPage() {
                         </button>
                       ))}
                       <span className="ml-2 text-sm" style={{ color: currentColors.textMuted }}>
-                        {rating} out of 5 stars
+                        {rating} {t('extracted.feedback_analytics.outOf5Stars')}
                       </span>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function FeedbackPage() {
                     <input
                       value={subject}
                       onChange={e => setSubject(e.target.value)}
-                      placeholder="Brief summary of your feedback"
+                      placeholder={t('extracted.brief_summary_of_your_feedback') || "Brief summary of your feedback"}
                       className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       style={{
                         backgroundColor: currentColors.glassBg,
@@ -344,7 +344,7 @@ export default function FeedbackPage() {
                 <div className="p-4 md:p-6">
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold" style={{ color: currentColors.textPrimary }}>
-                      Your Feedback ({feedbacks.length})
+                      {t('extracted.feedback_analytics.yourFeedback')} ({feedbacks.length})
                     </h3>
                   </div>
 
@@ -452,7 +452,7 @@ export default function FeedbackPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <span className="font-medium" style={{ color: currentColors.textPrimary }}>Total Feedback</span>
+                      <span className="font-medium" style={{ color: currentColors.textPrimary }}>{t('extracted.feedback_analytics.totalFeedback')}</span>
                     </div>
                     <span className="text-lg font-bold" style={{ color: theme === 'light' ? '#1e40af' : '#60a5fa' }}>{feedbacks.length}</span>
                   </div>
@@ -464,7 +464,7 @@ export default function FeedbackPage() {
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       </div>
-                      <span className="font-medium" style={{ color: currentColors.textPrimary }}>Average Rating</span>
+                      <span className="font-medium" style={{ color: currentColors.textPrimary }}>{t('extracted.feedback_analytics.averageRating', { rating: averageRating })}</span>
                     </div>
                     <span className="text-lg font-bold" style={{ color: theme === 'light' ? '#d97706' : '#fbbf24' }}>{averageRating} ⭐</span>
                   </div>

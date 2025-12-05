@@ -130,6 +130,26 @@
     "hi": "सामाजिक न्याय और सशक्तिकरण मंत्रालय, भारत सरकार के तहत विकसित"
   },
   {
+    "key": "footer.newsletter.title",
+    "en": "Stay Updated",
+    "hi": "अपडेट रहें"
+  },
+  {
+    "key": "footer.newsletter.description",
+    "en": "Subscribe to our newsletter for the latest updates on social justice initiatives and platform enhancements.",
+    "hi": "सामाजिक न्याय पहलों और प्लेटफॉर्म संवर्द्धन पर नवीनतम अपडेट के लिए हमारे न्यूज़लेटर की सदस्यता लें।"
+  },
+  {
+    "key": "footer.newsletter.placeholder",
+    "en": "Enter your email",
+    "hi": "अपना ईमेल दर्ज करें"
+  },
+  {
+    "key": "footer.newsletter.subscribe",
+    "en": "Subscribe",
+    "hi": "सब्सक्राइब"
+  },
+  {
     "key": "extracted.theme_variables",
     "en": "{/* Theme Variables */}",
     "hi": "{/* Theme Variables */}"

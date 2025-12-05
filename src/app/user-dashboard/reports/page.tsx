@@ -11,7 +11,9 @@ import {
   Activity,
   Calendar,
   Clock,
-  Filter
+  Filter,
+  Grid3X3,
+  Table
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
@@ -108,6 +110,7 @@ const UserReportsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Subscribe to Firestore reports collection
   useFirestoreReports(setReports);
@@ -544,165 +547,362 @@ const UserReportsPage = () => {
           </div>
         </motion.div>
 
-        {/* Reports Grid */}
+        {/* View Toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          transition={{ delay: 0.15 }}
+          className="flex items-center justify-between"
         >
-          {filteredReports.map((report, idx) => (
-            <motion.div
-              key={report.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.03 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
-              onClick={() => setSelectedReport(report)}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
-                    {(() => {
-                      const Icon = getCategoryIcon(report.category) || FileText;
-                      return <Icon className="w-5 h-5 sm:w-6 sm:h-6" />;
-                    })()}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium theme-text-primary">
+              {t('extracted.view_mode')}:
+            </span>
+            <div className="flex rounded-lg theme-bg-glass theme-border-glass border p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'theme-text-primary hover:theme-bg-glass'
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4" />
+                {t('extracted.grid')}
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-blue-600 text-white'
+                    : 'theme-text-primary hover:theme-bg-glass'
+                }`}
+              >
+                <Table className="w-4 h-4" />
+                {t('extracted.table')}
+              </button>
+            </div>
+          </div>
+          <div className="text-sm theme-text-muted">
+            {filteredReports.length} {t('extracted.reports_found')}
+          </div>
+        </motion.div>
+
+        {/* Reports Views */}
+        {viewMode === 'grid' ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredReports.map((report, idx) => (
+              <motion.div
+                key={report.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.03 }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="theme-bg-card theme-border-glass border rounded-2xl p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
+                onClick={() => setSelectedReport(report)}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                      {(() => {
+                        const Icon = getCategoryIcon(report.category) || FileText;
+                        return <Icon className="w-5 h-5 sm:w-6 sm:h-6" />;
+                      })()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold theme-text-primary text-sm sm:text-base group-hover:text-blue-400 transition-colors truncate">
+                        {report.name}
+                      </h3>
+                      <p className="theme-text-muted text-xs truncate">
+                        {report.id}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold theme-text-primary text-sm sm:text-base group-hover:text-blue-400 transition-colors truncate">
-                      {report.name}
-                    </h3>
-                    <p className="theme-text-muted text-xs truncate">
-                      {report.id}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
-                  <div
-                    className="px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1"
-                    style={{
-                      backgroundColor:
-                        report.status === 'completed'
-                          ? (theme === 'dark' ? '#16a34a' : '#059669')
-                          : report.status === 'processing'
-                          ? (theme === 'dark' ? '#2563eb' : '#2563eb')
-                          : report.status === 'scheduled'
-                          ? (theme === 'dark' ? '#d97706' : '#d97706')
-                          : report.status === 'failed'
-                          ? (theme === 'dark' ? '#dc2626' : '#dc2626')
-                          : (theme === 'dark' ? '#6b7280' : '#6b7280'),
-                      color: 'white',
-                      boxShadow:
-                        theme === 'light'
-                          ? '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          : '0 1px 3px rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
                     <div
-                      className="w-1.5 h-1.5 rounded-full"
+                      className="px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1"
                       style={{
                         backgroundColor:
                           report.status === 'completed'
-                            ? '#10b981'
+                            ? (theme === 'dark' ? '#16a34a' : '#059669')
                             : report.status === 'processing'
-                            ? '#3b82f6'
+                            ? (theme === 'dark' ? '#2563eb' : '#2563eb')
                             : report.status === 'scheduled'
-                            ? '#f59e0b'
+                            ? (theme === 'dark' ? '#d97706' : '#d97706')
                             : report.status === 'failed'
-                            ? '#ef4444'
-                            : '#9ca3af'
+                            ? (theme === 'dark' ? '#dc2626' : '#dc2626')
+                            : (theme === 'dark' ? '#6b7280' : '#6b7280'),
+                        color: 'white',
+                        boxShadow:
+                          theme === 'light'
+                            ? '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            : '0 1px 3px rgba(0, 0, 0, 0.3)'
                       }}
-                    />
-                    {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    >
+                      <div
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{
+                          backgroundColor:
+                            report.status === 'completed'
+                              ? '#10b981'
+                              : report.status === 'processing'
+                              ? '#3b82f6'
+                              : report.status === 'scheduled'
+                              ? '#f59e0b'
+                              : report.status === 'failed'
+                              ? '#ef4444'
+                              : '#9ca3af'
+                        }}
+                      />
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Description */}
-              <p className="theme-text-secondary text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed">
-                {report.description}
-              </p>
+                {/* Description */}
+                <p className="theme-text-secondary text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed">
+                  {report.description}
+                </p>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="text-center p-2 rounded-lg theme-bg-glass">
-                  <p className="text-sm font-bold theme-text-primary">
-                    {report.recordCount ?? '--'}
-                  </p>
-                  <p className="theme-text-muted text-xs">
-                    {t('extracted.records')}
-                  </p>
-                </div>
-                <div className="text-center p-2 rounded-lg theme-bg-glass">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    {(() => {
-                      const FormatIcon = FileText;
-                      return (
-                        <FormatIcon className="w-3 h-3 theme-text-muted" />
-                      );
-                    })()}
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
                     <p className="text-sm font-bold theme-text-primary">
-                      {formatFileSize(report.fileSize)}
+                      {report.recordCount ?? '--'}
+                    </p>
+                    <p className="theme-text-muted text-xs">
+                      {t('extracted.records')}
                     </p>
                   </div>
-                  <p className="theme-text-muted text-xs">
-                    {t('extracted.size')}
-                  </p>
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      {(() => {
+                        const FormatIcon = FileText;
+                        return (
+                          <FormatIcon className="w-3 h-3 theme-text-muted" />
+                        );
+                      })()}
+                      <p className="text-sm font-bold theme-text-primary">
+                        {formatFileSize(report.fileSize)}
+                      </p>
+                    </div>
+                    <p className="theme-text-muted text-xs">
+                      {t('extracted.size')}
+                    </p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg theme-bg-glass">
+                    <p className="text-sm font-bold theme-text-primary">
+                      {report.downloadCount}
+                    </p>
+                    <p className="theme-text-muted text-xs">
+                      {t('extracted.downloads')}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-center p-2 rounded-lg theme-bg-glass">
-                  <p className="text-sm font-bold theme-text-primary">
-                    {report.downloadCount}
-                  </p>
-                  <p className="theme-text-muted text-xs">
-                    {t('extracted.downloads')}
-                  </p>
-                </div>
-              </div>
 
-              {/* Metadata */}
-              <div className="flex items-center justify-between text-xs theme-text-muted mb-3">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <span>{formatDate(report.generatedDate)}</span>
+                {/* Metadata */}
+                <div className="flex items-center justify-between text-xs theme-text-muted mb-3">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDate(report.generatedDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span className="capitalize">{report.frequency}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span className="capitalize">{report.frequency}</span>
-                </div>
-              </div>
 
-              {/* Footer Actions */}
-              <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs theme-text-muted">
-                    {t('extracted.type')}: {report.type}
-                  </span>
+                {/* Footer Actions */}
+                <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs theme-text-muted">
+                      {t('extracted.type')}: {report.type}
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (report.status === 'completed') {
+                        handleDownload(report.id);
+                      }
+                    }}
+                    disabled={report.status !== 'completed'}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      report.status === 'completed'
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <Download className="w-4 h-4" />
+                    {t('extracted.download')}
+                  </motion.button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (report.status === 'completed') {
-                      handleDownload(report.id);
-                    }
-                  }}
-                  disabled={report.status !== 'completed'}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    report.status === 'completed'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <Download className="w-4 h-4" />
-                  {t('extracted.download')}
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          /* Table View */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="theme-bg-card theme-border-glass border rounded-2xl overflow-hidden glass-effect"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="theme-bg-glass">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.report')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.type')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.category')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.status')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.records')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.size')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.generated_date')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      {t('extracted.actions')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y theme-border-glass">
+                  {filteredReports.map((report, idx) => (
+                    <motion.tr
+                      key={report.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className="hover:theme-bg-glass cursor-pointer transition-colors"
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                            {(() => {
+                              const Icon = getCategoryIcon(report.category) || FileText;
+                              return <Icon className="w-4 h-4" />;
+                            })()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium theme-text-primary truncate">
+                              {report.name}
+                            </div>
+                            <div className="text-xs theme-text-muted truncate">
+                              {report.id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm theme-text-primary capitalize">
+                          {report.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm theme-text-primary capitalize">
+                          {report.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              backgroundColor:
+                                report.status === 'completed'
+                                  ? '#10b981'
+                                  : report.status === 'processing'
+                                  ? '#3b82f6'
+                                  : report.status === 'scheduled'
+                                  ? '#f59e0b'
+                                  : report.status === 'failed'
+                                  ? '#ef4444'
+                                  : '#9ca3af'
+                            }}
+                          />
+                          <span
+                            className="text-sm font-medium capitalize"
+                            style={{
+                              color:
+                                report.status === 'completed'
+                                  ? (theme === 'dark' ? '#10b981' : '#059669')
+                                  : report.status === 'processing'
+                                  ? (theme === 'dark' ? '#3b82f6' : '#2563eb')
+                                  : report.status === 'scheduled'
+                                  ? (theme === 'dark' ? '#f59e0b' : '#d97706')
+                                  : report.status === 'failed'
+                                  ? (theme === 'dark' ? '#ef4444' : '#dc2626')
+                                  : (theme === 'dark' ? '#9ca3af' : '#6b7280')
+                            }}
+                          >
+                            {report.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm theme-text-primary">
+                          {report.recordCount ?? '--'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm theme-text-primary">
+                          {formatFileSize(report.fileSize)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm theme-text-primary">
+                          {formatDate(report.generatedDate)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (report.status === 'completed') {
+                              handleDownload(report.id);
+                            }
+                          }}
+                          disabled={report.status !== 'completed'}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            report.status === 'completed'
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          <Download className="w-4 h-4" />
+                          {t('extracted.download')}
+                        </motion.button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
 
        
 

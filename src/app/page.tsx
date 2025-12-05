@@ -1490,18 +1490,19 @@ const NyantraLanding = () => {
                 <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.newsletter.title')}</h3>
                 <div className="space-y-4">
                   <p className="theme-text-secondary text-sm overflow-visible">{t('footer.newsletter.description')}</p>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="email"
                       placeholder={t('footer.newsletter.placeholder')}
                       className="flex-1 px-4 py-3 theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
                     />
                     <motion.button
-                      className="px-6 py-3 accent-gradient rounded-lg font-semibold flex items-center space-x-2 text-white shadow-lg"
+                      className="px-4 sm:px-6 py-3 accent-gradient rounded-lg font-semibold flex items-center justify-center space-x-2 text-white shadow-lg whitespace-nowrap"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <span>{t('footer.newsletter.subscribe')}</span>
+                      <span className="hidden sm:inline">{t('footer.newsletter.subscribe')}</span>
+                      <span className="sm:hidden">{t('footer.newsletter.subscribe')}</span>
                       <Send className="w-4 h-4" />
                     </motion.button>
                   </div>
