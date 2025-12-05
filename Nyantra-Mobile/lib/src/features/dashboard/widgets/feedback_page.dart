@@ -46,7 +46,7 @@ class _FeedbackPageState extends State<FeedbackPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            localeProvider.translate('feedback.loginRequiredSubmit'),
+            localeProvider.translate('extracted.feedback.loginRequiredSubmit'),
           ),
         ),
       );
@@ -66,7 +66,9 @@ class _FeedbackPageState extends State<FeedbackPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localeProvider.translate('feedback.submitSuccess')),
+            content: Text(
+              localeProvider.translate('extracted.feedback.submitSuccess'),
+            ),
           ),
         );
         _subjectController.clear();
@@ -78,7 +80,7 @@ class _FeedbackPageState extends State<FeedbackPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${localeProvider.translate('feedback.submitError')}: $e',
+              '${localeProvider.translate('extracted.feedback.submitError')}: $e',
             ),
           ),
         );
@@ -102,14 +104,16 @@ class _FeedbackPageState extends State<FeedbackPage>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(localeProvider.translate('feedback.editFeedback')),
+          title: Text(
+            localeProvider.translate('extracted.feedback.editFeedback'),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  localeProvider.translate('feedback.rateExperience'),
+                  localeProvider.translate('extracted.feedback.rateExperience'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -134,7 +138,9 @@ class _FeedbackPageState extends State<FeedbackPage>
                 TextField(
                   controller: subjectController,
                   decoration: InputDecoration(
-                    labelText: localeProvider.translate('feedback.subject'),
+                    labelText: localeProvider.translate(
+                      'extracted.feedback.subject',
+                    ),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -144,7 +150,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: localeProvider.translate(
-                      'feedback.yourFeedback',
+                      'extracted.feedback.yourFeedback',
                     ),
                     border: const OutlineInputBorder(),
                   ),
@@ -164,7 +170,9 @@ class _FeedbackPageState extends State<FeedbackPage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        localeProvider.translate('feedback.fillAllFields'),
+                        localeProvider.translate(
+                          'extracted.feedback.fillAllFields',
+                        ),
                       ),
                     ),
                   );
@@ -182,7 +190,9 @@ class _FeedbackPageState extends State<FeedbackPage>
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          localeProvider.translate('feedback.updateSuccess'),
+                          localeProvider.translate(
+                            'extracted.feedback.updateSuccess',
+                          ),
                         ),
                       ),
                     );
@@ -193,7 +203,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          '${localeProvider.translate('feedback.updateError')}: $e',
+                          '${localeProvider.translate('extracted.feedback.updateError')}: $e',
                         ),
                       ),
                     );
@@ -219,8 +229,12 @@ class _FeedbackPageState extends State<FeedbackPage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(localeProvider.translate('feedback.deleteFeedback')),
-        content: Text(localeProvider.translate('feedback.deleteConfirm')),
+        title: Text(
+          localeProvider.translate('extracted.feedback.deleteFeedback'),
+        ),
+        content: Text(
+          localeProvider.translate('extracted.feedback.deleteConfirm'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -245,7 +259,9 @@ class _FeedbackPageState extends State<FeedbackPage>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(localeProvider.translate('feedback.deleteSuccess')),
+              content: Text(
+                localeProvider.translate('extracted.feedback.deleteSuccess'),
+              ),
             ),
           );
         }
@@ -254,7 +270,7 @@ class _FeedbackPageState extends State<FeedbackPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${localeProvider.translate('feedback.deleteError')}: $e',
+                '${localeProvider.translate('extracted.feedback.deleteError')}: $e',
               ),
             ),
           );
@@ -370,7 +386,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                           // Subtitle
                           Text(
                                 localeProvider.translate(
-                                  'feedback.helpImprove',
+                                  'extracted.feedback.helpImprove',
                                 ),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
@@ -427,7 +443,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                               Tab(
                                 child: Text(
                                   localeProvider.translate(
-                                    'feedback.submitTab',
+                                    'extracted.feedback.submitTab',
                                   ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -437,7 +453,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                               Tab(
                                 child: Text(
                                   localeProvider.translate(
-                                    'feedback.myFeedbackTab',
+                                    'extracted.feedback.myFeedbackTab',
                                   ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -488,7 +504,7 @@ class _FeedbackPageState extends State<FeedbackPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              localeProvider.translate('feedback.rateExperience'),
+              localeProvider.translate('extracted.feedback.rateExperience'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -511,7 +527,7 @@ class _FeedbackPageState extends State<FeedbackPage>
             ),
             const SizedBox(height: 32),
             Text(
-              localeProvider.translate('feedback.subject'),
+              localeProvider.translate('extracted.feedback.subject'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -520,7 +536,9 @@ class _FeedbackPageState extends State<FeedbackPage>
             TextFormField(
               controller: _subjectController,
               decoration: InputDecoration(
-                hintText: localeProvider.translate('feedback.subjectHint'),
+                hintText: localeProvider.translate(
+                  'extracted.feedback.subjectHint',
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -529,14 +547,16 @@ class _FeedbackPageState extends State<FeedbackPage>
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return localeProvider.translate('feedback.subjectRequired');
+                  return localeProvider.translate(
+                    'extracted.feedback.subjectRequired',
+                  );
                 }
                 return null;
               },
             ),
             const SizedBox(height: 32),
             Text(
-              localeProvider.translate('feedback.yourFeedback'),
+              localeProvider.translate('extracted.feedback.yourFeedback'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -546,7 +566,9 @@ class _FeedbackPageState extends State<FeedbackPage>
               controller: _feedbackController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: localeProvider.translate('feedback.feedbackHint'),
+                hintText: localeProvider.translate(
+                  'extracted.feedback.feedbackHint',
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -555,7 +577,9 @@ class _FeedbackPageState extends State<FeedbackPage>
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return localeProvider.translate('feedback.feedbackRequired');
+                  return localeProvider.translate(
+                    'extracted.feedback.feedbackRequired',
+                  );
                 }
                 return null;
               },
@@ -575,7 +599,11 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator()
-                    : Text(localeProvider.translate('feedback.submitButton')),
+                    : Text(
+                        localeProvider.translate(
+                          'extracted.feedback.submitButton',
+                        ),
+                      ),
               ),
             ),
           ],
@@ -599,7 +627,7 @@ class _FeedbackPageState extends State<FeedbackPage>
             ),
             const SizedBox(height: 16),
             Text(
-              localeProvider.translate('feedback.loginRequired'),
+              localeProvider.translate('extracted.feedback.loginRequired'),
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -627,7 +655,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  localeProvider.translate('feedback.errorLoading'),
+                  localeProvider.translate('extracted.feedback.errorLoading'),
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -655,12 +683,12 @@ class _FeedbackPageState extends State<FeedbackPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  localeProvider.translate('feedback.noFeedback'),
+                  localeProvider.translate('extracted.feedback.noFeedback'),
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  localeProvider.translate('feedback.noFeedbackDesc'),
+                  localeProvider.translate('extracted.feedback.noFeedbackDesc'),
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -722,7 +750,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                             color: theme.colorScheme.primary,
                           ),
                           tooltip: localeProvider.translate(
-                            'feedback.editButton',
+                            'extracted.feedback.editButton',
                           ),
                         ),
                         IconButton(
@@ -734,7 +762,7 @@ class _FeedbackPageState extends State<FeedbackPage>
                             color: theme.colorScheme.error,
                           ),
                           tooltip: localeProvider.translate(
-                            'feedback.deleteButton',
+                            'extracted.feedback.deleteButton',
                           ),
                         ),
                       ],
@@ -803,11 +831,11 @@ class _FeedbackPageState extends State<FeedbackPage>
   String _getStatusText(String status, LocaleProvider localeProvider) {
     switch (status) {
       case 'open':
-        return localeProvider.translate('feedback.status.open');
+        return localeProvider.translate('extracted.feedback.status.open');
       case 'in-review':
-        return localeProvider.translate('feedback.status.inReview');
+        return localeProvider.translate('extracted.feedback.status.inReview');
       case 'resolved':
-        return localeProvider.translate('feedback.status.resolved');
+        return localeProvider.translate('extracted.feedback.status.resolved');
       default:
         return status;
     }

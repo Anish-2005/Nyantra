@@ -435,21 +435,12 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                         vertical: 5,
                                                       ),
                                                   decoration: BoxDecoration(
-                                                    color: application
-                                                        .statusColor
-                                                        .withValues(alpha: 102),
+                                                    color:
+                                                        application.statusColor,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           16,
                                                         ),
-                                                    border: Border.all(
-                                                      color: application
-                                                          .statusColor
-                                                          .withValues(
-                                                            alpha: 153,
-                                                          ),
-                                                      width: 1,
-                                                    ),
                                                   ),
                                                   child: Text(
                                                     application.statusText,

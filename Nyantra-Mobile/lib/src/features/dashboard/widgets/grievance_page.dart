@@ -902,22 +902,11 @@ class _GrievancePageState extends State<GrievancePage> {
                                                               ),
                                                           decoration: BoxDecoration(
                                                             color: grievance
-                                                                .statusColor
-                                                                .withValues(
-                                                                  alpha: 102,
-                                                                ),
+                                                                .statusColor,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   16,
                                                                 ),
-                                                            border: Border.all(
-                                                              color: grievance
-                                                                  .statusColor
-                                                                  .withValues(
-                                                                    alpha: 153,
-                                                                  ),
-                                                              width: 1,
-                                                            ),
                                                           ),
                                                           child: Text(
                                                             grievance

@@ -256,22 +256,55 @@ class DataService {
               .map((doc) => doc.id)
               .toList();
 
-          if (uniqueApplicationIds.isEmpty) {
+          if (uniqueApplicationIds.isEmpty && beneficiaryIds.isEmpty) {
             return [];
           }
 
-          // Get disbursements for these applications
-          final disbursementsSnapshot = await _firestore
-              .collection('disbursements')
-              .where(
-                'applicationId',
-                whereIn: uniqueApplicationIds.take(10),
-              ) // Firestore limit
-              .get();
+          List<DisbursementModel> allDisbursements = [];
 
-          return disbursementsSnapshot.docs.map((doc) {
-            return DisbursementModel.fromFirestore(doc.data(), doc.id);
+          // Get disbursements for applications
+          if (uniqueApplicationIds.isNotEmpty) {
+            final disbursementsSnapshot = await _firestore
+                .collection('disbursements')
+                .where(
+                  'applicationId',
+                  whereIn: uniqueApplicationIds.take(10),
+                ) // Firestore limit
+                .get();
+
+            allDisbursements.addAll(
+              disbursementsSnapshot.docs.map((doc) {
+                return DisbursementModel.fromFirestore(doc.data(), doc.id);
+              }).toList(),
+            );
+          }
+
+          // Get disbursements directly for beneficiaries
+          if (beneficiaryIds.isNotEmpty) {
+            final beneficiaryDisbursementsSnapshot = await _firestore
+                .collection('disbursements')
+                .where(
+                  'beneficiaryId',
+                  whereIn: beneficiaryIds.take(10),
+                ) // Firestore limit
+                .get();
+
+            allDisbursements.addAll(
+              beneficiaryDisbursementsSnapshot.docs.map((doc) {
+                return DisbursementModel.fromFirestore(doc.data(), doc.id);
+              }).toList(),
+            );
+          }
+
+          // Remove duplicates based on ID
+          final disbursementIds = <String>{};
+          final uniqueDisbursements = allDisbursements.where((disbursement) {
+            if (disbursementIds.contains(disbursement.id)) return false;
+            disbursementIds.add(disbursement.id);
+            return true;
           }).toList();
+
+          return uniqueDisbursements;
         });
   }
 

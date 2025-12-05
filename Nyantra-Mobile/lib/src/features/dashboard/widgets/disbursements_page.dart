@@ -415,6 +415,22 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                               );
                                             }
 
+                                            if (snapshot.hasError) {
+                                              return Center(
+                                                child: Text(
+                                                  'Error loading beneficiary: ${snapshot.error}',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .error,
+                                                      ),
+                                                ),
+                                              );
+                                            }
+
                                             BeneficiaryModel? beneficiary;
                                             if (snapshot.hasData &&
                                                 snapshot.data!.exists) {
@@ -441,7 +457,7 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                           'dashboard.disbursements.labels.beneficiaryName',
                                                         ),
                                                         beneficiary?.name ??
-                                                            'Unknown',
+                                                            'Beneficiary ID: ${disbursement.beneficiaryId}',
                                                       ),
                                                     ),
                                                     Expanded(
@@ -451,7 +467,12 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                         localeProvider.translate(
                                                           'dashboard.disbursements.labels.initiatedDate',
                                                         ),
-                                                        '30 Nov 2025',
+                                                        disbursement.createdAt
+                                                                ?.toString()
+                                                                .split(
+                                                                  ' ',
+                                                                )[0] ??
+                                                            'Not available',
                                                       ),
                                                     ),
                                                   ],
@@ -534,7 +555,8 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                   localeProvider.translate(
                                                     'dashboard.disbursements.labels.transactionId',
                                                   ),
-                                                  'TX01234',
+                                                  disbursement.transactionId ??
+                                                      'Not available',
                                                 ),
                                               ],
                                             );

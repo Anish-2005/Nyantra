@@ -106,6 +106,21 @@ class SyncService {
         }
       }
 
+      // Also sync disbursements directly for user's beneficiaries
+      if (beneficiaryIds.isNotEmpty) {
+        final beneficiaryDisbursementsSnapshot = await FirebaseService.firestore
+            .collection('disbursements')
+            .where('beneficiaryId', whereIn: beneficiaryIds.take(10))
+            .get();
+        for (var doc in beneficiaryDisbursementsSnapshot.docs) {
+          final disbursement = DisbursementModel.fromFirestore(
+            doc.data(),
+            doc.id,
+          );
+          await _dbHelper!.insertDisbursement(disbursement);
+        }
+      }
+
       // Sync grievances created by user or related to user's beneficiaries
       final grievancesQuery1 = await FirebaseService.firestore
           .collection('grievances')
@@ -146,12 +161,39 @@ class SyncService {
       }
 
       // Sync reports
+      print('SyncService: syncFromFirestore - Syncing reports');
       final reportsSnapshot = await FirebaseService.firestore
           .collection('reports')
           .get();
-      for (var doc in reportsSnapshot.docs) {
-        final report = Report.fromJson(doc.data(), doc.id);
-        await _dbHelper!.insertReport(report);
+      print(
+        'SyncService: syncFromFirestore - Found ${reportsSnapshot.docs.length} reports in Firestore',
+      );
+
+      // If no reports exist in Firestore, create some sample reports
+      if (reportsSnapshot.docs.isEmpty) {
+        print(
+          'SyncService: No reports found in Firestore, creating sample reports',
+        );
+        await _createSampleReports();
+        // Re-fetch after creating samples
+        final updatedReportsSnapshot = await FirebaseService.firestore
+            .collection('reports')
+            .get();
+        for (var doc in updatedReportsSnapshot.docs) {
+          final report = Report.fromJson(doc.data(), doc.id);
+          await _dbHelper!.insertReport(report);
+          print(
+            'SyncService: syncFromFirestore - Synced sample report: ${report.name}',
+          );
+        }
+      } else {
+        for (var doc in reportsSnapshot.docs) {
+          final report = Report.fromJson(doc.data(), doc.id);
+          await _dbHelper!.insertReport(report);
+          print(
+            'SyncService: syncFromFirestore - Synced report: ${report.name}',
+          );
+        }
       }
     } catch (e) {
       print('Error syncing from Firestore: $e');
@@ -380,9 +422,168 @@ class SyncService {
         return [];
       }
     }
-    if (await isOnline()) {
+    final online = await isOnline();
+    print('SyncService: getReports - Online status: $online');
+    if (online) {
+      print('SyncService: getReports - Starting sync from Firestore');
       await syncFromFirestore();
+      print('SyncService: getReports - Sync completed');
     }
-    return await _dbHelper!.getReports();
+    final reports = await _dbHelper!.getReports();
+    print(
+      'SyncService: getReports - Retrieved ${reports.length} reports from local DB',
+    );
+    return reports;
+  }
+
+  Future<void> _createSampleReports() async {
+    final sampleReports = [
+      {
+        'name': 'Monthly Applications Report',
+        'type': 'applications',
+        'category': 'statistical',
+        'frequency': 'monthly',
+        'status': 'completed',
+        'fileSize': '2.5 MB',
+        'fileFormat': 'PDF',
+        'generatedDate': DateTime.now()
+            .subtract(const Duration(days: 5))
+            .toIso8601String(),
+        'generatedBy': 'System',
+        'lastRun': DateTime.now()
+            .subtract(const Duration(days: 5))
+            .toIso8601String(),
+        'nextRun': DateTime.now()
+            .add(const Duration(days: 25))
+            .toIso8601String(),
+        'recordCount': 150,
+        'description':
+            'Comprehensive report of all applications submitted in the current month',
+        'parameters': {'month': 'December', 'year': 2024},
+        'downloadCount': 5,
+        'isScheduled': true,
+        'recipients': ['admin@nyantara.com'],
+        'columns': ['id', 'name', 'status', 'amount', 'date'],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      {
+        'name': 'Beneficiary Disbursement Summary',
+        'type': 'disbursements',
+        'category': 'financial',
+        'frequency': 'weekly',
+        'status': 'completed',
+        'fileSize': '1.8 MB',
+        'fileFormat': 'PDF',
+        'generatedDate': DateTime.now()
+            .subtract(const Duration(days: 2))
+            .toIso8601String(),
+        'generatedBy': 'System',
+        'lastRun': DateTime.now()
+            .subtract(const Duration(days: 2))
+            .toIso8601String(),
+        'nextRun': DateTime.now()
+            .add(const Duration(days: 5))
+            .toIso8601String(),
+        'recordCount': 89,
+        'description':
+            'Weekly summary of all disbursements made to beneficiaries',
+        'parameters': {'week': '48', 'year': 2024},
+        'downloadCount': 3,
+        'isScheduled': true,
+        'recipients': ['finance@nyantara.com'],
+        'columns': ['beneficiaryId', 'amount', 'date', 'status'],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      {
+        'name': 'Grievance Resolution Report',
+        'type': 'grievances',
+        'category': 'performance',
+        'frequency': 'quarterly',
+        'status': 'processing',
+        'fileSize': null,
+        'fileFormat': 'PDF',
+        'generatedDate': null,
+        'generatedBy': 'System',
+        'lastRun': null,
+        'nextRun': DateTime.now()
+            .add(const Duration(days: 30))
+            .toIso8601String(),
+        'recordCount': null,
+        'description':
+            'Analysis of grievance resolution times and effectiveness',
+        'parameters': {'quarter': 'Q4', 'year': 2024},
+        'downloadCount': 0,
+        'isScheduled': true,
+        'recipients': ['support@nyantara.com'],
+        'columns': ['id', 'type', 'status', 'resolutionTime'],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      {
+        'name': 'User Feedback Analysis',
+        'type': 'feedback',
+        'category': 'analytical',
+        'frequency': 'monthly',
+        'status': 'scheduled',
+        'fileSize': null,
+        'fileFormat': 'PDF',
+        'generatedDate': null,
+        'generatedBy': 'System',
+        'lastRun': null,
+        'nextRun': DateTime.now()
+            .add(const Duration(days: 10))
+            .toIso8601String(),
+        'recordCount': null,
+        'description': 'Analysis of user feedback and satisfaction metrics',
+        'parameters': {'month': 'December', 'year': 2024},
+        'downloadCount': 0,
+        'isScheduled': true,
+        'recipients': ['ux@nyantara.com'],
+        'columns': ['rating', 'category', 'comments', 'date'],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      {
+        'name': 'System Performance Report',
+        'type': 'technical',
+        'category': 'technical',
+        'frequency': 'daily',
+        'status': 'completed',
+        'fileSize': '500 KB',
+        'fileFormat': 'PDF',
+        'generatedDate': DateTime.now()
+            .subtract(const Duration(hours: 6))
+            .toIso8601String(),
+        'generatedBy': 'System',
+        'lastRun': DateTime.now()
+            .subtract(const Duration(hours: 6))
+            .toIso8601String(),
+        'nextRun': DateTime.now()
+            .add(const Duration(hours: 18))
+            .toIso8601String(),
+        'recordCount': 24,
+        'description': 'Daily system performance metrics and uptime statistics',
+        'parameters': {'date': DateTime.now().toIso8601String().split('T')[0]},
+        'downloadCount': 1,
+        'isScheduled': true,
+        'recipients': ['tech@nyantara.com'],
+        'columns': ['metric', 'value', 'timestamp'],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+    ];
+
+    for (final reportData in sampleReports) {
+      try {
+        await FirebaseService.firestore.collection('reports').add(reportData);
+        print('SyncService: Created sample report: ${reportData['name']}');
+      } catch (e) {
+        print(
+          'SyncService: Error creating sample report ${reportData['name']}: $e',
+        );
+      }
+    }
   }
 }

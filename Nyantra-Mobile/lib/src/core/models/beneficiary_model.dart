@@ -68,7 +68,9 @@ class BeneficiaryModel {
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
       actType: data['actType'] as String?,
-      reliefAmount: data['reliefAmount'] as double?,
+      reliefAmount: data['reliefAmount'] != null
+          ? (data['reliefAmount'] as num).toDouble()
+          : null,
       category: data['category'] as String?,
       registrationDate: data['registrationDate'] != null
           ? (data['registrationDate'] as Timestamp).toDate()

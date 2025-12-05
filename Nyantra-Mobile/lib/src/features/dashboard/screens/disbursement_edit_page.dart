@@ -144,17 +144,70 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _beneficiary == null
-          ? Center(
-              child: Text(
-                locale.translate('disbursements.beneficiaryNotFound'),
-              ),
-            )
           : Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    // Show beneficiary info if available
+                    if (_beneficiary != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.dividerColor.withOpacity(0.1),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Beneficiary Information',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text('Name: ${_beneficiary!.name}'),
+                            if (_beneficiary!.phone != null)
+                              Text('Phone: ${_beneficiary!.phone}'),
+                            if (_beneficiary!.district != null)
+                              Text('District: ${_beneficiary!.district}'),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer.withOpacity(
+                            0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.error.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning, color: theme.colorScheme.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Beneficiary data not found for ID: ${widget.disbursement.beneficiaryId}. You can still edit the disbursement details.',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _buildInput(
                       theme,
