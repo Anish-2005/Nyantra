@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class FirebaseService {
   static FirebaseAuth? _auth;
@@ -37,30 +38,32 @@ class FirebaseService {
   }
 
   static Future<UserCredential> signInWithGoogle() async {
-    // For mobile platforms, use Google Sign-In plugin
-    final GoogleSignIn googleSignIn = GoogleSignIn();
+    if (kIsWeb) {
+      // For web, use signInWithPopup
+      GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+      return await FirebaseAuth.instance.signInWithPopup(googleProvider);
+    } else {
+      // For mobile platforms, use GoogleSignIn
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-    // Attempt to sign in
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw FirebaseAuthException(
+          code: 'ERROR_ABORTED_BY_USER',
+          message: 'Sign in aborted by user',
+        );
+      }
 
-    if (googleUser == null) {
-      throw FirebaseAuthException(
-        code: 'ERROR_ABORTED_BY_USER',
-        message: 'Sign in aborted by user',
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
+
+      return await FirebaseAuth.instance.signInWithCredential(credential);
     }
-
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    // Sign in to Firebase with the credential
-    return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 }
