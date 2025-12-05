@@ -1,4 +1,7 @@
+// ignore_for_file: avoid_print
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 
 class Report {
   final String id;
@@ -59,6 +62,42 @@ class Report {
       return value.toString();
     }
 
+    // Helper function to parse JSON strings back to maps
+    Map<String, dynamic>? parseJsonMap(dynamic value) {
+      if (value == null) return null;
+      if (value is Map<String, dynamic>) return value;
+      if (value is String) {
+        try {
+          // Try to decode JSON string
+          return jsonDecode(value) as Map<String, dynamic>;
+        } catch (e) {
+          print('Error parsing JSON map: $e');
+          return null;
+        }
+      }
+      return null;
+    }
+
+    // Helper function to parse JSON strings back to lists
+    List<String> parseJsonList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) return List<String>.from(value);
+      if (value is String) {
+        try {
+          // Try to decode JSON string
+          final decoded = jsonDecode(value);
+          if (decoded is List) {
+            return List<String>.from(decoded);
+          }
+          return [];
+        } catch (e) {
+          print('Error parsing JSON list: $e');
+          return [];
+        }
+      }
+      return [];
+    }
+
     try {
       final name = json['name'] ?? 'Unnamed Report';
       final type = json['type'] ?? 'general';
@@ -78,24 +117,26 @@ class Report {
         fileFormat: json['fileFormat'] ?? 'PDF',
         generatedDate: toIsoString(json['generatedDate']),
         generatedBy: json['generatedBy']?.toString(),
-        schedule: json['schedule'],
+        schedule: parseJsonMap(json['schedule']),
         lastRun: toIsoString(json['lastRun']),
         nextRun: toIsoString(json['nextRun']),
         recordCount: json['recordCount'] is int
             ? json['recordCount']
-            : int.tryParse(json['recordCount']?.toString() ?? ''),
+            : json['recordCount'] is String
+            ? int.tryParse(json['recordCount'])
+            : null,
         description: description,
-        parameters: json['parameters'],
+        parameters: parseJsonMap(json['parameters']),
         downloadCount: json['downloadCount'] is int
             ? json['downloadCount']
-            : int.tryParse(json['downloadCount']?.toString() ?? '0') ?? 0,
-        isScheduled: json['isScheduled'] ?? false,
-        recipients: json['recipients'] is List
-            ? List<String>.from(json['recipients'])
-            : [],
-        columns: json['columns'] is List
-            ? List<String>.from(json['columns'])
-            : [],
+            : json['downloadCount'] is String
+            ? int.tryParse(json['downloadCount']) ?? 0
+            : 0,
+        isScheduled: json['isScheduled'] is bool
+            ? json['isScheduled']
+            : json['isScheduled']?.toString().toLowerCase() == 'true',
+        recipients: parseJsonList(json['recipients']),
+        columns: parseJsonList(json['columns']),
         createdAt: toIsoString(json['createdAt']),
         updatedAt: toIsoString(json['updatedAt']),
       );

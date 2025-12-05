@@ -257,9 +257,22 @@ class DatabaseHelper {
 
   Future<List<Report>> getReports() async {
     List<Map<String, dynamic>> maps = await query('reports');
-    return maps
+    final reports = maps
         .map((map) => Report.fromJson(map, map['id']?.toString() ?? 'unknown'))
         .toList();
+
+    // Remove duplicates based on name (since IDs might be different for same content)
+    final seenNames = <String>{};
+    final uniqueReports = <Report>[];
+
+    for (final report in reports) {
+      if (!seenNames.contains(report.name)) {
+        seenNames.add(report.name);
+        uniqueReports.add(report);
+      }
+    }
+
+    return uniqueReports;
   }
 
   // Sync methods

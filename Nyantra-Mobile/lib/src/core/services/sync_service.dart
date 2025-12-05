@@ -174,8 +174,23 @@ class SyncService {
         print(
           'SyncService: No reports found in Firestore, creating sample reports',
         );
-        await _createSampleReports();
-        // Re-fetch after creating samples
+
+        // Check if sample reports already exist in local DB to avoid duplicates
+        final localReports = await _dbHelper!.getReports();
+        final hasSampleReports = localReports.any(
+          (report) =>
+              report.name.contains('Monthly Applications') ||
+              report.name.contains('Beneficiary Disbursement') ||
+              report.name.contains('Grievance Resolution') ||
+              report.name.contains('User Feedback') ||
+              report.name.contains('System Performance'),
+        );
+
+        if (!hasSampleReports) {
+          await _createSampleReports();
+        }
+
+        // Re-fetch after creating samples (or if they already exist)
         final updatedReportsSnapshot = await FirebaseService.firestore
             .collection('reports')
             .get();
@@ -187,12 +202,19 @@ class SyncService {
           );
         }
       } else {
+        // Sync existing reports from Firestore, but avoid duplicates
+        final localReports = await _dbHelper!.getReports();
+        final localReportIds = localReports.map((r) => r.id).toSet();
+
         for (var doc in reportsSnapshot.docs) {
-          final report = Report.fromJson(doc.data(), doc.id);
-          await _dbHelper!.insertReport(report);
-          print(
-            'SyncService: syncFromFirestore - Synced report: ${report.name}',
-          );
+          // Only sync if this report doesn't already exist locally
+          if (!localReportIds.contains(doc.id)) {
+            final report = Report.fromJson(doc.data(), doc.id);
+            await _dbHelper!.insertReport(report);
+            print(
+              'SyncService: syncFromFirestore - Synced new report: ${report.name}',
+            );
+          }
         }
       }
     } catch (e) {
