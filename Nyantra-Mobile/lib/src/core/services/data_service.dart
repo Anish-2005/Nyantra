@@ -9,6 +9,7 @@ import '../models/beneficiary_model.dart';
 import '../models/disbursement_model.dart';
 import '../models/grievance_model.dart';
 import '../models/feedback_model.dart';
+import '../models/activity_model.dart';
 
 class DataService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -101,6 +102,188 @@ class DataService {
         'totalDisbursed': 0.0,
         'beneficiariesCount': 0,
       };
+    }
+  }
+
+  // Recent Activities - filtered by current user
+  static Future<List<ActivityModel>> getRecentActivities({
+    int limit = 10,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        return [];
+      }
+
+      final activities = <ActivityModel>[];
+
+      // Get user's beneficiaries first
+      final beneficiariesQuery = await _firestore
+          .collection('beneficiaries')
+          .where('ownerId', isEqualTo: currentUser.uid)
+          .get();
+
+      final beneficiaryIds = beneficiariesQuery.docs
+          .map((doc) => doc.id)
+          .toList();
+
+      // Get recent applications
+      final applicationsQuery1 = await _firestore
+          .collection('applications')
+          .where('ownerId', isEqualTo: currentUser.uid)
+          .orderBy('applicationDate', descending: true)
+          .limit(limit)
+          .get();
+
+      final applicationsQuery2 = beneficiaryIds.isNotEmpty
+          ? await _firestore
+                .collection('applications')
+                .where('beneficiaryId', whereIn: beneficiaryIds.take(10))
+                .orderBy('applicationDate', descending: true)
+                .limit(limit)
+                .get()
+          : null;
+
+      final allApplicationDocs = [
+        ...applicationsQuery1.docs,
+        if (applicationsQuery2 != null) ...applicationsQuery2.docs,
+      ];
+
+      // Remove duplicates and sort by date
+      final applicationIds = <String>{};
+      final uniqueApplications =
+          allApplicationDocs.where((doc) {
+            if (applicationIds.contains(doc.id)) return false;
+            applicationIds.add(doc.id);
+            return true;
+          }).toList()..sort(
+            (a, b) => (b.data()['applicationDate'] as Timestamp).compareTo(
+              a.data()['applicationDate'] as Timestamp,
+            ),
+          );
+
+      // Convert to activities
+      for (final doc in uniqueApplications.take(limit)) {
+        final data = doc.data();
+        final status = data['status'] as String?;
+        final applicantName = data['applicantName'] as String? ?? 'Unknown';
+        final applicationDate = (data['applicationDate'] as Timestamp).toDate();
+
+        ActivityType activityType;
+        String title;
+        String description;
+
+        switch (status) {
+          case 'approved':
+            activityType = ActivityType.applicationApproved;
+            title = 'Application Approved';
+            description = 'Application by $applicantName was approved';
+            break;
+          case 'rejected':
+            activityType = ActivityType.applicationRejected;
+            title = 'Application Rejected';
+            description = 'Application by $applicantName was rejected';
+            break;
+          default:
+            activityType = ActivityType.applicationSubmitted;
+            title = 'Application Submitted';
+            description = 'New application submitted by $applicantName';
+        }
+
+        activities.add(
+          ActivityModel(
+            id: 'app_${doc.id}',
+            type: activityType,
+            title: title,
+            description: description,
+            timestamp: applicationDate,
+            relatedId: doc.id,
+          ),
+        );
+      }
+
+      // Get recent grievances
+      final grievancesQuery = await _firestore
+          .collection('grievances')
+          .where('userId', isEqualTo: currentUser.uid)
+          .orderBy('createdDate', descending: true)
+          .limit(limit)
+          .get();
+
+      for (final doc in grievancesQuery.docs.take(limit - activities.length)) {
+        final data = doc.data();
+        final status = data['status'] as String?;
+        final titleText = data['title'] as String? ?? 'Grievance';
+        final createdDate =
+            (data['createdDate'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+        ActivityType activityType;
+        String title;
+        String description;
+
+        if (status == 'resolved' || status == 'closed') {
+          activityType = ActivityType.grievanceResolved;
+          title = 'Grievance Resolved';
+          description = '$titleText has been resolved';
+        } else {
+          activityType = ActivityType.grievanceFiled;
+          title = 'Grievance Filed';
+          description = 'New grievance: $titleText';
+        }
+
+        activities.add(
+          ActivityModel(
+            id: 'grievance_${doc.id}',
+            type: activityType,
+            title: title,
+            description: description,
+            timestamp: createdDate,
+            relatedId: doc.id,
+          ),
+        );
+      }
+
+      // Get recent disbursements
+      final applicationIdsList = uniqueApplications
+          .map((doc) => doc.id)
+          .toList();
+      if (applicationIdsList.isNotEmpty) {
+        final disbursementsQuery = await _firestore
+            .collection('disbursements')
+            .where('applicationId', whereIn: applicationIdsList.take(10))
+            .where('status', isEqualTo: 'completed')
+            .orderBy('disbursementDate', descending: true)
+            .limit(limit - activities.length)
+            .get();
+
+        for (final doc in disbursementsQuery.docs) {
+          final data = doc.data();
+          final amount = (data['reliefAmount'] as num?)?.toDouble() ?? 0.0;
+          final disbursementDate =
+              (data['disbursementDate'] as Timestamp?)?.toDate() ??
+              DateTime.now();
+
+          activities.add(
+            ActivityModel(
+              id: 'disbursement_${doc.id}',
+              type: ActivityType.disbursementCompleted,
+              title: 'Disbursement Completed',
+              description:
+                  '₹${amount.toStringAsFixed(2)} disbursed successfully',
+              timestamp: disbursementDate,
+              relatedId: doc.id,
+            ),
+          );
+        }
+      }
+
+      // Sort all activities by timestamp (most recent first)
+      activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+      return activities.take(limit).toList();
+    } catch (e) {
+      print('Error fetching recent activities: $e');
+      return [];
     }
   }
 

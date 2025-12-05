@@ -362,109 +362,190 @@ class _ReportsPageState extends State<ReportsPage> {
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
-                    child: FutureBuilder<List<Report>>(
-                      future: SyncService().getReports(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return LoadingState(
-                            message: localeProvider.translate('common.loading'),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  size: 64,
-                                  color: Colors.white.withOpacity(0.7),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Error loading reports: ${snapshot.error}',
-                                  style: theme.textTheme.headlineSmall,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        final reports = snapshot.data ?? [];
-
-                        // Apply filters
-                        final filteredReports = reports.where((report) {
-                          final matchesSearch =
-                              _searchController.text.isEmpty ||
-                              report.name.toLowerCase().contains(
-                                _searchController.text.toLowerCase(),
-                              ) ||
-                              report.description.toLowerCase().contains(
-                                _searchController.text.toLowerCase(),
-                              );
-
-                          final matchesCategory =
-                              _selectedCategory == 'all' ||
-                              report.category == _selectedCategory;
-                          final matchesStatus =
-                              _selectedStatus == 'all' ||
-                              report.status == _selectedStatus;
-
-                          return matchesSearch &&
-                              matchesCategory &&
-                              matchesStatus;
-                        }).toList();
-
-                        if (filteredReports.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.file_copy_outlined,
-                                  size: 64,
-                                  color: theme.textTheme.bodyMedium?.color
-                                      ?.withOpacity(0.5),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  localeProvider.translate('reports.noReports'),
-                                  style: theme.textTheme.headlineSmall,
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  localeProvider.translate(
-                                    'reports.noReportsDescription',
-                                  ),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.textTheme.bodySmall?.color,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(0),
-                          itemCount: filteredReports.length,
-                          itemBuilder: (context, index) {
-                            final report = filteredReports[index];
-                            return _buildReportCard(
-                              context,
-                              report,
-                              localeProvider,
-                              theme,
-                              isDark,
-                            );
-                          },
-                        );
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        // Force refresh by clearing any cached state
+                        setState(() {});
                       },
+                      child: FutureBuilder<List<Report>>(
+                        future: SyncService().getReports(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return LoadingState(
+                              message: localeProvider.translate(
+                                'common.loading',
+                              ),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 64,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Error loading reports: ${snapshot.error}',
+                                    style: theme.textTheme.headlineSmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          final reports = snapshot.data ?? [];
+                          print(
+                            'ReportsPage: Retrieved ${reports.length} reports from SyncService',
+                          );
+
+                          // Apply filters
+                          final filteredReports = reports.where((report) {
+                            final matchesSearch =
+                                _searchController.text.isEmpty ||
+                                report.name.toLowerCase().contains(
+                                  _searchController.text.toLowerCase(),
+                                ) ||
+                                report.description.toLowerCase().contains(
+                                  _searchController.text.toLowerCase(),
+                                );
+
+                            final matchesCategory =
+                                _selectedCategory == 'all' ||
+                                report.category == _selectedCategory;
+                            final matchesStatus =
+                                _selectedStatus == 'all' ||
+                                report.status == _selectedStatus;
+
+                            print(
+                              'ReportsPage: Report ${report.name} - category: ${report.category}, status: ${report.status}, matches: search=$matchesSearch, category=$matchesCategory, status=$matchesStatus',
+                            );
+
+                            return matchesSearch &&
+                                matchesCategory &&
+                                matchesStatus;
+                          }).toList();
+
+                          print(
+                            'ReportsPage: After filtering, ${filteredReports.length} reports remain',
+                          );
+
+                          if (filteredReports.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.file_copy_outlined,
+                                    size: 64,
+                                    color: theme.textTheme.bodyMedium?.color
+                                        ?.withOpacity(0.5),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    localeProvider.translate(
+                                      'reports.noReports',
+                                    ),
+                                    style: theme.textTheme.headlineSmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    localeProvider.translate(
+                                      'reports.noReportsDescription',
+                                    ),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.textTheme.bodySmall?.color,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Debug information
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.cardColor.withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: theme.dividerColor.withOpacity(
+                                          0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          'Debug Info:',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Total reports fetched: ${reports.length}',
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                        Text(
+                                          'Selected filters - Category: $_selectedCategory, Status: $_selectedStatus',
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                        Text(
+                                          'Search query: "${_searchController.text}"',
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            setState(() {});
+                                          },
+                                          icon: const Icon(
+                                            Icons.refresh,
+                                            size: 16,
+                                          ),
+                                          label: const Text('Refresh'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: theme.primaryColor,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 8,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView.builder(
+                            padding: const EdgeInsets.all(0),
+                            itemCount: filteredReports.length,
+                            itemBuilder: (context, index) {
+                              final report = filteredReports[index];
+                              return _buildReportCard(
+                                context,
+                                report,
+                                localeProvider,
+                                theme,
+                                isDark,
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

@@ -422,18 +422,68 @@ class SyncService {
         return [];
       }
     }
-    final online = await isOnline();
-    print('SyncService: getReports - Online status: $online');
-    if (online) {
-      print('SyncService: getReports - Starting sync from Firestore');
-      await syncFromFirestore();
-      print('SyncService: getReports - Sync completed');
-    }
-    final reports = await _dbHelper!.getReports();
+
+    // First try to get from local DB
+    final localReports = await _dbHelper!.getReports();
     print(
-      'SyncService: getReports - Retrieved ${reports.length} reports from local DB',
+      'SyncService: getReports - Retrieved ${localReports.length} reports from local DB',
     );
-    return reports;
+
+    // If we have local reports, try to sync in background but return local data immediately
+    if (localReports.isNotEmpty) {
+      final online = await isOnline();
+      print('SyncService: getReports - Online status: $online');
+      if (online) {
+        print(
+          'SyncService: getReports - Starting background sync from Firestore',
+        );
+        try {
+          await syncFromFirestore();
+          print('SyncService: getReports - Background sync completed');
+        } catch (e) {
+          print('SyncService: getReports - Background sync failed: $e');
+        }
+      }
+      return localReports;
+    }
+
+    // If no local reports, try to fetch from Firebase directly
+    final online = await isOnline();
+    print('SyncService: getReports - No local reports, online status: $online');
+
+    if (online) {
+      try {
+        print(
+          'SyncService: getReports - Fetching reports directly from Firestore',
+        );
+        final reportsSnapshot = await FirebaseService.firestore
+            .collection('reports')
+            .get();
+        print(
+          'SyncService: getReports - Found ${reportsSnapshot.docs.length} reports in Firestore',
+        );
+
+        final reports = reportsSnapshot.docs
+            .map((doc) => Report.fromJson(doc.data(), doc.id))
+            .toList();
+
+        // Save to local DB for future use
+        for (var report in reports) {
+          await _dbHelper!.insertReport(report);
+        }
+
+        print(
+          'SyncService: getReports - Saved ${reports.length} reports to local DB',
+        );
+        return reports;
+      } catch (e) {
+        print('SyncService: getReports - Error fetching from Firestore: $e');
+        return [];
+      }
+    } else {
+      print('SyncService: getReports - Offline and no local reports available');
+      return [];
+    }
   }
 
   Future<void> _createSampleReports() async {

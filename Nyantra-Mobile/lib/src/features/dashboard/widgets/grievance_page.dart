@@ -615,7 +615,8 @@ class _GrievancePageState extends State<GrievancePage> {
                                       Icon(
                                         Icons.error_outline,
                                         size: 64,
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: theme.textTheme.bodyMedium?.color
+                                            ?.withOpacity(0.7),
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
@@ -1076,7 +1077,11 @@ class _GrievancePageState extends State<GrievancePage> {
 
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.white.withOpacity(0.6)),
+        Icon(
+          icon,
+          size: 16,
+          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+        ),
         const SizedBox(width: 6),
         Expanded(
           child: Column(

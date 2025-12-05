@@ -257,7 +257,9 @@ class DatabaseHelper {
 
   Future<List<Report>> getReports() async {
     List<Map<String, dynamic>> maps = await query('reports');
-    return maps.map((map) => Report.fromJson(map, map['id'])).toList();
+    return maps
+        .map((map) => Report.fromJson(map, map['id']?.toString() ?? 'unknown'))
+        .toList();
   }
 
   // Sync methods

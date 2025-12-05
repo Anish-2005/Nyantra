@@ -437,7 +437,8 @@
       "applicationSubmitted": "आवेदन जमा किया गया",
       "documentVerified": "दस्तावेज़ सत्यापित",
       "paymentProcessed": "भुगतान संसाधित",
-      "reviewPending": "समीक्षा लंबित"
+      "reviewPending": "समीक्षा लंबित",
+      "noActivity": "कोई हाल की गतिविधि नहीं"
     },
     "performance": {
       "performance": "प्रदर्शन",

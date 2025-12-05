@@ -438,7 +438,8 @@
       "applicationSubmitted": "Application submitted",
       "documentVerified": "Document verified",
       "paymentProcessed": "Payment processed",
-      "reviewPending": "Review pending"
+      "reviewPending": "Review pending",
+      "noActivity": "No recent activity"
     },
     "performance": {
       "performance": "Performance",

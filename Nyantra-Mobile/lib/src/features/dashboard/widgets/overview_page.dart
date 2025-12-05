@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
+import '../../../core/models/activity_model.dart';
 
 class OverviewPage extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -20,11 +21,14 @@ class OverviewPage extends StatefulWidget {
 class _OverviewPageState extends State<OverviewPage> {
   bool _isLoading = true;
   Map<String, dynamic> _stats = {};
+  List<ActivityModel> _recentActivities = [];
+  bool _isLoadingActivities = true;
 
   @override
   void initState() {
     super.initState();
     _loadStats();
+    _loadRecentActivities();
   }
 
   Future<void> _loadStats() async {
@@ -41,6 +45,228 @@ class _OverviewPageState extends State<OverviewPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadRecentActivities() async {
+    try {
+      final activities = await DataService.getRecentActivities(limit: 5);
+      if (mounted) {
+        setState(() {
+          _recentActivities = activities;
+          _isLoadingActivities = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading recent activities: $e');
+      if (mounted) {
+        setState(() => _isLoadingActivities = false);
+      }
+    }
+  }
+
+  Widget _buildStatCard(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+    bool isDark,
+    int index,
+  ) {
+    final theme = Theme.of(context);
+
+    return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.cardColor.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.dividerColor.withOpacity(0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF06B6D4), const Color(0xFF8B5CF6)]
+                        : [const Color(0xFFFB7185), const Color(0xFFFB923C)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: (800 + index * 100).ms)
+        .scale(begin: const Offset(0.9, 0.9));
+  }
+
+  Widget _buildActionCard(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+    bool isDark,
+    int index,
+  ) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.cardColor.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.dividerColor.withOpacity(0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: theme.primaryColor, size: 24),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: (1200 + index * 100).ms)
+        .scale(begin: const Offset(0.9, 0.9));
+  }
+
+  Widget _buildActivityItem(
+    String text,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodyLarge?.color,
+                  fontWeight: FontWeight.w500,
+                ),
+                softWrap: true,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                time,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color?.withValues(
+                    alpha: 0.6,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} ${difference.inDays == 1 ? 'day' : 'days'} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ${difference.inHours == 1 ? 'hour' : 'hours'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} ${difference.inMinutes == 1 ? 'minute' : 'minutes'} ago';
+    } else {
+      return 'Just now';
     }
   }
 
@@ -399,38 +625,52 @@ class _OverviewPageState extends State<OverviewPage> {
                         // Constrain recent activity list height so it doesn't overflow
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxHeight: 220),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                _buildActivityItem(
-                                  localeProvider.translate(
-                                    'dashboard.activityItems.appSubmitted',
+                          child: _isLoadingActivities
+                              ? const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: CircularProgressIndicator(),
                                   ),
-                                  '2 ${localeProvider.translate('dashboard.timeAgo.hours')}',
-                                  Icons.check_circle,
-                                  Colors.green,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildActivityItem(
-                                  localeProvider.translate(
-                                    'dashboard.activityItems.docVerified',
+                                )
+                              : _recentActivities.isEmpty
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Text(
+                                      localeProvider.translate(
+                                        'dashboard.recentActivity.noActivity',
+                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color
+                                                ?.withOpacity(0.6),
+                                          ),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
-                                  '1 ${localeProvider.translate('dashboard.timeAgo.days')}',
-                                  Icons.verified,
-                                  Colors.blue,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildActivityItem(
-                                  localeProvider.translate(
-                                    'dashboard.activityItems.beneficiaryUpdated',
+                                )
+                              : SingleChildScrollView(
+                                  child: Column(
+                                    children: _recentActivities.map<Widget>((
+                                      activity,
+                                    ) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: _buildActivityItem(
+                                          activity.title,
+                                          _formatTimeAgo(activity.timestamp),
+                                          activity.icon,
+                                          activity.color,
+                                        ),
+                                      );
+                                    }).toList(),
                                   ),
-                                  '3 ${localeProvider.translate('dashboard.timeAgo.days')}',
-                                  Icons.edit,
-                                  Colors.orange,
                                 ),
-                              ],
-                            ),
-                          ),
                         ),
                       ],
                     ),
@@ -443,196 +683,6 @@ class _OverviewPageState extends State<OverviewPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context,
-    String value,
-    String label,
-    IconData icon,
-    bool isDark,
-    int index,
-  ) {
-    final theme = Theme.of(context);
-
-    return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.cardColor.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.dividerColor.withOpacity(0.1),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF06B6D4), const Color(0xFF8B5CF6)]
-                        : [const Color(0xFFFB7185), const Color(0xFFFB923C)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: Colors.white, size: 24),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.textTheme.bodyLarge?.color,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: (800 + index * 100).ms)
-        .scale(begin: const Offset(0.9, 0.9));
-  }
-
-  Widget _buildActionCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    VoidCallback onTap,
-    bool isDark,
-    int index,
-  ) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: theme.cardColor.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.dividerColor.withOpacity(0.1),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: theme.primaryColor, size: 24),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.textTheme.bodyLarge?.color,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: (1200 + index * 100).ms)
-        .scale(begin: const Offset(0.9, 0.9));
-  }
-
-  Widget _buildActivityItem(
-    String text,
-    String time,
-    IconData icon,
-    Color color,
-  ) {
-    final theme = Theme.of(context);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                text,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.w500,
-                ),
-                softWrap: true,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                time,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withValues(
-                    alpha: 0.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

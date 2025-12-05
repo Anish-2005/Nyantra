@@ -124,7 +124,9 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(locale.translate('disbursements.editDisbursement')),
+        title: Text(
+          locale.translate('dashboard.disbursements.editDisbursement'),
+        ),
         actions: [
           if (!_loading)
             TextButton(
@@ -213,7 +215,7 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
                       theme,
                       locale,
                       controller: _phoneCtrl,
-                      labelKey: 'disbursements.labels.phoneNumber',
+                      labelKey: 'dashboard.disbursements.labels.phoneNumber',
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 8),
@@ -221,21 +223,21 @@ class _DisbursementEditPageState extends State<DisbursementEditPage> {
                       theme,
                       locale,
                       controller: _bankAccountCtrl,
-                      labelKey: 'disbursements.labels.bankAccount',
+                      labelKey: 'dashboard.disbursements.labels.bankAccount',
                     ),
                     const SizedBox(height: 8),
                     _buildInput(
                       theme,
                       locale,
                       controller: _ifscCtrl,
-                      labelKey: 'disbursements.labels.ifscCode',
+                      labelKey: 'dashboard.disbursements.labels.ifscCode',
                     ),
                     const SizedBox(height: 8),
                     _buildInput(
                       theme,
                       locale,
                       controller: _addressCtrl,
-                      labelKey: 'disbursements.labels.address',
+                      labelKey: 'dashboard.disbursements.labels.address',
                       maxLines: 3,
                     ),
                   ],

@@ -59,30 +59,65 @@ class Report {
       return value.toString();
     }
 
-    return Report(
-      id: id,
-      name: json['name'] ?? 'Unnamed Report',
-      type: json['type'] ?? 'general',
-      category: json['category'] ?? 'analytical',
-      frequency: json['frequency'] ?? 'once',
-      status: json['status'] ?? 'completed',
-      fileSize: json['fileSize'],
-      fileFormat: json['fileFormat'] ?? 'PDF',
-      generatedDate: toIsoString(json['generatedDate']),
-      generatedBy: json['generatedBy'],
-      schedule: json['schedule'],
-      lastRun: toIsoString(json['lastRun']),
-      nextRun: toIsoString(json['nextRun']),
-      recordCount: json['recordCount'],
-      description: json['description'] ?? '',
-      parameters: json['parameters'],
-      downloadCount: json['downloadCount'] ?? 0,
-      isScheduled: json['isScheduled'] ?? false,
-      recipients: List<String>.from(json['recipients'] ?? []),
-      columns: List<String>.from(json['columns'] ?? []),
-      createdAt: toIsoString(json['createdAt']),
-      updatedAt: toIsoString(json['updatedAt']),
-    );
+    try {
+      final name = json['name'] ?? 'Unnamed Report';
+      final type = json['type'] ?? 'general';
+      final category = json['category'] ?? 'analytical';
+      final frequency = json['frequency'] ?? 'once';
+      final status = json['status'] ?? 'completed';
+      final description = json['description'] ?? '';
+
+      return Report(
+        id: id,
+        name: name,
+        type: type,
+        category: category,
+        frequency: frequency,
+        status: status,
+        fileSize: json['fileSize']?.toString(),
+        fileFormat: json['fileFormat'] ?? 'PDF',
+        generatedDate: toIsoString(json['generatedDate']),
+        generatedBy: json['generatedBy']?.toString(),
+        schedule: json['schedule'],
+        lastRun: toIsoString(json['lastRun']),
+        nextRun: toIsoString(json['nextRun']),
+        recordCount: json['recordCount'] is int
+            ? json['recordCount']
+            : int.tryParse(json['recordCount']?.toString() ?? ''),
+        description: description,
+        parameters: json['parameters'],
+        downloadCount: json['downloadCount'] is int
+            ? json['downloadCount']
+            : int.tryParse(json['downloadCount']?.toString() ?? '0') ?? 0,
+        isScheduled: json['isScheduled'] ?? false,
+        recipients: json['recipients'] is List
+            ? List<String>.from(json['recipients'])
+            : [],
+        columns: json['columns'] is List
+            ? List<String>.from(json['columns'])
+            : [],
+        createdAt: toIsoString(json['createdAt']),
+        updatedAt: toIsoString(json['updatedAt']),
+      );
+    } catch (e) {
+      print('Error parsing Report with id $id: $e');
+      print('Report data keys: ${json.keys.toList()}');
+      print('Report data: $json');
+      // Return a basic report to avoid crashes
+      return Report(
+        id: id,
+        name: json['name']?.toString() ?? 'Error Report',
+        type: 'error',
+        category: 'error',
+        frequency: 'once',
+        status: 'failed',
+        description: 'Error parsing report data: $e',
+        downloadCount: 0,
+        isScheduled: false,
+        recipients: [],
+        columns: [],
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {
