@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
-import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import AnalyticsChart from '@/components/AnalyticsChart';

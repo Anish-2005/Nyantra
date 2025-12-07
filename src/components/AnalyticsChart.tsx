@@ -3,6 +3,9 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
+import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 type DataPoint = { x: string | number | Date; y: number };
 
@@ -15,10 +18,104 @@ export default function AnalyticsChart({
 }) {
   const chartRef = useRef<any>(null);
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [componentsLoaded, setComponentsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [LineComp, setLineComp] = useState<any>(null);
   const [BarComp, setBarComp] = useState<any>(null);
+  const [realData, setRealData] = useState<{ id: string; label: string; color?: string; points: DataPoint[] }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data from Firestore
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const applicationsQuery = query(
+      collection(db, 'applications'),
+      where('ownerId', '==', user.uid),
+      orderBy('applicationDate', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(applicationsQuery, (snapshot) => {
+      const applications = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        applicationDate: doc.data().applicationDate?.toDate?.() || new Date()
+      }));
+
+      // Process data for different chart types
+      const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (29 - i));
+        date.setHours(0, 0, 0, 0);
+        return date;
+      });
+
+      // Applications over time
+      const applicationsOverTime = last30Days.map(date => {
+        const count = applications.filter(app => {
+          const appDate = new Date(app.applicationDate);
+          appDate.setHours(0, 0, 0, 0);
+          return appDate.getTime() === date.getTime();
+        }).length;
+        return { x: date, y: count };
+      });
+
+      // Status distribution (for bar chart)
+      const statusCounts = applications.reduce((acc, app) => {
+        const status = app.status || 'pending';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+        x: status,
+        y: count
+      }));
+
+      // Amount over time (if amount data exists)
+      const amountOverTime = last30Days.map(date => {
+        const total = applications
+          .filter(app => {
+            const appDate = new Date(app.applicationDate);
+            appDate.setHours(0, 0, 0, 0);
+            return appDate.getTime() === date.getTime();
+          })
+          .reduce((sum, app) => sum + (app.amount || 0), 0);
+        return { x: date, y: total };
+      });
+
+      const chartData = [
+        {
+          id: "applications",
+          label: "Applications Over Time",
+          points: applicationsOverTime,
+          color: theme === "dark" ? "rgba(59,130,246,1)" : "rgba(59,130,246,1)"
+        },
+        {
+          id: "amounts",
+          label: "Amount Over Time (₹)",
+          points: amountOverTime,
+          color: theme === "dark" ? "rgba(16,185,129,1)" : "rgba(16,185,129,1)"
+        },
+        {
+          id: "status",
+          label: "Applications by Status",
+          points: statusData,
+          color: theme === "dark" ? "rgba(245,158,11,1)" : "rgba(245,158,11,1)"
+        }
+      ];
+
+      setRealData(chartData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, theme]);
 
   // Generate fallback mock data
   const now = Date.now();
@@ -26,10 +123,13 @@ export default function AnalyticsChart({
     x: now - (29 - i) * 24 * 60 * 60 * 1000,
     y: Math.round(40 + Math.sin(i / 3) * 20 + Math.random() * 10),
   }));
-  const sets =
-    dataSets && dataSets.length
-      ? dataSets
-      : [{ id: "applications", label: "Applications", points: mock }];
+
+  // Use real data if available, otherwise fallback to mock data
+  const sets = dataSets && dataSets.length
+    ? dataSets
+    : realData.length > 0
+    ? realData
+    : [{ id: "applications", label: "Applications", points: mock }];
 
   // Set mobile state on client side
   useEffect(() => {
