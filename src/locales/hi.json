@@ -477,7 +477,9 @@
     "enterCaseNumber": "मामला संख्या दर्ज करें",
     "enterCourtName": "न्यायालय का नाम दर्ज करें",
     "confirmDeleteTitle": "हटाने की पुष्टि करें",
-    "confirmDeleteMessage": "आवेदन {id} हटाएं? यह क्रिया वापस नहीं की जा सकती।"
+    "confirmDeleteMessage": "आवेदन {id} हटाएं? यह क्रिया वापस नहीं की जा सकती।",
+    "pending": "लंबित",
+    "rejected": "अस्वीकृत"
   },
   "extracted": {
     "grievance": "शिकायत",

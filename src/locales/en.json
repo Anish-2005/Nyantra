@@ -477,7 +477,9 @@
     "enterCaseNumber": "Enter case number",
     "enterCourtName": "Enter court name",
     "confirmDeleteTitle": "Confirm delete",
-    "confirmDeleteMessage": "Delete application {id}? This action cannot be undone."
+    "confirmDeleteMessage": "Delete application {id}? This action cannot be undone.",
+    "pending": "Pending",
+    "rejected": "Rejected"
   },
   "extracted": {
     "grievance": "Grievance",

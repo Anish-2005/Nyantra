@@ -588,7 +588,9 @@
     "noApplications": "No applications found",
     "noApplicationsDescription": "Your submitted applications will appear here",
     "unknownApplicant": "Unknown Applicant",
-    "idLabel": "ID:"
+    "idLabel": "ID:",
+    "pending": "Pending",
+    "rejected": "Rejected"
   },
   "reports": {
     "pageTitle": "Reports",

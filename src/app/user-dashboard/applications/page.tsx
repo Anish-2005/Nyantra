@@ -1189,36 +1189,95 @@ export default function ApplicationsPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Summary Card */}
+            {/* Enhanced Summary Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl shadow-sm"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')}</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold theme-text-primary mb-1">{stats.total}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-white" />
                 </div>
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold theme-text-primary mb-1">
-                    {stats.approved}
-                  </div>
-                  <div className="text-xs theme-text-muted">{t('extracted.approved')}</div>
-                </div>
+                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.summary')}</h3>
               </div>
 
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <div className="text-xs theme-text-muted mb-1">{t('extracted.beneficiary_id')}</div>
-                <div className="font-medium theme-text-primary text-sm truncate">
-                  {userBeneficiary?.id || t('extracted.not_created')}
+              {/* Statistics Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                >
+                  <div className="text-3xl font-bold theme-text-primary mb-1 group-hover:text-blue-600 transition-colors">
+                    {stats.total}
+                  </div>
+                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
+                    {t('extracted.total')}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                >
+                  <div className="text-3xl font-bold theme-text-primary mb-1 group-hover:text-green-600 transition-colors">
+                    {stats.approved}
+                  </div>
+                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
+                    {t('extracted.approved')}
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Beneficiary Information Card */}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                className="theme-bg-glass rounded-xl p-4 border theme-border-glass hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium theme-text-muted uppercase tracking-wide mb-1">
+                      {t('extracted.beneficiary_id')}
+                    </div>
+                    <div className="font-mono text-sm theme-text-primary font-semibold truncate mb-1">
+                      {userBeneficiary?.id || t('extracted.not_created')}
+                    </div>
+                    <div className="text-xs theme-text-muted truncate">
+                      {userBeneficiary ? userBeneficiary.name : t('extracted.create_beneficiary_first')}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs theme-text-muted">
-                  {userBeneficiary ? userBeneficiary.name : t('extracted.create_beneficiary_first')}
-                </div>
+              </motion.div>
+
+              {/* Additional Stats */}
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                >
+                  <div className="text-xl font-bold theme-text-primary mb-1 group-hover:text-amber-600 transition-colors">
+                    {stats.pending}
+                  </div>
+                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
+                    {t('applications.pending')}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                >
+                  <div className="text-xl font-bold theme-text-primary mb-1 group-hover:text-red-600 transition-colors">
+                    {stats.rejected}
+                  </div>
+                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
+                    {t('applications.rejected')}
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
 

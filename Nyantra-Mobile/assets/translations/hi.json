@@ -577,7 +577,9 @@
     "noApplications": "कोई आवेदन नहीं मिला",
     "noApplicationsDescription": "आपके सबमिट किए गए आवेदन यहां दिखाई देंगे",
     "unknownApplicant": "अज्ञात आवेदक",
-    "idLabel": "आईडी:"
+    "idLabel": "आईडी:",
+    "pending": "लंबित",
+    "rejected": "अस्वीकृत"
   },
   "reports": {
     "pageTitle": "रिपोर्ट",
