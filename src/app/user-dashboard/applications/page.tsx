@@ -29,7 +29,6 @@ interface Application {
   medicalReport?: string;
   policeStation?: string;
   caseNumber?: string;
-  courtName?: string;
   applicationDate: string;
   status: string;
   amount: number;
@@ -73,7 +72,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
     medicalReport: '',
     policeStation: '',
     caseNumber: '',
-    courtName: '',
     amount: '',
     // beneficiary common fields
     fatherName: '',
@@ -129,7 +127,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           medicalReport: (formData as any).medicalReport || null,
           policeStation: (formData as any).policeStation || null,
           caseNumber: (formData as any).caseNumber || null,
-          courtName: (formData as any).courtName || null,
           // copy common beneficiary fields into the application
           fatherName: (formData as any).fatherName || null,
           email: (formData as any).email || null,
@@ -163,7 +160,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           medicalReport: (formData as any).medicalReport || null,
           policeStation: (formData as any).policeStation || null,
           caseNumber: (formData as any).caseNumber || null,
-          courtName: (formData as any).courtName || null,
           // copy common beneficiary fields into the application
           fatherName: (formData as any).fatherName || null,
           email: (formData as any).email || null,
@@ -214,7 +210,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         medicalReport: (initialData as any).medicalReport || '',
         policeStation: (initialData as any).policeStation || '',
         caseNumber: (initialData as any).caseNumber || '',
-        courtName: (initialData as any).courtName || '',
         amount: String(initialData.amount || ''),
         // populate beneficiary fields if present on the application
         fatherName: (initialData as any).fatherName || '',
@@ -248,7 +243,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         medicalReport: '',
         policeStation: '',
         caseNumber: '',
-        courtName: '',
         amount: userBeneficiary?.reliefAmount ? String(userBeneficiary.reliefAmount) : '',
         fatherName: userBeneficiary?.fatherName || '',
         email: userBeneficiary?.email || '',
@@ -487,16 +481,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
                 placeholder={t('applications.enterCaseNumber')}
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.courtName')}</label>
-              <input
-                type="text"
-                value={(formData as any).courtName}
-                onChange={(e) => handleInputChange('courtName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterCourtName')}
-              />
-            </div>
           </div>
         </div>
 
@@ -513,21 +497,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
               className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
               placeholder={t('applications.enterReliefAmount')}
             />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.priorityLevel')}</label>
-            <select
-              value={formData.priority}
-              onChange={(e) => handleInputChange('priority', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-            >
-              <option value="low">{t('extracted.low')}</option>
-              <option value="medium">{t('extracted.medium')}</option>
-              <option value="high">{t('extracted.high')}</option>
-            </select>
           </div>
         </div>
       </div>
@@ -678,7 +647,6 @@ export default function ApplicationsPage() {
           medicalReport: data.medicalReport || '',
           policeStation: data.policeStation || '',
           caseNumber: data.caseNumber || '',
-          courtName: data.courtName || '',
           // copy stored beneficiary fields if present
           fatherName: data.fatherName || '',
           email: data.email || '',
@@ -1359,7 +1327,7 @@ export default function ApplicationsPage() {
                     </div>
 
                     {/* Case Details Section */}
-                    {(selectedApplication.incidentDate || selectedApplication.firReport || selectedApplication.medicalReport || selectedApplication.policeStation || selectedApplication.caseNumber || selectedApplication.courtName) && (
+                    {(selectedApplication.incidentDate || selectedApplication.firReport || selectedApplication.medicalReport || selectedApplication.policeStation || selectedApplication.caseNumber) && (
                       <div className="pt-4 border-t theme-border-glass">
                         <div className="text-sm font-medium theme-text-primary mb-3">{t('applications.caseDetails')}</div>
                         <div className="space-y-2">
@@ -1391,12 +1359,6 @@ export default function ApplicationsPage() {
                             <div className="flex justify-between">
                               <span className="text-sm theme-text-muted">{t('applications.caseNumber')}:</span>
                               <span className="text-sm font-medium theme-text-primary">{selectedApplication.caseNumber}</span>
-                            </div>
-                          )}
-                          {selectedApplication.courtName && (
-                            <div className="flex justify-between">
-                              <span className="text-sm theme-text-muted">{t('applications.courtName')}:</span>
-                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.courtName}</span>
                             </div>
                           )}
                         </div>

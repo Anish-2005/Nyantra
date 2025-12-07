@@ -26,7 +26,6 @@ type Beneficiary = {
   district: string;
   state: string;
   address: string;
-  actType: string;
   registrationDate: any;
   priority: string;
   assignedOfficer: string;
@@ -57,7 +56,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     district: '',
     state: '',
     address: '',
-    actType: '',
     registrationDate: '',
     priority: 'medium',
     assignedOfficer: '',
@@ -131,11 +129,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       newErrors.address = 'Address is required';
     }
 
-    // Act Type validation
-    if (!formData.actType) {
-      newErrors.actType = 'Act type is required';
-    }
-
     // SC/ST Certificate validation (required for SC/ST category)
     if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
       newErrors.scStCertificate = 'SC/ST certificate number is required for SC/ST category';
@@ -195,7 +188,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           district: formData.district,
           state: formData.state,
           address: formData.address,
-          actType: formData.actType,
           registrationDate: regDate,
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
@@ -233,7 +225,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         district: initialData.district || '',
         state: initialData.state || '',
         address: initialData.address || '',
-        actType: initialData.actType || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
         priority: initialData.priority || 'medium',
         assignedOfficer: initialData.assignedOfficer || '',
@@ -287,20 +278,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
             <input required value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.address ? 'border-red-500' : ''}`} />
             {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
-            <select required value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.actType ? 'border-red-500' : ''}`}>
-              <option value="">{t('extracted.select_act_type') || 'Select Act Type'}</option>
-              <option value="PCR Act">{t('extracted.pcr_act') || 'PCR Act'}</option>
-              <option value="PoA Act">{t('extracted.poa_act') || 'PoA Act'}</option>
-            </select>
-            {errors.actType && <p className="text-red-500 text-xs mt-1">{errors.actType}</p>}
           </div>
         </div>
       </div>
@@ -443,7 +420,6 @@ export default function BeneficiariesPage() {
           district: data.district || '',
           state: data.state || '',
           address: data.address || '',
-          actType: data.actType || '',
           registrationDate: data.registrationDate,
           priority: data.priority || 'medium',
           assignedOfficer: data.assignedOfficer || '',
@@ -502,7 +478,6 @@ export default function BeneficiariesPage() {
         district: '',
         state: '',
         address: '',
-        actType: 'PCR Act',
         registrationDate: Timestamp.fromDate(new Date()),
         priority: 'medium',
         assignedOfficer: '',
@@ -866,18 +841,6 @@ export default function BeneficiariesPage() {
                                 <p className={`text-xs ${
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
                                 }`}>
-                                  {t('extracted.act_type')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {beneficiary.actType}
-                                </p>
-                              </div>
-                              <div>
-                                <p className={`text-xs ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
                                   {t('extracted.sc_st_certificate')}
                                 </p>
                                 <p className={`font-medium ${
@@ -1062,10 +1025,6 @@ export default function BeneficiariesPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.act_type')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.actType}</div>
-                      </div>
                       <div>
                         <div className="text-sm theme-text-muted mb-1">{t('extracted.sc_st_certificate')}</div>
                         <div className="font-medium theme-text-primary">{selectedBeneficiary.scStCertificate || '—'}</div>
