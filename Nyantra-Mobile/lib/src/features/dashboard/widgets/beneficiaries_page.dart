@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

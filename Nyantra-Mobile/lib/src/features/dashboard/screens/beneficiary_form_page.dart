@@ -248,12 +248,15 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
-                if (value?.isEmpty ?? true)
+                if (value?.isEmpty ?? true) {
                   return 'SC/ST Certificate Number is required';
-                if (value!.length < 5)
+                }
+                if (value!.length < 5) {
                   return 'Certificate Number must be at least 5 characters';
-                if (value.length > 20)
+                }
+                if (value.length > 20) {
                   return 'Certificate Number must be less than 20 characters';
+                }
                 // Basic pattern validation - alphanumeric with possible slashes or hyphens
                 final certPattern = RegExp(r'^[A-Za-z0-9/-]+$');
                 if (!certPattern.hasMatch(value)) {
