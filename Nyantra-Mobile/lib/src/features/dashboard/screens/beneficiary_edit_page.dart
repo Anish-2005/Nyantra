@@ -21,7 +21,6 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
   late TextEditingController _bankCtrl;
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
-  late TextEditingController _actTypeCtrl;
   late TextEditingController _categoryCtrl;
   late TextEditingController _fatherNameCtrl;
   late TextEditingController _districtCtrl;
@@ -41,7 +40,6 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
     _bankCtrl = TextEditingController(text: widget.beneficiary.bankAccount);
     _phoneCtrl = TextEditingController(text: widget.beneficiary.phone);
     _addressCtrl = TextEditingController(text: widget.beneficiary.address);
-    _actTypeCtrl = TextEditingController(text: widget.beneficiary.actType);
     _categoryCtrl = TextEditingController(text: widget.beneficiary.category);
     _fatherNameCtrl = TextEditingController(
       text: widget.beneficiary.fatherName,
@@ -66,7 +64,6 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
     _bankCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
-    _actTypeCtrl.dispose();
     _categoryCtrl.dispose();
     _fatherNameCtrl.dispose();
     _districtCtrl.dispose();
@@ -90,7 +87,6 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
       updates['district'] = _districtCtrl.text.trim();
       updates['state'] = _stateCtrl.text.trim();
       updates['address'] = _addressCtrl.text.trim();
-      updates['actType'] = _actTypeCtrl.text.trim();
       updates['age'] = int.tryParse(_ageCtrl.text.trim());
       updates['gender'] = _genderCtrl.text.trim();
       updates['category'] = _categoryCtrl.text.trim();
@@ -194,14 +190,6 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                 labelKey: 'beneficiaries.completeAddress',
                 maxLines: 3,
               ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _actTypeCtrl,
-                labelKey: 'beneficiaries.actType',
-              ),
-
               const SizedBox(height: 8),
               _buildInput(
                 theme,

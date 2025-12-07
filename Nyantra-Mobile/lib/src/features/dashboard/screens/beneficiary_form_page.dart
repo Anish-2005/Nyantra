@@ -17,7 +17,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
   late TextEditingController _bankCtrl;
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
-  late TextEditingController _actTypeCtrl;
   late TextEditingController _categoryCtrl;
   late TextEditingController _fatherNameCtrl;
   late TextEditingController _districtCtrl;
@@ -37,7 +36,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _bankCtrl = TextEditingController();
     _phoneCtrl = TextEditingController();
     _addressCtrl = TextEditingController();
-    _actTypeCtrl = TextEditingController();
     _categoryCtrl = TextEditingController();
     _fatherNameCtrl = TextEditingController();
     _districtCtrl = TextEditingController();
@@ -56,7 +54,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _bankCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
-    _actTypeCtrl.dispose();
     _categoryCtrl.dispose();
     _fatherNameCtrl.dispose();
     _districtCtrl.dispose();
@@ -87,7 +84,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         bankAccount: _bankCtrl.text.trim(),
         phone: _phoneCtrl.text.trim(),
         address: _addressCtrl.text.trim(),
-        actType: _actTypeCtrl.text.trim(),
         category: _categoryCtrl.text.trim(),
         fatherName: _fatherNameCtrl.text.trim(),
         district: _districtCtrl.text.trim(),
@@ -211,14 +207,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 if (value?.isEmpty ?? true) return 'IFSC code is required';
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _actTypeCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Act Type',
-                border: OutlineInputBorder(),
-              ),
             ),
             const SizedBox(height: 16),
             TextFormField(

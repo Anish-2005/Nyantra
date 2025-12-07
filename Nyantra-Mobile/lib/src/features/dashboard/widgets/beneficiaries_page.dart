@@ -465,23 +465,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
-                                                Icons.category,
-                                                localeProvider.translate(
-                                                  'extracted.act_type',
-                                                ),
-                                                beneficiary.actType ?? 'N/A',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 12),
-
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
                                                 Icons.label,
                                                 localeProvider.translate(
                                                   'extracted.category',

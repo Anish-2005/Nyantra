@@ -576,8 +576,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                         if (application.firReport != null ||
                                             application.medicalReport != null ||
                                             application.policeStation != null ||
-                                            application.caseNumber != null ||
-                                            application.courtName != null)
+                                            application.caseNumber != null)
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -644,19 +643,6 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     'applications.caseNumber',
                                                   ),
                                                   application.caseNumber!,
-                                                ),
-                                              if (application.courtName !=
-                                                      null &&
-                                                  application
-                                                      .courtName!
-                                                      .isNotEmpty)
-                                                _buildDetailItem(
-                                                  context,
-                                                  Icons.gavel,
-                                                  localeProvider.translate(
-                                                    'applications.courtName',
-                                                  ),
-                                                  application.courtName!,
                                                 ),
                                               const SizedBox(height: 12),
                                             ],
@@ -861,7 +847,6 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
   final _medicalReportCtrl = TextEditingController();
   final _policeStationCtrl = TextEditingController();
   final _caseNumberCtrl = TextEditingController();
-  final _courtNameCtrl = TextEditingController();
   bool _saving = false;
   bool _beneficiaryValid = false;
   bool _checkingBeneficiary = false;
@@ -890,7 +875,6 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _medicalReportCtrl.dispose();
     _policeStationCtrl.dispose();
     _caseNumberCtrl.dispose();
-    _courtNameCtrl.dispose();
     super.dispose();
   }
 
@@ -1006,9 +990,6 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
             : null,
         caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
             ? _caseNumberCtrl.text.trim()
-            : null,
-        courtName: _courtNameCtrl.text.trim().isNotEmpty
-            ? _courtNameCtrl.text.trim()
             : null,
         amount: double.tryParse(_amountCtrl.text.trim()),
         status: ApplicationStatus.pending,
@@ -1419,26 +1400,6 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _courtNameCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.courtName',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterCourtName',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),

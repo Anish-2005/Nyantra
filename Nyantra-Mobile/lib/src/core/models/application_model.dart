@@ -44,7 +44,6 @@ class ApplicationModel {
   final String? firReport;
   final String? medicalReport;
   final String? policeStation;
-  final String? courtName;
 
   ApplicationModel({
     required this.id,
@@ -86,7 +85,6 @@ class ApplicationModel {
     this.firReport,
     this.medicalReport,
     this.policeStation,
-    this.courtName,
   });
 
   factory ApplicationModel.fromFirestore(Map<String, dynamic> data, String id) {
@@ -149,7 +147,6 @@ class ApplicationModel {
       firReport: data['firReport'] as String?,
       medicalReport: data['medicalReport'] as String?,
       policeStation: data['policeStation'] as String?,
-      courtName: data['courtName'] as String?,
     );
   }
 
@@ -193,7 +190,6 @@ class ApplicationModel {
       if (firReport != null) 'firReport': firReport,
       if (medicalReport != null) 'medicalReport': medicalReport,
       if (policeStation != null) 'policeStation': policeStation,
-      if (courtName != null) 'courtName': courtName,
     };
   }
 
@@ -247,7 +243,6 @@ class ApplicationModel {
       firReport: json['firReport'],
       medicalReport: json['medicalReport'],
       policeStation: json['policeStation'],
-      courtName: json['courtName'],
     );
   }
 
@@ -292,7 +287,6 @@ class ApplicationModel {
       'firReport': firReport,
       'medicalReport': medicalReport,
       'policeStation': policeStation,
-      'courtName': courtName,
     };
   }
 
