@@ -472,18 +472,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                 beneficiary.actType ?? 'N/A',
                                               ),
                                             ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.attach_money,
-                                                localeProvider.translate(
-                                                  'applications.reliefAmountINR',
-                                                ),
-                                                beneficiary.reliefAmount != null
-                                                    ? '₹${beneficiary.reliefAmount!.toStringAsFixed(0)}'
-                                                    : 'N/A',
-                                              ),
-                                            ),
                                           ],
                                         ),
 
@@ -542,34 +530,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                   'applications.fatherName',
                                                 ),
                                                 beneficiary.fatherName ?? 'N/A',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 12),
-
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.confirmation_number,
-                                                localeProvider.translate(
-                                                  'applications.caseNumber',
-                                                ),
-                                                beneficiary.caseNumber ?? 'N/A',
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.event,
-                                                localeProvider.translate(
-                                                  'extracted.incidentDateHint',
-                                                ),
-                                                beneficiary.incidentDate ??
-                                                    'N/A',
                                               ),
                                             ),
                                           ],

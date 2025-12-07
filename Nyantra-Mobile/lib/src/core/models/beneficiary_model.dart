@@ -12,7 +12,6 @@ class BeneficiaryModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String? actType;
-  final double? reliefAmount;
   final String? category;
   final DateTime? registrationDate;
   final String? status;
@@ -36,7 +35,6 @@ class BeneficiaryModel {
     this.createdAt,
     this.updatedAt,
     this.actType,
-    this.reliefAmount,
     this.category,
     this.registrationDate,
     this.status,
@@ -66,9 +64,6 @@ class BeneficiaryModel {
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
       actType: data['actType'] as String?,
-      reliefAmount: data['reliefAmount'] != null
-          ? (data['reliefAmount'] as num).toDouble()
-          : null,
       category: data['category'] as String?,
       registrationDate: data['registrationDate'] != null
           ? (data['registrationDate'] as Timestamp).toDate()
@@ -96,7 +91,6 @@ class BeneficiaryModel {
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
       if (actType != null) 'actType': actType,
-      if (reliefAmount != null) 'reliefAmount': reliefAmount,
       if (category != null) 'category': category,
       if (registrationDate != null)
         'registrationDate': Timestamp.fromDate(registrationDate!),
@@ -128,7 +122,6 @@ class BeneficiaryModel {
           ? DateTime.parse(json['updatedAt'])
           : null,
       actType: json['actType'],
-      reliefAmount: json['reliefAmount'],
       category: json['category'],
       registrationDate: json['registrationDate'] != null
           ? DateTime.parse(json['registrationDate'])
@@ -157,7 +150,6 @@ class BeneficiaryModel {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'actType': actType,
-      'reliefAmount': reliefAmount,
       'category': category,
       'registrationDate': registrationDate?.toIso8601String(),
       'status': status,

@@ -91,7 +91,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         phone: _phoneCtrl.text.trim(),
         address: _addressCtrl.text.trim(),
         actType: _actTypeCtrl.text.trim(),
-        reliefAmount: double.tryParse(_reliefAmountCtrl.text.trim()),
         category: _categoryCtrl.text.trim(),
         fatherName: _fatherNameCtrl.text.trim(),
         district: _districtCtrl.text.trim(),

@@ -22,17 +22,15 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
   late TextEditingController _actTypeCtrl;
-  late TextEditingController _reliefAmountCtrl;
   late TextEditingController _categoryCtrl;
   late TextEditingController _fatherNameCtrl;
-  late TextEditingController _caseNumberCtrl;
   late TextEditingController _districtCtrl;
   late TextEditingController _stateCtrl;
-  late TextEditingController _incidentDateCtrl;
   late TextEditingController _ageCtrl;
   late TextEditingController _genderCtrl;
   late TextEditingController _maritalStatusCtrl;
   late TextEditingController _ifscCtrl;
+  late TextEditingController _scStCertificateCtrl;
   bool _saving = false;
 
   @override
@@ -44,27 +42,21 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
     _phoneCtrl = TextEditingController(text: widget.beneficiary.phone);
     _addressCtrl = TextEditingController(text: widget.beneficiary.address);
     _actTypeCtrl = TextEditingController(text: widget.beneficiary.actType);
-    _reliefAmountCtrl = TextEditingController(
-      text: widget.beneficiary.reliefAmount?.toString(),
-    );
     _categoryCtrl = TextEditingController(text: widget.beneficiary.category);
     _fatherNameCtrl = TextEditingController(
       text: widget.beneficiary.fatherName,
     );
-    _caseNumberCtrl = TextEditingController(
-      text: widget.beneficiary.caseNumber,
-    );
     _districtCtrl = TextEditingController(text: widget.beneficiary.district);
     _stateCtrl = TextEditingController(text: widget.beneficiary.state);
-    _incidentDateCtrl = TextEditingController(
-      text: widget.beneficiary.incidentDate,
-    );
     _ageCtrl = TextEditingController(text: widget.beneficiary.age?.toString());
     _genderCtrl = TextEditingController(text: widget.beneficiary.gender);
     _maritalStatusCtrl = TextEditingController(
       text: widget.beneficiary.maritalStatus,
     );
     _ifscCtrl = TextEditingController(text: widget.beneficiary.ifsc);
+    _scStCertificateCtrl = TextEditingController(
+      text: widget.beneficiary.scStCertificate,
+    );
   }
 
   @override
@@ -75,17 +67,15 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
     _actTypeCtrl.dispose();
-    _reliefAmountCtrl.dispose();
     _categoryCtrl.dispose();
     _fatherNameCtrl.dispose();
-    _caseNumberCtrl.dispose();
     _districtCtrl.dispose();
     _stateCtrl.dispose();
-    _incidentDateCtrl.dispose();
     _ageCtrl.dispose();
     _genderCtrl.dispose();
     _maritalStatusCtrl.dispose();
     _ifscCtrl.dispose();
+    _scStCertificateCtrl.dispose();
     super.dispose();
   }
 
@@ -101,19 +91,13 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
       updates['state'] = _stateCtrl.text.trim();
       updates['address'] = _addressCtrl.text.trim();
       updates['actType'] = _actTypeCtrl.text.trim();
-      updates['caseNumber'] = _caseNumberCtrl.text.trim();
-      // For incidentDate, we might need better parsing, but for now simple text
-      if (_incidentDateCtrl.text.trim().isNotEmpty) {
-        updates['incidentDate'] = _incidentDateCtrl.text.trim();
-      }
-      updates['reliefAmount'] =
-          double.tryParse(_reliefAmountCtrl.text.trim()) ?? 0.0;
       updates['age'] = int.tryParse(_ageCtrl.text.trim());
       updates['gender'] = _genderCtrl.text.trim();
       updates['category'] = _categoryCtrl.text.trim();
       updates['maritalStatus'] = _maritalStatusCtrl.text.trim();
       updates['bankAccount'] = _bankCtrl.text.trim();
       updates['ifsc'] = _ifscCtrl.text.trim();
+      updates['scStCertificate'] = _scStCertificateCtrl.text.trim();
 
       await DataService.updateBeneficiary(widget.beneficiary.id, updates);
       if (mounted) Navigator.of(context).pop(true);
@@ -217,28 +201,7 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                 controller: _actTypeCtrl,
                 labelKey: 'beneficiaries.actType',
               ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _caseNumberCtrl,
-                labelKey: 'beneficiaries.caseNumber',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _incidentDateCtrl,
-                labelKey: 'beneficiaries.incidentDate',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _reliefAmountCtrl,
-                labelKey: 'beneficiaries.reliefAmount',
-                keyboardType: TextInputType.number,
-              ),
+
               const SizedBox(height: 8),
               _buildInput(
                 theme,

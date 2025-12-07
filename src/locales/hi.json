@@ -479,6 +479,8 @@
     "verification_details": "सत्यापन विवरण",
     "sc_st_certificate": "एससी/एसटी प्रमाणपत्र",
     "total_disbursed_amount": "कुल वितरित राशि",
+    "beneficiary_status": "लाभार्थी स्थिति",
+    "registered_on": "पंजीकृत तिथि",
     "enterPhoneNumber": "फ़ोन नंबर दर्ज करें",
     "failed_to_submit_grievance": "शिकायत जमा करने में विफल",
     "loading_grievances": "शिकायतें लोड हो रही हैं...",

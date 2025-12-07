@@ -28,7 +28,6 @@ type Beneficiary = {
   address: string;
   actType: string;
   registrationDate: any;
-  reliefAmount: number;
   priority: string;
   assignedOfficer: string;
   category: string;
@@ -60,7 +59,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     address: '',
     actType: '',
     registrationDate: '',
-    reliefAmount: '',
     priority: 'medium',
     assignedOfficer: '',
     category: 'SC',
@@ -71,14 +69,113 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     ifsc: '',
     scStCertificate: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    // Father's name validation
+    if (!formData.fatherName.trim()) {
+      newErrors.fatherName = 'Father\'s name is required';
+    } else if (formData.fatherName.trim().length < 2) {
+      newErrors.fatherName = 'Father\'s name must be at least 2 characters';
+    }
+
+    // Aadhaar validation
+    if (!formData.aadhaarNumber.trim()) {
+      newErrors.aadhaarNumber = 'Aadhaar number is required';
+    } else if (!/^\d{12}$/.test(formData.aadhaarNumber.trim())) {
+      newErrors.aadhaarNumber = 'Aadhaar number must be 12 digits';
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Email validation (optional but must be valid if provided)
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // District validation
+    if (!formData.district.trim()) {
+      newErrors.district = 'District is required';
+    }
+
+    // State validation
+    if (!formData.state.trim()) {
+      newErrors.state = 'State is required';
+    }
+
+    // Address validation
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    }
+
+    // Act Type validation
+    if (!formData.actType) {
+      newErrors.actType = 'Act type is required';
+    }
+
+    // SC/ST Certificate validation (required for SC/ST category)
+    if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
+      newErrors.scStCertificate = 'SC/ST certificate number is required for SC/ST category';
+    }
+
+    // Age validation (optional but must be valid number if provided)
+    if (formData.age.trim() && (isNaN(Number(formData.age)) || Number(formData.age) < 0 || Number(formData.age) > 120)) {
+      newErrors.age = 'Please enter a valid age (0-120)';
+    }
+
+    // Gender validation
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+    }
+
+    // Bank Account validation
+    if (!formData.bankAccount.trim()) {
+      newErrors.bankAccount = 'Bank account number is required';
+    } else if (!/^\d{9,18}$/.test(formData.bankAccount.trim())) {
+      newErrors.bankAccount = 'Bank account number must be 9-18 digits';
+    }
+
+    // IFSC validation
+    if (!formData.ifsc.trim()) {
+      newErrors.ifsc = 'IFSC code is required';
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc.trim().toUpperCase())) {
+      newErrors.ifsc = 'Please enter a valid IFSC code (e.g., SBIN0001234)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       if (initialData && initialData.id) {
@@ -100,7 +197,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           address: formData.address,
           actType: formData.actType,
           registrationDate: regDate,
-          reliefAmount: parseFloat(formData.reliefAmount) || 0,
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
           category: formData.category,
@@ -139,7 +235,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         address: initialData.address || '',
         actType: initialData.actType || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
-        reliefAmount: initialData.reliefAmount ? String(initialData.reliefAmount) : '',
         priority: initialData.priority || 'medium',
         assignedOfficer: initialData.assignedOfficer || '',
         category: initialData.category || 'SC',
@@ -160,48 +255,52 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
-            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.name ? 'border-red-500' : ''}`} />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.fatheraposs_name')}</label>
-            <input value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.fatherName ? 'border-red-500' : ''}`} />
+            {errors.fatherName && <p className="text-red-500 text-xs mt-1">{errors.fatherName}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')}</label>
-            <input value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.aadhaarNumber ? 'border-red-500' : ''}`} />
+            {errors.aadhaarNumber && <p className="text-red-500 text-xs mt-1">{errors.aadhaarNumber}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')}</label>
-            <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.phone ? 'border-red-500' : ''}`} />
+            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
-            <input value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.district ? 'border-red-500' : ''}`} />
+            {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')}</label>
-            <input value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.state ? 'border-red-500' : ''}`} />
+            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
-            <input value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.address ? 'border-red-500' : ''}`} />
+            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.financial_details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
-            <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            <select required value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.actType ? 'border-red-500' : ''}`}>
+              <option value="">{t('extracted.select_act_type') || 'Select Act Type'}</option>
               <option value="PCR Act">{t('extracted.pcr_act') || 'PCR Act'}</option>
               <option value="PoA Act">{t('extracted.poa_act') || 'PoA Act'}</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')}</label>
-            <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            {errors.actType && <p className="text-red-500 text-xs mt-1">{errors.actType}</p>}
           </div>
         </div>
       </div>
@@ -211,7 +310,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
-            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" placeholder="Certificate Number" />
+            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`} placeholder="Certificate Number" />
+            {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
           </div>
         </div>
       </div>
@@ -221,16 +321,18 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.age')}</label>
-            <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.age ? 'border-red-500' : ''}`} />
+            {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.gender')}</label>
-            <select value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            <select required value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.gender ? 'border-red-500' : ''}`}>
               <option value="">{t('extracted.select_gender')}</option>
               <option value="Male">{t('extracted.male')}</option>
               <option value="Female">{t('extracted.female')}</option>
               <option value="Other">{t('extracted.other')}</option>
             </select>
+            {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.category_1') || 'Category'}</label>
@@ -253,11 +355,13 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>
-            <input value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.bankAccount ? 'border-red-500' : ''}`} />
+            {errors.bankAccount && <p className="text-red-500 text-xs mt-1">{errors.bankAccount}</p>}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.ifsc_code')}</label>
-            <input value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.ifsc ? 'border-red-500' : ''}`} />
+            {errors.ifsc && <p className="text-red-500 text-xs mt-1">{errors.ifsc}</p>}
           </div>
         </div>
       </div>
@@ -341,7 +445,6 @@ export default function BeneficiariesPage() {
           address: data.address || '',
           actType: data.actType || '',
           registrationDate: data.registrationDate,
-          reliefAmount: data.reliefAmount || 0,
           priority: data.priority || 'medium',
           assignedOfficer: data.assignedOfficer || '',
           category: data.category || 'SC',
@@ -401,7 +504,6 @@ export default function BeneficiariesPage() {
         address: '',
         actType: 'PCR Act',
         registrationDate: Timestamp.fromDate(new Date()),
-        reliefAmount: 0,
         priority: 'medium',
         assignedOfficer: '',
         category: 'SC',
@@ -776,12 +878,12 @@ export default function BeneficiariesPage() {
                                 <p className={`text-xs ${
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
                                 }`}>
-                                  {t('extracted.relief_amount')}
+                                  {t('extracted.sc_st_certificate')}
                                 </p>
                                 <p className={`font-medium ${
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
                                 }`}>
-                                  {formatCurrency(beneficiary.reliefAmount)}
+                                  {beneficiary.scStCertificate || 'Not provided'}
                                 </p>
                               </div>
                               <div>
@@ -864,35 +966,48 @@ export default function BeneficiariesPage() {
 
           {/* Sidebar - Selected Beneficiary Details */}
           <div className="space-y-6">
-            {/* Summary Card */}
+            {/* Beneficiary Status Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               className="theme-bg-card theme-border-glass border rounded-2xl p-6"
             >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.summary')}</h3>
+              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_status')}</h3>
               
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold theme-text-primary mb-1">{beneficiaries.length}</div>
-                  <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
-                </div>
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold theme-text-primary mb-1">
-                    {beneficiaries.filter(b => b.verificationStatus === 'verified').length}
+              <div className="space-y-4">
+                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm theme-text-muted">{t('extracted.status')}</span>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      beneficiaries[0]?.status === 'approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                      beneficiaries[0]?.status === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                      beneficiaries[0]?.status === 'documents-required' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
+                      'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                    }`}>
+                      {beneficiaries[0]?.status?.replace('-', ' ') || 'pending'}
+                    </span>
                   </div>
-                  <div className="text-xs theme-text-muted">{t('extracted.verified')}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm theme-text-muted">{t('extracted.verification')}</span>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      beneficiaries[0]?.verificationStatus === 'verified' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                      beneficiaries[0]?.verificationStatus === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                      'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {beneficiaries[0]?.verificationStatus || 'pending'}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <div className="text-xs theme-text-muted mb-1">{t('extracted.most_recent')}</div>
-                <div className="font-medium theme-text-primary text-sm truncate">
-                  {beneficiaries[0]?.name || '—'}
-                </div>
-                <div className="text-xs theme-text-muted">
-                  {beneficiaries[0] ? formatDate(beneficiaries[0].createdAt) : '--'}
+                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass">
+                  <div className="text-xs theme-text-muted mb-1">{t('extracted.registered_on')}</div>
+                  <div className="font-medium theme-text-primary text-sm">
+                    {beneficiaries[0] ? formatDate(beneficiaries[0].createdAt) : '—'}
+                  </div>
+                  <div className="text-xs theme-text-muted mt-1">
+                    {t('extracted.last_updated')}: {beneficiaries[0] ? formatDate(beneficiaries[0].lastUpdate) : '—'}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -959,12 +1074,12 @@ export default function BeneficiariesPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.relief_amount')}</div>
-                        <div className="font-medium theme-text-primary">{formatCurrency(selectedBeneficiary.reliefAmount)}</div>
-                      </div>
-                      <div>
                         <div className="text-sm theme-text-muted mb-1">{t('extracted.category_1')}</div>
                         <div className="font-medium theme-text-primary">{selectedBeneficiary.category}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')}</div>
+                        <div className="font-medium theme-text-primary">{selectedBeneficiary.status}</div>
                       </div>
                     </div>
 
