@@ -220,7 +220,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         fatherName: (initialData as any).fatherName || '',
         email: (initialData as any).email || '',
         address: (initialData as any).address || '',
-        caseNumber: (initialData as any).caseNumber || '',
         registrationDate: (initialData as any).registrationDate && (initialData as any).registrationDate.toDate ? (initialData as any).registrationDate.toDate().toISOString() : ((initialData as any).registrationDate || ''),
         category: (initialData as any).category || '',
         age: (initialData as any).age ? String((initialData as any).age) : '',
