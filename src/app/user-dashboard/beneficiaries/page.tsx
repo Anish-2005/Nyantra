@@ -27,8 +27,6 @@ type Beneficiary = {
   state: string;
   address: string;
   actType: string;
-  caseNumber: string;
-  incidentDate: string;
   registrationDate: any;
   reliefAmount: number;
   priority: string;
@@ -44,6 +42,7 @@ type Beneficiary = {
   documents: number;
   lastUpdate: any;
   createdAt: any;
+  scStCertificate: string;
 };
 
 // New Beneficiary Form Component (same as officer page)
@@ -60,8 +59,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     state: '',
     address: '',
     actType: '',
-    caseNumber: '',
-    incidentDate: '',
     registrationDate: '',
     reliefAmount: '',
     priority: 'medium',
@@ -71,7 +68,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     gender: '',
     maritalStatus: '',
     bankAccount: '',
-    ifsc: ''
+    ifsc: '',
+    scStCertificate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,8 +99,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           state: formData.state,
           address: formData.address,
           actType: formData.actType,
-          caseNumber: formData.caseNumber,
-          incidentDate: formData.incidentDate,
           registrationDate: regDate,
           reliefAmount: parseFloat(formData.reliefAmount) || 0,
           priority: formData.priority,
@@ -113,6 +109,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           maritalStatus: formData.maritalStatus || null,
           bankAccount: formData.bankAccount || null,
           ifsc: formData.ifsc || null,
+          scStCertificate: formData.scStCertificate,
           lastUpdate: Timestamp.fromDate(new Date())
         };
 
@@ -141,8 +138,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         state: initialData.state || '',
         address: initialData.address || '',
         actType: initialData.actType || '',
-        caseNumber: initialData.caseNumber || '',
-        incidentDate: initialData.incidentDate || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
         reliefAmount: initialData.reliefAmount ? String(initialData.reliefAmount) : '',
         priority: initialData.priority || 'medium',
@@ -152,7 +147,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         gender: initialData.gender || '',
         maritalStatus: initialData.maritalStatus || '',
         bankAccount: initialData.bankAccount || '',
-        ifsc: initialData.ifsc || ''
+        ifsc: initialData.ifsc || '',
+        scStCertificate: initialData.scStCertificate || ''
       });
     }
   }, [initialData]);
@@ -194,7 +190,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_financial_details')}</h3>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.financial_details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
@@ -204,16 +200,18 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.case_number')}</label>
-            <input value={formData.caseNumber} onChange={(e) => handleInputChange('caseNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')}</label>
-            <input type="date" value={formData.incidentDate} onChange={(e) => handleInputChange('incidentDate', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-          <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')}</label>
             <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.verification_details')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
+            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" placeholder="Certificate Number" />
           </div>
         </div>
       </div>
@@ -342,8 +340,6 @@ export default function BeneficiariesPage() {
           state: data.state || '',
           address: data.address || '',
           actType: data.actType || '',
-          caseNumber: data.caseNumber || '',
-          incidentDate: data.incidentDate || '',
           registrationDate: data.registrationDate,
           reliefAmount: data.reliefAmount || 0,
           priority: data.priority || 'medium',
@@ -358,7 +354,8 @@ export default function BeneficiariesPage() {
           verificationStatus: data.verificationStatus || 'pending',
           documents: data.documents || 0,
           lastUpdate: data.lastUpdate,
-          createdAt: data.createdAt
+          createdAt: data.createdAt,
+          scStCertificate: data.scStCertificate || ''
         });
       });
       
@@ -403,8 +400,6 @@ export default function BeneficiariesPage() {
         state: '',
         address: '',
         actType: 'PCR Act',
-        caseNumber: '',
-        incidentDate: '',
         registrationDate: Timestamp.fromDate(new Date()),
         reliefAmount: 0,
         priority: 'medium',
@@ -419,7 +414,8 @@ export default function BeneficiariesPage() {
         verificationStatus: 'pending',
         documents: 0,
         lastUpdate: Timestamp.fromDate(new Date()),
-        createdAt: Timestamp.fromDate(new Date())
+        createdAt: Timestamp.fromDate(new Date()),
+        scStCertificate: ''
       };
 
       const ref = doc(db, 'beneficiaries', newId);
@@ -956,8 +952,8 @@ export default function BeneficiariesPage() {
                         <div className="font-medium theme-text-primary">{selectedBeneficiary.actType}</div>
                       </div>
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.case_number')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.caseNumber || '—'}</div>
+                        <div className="text-sm theme-text-muted mb-1">{t('extracted.sc_st_certificate')}</div>
+                        <div className="font-medium theme-text-primary">{selectedBeneficiary.scStCertificate || '—'}</div>
                       </div>
                     </div>
 

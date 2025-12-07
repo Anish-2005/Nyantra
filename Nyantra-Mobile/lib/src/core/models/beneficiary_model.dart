@@ -17,13 +17,12 @@ class BeneficiaryModel {
   final DateTime? registrationDate;
   final String? status;
   final String? fatherName;
-  final String? caseNumber;
   final String? district;
   final String? state;
-  final String? incidentDate;
   final int? age;
   final String? gender;
   final String? maritalStatus;
+  final String? scStCertificate;
 
   BeneficiaryModel({
     required this.id,
@@ -42,13 +41,12 @@ class BeneficiaryModel {
     this.registrationDate,
     this.status,
     this.fatherName,
-    this.caseNumber,
     this.district,
     this.state,
-    this.incidentDate,
     this.age,
     this.gender,
     this.maritalStatus,
+    this.scStCertificate,
   });
 
   factory BeneficiaryModel.fromFirestore(Map<String, dynamic> data, String id) {
@@ -77,13 +75,12 @@ class BeneficiaryModel {
           : null,
       status: data['status'] as String?,
       fatherName: data['fatherName'] as String?,
-      caseNumber: data['caseNumber'] as String?,
       district: data['district'] as String?,
       state: data['state'] as String?,
-      incidentDate: data['incidentDate'] as String?,
       age: data['age'] as int?,
       gender: data['gender'] as String?,
       maritalStatus: data['maritalStatus'] as String?,
+      scStCertificate: data['scStCertificate'] as String?,
     );
   }
 
@@ -105,13 +102,12 @@ class BeneficiaryModel {
         'registrationDate': Timestamp.fromDate(registrationDate!),
       if (status != null) 'status': status,
       if (fatherName != null) 'fatherName': fatherName,
-      if (caseNumber != null) 'caseNumber': caseNumber,
       if (district != null) 'district': district,
       if (state != null) 'state': state,
-      if (incidentDate != null) 'incidentDate': incidentDate,
       if (age != null) 'age': age,
       if (gender != null) 'gender': gender,
       if (maritalStatus != null) 'maritalStatus': maritalStatus,
+      if (scStCertificate != null) 'scStCertificate': scStCertificate,
     };
   }
 
@@ -139,13 +135,12 @@ class BeneficiaryModel {
           : null,
       status: json['status'],
       fatherName: json['fatherName'],
-      caseNumber: json['caseNumber'],
       district: json['district'],
       state: json['state'],
-      incidentDate: json['incidentDate'],
       age: json['age'],
       gender: json['gender'],
       maritalStatus: json['maritalStatus'],
+      scStCertificate: json['scStCertificate'],
     );
   }
 
@@ -167,13 +162,12 @@ class BeneficiaryModel {
       'registrationDate': registrationDate?.toIso8601String(),
       'status': status,
       'fatherName': fatherName,
-      'caseNumber': caseNumber,
       'district': district,
       'state': state,
-      'incidentDate': incidentDate,
       'age': age,
       'gender': gender,
       'maritalStatus': maritalStatus,
+      'scStCertificate': scStCertificate,
     };
   }
 }

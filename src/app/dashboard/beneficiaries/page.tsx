@@ -39,8 +39,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     state: '',
     address: '',
     actType: '',
-    caseNumber: '',
-    incidentDate: '',
     registrationDate: '',
     reliefAmount: '',
     priority: 'medium',
@@ -50,16 +48,82 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     gender: '',
     maritalStatus: '',
     bankAccount: '',
-    ifsc: ''
+    ifsc: '',
+    scStCertificate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    // Required field validations
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    if (!formData.aadhaarNumber.trim()) {
+      errors.aadhaarNumber = 'Aadhaar number is required';
+    } else if (!/^\d{12}$/.test(formData.aadhaarNumber)) {
+      errors.aadhaarNumber = 'Aadhaar number must be 12 digits';
+    }
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      errors.phone = 'Phone number must be 10 digits';
+    }
+    if (!formData.district.trim()) {
+      errors.district = 'District is required';
+    }
+    if (!formData.state.trim()) {
+      errors.state = 'State is required';
+    }
+    if (!formData.actType.trim()) {
+      errors.actType = 'Act type is required';
+    }
+    if (!formData.reliefAmount.trim()) {
+      errors.reliefAmount = 'Relief amount is required';
+    }
+
+    // SC/ST Certificate validation - required when category is SC or ST
+    if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
+      errors.scStCertificate = 'SC/ST Certificate is required for SC/ST category';
+    } else if (formData.scStCertificate.trim()) {
+      // Validate certificate format - should be alphanumeric, typically 8-15 characters
+      const certPattern = /^[A-Za-z0-9\-\/]{8,15}$/;
+      if (!certPattern.test(formData.scStCertificate.trim())) {
+        errors.scStCertificate = 'Invalid certificate format. Should be 8-15 alphanumeric characters';
+      }
+    }
+
+    // Bank account validation if provided
+    if (formData.bankAccount.trim() && !/^\d{9,18}$/.test(formData.bankAccount)) {
+      errors.bankAccount = 'Bank account number should be 9-18 digits';
+    }
+
+    // IFSC validation if provided
+    if (formData.ifsc.trim() && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc.toUpperCase())) {
+      errors.ifsc = 'Invalid IFSC code format';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const beneficiariesRef = collection(db, 'beneficiaries');
@@ -81,8 +145,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           state: formData.state,
           address: formData.address,
           actType: formData.actType,
-          caseNumber: formData.caseNumber,
-          incidentDate: formData.incidentDate,
           registrationDate: regDate,
           reliefAmount: parseFloat(formData.reliefAmount) || 0,
           priority: formData.priority,
@@ -93,6 +155,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           maritalStatus: formData.maritalStatus || null,
           bankAccount: formData.bankAccount || null,
           ifsc: formData.ifsc || null,
+          scStCertificate: formData.scStCertificate,
           lastUpdate: Timestamp.fromDate(new Date())
         };
 
@@ -111,8 +174,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           state: formData.state,
           address: formData.address,
           actType: formData.actType,
-          caseNumber: formData.caseNumber,
-          incidentDate: formData.incidentDate,
           registrationDate: formData.registrationDate ? Timestamp.fromDate(new Date(formData.registrationDate)) : Timestamp.fromDate(new Date()),
           status: 'pending-verification',
           reliefAmount: parseFloat(formData.reliefAmount) || 0,
@@ -127,7 +188,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           gender: formData.gender || null,
           maritalStatus: formData.maritalStatus || null,
           bankAccount: formData.bankAccount || null,
-          ifsc: formData.ifsc || null
+          ifsc: formData.ifsc || null,
+          scStCertificate: formData.scStCertificate
         };
 
         // Generate beneficiary id starting with `BEN` followed by digits
@@ -158,8 +220,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         state: initialData.state || '',
         address: initialData.address || '',
         actType: initialData.actType || '',
-        caseNumber: initialData.caseNumber || '',
-        incidentDate: initialData.incidentDate || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
         reliefAmount: initialData.reliefAmount ? String(initialData.reliefAmount) : '',
         priority: initialData.priority || 'medium',
@@ -169,7 +229,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         gender: initialData.gender || '',
         maritalStatus: initialData.maritalStatus || '',
         bankAccount: initialData.bankAccount || '',
-        ifsc: initialData.ifsc || ''
+        ifsc: initialData.ifsc || '',
+        scStCertificate: initialData.scStCertificate || ''
       });
     }
   }, [initialData]);
@@ -181,7 +242,10 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
-            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.name ? 'border-red-500' : ''}`} />
+            {validationErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.fatheraposs_name')}</label>
@@ -189,19 +253,31 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')}</label>
-            <input value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.aadhaarNumber ? 'border-red-500' : ''}`} />
+            {validationErrors.aadhaarNumber && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.aadhaarNumber}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')}</label>
-            <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.phone ? 'border-red-500' : ''}`} />
+            {validationErrors.phone && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
-            <input value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.district ? 'border-red-500' : ''}`} />
+            {validationErrors.district && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.district}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')}</label>
-            <input value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.state ? 'border-red-500' : ''}`} />
+            {validationErrors.state && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.state}</p>
+            )}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
@@ -211,26 +287,38 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_financial_details')}</h3>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.financial_details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
-            <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.actType ? 'border-red-500' : ''}`}>
+              <option value="">{t('extracted.select_act_type')}</option>
               <option value="PCR Act">{t('extracted.pcr_act') || 'PCR Act'}</option>
               <option value="PoA Act">{t('extracted.poa_act') || 'PoA Act'}</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.case_number')}</label>
-            <input value={formData.caseNumber} onChange={(e) => handleInputChange('caseNumber', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')}</label>
-            <input type="date" value={formData.incidentDate} onChange={(e) => handleInputChange('incidentDate', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            {validationErrors.actType && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.actType}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')}</label>
-            <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.reliefAmount ? 'border-red-500' : ''}`} />
+            {validationErrors.reliefAmount && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.reliefAmount}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.verification_details')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
+            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`} placeholder="Certificate Number" />
+            {validationErrors.scStCertificate && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.scStCertificate}</p>
+            )}
           </div>
         </div>
       </div>
@@ -272,11 +360,17 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>
-            <input value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.bankAccount ? 'border-red-500' : ''}`} />
+            {validationErrors.bankAccount && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.bankAccount}</p>
+            )}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.ifsc_code')}</label>
-            <input value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
+            <input value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.ifsc ? 'border-red-500' : ''}`} />
+            {validationErrors.ifsc && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.ifsc}</p>
+            )}
           </div>
         </div>
       </div>
@@ -356,7 +450,7 @@ const BeneficiariesPage = () => {
 
   // Export helpers
   const exportBeneficiariesData = (items: any[]) => {
-    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'Case Number', 'Incident Date', 'Registration Date', 'Status', 'Verification', 'Relief (INR)', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
+    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Relief (INR)', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
     const rows = items.map(b => {
       const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
         ? b.registrationDate.toDate().toISOString()
@@ -369,8 +463,7 @@ const BeneficiariesPage = () => {
         b.district,
         b.state,
         b.actType,
-        b.caseNumber,
-        b.incidentDate,
+        b.scStCertificate || '',
         reg,
         b.status || '',
         b.verificationStatus || '',

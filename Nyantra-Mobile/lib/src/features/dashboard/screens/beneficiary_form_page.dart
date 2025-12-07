@@ -21,14 +21,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
   late TextEditingController _reliefAmountCtrl;
   late TextEditingController _categoryCtrl;
   late TextEditingController _fatherNameCtrl;
-  late TextEditingController _caseNumberCtrl;
   late TextEditingController _districtCtrl;
   late TextEditingController _stateCtrl;
-  late TextEditingController _incidentDateCtrl;
   late TextEditingController _ageCtrl;
   late TextEditingController _genderCtrl;
   late TextEditingController _maritalStatusCtrl;
   late TextEditingController _ifscCtrl;
+  late TextEditingController _scStCertificateCtrl;
   bool _saving = false;
 
   @override
@@ -43,14 +42,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _reliefAmountCtrl = TextEditingController();
     _categoryCtrl = TextEditingController();
     _fatherNameCtrl = TextEditingController();
-    _caseNumberCtrl = TextEditingController();
     _districtCtrl = TextEditingController();
     _stateCtrl = TextEditingController();
-    _incidentDateCtrl = TextEditingController();
     _ageCtrl = TextEditingController();
     _genderCtrl = TextEditingController();
     _maritalStatusCtrl = TextEditingController();
     _ifscCtrl = TextEditingController();
+    _scStCertificateCtrl = TextEditingController();
   }
 
   @override
@@ -64,14 +62,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _reliefAmountCtrl.dispose();
     _categoryCtrl.dispose();
     _fatherNameCtrl.dispose();
-    _caseNumberCtrl.dispose();
     _districtCtrl.dispose();
     _stateCtrl.dispose();
-    _incidentDateCtrl.dispose();
     _ageCtrl.dispose();
     _genderCtrl.dispose();
     _maritalStatusCtrl.dispose();
     _ifscCtrl.dispose();
+    _scStCertificateCtrl.dispose();
     super.dispose();
   }
 
@@ -97,14 +94,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         reliefAmount: double.tryParse(_reliefAmountCtrl.text.trim()),
         category: _categoryCtrl.text.trim(),
         fatherName: _fatherNameCtrl.text.trim(),
-        caseNumber: _caseNumberCtrl.text.trim(),
         district: _districtCtrl.text.trim(),
         state: _stateCtrl.text.trim(),
-        incidentDate: _incidentDateCtrl.text.trim(),
         age: int.tryParse(_ageCtrl.text.trim()),
         gender: _genderCtrl.text.trim(),
         maritalStatus: _maritalStatusCtrl.text.trim(),
         ifsc: _ifscCtrl.text.trim(),
+        scStCertificate: _scStCertificateCtrl.text.trim(),
         ownerId: user.uid,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -255,14 +251,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _caseNumberCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Case Number',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
               controller: _districtCtrl,
               decoration: const InputDecoration(
                 labelText: 'District',
@@ -279,11 +267,25 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _incidentDateCtrl,
+              controller: _scStCertificateCtrl,
               decoration: const InputDecoration(
-                labelText: 'Incident Date',
+                labelText: 'SC/ST Certificate Number',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true)
+                  return 'SC/ST Certificate Number is required';
+                if (value!.length < 5)
+                  return 'Certificate Number must be at least 5 characters';
+                if (value.length > 20)
+                  return 'Certificate Number must be less than 20 characters';
+                // Basic pattern validation - alphanumeric with possible slashes or hyphens
+                final certPattern = RegExp(r'^[A-Za-z0-9/-]+$');
+                if (!certPattern.hasMatch(value)) {
+                  return 'Certificate Number can only contain letters, numbers, slashes, and hyphens';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
