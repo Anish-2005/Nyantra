@@ -28,6 +28,11 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         actType: '',
         beneficiaryId: '',
         incidentDate: '',
+        firReport: '',
+        medicalReport: '',
+        policeStation: '',
+        caseNumber: '',
+        courtName: '',
         amount: '',
         priority: 'medium',
         assignedOfficer: ''
@@ -72,6 +77,11 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     actType: formData.actType,
                     beneficiaryId: formData.beneficiaryId,
                     incidentDate: formData.incidentDate,
+                    firReport: formData.firReport,
+                    medicalReport: formData.medicalReport,
+                    policeStation: formData.policeStation,
+                    caseNumber: formData.caseNumber,
+                    courtName: formData.courtName,
                     // keep original applicationDate if present
                     lastUpdate: Timestamp.fromDate(new Date()),
                     status: initialData.status || 'pending',
@@ -97,6 +107,11 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     actType: formData.actType,
                     beneficiaryId: formData.beneficiaryId,
                     incidentDate: formData.incidentDate,
+                    firReport: formData.firReport,
+                    medicalReport: formData.medicalReport,
+                    policeStation: formData.policeStation,
+                    caseNumber: formData.caseNumber,
+                    courtName: formData.courtName,
                     applicationDate: Timestamp.fromDate(new Date()),
                     status: 'pending',
                     amount: parseFloat(formData.amount) || 0,
@@ -140,6 +155,11 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 actType: initialData.actType || '',
                 beneficiaryId: (initialData as any).beneficiaryId || '',
                 incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
+                firReport: (initialData as any).firReport || '',
+                medicalReport: (initialData as any).medicalReport || '',
+                policeStation: (initialData as any).policeStation || '',
+                caseNumber: (initialData as any).caseNumber || '',
+                courtName: (initialData as any).courtName || '',
                 amount: String(initialData.amount || ''),
                 priority: initialData.priority || 'medium',
                 assignedOfficer: initialData.assignedOfficer || ''
@@ -150,6 +170,28 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 // optimistic mark - we'll validate on blur or explicitly
                 setBeneficiaryExists(true);
             }
+        } else {
+            // Reset form for new application
+            setFormData({
+                applicantName: '',
+                aadhaar: '',
+                phone: '',
+                district: '',
+                state: '',
+                actType: '',
+                beneficiaryId: '',
+                incidentDate: '',
+                firReport: '',
+                medicalReport: '',
+                policeStation: '',
+                caseNumber: '',
+                courtName: '',
+                amount: '',
+                priority: 'medium',
+                assignedOfficer: ''
+            });
+            setBeneficiaryExists(null);
+            setBeneficiaryAutoFilled(false);
         }
     }, [initialData]);
 
@@ -363,6 +405,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                             className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                         />
                     </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 mt-4">
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
                         <input
@@ -376,6 +421,66 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                             placeholder={t('applications.enterReliefAmount')}
                         />
                     </div>
+                </div>
+
+                {/* Case Details */}
+                <div className="mt-6">
+                    <h4 className="text-md font-semibold theme-text-primary mb-4">{t('applications.caseDetails')}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.firReport')}</label>
+                            <input
+                                type="text"
+                                value={formData.firReport}
+                                onChange={(e) => handleInputChange('firReport', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                placeholder={t('applications.enterFirReport')}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.medicalReport')}</label>
+                            <input
+                                type="text"
+                                value={formData.medicalReport}
+                                onChange={(e) => handleInputChange('medicalReport', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                placeholder={t('applications.enterMedicalReport')}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.policeStation')}</label>
+                            <input
+                                type="text"
+                                value={formData.policeStation}
+                                onChange={(e) => handleInputChange('policeStation', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                placeholder={t('applications.enterPoliceStation')}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.caseNumber')}</label>
+                            <input
+                                type="text"
+                                value={formData.caseNumber}
+                                onChange={(e) => handleInputChange('caseNumber', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                placeholder={t('applications.enterCaseNumber')}
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.courtName')}</label>
+                            <input
+                                type="text"
+                                value={formData.courtName}
+                                onChange={(e) => handleInputChange('courtName', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                placeholder={t('applications.enterCourtName')}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.priorityLevel')}</label>
                         <select
@@ -448,6 +553,11 @@ interface Application {
     actType: string;
     beneficiaryId?: string;
     incidentDate: string;
+    firReport?: string;
+    medicalReport?: string;
+    policeStation?: string;
+    caseNumber?: string;
+    courtName?: string;
     applicationDate: string;
     status: string;
     amount: number;
@@ -469,6 +579,11 @@ const exportApplicationsData = (applications: Application[]) => {
         'State',
         'Act Type',
         'Incident Date',
+        'FIR Report',
+        'Medical Report',
+        'Police Station',
+        'Case Number',
+        'Court Name',
         'Application Date',
         'Status',
         'Amount (INR)',
@@ -488,6 +603,11 @@ const exportApplicationsData = (applications: Application[]) => {
         app.state,
         app.actType,
         app.incidentDate,
+        (app as any).firReport || '',
+        (app as any).medicalReport || '',
+        (app as any).policeStation || '',
+        (app as any).caseNumber || '',
+        (app as any).courtName || '',
         app.applicationDate,
         app.status,
         app.amount.toString(),
@@ -1625,6 +1745,7 @@ return (
             <th className="hidden sm:table-cell py-3 px-3 text-left font-semibold theme-text-primary min-w-[120px]">{t("applications.beneficiaryId")}</th>
             <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.district")}</th>
             <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.act_type")}</th>
+            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("applications.caseDetails")}</th>
             <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.amount")}</th>
             <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.status")}</th>
             <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.priority")}</th>
@@ -1672,6 +1793,14 @@ return (
                 <span className="inline-block rounded text-xs font-medium theme-bg-glass theme-text-primary truncate">
                   {app.actType}
                 </span>
+              </td>
+
+              <td className="hidden md:table-cell py-3 px-2 text-sm theme-text-secondary">
+                <div className="space-y-1">
+                  {app.incidentDate && <div><strong>{t('extracted.incident_date')}:</strong> {new Date(app.incidentDate).toLocaleDateString()}</div>}
+                  {app.firReport && <div><strong>{t('applications.firReport')}:</strong> {app.firReport}</div>}
+                  {app.caseNumber && <div><strong>{t('applications.caseNumber')}:</strong> {app.caseNumber}</div>}
+                </div>
               </td>
 
               <td className="hidden md:table-cell py-3 px-2 font-semibold theme-text-primary truncate">
@@ -1757,6 +1886,9 @@ return (
             <p><strong>{t("applications.beneficiaryId")}:</strong> {app.beneficiaryId || "-"}</p>
             <p><strong>{t("extracted.district_1")}</strong> {app.district}, {app.state}</p>
             <p><strong>{t("extracted.act_type_1")}</strong> {app.actType}</p>
+            {app.incidentDate && <p><strong>{t("extracted.incident_date")}:</strong> {new Date(app.incidentDate).toLocaleDateString()}</p>}
+            {app.firReport && <p><strong>{t("applications.firReport")}:</strong> {app.firReport}</p>}
+            {app.caseNumber && <p><strong>{t("applications.caseNumber")}:</strong> {app.caseNumber}</p>}
             <p><strong>{t("extracted.amount_1")}</strong> {formatCurrency(app.amount)}</p>
           </div>
         </motion.div>
@@ -1811,6 +1943,14 @@ return (
                       <FileText className="w-4 h-4" />
                       <span>{app.actType}</span>
                     </div>
+                    {(app.incidentDate || app.firReport || app.caseNumber) && (
+                      <div className="text-sm theme-text-secondary">
+                        <div className="font-medium mb-1">{t('applications.caseDetails')}:</div>
+                        {app.incidentDate && <div>{t('extracted.incident_date')}: {new Date(app.incidentDate).toLocaleDateString()}</div>}
+                        {app.firReport && <div>{t('applications.firReport')}: {app.firReport}</div>}
+                        {app.caseNumber && <div>{t('applications.caseNumber')}: {app.caseNumber}</div>}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm theme-text-secondary">
                       <DollarSign className="w-4 h-4" />
                       <span className="font-semibold">

@@ -41,6 +41,10 @@ class ApplicationModel {
   final String? gender;
   final String? maritalStatus;
   final String? ifsc;
+  final String? firReport;
+  final String? medicalReport;
+  final String? policeStation;
+  final String? courtName;
 
   ApplicationModel({
     required this.id,
@@ -79,6 +83,10 @@ class ApplicationModel {
     this.gender,
     this.maritalStatus,
     this.ifsc,
+    this.firReport,
+    this.medicalReport,
+    this.policeStation,
+    this.courtName,
   });
 
   factory ApplicationModel.fromFirestore(Map<String, dynamic> data, String id) {
@@ -138,6 +146,10 @@ class ApplicationModel {
       gender: data['gender'] as String?,
       maritalStatus: data['maritalStatus'] as String?,
       ifsc: data['ifsc'] as String?,
+      firReport: data['firReport'] as String?,
+      medicalReport: data['medicalReport'] as String?,
+      policeStation: data['policeStation'] as String?,
+      courtName: data['courtName'] as String?,
     );
   }
 
@@ -178,6 +190,10 @@ class ApplicationModel {
       if (gender != null) 'gender': gender,
       if (maritalStatus != null) 'maritalStatus': maritalStatus,
       if (ifsc != null) 'ifsc': ifsc,
+      if (firReport != null) 'firReport': firReport,
+      if (medicalReport != null) 'medicalReport': medicalReport,
+      if (policeStation != null) 'policeStation': policeStation,
+      if (courtName != null) 'courtName': courtName,
     };
   }
 
@@ -228,6 +244,10 @@ class ApplicationModel {
       gender: json['gender'],
       maritalStatus: json['maritalStatus'],
       ifsc: json['ifsc'],
+      firReport: json['firReport'],
+      medicalReport: json['medicalReport'],
+      policeStation: json['policeStation'],
+      courtName: json['courtName'],
     );
   }
 
@@ -269,6 +289,10 @@ class ApplicationModel {
       'gender': gender,
       'maritalStatus': maritalStatus,
       'ifsc': ifsc,
+      'firReport': firReport,
+      'medicalReport': medicalReport,
+      'policeStation': policeStation,
+      'courtName': courtName,
     };
   }
 

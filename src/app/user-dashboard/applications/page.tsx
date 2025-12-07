@@ -25,6 +25,11 @@ interface Application {
   actType: string;
   beneficiaryId: string;
   incidentDate: string;
+  firReport?: string;
+  medicalReport?: string;
+  policeStation?: string;
+  caseNumber?: string;
+  courtName?: string;
   applicationDate: string;
   status: string;
   amount: number;
@@ -36,7 +41,6 @@ interface Application {
   fatherName?: string;
   email?: string;
   address?: string;
-  caseNumber?: string;
   registrationDate?: any;
   category?: string;
   age?: number | null;
@@ -65,12 +69,16 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
     actType: '',
     beneficiaryId: '',
     incidentDate: '',
+    firReport: '',
+    medicalReport: '',
+    policeStation: '',
+    caseNumber: '',
+    courtName: '',
     amount: '',
     // beneficiary common fields
     fatherName: '',
     email: '',
     address: '',
-    caseNumber: '',
     registrationDate: '',
     category: '',
     age: '',
@@ -116,13 +124,17 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           state: formData.state,
           actType: formData.actType,
           beneficiaryId: formData.beneficiaryId,
+          incidentDate: formData.incidentDate,
+          firReport: (formData as any).firReport || null,
+          medicalReport: (formData as any).medicalReport || null,
+          policeStation: (formData as any).policeStation || null,
+          caseNumber: (formData as any).caseNumber || null,
+          courtName: (formData as any).courtName || null,
           // copy common beneficiary fields into the application
           fatherName: (formData as any).fatherName || null,
           email: (formData as any).email || null,
           address: (formData as any).address || null,
-          caseNumber: (formData as any).caseNumber || null,
           registrationDate: (formData as any).registrationDate || null,
-          incidentDate: formData.incidentDate,
           lastUpdate: Timestamp.fromDate(new Date()),
           status: initialData.status || 'pending',
           amount: parseFloat(formData.amount) || 0,
@@ -146,13 +158,18 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           state: formData.state,
           actType: formData.actType,
           beneficiaryId: formData.beneficiaryId,
+          incidentDate: formData.incidentDate,
+          firReport: (formData as any).firReport || null,
+          medicalReport: (formData as any).medicalReport || null,
+          policeStation: (formData as any).policeStation || null,
+          caseNumber: (formData as any).caseNumber || null,
+          courtName: (formData as any).courtName || null,
           // copy common beneficiary fields into the application
           fatherName: (formData as any).fatherName || null,
           email: (formData as any).email || null,
           address: (formData as any).address || null,
           caseNumber: (formData as any).caseNumber || null,
           registrationDate: (formData as any).registrationDate || null,
-          incidentDate: formData.incidentDate,
           applicationDate: Timestamp.fromDate(new Date()),
           status: 'pending',
           amount: parseFloat(formData.amount) || 0,
@@ -193,7 +210,12 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         state: initialData.state || '',
         actType: initialData.actType || '',
         beneficiaryId: initialData.beneficiaryId || '',
-        incidentDate: initialData.incidentDate || '',
+        incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
+        firReport: (initialData as any).firReport || '',
+        medicalReport: (initialData as any).medicalReport || '',
+        policeStation: (initialData as any).policeStation || '',
+        caseNumber: (initialData as any).caseNumber || '',
+        courtName: (initialData as any).courtName || '',
         amount: String(initialData.amount || ''),
         // populate beneficiary fields if present on the application
         fatherName: (initialData as any).fatherName || '',
@@ -213,32 +235,37 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
       if (initialData.beneficiaryId) {
         setBeneficiaryExists(true);
       }
-    } else if (userBeneficiary) {
-      // Auto-fill from user's beneficiary
-      setFormData(prev => ({
-        ...prev,
-        applicantName: userBeneficiary.name || '',
-        aadhaar: userBeneficiary.aadhaarNumber || '',
-        phone: userBeneficiary.phone || '',
-        district: userBeneficiary.district || '',
-        state: userBeneficiary.state || '',
-        actType: userBeneficiary.actType || '',
-        beneficiaryId: userBeneficiary.id || '',
-        incidentDate: userBeneficiary.incidentDate || '',
-        amount: userBeneficiary.reliefAmount ? String(userBeneficiary.reliefAmount) : '',
-        fatherName: userBeneficiary.fatherName || '',
-        email: userBeneficiary.email || '',
-        address: userBeneficiary.address || '',
-        caseNumber: userBeneficiary.caseNumber || '',
-        registrationDate: userBeneficiary.registrationDate && typeof userBeneficiary.registrationDate.toDate === 'function' ? userBeneficiary.registrationDate.toDate().toISOString() : (userBeneficiary.registrationDate || ''),
-        category: userBeneficiary.category || '',
-        age: userBeneficiary.age ? String(userBeneficiary.age) : '',
-        gender: userBeneficiary.gender || '',
-        maritalStatus: userBeneficiary.maritalStatus || '',
-        bankAccount: userBeneficiary.bankAccount || '',
-        ifsc: userBeneficiary.ifsc || ''
-      }));
-      setBeneficiaryExists(true);
+    } else {
+      // Reset form for new application
+      setFormData({
+        applicantName: userBeneficiary?.name || '',
+        aadhaar: userBeneficiary?.aadhaarNumber || '',
+        phone: userBeneficiary?.phone || '',
+        district: userBeneficiary?.district || '',
+        state: userBeneficiary?.state || '',
+        actType: userBeneficiary?.actType || '',
+        beneficiaryId: userBeneficiary?.id || '',
+        incidentDate: userBeneficiary?.incidentDate || '',
+        firReport: '',
+        medicalReport: '',
+        policeStation: '',
+        caseNumber: '',
+        courtName: '',
+        amount: userBeneficiary?.reliefAmount ? String(userBeneficiary.reliefAmount) : '',
+        fatherName: userBeneficiary?.fatherName || '',
+        email: userBeneficiary?.email || '',
+        address: userBeneficiary?.address || '',
+        registrationDate: userBeneficiary?.registrationDate || '',
+        category: userBeneficiary?.category || '',
+        age: userBeneficiary?.age ? String(userBeneficiary.age) : '',
+        gender: userBeneficiary?.gender || '',
+        maritalStatus: userBeneficiary?.maritalStatus || '',
+        bankAccount: userBeneficiary?.bankAccount || '',
+        ifsc: userBeneficiary?.ifsc || '',
+        priority: 'medium',
+        assignedOfficer: ''
+      });
+      setBeneficiaryExists(userBeneficiary ? true : null);
     }
   }, [initialData, userBeneficiary]);
 
@@ -416,6 +443,66 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
               className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
             />
           </div>
+        </div>
+
+        {/* Case Details */}
+        <div className="mt-6">
+          <h4 className="text-md font-semibold theme-text-primary mb-4">{t('applications.caseDetails')}</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.firReport')}</label>
+              <input
+                type="text"
+                value={(formData as any).firReport}
+                onChange={(e) => handleInputChange('firReport', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterFirReport')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.medicalReport')}</label>
+              <input
+                type="text"
+                value={(formData as any).medicalReport}
+                onChange={(e) => handleInputChange('medicalReport', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterMedicalReport')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.policeStation')}</label>
+              <input
+                type="text"
+                value={(formData as any).policeStation}
+                onChange={(e) => handleInputChange('policeStation', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterPoliceStation')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.caseNumber')}</label>
+              <input
+                type="text"
+                value={(formData as any).caseNumber}
+                onChange={(e) => handleInputChange('caseNumber', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterCaseNumber')}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.courtName')}</label>
+              <input
+                type="text"
+                value={(formData as any).courtName}
+                onChange={(e) => handleInputChange('courtName', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterCourtName')}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
             <input
@@ -429,6 +516,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
               placeholder={t('applications.enterReliefAmount')}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.priorityLevel')}</label>
             <select
@@ -946,6 +1036,61 @@ export default function ApplicationsPage() {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Case Details */}
+                            {(application.incidentDate || application.firReport || application.caseNumber) && (
+                              <div className="mt-3 pt-3 border-t theme-border-glass">
+                                <p className={`text-xs font-medium mb-2 ${
+                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
+                                }`}>
+                                  {t('applications.caseDetails')}:
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                  {application.incidentDate && (
+                                    <div>
+                                      <span className={`font-medium ${
+                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
+                                      }`}>
+                                        {t('extracted.incident_date')}:
+                                      </span>
+                                      <span className={`ml-1 ${
+                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
+                                      }`}>
+                                        {new Date(application.incidentDate).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {application.firReport && (
+                                    <div>
+                                      <span className={`font-medium ${
+                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
+                                      }`}>
+                                        {t('applications.firReport')}:
+                                      </span>
+                                      <span className={`ml-1 ${
+                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
+                                      }`}>
+                                        {application.firReport}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {application.caseNumber && (
+                                    <div>
+                                      <span className={`font-medium ${
+                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
+                                      }`}>
+                                        {t('applications.caseNumber')}:
+                                      </span>
+                                      <span className={`ml-1 ${
+                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
+                                      }`}>
+                                        {application.caseNumber}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             
                             <div className="flex flex-wrap gap-2">
                               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -1151,6 +1296,51 @@ export default function ApplicationsPage() {
                         {selectedApplication.beneficiaryId}
                       </div>
                     </div>
+
+                    {/* Case Details Section */}
+                    {(selectedApplication.incidentDate || selectedApplication.firReport || selectedApplication.medicalReport || selectedApplication.policeStation || selectedApplication.caseNumber || selectedApplication.courtName) && (
+                      <div className="pt-4 border-t theme-border-glass">
+                        <div className="text-sm font-medium theme-text-primary mb-3">{t('applications.caseDetails')}</div>
+                        <div className="space-y-2">
+                          {selectedApplication.incidentDate && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('extracted.incident_date')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{new Date(selectedApplication.incidentDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          {selectedApplication.firReport && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('applications.firReport')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.firReport}</span>
+                            </div>
+                          )}
+                          {selectedApplication.medicalReport && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('applications.medicalReport')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.medicalReport}</span>
+                            </div>
+                          )}
+                          {selectedApplication.policeStation && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('applications.policeStation')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.policeStation}</span>
+                            </div>
+                          )}
+                          {selectedApplication.caseNumber && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('applications.caseNumber')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.caseNumber}</span>
+                            </div>
+                          )}
+                          {selectedApplication.courtName && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">{t('applications.courtName')}:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.courtName}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="pt-2 border-t theme-border-glass">
                       <div className="text-xs theme-text-muted">

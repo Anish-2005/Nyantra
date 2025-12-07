@@ -37,6 +37,10 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
   late TextEditingController _maritalStatusCtrl;
   late TextEditingController _bankAccountCtrl;
   late TextEditingController _ifscCtrl;
+  late TextEditingController _firReportCtrl;
+  late TextEditingController _medicalReportCtrl;
+  late TextEditingController _policeStationCtrl;
+  late TextEditingController _courtNameCtrl;
   bool _saving = false;
 
   @override
@@ -86,6 +90,14 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     _ifscCtrl = TextEditingController(
       text: widget.application.ifsc ?? widget.application.bankIfsc,
     );
+    _firReportCtrl = TextEditingController(text: widget.application.firReport);
+    _medicalReportCtrl = TextEditingController(
+      text: widget.application.medicalReport,
+    );
+    _policeStationCtrl = TextEditingController(
+      text: widget.application.policeStation,
+    );
+    _courtNameCtrl = TextEditingController(text: widget.application.courtName);
   }
 
   @override
@@ -337,6 +349,34 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _firReportCtrl,
+                labelKey: 'applications.firReport',
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _medicalReportCtrl,
+                labelKey: 'applications.medicalReport',
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _policeStationCtrl,
+                labelKey: 'applications.policeStation',
+              ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _courtNameCtrl,
+                labelKey: 'applications.courtName',
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -402,6 +442,10 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
   late TextEditingController _maritalStatusCtrl;
   late TextEditingController _bankAccountCtrl;
   late TextEditingController _ifscCtrl;
+  late TextEditingController _firReportCtrl;
+  late TextEditingController _medicalReportCtrl;
+  late TextEditingController _policeStationCtrl;
+  late TextEditingController _courtNameCtrl;
   bool _saving = false;
 
   @override
@@ -451,6 +495,14 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
     _ifscCtrl = TextEditingController(
       text: widget.application.ifsc ?? widget.application.bankIfsc,
     );
+    _firReportCtrl = TextEditingController(text: widget.application.firReport);
+    _medicalReportCtrl = TextEditingController(
+      text: widget.application.medicalReport,
+    );
+    _policeStationCtrl = TextEditingController(
+      text: widget.application.policeStation,
+    );
+    _courtNameCtrl = TextEditingController(text: widget.application.courtName);
   }
 
   @override
@@ -659,6 +711,26 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
             TextField(
               controller: _ifscCtrl,
               decoration: const InputDecoration(labelText: 'IFSC'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _firReportCtrl,
+              decoration: const InputDecoration(labelText: 'FIR Report'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _medicalReportCtrl,
+              decoration: const InputDecoration(labelText: 'Medical Report'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _policeStationCtrl,
+              decoration: const InputDecoration(labelText: 'Police Station'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _courtNameCtrl,
+              decoration: const InputDecoration(labelText: 'Court Name'),
             ),
             const SizedBox(height: 8),
           ],
