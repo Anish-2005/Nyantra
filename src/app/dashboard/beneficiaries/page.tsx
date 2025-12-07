@@ -40,7 +40,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     address: '',
     actType: '',
     registrationDate: '',
-    reliefAmount: '',
     priority: 'medium',
     assignedOfficer: '',
     category: 'SC',
@@ -87,9 +86,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     }
     if (!formData.actType.trim()) {
       errors.actType = 'Act type is required';
-    }
-    if (!formData.reliefAmount.trim()) {
-      errors.reliefAmount = 'Relief amount is required';
     }
 
     // SC/ST Certificate validation - required when category is SC or ST
@@ -146,7 +142,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           address: formData.address,
           actType: formData.actType,
           registrationDate: regDate,
-          reliefAmount: parseFloat(formData.reliefAmount) || 0,
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
           category: formData.category,
@@ -176,8 +171,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           actType: formData.actType,
           registrationDate: formData.registrationDate ? Timestamp.fromDate(new Date(formData.registrationDate)) : Timestamp.fromDate(new Date()),
           status: 'pending-verification',
-          reliefAmount: parseFloat(formData.reliefAmount) || 0,
-          disbursedAmount: 0,
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
           documents: 0,
@@ -221,7 +214,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         address: initialData.address || '',
         actType: initialData.actType || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
-        reliefAmount: initialData.reliefAmount ? String(initialData.reliefAmount) : '',
         priority: initialData.priority || 'medium',
         assignedOfficer: initialData.assignedOfficer || '',
         category: initialData.category || 'SC',
@@ -287,8 +279,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.financial_details')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
             <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.actType ? 'border-red-500' : ''}`}>
@@ -298,13 +289,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
             </select>
             {validationErrors.actType && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.actType}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')}</label>
-            <input type="number" value={formData.reliefAmount} onChange={(e) => handleInputChange('reliefAmount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.reliefAmount ? 'border-red-500' : ''}`} />
-            {validationErrors.reliefAmount && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.reliefAmount}</p>
             )}
           </div>
         </div>
@@ -450,7 +434,7 @@ const BeneficiariesPage = () => {
 
   // Export helpers
   const exportBeneficiariesData = (items: any[]) => {
-    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Relief (INR)', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
+    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
     const rows = items.map(b => {
       const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
         ? b.registrationDate.toDate().toISOString()
@@ -467,7 +451,6 @@ const BeneficiariesPage = () => {
         reg,
         b.status || '',
         b.verificationStatus || '',
-        (b.reliefAmount != null ? String(b.reliefAmount) : '0'),
         (b.disbursedAmount != null ? String(b.disbursedAmount) : '0'),
         b.priority || '',
         b.assignedOfficer || '',
@@ -506,7 +489,7 @@ const BeneficiariesPage = () => {
     doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, 28, { align: 'right' });
     doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
 
-    const head = [['ID', 'Name', 'District', 'Act', 'Relief', 'Status', 'Verification', 'Assigned']];
+    const head = [['ID', 'Name', 'District', 'Act', 'Status', 'Verification', 'Assigned']];
     const body: any[] = [];
     items.forEach(b => {
       body.push([
@@ -514,7 +497,6 @@ const BeneficiariesPage = () => {
         `${b.name}\n${b.phone}`,
         `${b.district}${b.state ? ', ' + b.state : ''}`,
         b.actType,
-        b.reliefAmount != null ? `₹${b.reliefAmount.toLocaleString('en-IN')}` : '',
         (b.status || '').toString().replace(/-/g, ' '),
         (b.verificationStatus || '').toString().replace(/-/g, ' '),
         b.assignedOfficer || ''
@@ -693,7 +675,6 @@ const BeneficiariesPage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const totalAmount = beneficiaries.reduce((sum, b) => sum + (b.reliefAmount || 0), 0);
     const disbursedAmount = beneficiaries.reduce((sum, b) => sum + (b.disbursedAmount || 0), 0);
     
     return {
@@ -702,9 +683,7 @@ const BeneficiariesPage = () => {
       pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
       rejected: beneficiaries.filter(b => b.status === 'rejected').length,
       documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length,
-      totalAmount,
-      disbursedAmount,
-      pendingAmount: totalAmount - disbursedAmount
+      disbursedAmount
     };
   }, [beneficiaries]);
 
@@ -1223,22 +1202,22 @@ const BeneficiariesPage = () => {
       >
         {[
           {
-            labelKey: 'extracted.total_relief_amount',
-            value: formatCurrency(stats.totalAmount),
+            labelKey: 'extracted.total_disbursed_amount',
+            value: formatCurrency(stats.disbursedAmount),
             color: 'from-green-500 to-emerald-500',
             icon: DollarSign,
             subtitle: t('extracted.disbursed_this_month')
           },
           {
             labelKey: 'extracted.pcr_act_disbursements',
-            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
+            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + (b.disbursedAmount || 0), 0)),
             color: 'from-blue-500 to-cyan-500',
             icon: Scale,
             subtitle: t('extracted.beneficiaries_success_rate', { count: beneficiaries.filter(b => b.actType === 'PCR Act').length, rate: 70 })
           },
           {
             labelKey: 'extracted.poa_act_disbursements',
-            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + (b.reliefAmount || 0), 0)),
+            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + (b.disbursedAmount || 0), 0)),
             color: 'from-purple-500 to-pink-500',
             icon: Heart,
             subtitle: t('extracted.beneficiaries_verified', { count: beneficiaries.filter(b => b.actType === 'PoA Act').length, rate: 70 })
@@ -1756,10 +1735,10 @@ const BeneficiariesPage = () => {
                       
                       <div className="flex items-center justify-between text-xs">
                         <span className="theme-text-muted flex items-center gap-1.5">
-                          <DollarSign className="w-3.5 h-3.5" />
-                          {t('extracted.relief_amount')}
+                          <FileText className="w-3.5 h-3.5" />
+                          {t('extracted.sc_st_certificate')}
                         </span>
-                        <span className="theme-text-primary font-bold">{formatCurrency(beneficiary.reliefAmount)}</span>
+                        <span className="theme-text-primary font-medium">{beneficiary.scStCertificate || 'Not provided'}</span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
@@ -1835,7 +1814,6 @@ const BeneficiariesPage = () => {
                     <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.aadhaar')} </th>
                     <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
                     <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.amount')} </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
                     <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.verification')} </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
@@ -1875,14 +1853,6 @@ const BeneficiariesPage = () => {
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
                           {formatActType(beneficiary.actType)}
                         </span>
-                      </td>
-                      <td className="hidden lg:table-cell px-4 py-3">
-                        <div>
-                          <p className="text-sm font-semibold theme-text-primary">{formatCurrency(beneficiary.reliefAmount)}</p>
-                          <p className="text-xs theme-text-muted">
-                            {t('extracted.disbursed')}: {formatCurrency(beneficiary.disbursedAmount)}
-                          </p>
-                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
@@ -1991,8 +1961,8 @@ const BeneficiariesPage = () => {
                       <span>{formatActType(beneficiary.actType)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                      <DollarSign className="w-4 h-4 flex-shrink-0" />
-                      <span className="font-semibold">{formatCurrency(beneficiary.reliefAmount)}</span>
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span>{beneficiary.scStCertificate || 'Not provided'}</span>
                     </div>
                   </div>
                   
