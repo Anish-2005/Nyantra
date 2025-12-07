@@ -147,6 +147,13 @@ const Dashboard = () => {
   const [smoothing, setSmoothing] = useState(false);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
 
+  // Analytics metrics state
+  const [analyticsMetrics, setAnalyticsMetrics] = useState({
+    peakValue: 0,
+    average: 0,
+    growthRate: 0
+  });
+
   // Dashboard data state
   const [recentApplications, setRecentApplications] = useState<any[]>([]);
   const [quickStats, setQuickStats] = useState<any[]>([]);
@@ -848,26 +855,68 @@ useEffect(() => {
         console.warn('Failed to fetch disbursements', e);
       }
 
-      // Fetch generated reports (if collection exists)
-      try {
-        const reportsQuery = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(4));
-        const reportsSnapshot = await getDocs(reportsQuery);
-        const rpts = reportsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: data.title || data.name || 'Report',
-            category: data.category || 'General',
-            size: data.size || '',
-            date: data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : 'N/A',
-            status: data.status || 'Completed',
-            progress: typeof data.progress === 'number' ? data.progress : (data.status === 'Completed' ? 100 : (data.progress || 0))
-          };
+      // Calculate analytics metrics
+      const calculateAnalyticsMetrics = (applications: any[]) => {
+        if (!applications || applications.length === 0) {
+          return { peakValue: 0, average: 0, growthRate: 0 };
+        }
+
+        // Group applications by date
+        const dateGroups: { [key: string]: number } = {};
+        applications.forEach(app => {
+          try {
+            if (!app.applicationDate) return;
+
+            let appDate: Date;
+            const dateValue = app.applicationDate;
+
+            if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof dateValue.toDate === 'function') {
+              appDate = dateValue.toDate();
+            } else if (dateValue instanceof Date) {
+              appDate = dateValue;
+            } else if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+              appDate = new Date(dateValue);
+            } else {
+              return;
+            }
+
+            const dateKey = appDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            dateGroups[dateKey] = (dateGroups[dateKey] || 0) + 1;
+          } catch (error) {
+            console.warn('Error processing application date for analytics:', app.id, error);
+          }
         });
-        setGeneratedReports(rpts);
-      } catch (e) {
-        console.warn('Failed to fetch reports', e);
-      }
+
+        // Calculate peak value (maximum applications per day)
+        const peakValue = Math.max(...Object.values(dateGroups), 0);
+
+        // Calculate average (mean applications per day over the last 30 days)
+        const last30Days = Object.keys(dateGroups)
+          .sort()
+          .slice(-30); // Get last 30 days
+        const totalApplications = last30Days.reduce((sum, date) => sum + dateGroups[date], 0);
+        const average = last30Days.length > 0 ? Math.round(totalApplications / last30Days.length) : 0;
+
+        // Calculate growth rate (compare last 7 days vs previous 7 days)
+        const sortedDates = Object.keys(dateGroups).sort();
+        const last7Days = sortedDates.slice(-7);
+        const previous7Days = sortedDates.slice(-14, -7);
+
+        const currentWeekTotal = last7Days.reduce((sum, date) => sum + dateGroups[date], 0);
+        const previousWeekTotal = previous7Days.reduce((sum, date) => sum + dateGroups[date], 0);
+
+        let growthRate = 0;
+        if (previousWeekTotal > 0) {
+          growthRate = Math.round(((currentWeekTotal - previousWeekTotal) / previousWeekTotal) * 100);
+        } else if (currentWeekTotal > 0) {
+          growthRate = 100; // If no previous data but current has data, show 100% growth
+        }
+
+        return { peakValue, average, growthRate };
+      };
+
+      const analyticsMetrics = calculateAnalyticsMetrics(allApplications);
+      setAnalyticsMetrics(analyticsMetrics);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -1646,12 +1695,11 @@ useEffect(() => {
 
                         {/* Chart Area with Enhanced Styling */}
                         <div className="relative z-10">
-                          {/* Chart Statistics Bar */}
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                             {[
-                              { label: t('dashboard.analytics.peakValue'), value: '1,247', color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
-                              { label: t('dashboard.analytics.average'), value: '856', color: 'from-purple-500 to-pink-500', icon: Activity },
-                              { label: t('dashboard.analytics.growthRate'), value: '+23%', color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
+                              { label: t('dashboard.analytics.peakValue'), value: analyticsMetrics.peakValue.toLocaleString(), color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
+                              { label: t('dashboard.analytics.average'), value: analyticsMetrics.average.toLocaleString(), color: 'from-purple-500 to-pink-500', icon: Activity },
+                              { label: t('dashboard.analytics.growthRate'), value: `${analyticsMetrics.growthRate >= 0 ? '+' : ''}${analyticsMetrics.growthRate}%`, color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
                             ].map((stat, idx) => (
                               <motion.div
                                 key={stat.label}

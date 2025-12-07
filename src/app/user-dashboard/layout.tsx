@@ -493,14 +493,27 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
                         <button
                           onClick={async () => {
+                            console.log('Sign out button clicked');
                             setUserMenuOpen(false);
                             try {
+                              console.log('Calling signOutUser...');
                               await signOutUser();
-                              router.push('/login');
+                              console.log('signOutUser completed, navigating to login...');
+                              // Try router.push first, fallback to window.location
+                              try {
+                                router.push('/login');
+                              } catch (navError) {
+                                console.log('router.push failed, using window.location');
+                                window.location.href = '/login';
+                              }
                             } catch (error) {
                               console.error('Logout error:', error);
                               // Fallback navigation
-                              router.push('/login');
+                              try {
+                                router.push('/login');
+                              } catch (navError) {
+                                window.location.href = '/login';
+                              }
                             }
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

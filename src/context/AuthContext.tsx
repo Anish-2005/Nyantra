@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let profileUnsub: Unsubscribe | null = null;
     const unsub = onAuthStateChanged(auth, async (u) => {
+      console.log('AuthContext: onAuthStateChanged fired, user:', u ? 'logged in' : 'logged out');
       setUser(u);
       if (profileUnsub) {
         try { profileUnsub(); } catch {}
@@ -114,7 +115,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOutUser = async () => {
-    await signOut(auth);
+    console.log('AuthContext: signOutUser called');
+    try {
+      await signOut(auth);
+      console.log('AuthContext: signOut completed successfully');
+    } catch (error) {
+      console.error('AuthContext: signOut error:', error);
+      throw error;
+    }
   };
 
   return (

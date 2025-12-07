@@ -36,8 +36,7 @@ export default function AnalyticsChart({
     setLoading(true);
     const applicationsQuery = query(
       collection(db, 'applications'),
-      where('ownerId', '==', user.uid),
-      orderBy('applicationDate', 'desc')
+      where('ownerId', '==', user.uid)
     );
 
     const unsubscribe = onSnapshot(applicationsQuery, (snapshot) => {

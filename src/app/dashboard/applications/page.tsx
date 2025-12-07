@@ -32,7 +32,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         medicalReport: '',
         policeStation: '',
         caseNumber: '',
-        courtName: '',
         amount: '',
         priority: 'medium',
         assignedOfficer: ''
@@ -81,7 +80,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     medicalReport: formData.medicalReport,
                     policeStation: formData.policeStation,
                     caseNumber: formData.caseNumber,
-                    courtName: formData.courtName,
                     // keep original applicationDate if present
                     lastUpdate: Timestamp.fromDate(new Date()),
                     status: initialData.status || 'pending',
@@ -111,7 +109,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     medicalReport: formData.medicalReport,
                     policeStation: formData.policeStation,
                     caseNumber: formData.caseNumber,
-                    courtName: formData.courtName,
                     applicationDate: Timestamp.fromDate(new Date()),
                     status: 'pending',
                     amount: parseFloat(formData.amount) || 0,
@@ -159,7 +156,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 medicalReport: (initialData as any).medicalReport || '',
                 policeStation: (initialData as any).policeStation || '',
                 caseNumber: (initialData as any).caseNumber || '',
-                courtName: (initialData as any).courtName || '',
                 amount: String(initialData.amount || ''),
                 priority: initialData.priority || 'medium',
                 assignedOfficer: initialData.assignedOfficer || ''
@@ -185,7 +181,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 medicalReport: '',
                 policeStation: '',
                 caseNumber: '',
-                courtName: '',
                 amount: '',
                 priority: 'medium',
                 assignedOfficer: ''
@@ -467,16 +462,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                                 placeholder={t('applications.enterCaseNumber')}
                             />
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.courtName')}</label>
-                            <input
-                                type="text"
-                                value={formData.courtName}
-                                onChange={(e) => handleInputChange('courtName', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                placeholder={t('applications.enterCourtName')}
-                            />
-                        </div>
                     </div>
                 </div>
 
@@ -557,7 +542,6 @@ interface Application {
     medicalReport?: string;
     policeStation?: string;
     caseNumber?: string;
-    courtName?: string;
     applicationDate: string;
     status: string;
     amount: number;
@@ -583,7 +567,6 @@ const exportApplicationsData = (applications: Application[]) => {
         'Medical Report',
         'Police Station',
         'Case Number',
-        'Court Name',
         'Application Date',
         'Status',
         'Amount (INR)',
@@ -607,7 +590,6 @@ const exportApplicationsData = (applications: Application[]) => {
         (app as any).medicalReport || '',
         (app as any).policeStation || '',
         (app as any).caseNumber || '',
-        (app as any).courtName || '',
         app.applicationDate,
         app.status,
         app.amount.toString(),
