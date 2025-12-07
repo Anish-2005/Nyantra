@@ -676,6 +676,11 @@ export default function ApplicationsPage() {
           actType: data.actType || '',
           beneficiaryId: data.beneficiaryId || '',
           incidentDate: data.incidentDate || '',
+          firReport: data.firReport || '',
+          medicalReport: data.medicalReport || '',
+          policeStation: data.policeStation || '',
+          caseNumber: data.caseNumber || '',
+          courtName: data.courtName || '',
           // copy stored beneficiary fields if present
           fatherName: data.fatherName || '',
           email: data.email || '',
