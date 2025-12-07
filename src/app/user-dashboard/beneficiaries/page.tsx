@@ -8,11 +8,13 @@ import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import LoadingState from '@/components/LoadingState';
+import { CldUploadWidget } from 'next-cloudinary';
 import {
   User, Plus, Edit, Trash, Eye, Search,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
   Shield, Award, MapPin, Phone, Calendar,
-  DollarSign, FileText, Check, ChevronLeft, ChevronRight
+  DollarSign, FileText, Check, ChevronLeft, ChevronRight,
+  Upload, File
 } from 'lucide-react';
 
 type Beneficiary = {
@@ -65,7 +67,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     maritalStatus: '',
     bankAccount: '',
     ifsc: '',
-    scStCertificate: ''
+    scStCertificate: '' // Now stores Cloudinary URL
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,7 +133,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
     // SC/ST Certificate validation (required for SC/ST category)
     if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
-      newErrors.scStCertificate = 'SC/ST certificate number is required for SC/ST category';
+      newErrors.scStCertificate = 'SC/ST certificate upload is required for SC/ST category';
     }
 
     // Age validation (optional but must be valid number if provided)
@@ -287,8 +289,63 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
-            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`} placeholder="Certificate Number" />
-            {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
+            <div className="space-y-2">
+              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' ? (
+                <CldUploadWidget
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                  onSuccess={(result: any) => {
+                    if (result?.info?.secure_url) {
+                      handleInputChange('scStCertificate', result.info.secure_url);
+                    }
+                  }}
+                  options={{
+                    maxFiles: 1,
+                    resourceType: 'auto',
+                    clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
+                    maxFileSize: 10000000, // 10MB
+                  }}
+                >
+                  {({ open }) => (
+                    <button
+                      type="button"
+                      onClick={() => open?.()}
+                      className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {formData.scStCertificate ? 'Change Certificate File' : 'Upload Certificate (PDF/Image)'}
+                    </button>
+                  )}
+                </CldUploadWidget>
+              ) : (
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                    Cloudinary not configured. Please configure your Cloudinary credentials in the .env file.
+                  </p>
+                  <input
+                    type="url"
+                    value={formData.scStCertificate}
+                    onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
+                    className={`w-full mt-2 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                    placeholder="Enter certificate URL"
+                  />
+                </div>
+              )}
+              {formData.scStCertificate && (
+                <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <File className="w-4 h-4 text-green-500" />
+                  <span className="text-sm theme-text-primary">Certificate uploaded successfully</span>
+                  <a
+                    href={formData.scStCertificate}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-600 text-sm underline"
+                  >
+                    View File
+                  </a>
+                </div>
+              )}
+              {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
+            </div>
           </div>
         </div>
       </div>
@@ -846,7 +903,16 @@ export default function BeneficiariesPage() {
                                 <p className={`font-medium ${
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
                                 }`}>
-                                  {beneficiary.scStCertificate || 'Not provided'}
+                                  {beneficiary.scStCertificate ? (
+                                    <a
+                                      href={beneficiary.scStCertificate}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-500 hover:text-blue-600 underline"
+                                    >
+                                      View Certificate
+                                    </a>
+                                  ) : 'Not provided'}
                                 </p>
                               </div>
                               <div>
@@ -1027,7 +1093,18 @@ export default function BeneficiariesPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="text-sm theme-text-muted mb-1">{t('extracted.sc_st_certificate')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.scStCertificate || '—'}</div>
+                        <div className="font-medium theme-text-primary">
+                          {selectedBeneficiary.scStCertificate ? (
+                            <a
+                              href={selectedBeneficiary.scStCertificate}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-600 underline"
+                            >
+                              View Certificate
+                            </a>
+                          ) : '—'}
+                        </div>
                       </div>
                     </div>
 

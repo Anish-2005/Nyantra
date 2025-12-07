@@ -11,6 +11,7 @@ import { generateBeneficiaryId } from '@/lib/id';
 import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { CldUploadWidget } from 'next-cloudinary';
 import {
   Search, Filter, Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X, Check,
@@ -20,7 +21,7 @@ import {
   Shield, Award, Heart, Scale, BadgeCheck,
   Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
   Target, Globe, Layers, Star,
-  CheckCircle, Tag
+  CheckCircle, Tag, Upload, File
 } from 'lucide-react';
 
 // All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
@@ -38,7 +39,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     district: '',
     state: '',
     address: '',
-    actType: '',
     registrationDate: '',
     priority: 'medium',
     assignedOfficer: '',
@@ -84,19 +84,10 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     if (!formData.state.trim()) {
       errors.state = 'State is required';
     }
-    if (!formData.actType.trim()) {
-      errors.actType = 'Act type is required';
-    }
 
     // SC/ST Certificate validation - required when category is SC or ST
     if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
-      errors.scStCertificate = 'SC/ST Certificate is required for SC/ST category';
-    } else if (formData.scStCertificate.trim()) {
-      // Validate certificate format - should be alphanumeric, typically 8-15 characters
-      const certPattern = /^[A-Za-z0-9\-\/]{8,15}$/;
-      if (!certPattern.test(formData.scStCertificate.trim())) {
-        errors.scStCertificate = 'Invalid certificate format. Should be 8-15 alphanumeric characters';
-      }
+      errors.scStCertificate = 'SC/ST certificate upload is required for SC/ST category';
     }
 
     // Bank account validation if provided
@@ -140,7 +131,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           district: formData.district,
           state: formData.state,
           address: formData.address,
-          actType: formData.actType,
           registrationDate: regDate,
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
@@ -168,7 +158,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           district: formData.district,
           state: formData.state,
           address: formData.address,
-          actType: formData.actType,
           registrationDate: formData.registrationDate ? Timestamp.fromDate(new Date(formData.registrationDate)) : Timestamp.fromDate(new Date()),
           status: 'pending-verification',
           priority: formData.priority,
@@ -212,7 +201,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         district: initialData.district || '',
         state: initialData.state || '',
         address: initialData.address || '',
-        actType: initialData.actType || '',
         registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
         priority: initialData.priority || 'medium',
         assignedOfficer: initialData.assignedOfficer || '',
@@ -279,30 +267,69 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       </div>
 
       <div>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')}</label>
-            <select value={formData.actType} onChange={(e) => handleInputChange('actType', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.actType ? 'border-red-500' : ''}`}>
-              <option value="">{t('extracted.select_act_type')}</option>
-              <option value="PCR Act">{t('extracted.pcr_act') || 'PCR Act'}</option>
-              <option value="PoA Act">{t('extracted.poa_act') || 'PoA Act'}</option>
-            </select>
-            {validationErrors.actType && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.actType}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div>
         <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.verification_details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
-            <input value={formData.scStCertificate} onChange={(e) => handleInputChange('scStCertificate', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`} placeholder="Certificate Number" />
-            {validationErrors.scStCertificate && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.scStCertificate}</p>
-            )}
+            <div className="space-y-2">
+              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' ? (
+                <CldUploadWidget
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                  onSuccess={(result: any) => {
+                    if (result?.info?.secure_url) {
+                      handleInputChange('scStCertificate', result.info.secure_url);
+                    }
+                  }}
+                  options={{
+                    maxFiles: 1,
+                    resourceType: 'auto',
+                    clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
+                    maxFileSize: 10000000, // 10MB
+                  }}
+                >
+                  {({ open }) => (
+                    <button
+                      type="button"
+                      onClick={() => open?.()}
+                      className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {formData.scStCertificate ? 'Change Certificate File' : 'Upload Certificate (PDF/Image)'}
+                    </button>
+                  )}
+                </CldUploadWidget>
+              ) : (
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                    Cloudinary not configured. Please configure your Cloudinary credentials in the .env file.
+                  </p>
+                  <input
+                    type="url"
+                    value={formData.scStCertificate}
+                    onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
+                    className={`w-full mt-2 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
+                    placeholder="Enter certificate URL"
+                  />
+                </div>
+              )}
+              {formData.scStCertificate && (
+                <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <File className="w-4 h-4 text-green-500" />
+                  <span className="text-sm theme-text-primary">Certificate uploaded successfully</span>
+                  <a
+                    href={formData.scStCertificate}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-600 text-sm underline"
+                  >
+                    View File
+                  </a>
+                </div>
+              )}
+              {validationErrors.scStCertificate && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.scStCertificate}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -402,7 +429,6 @@ const BeneficiariesPage = () => {
   const { profile, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [actTypeFilter, setActTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [verificationFilter, setVerificationFilter] = useState('all');
   const [sortBy] = useState('registrationDate');
@@ -434,7 +460,7 @@ const BeneficiariesPage = () => {
 
   // Export helpers
   const exportBeneficiariesData = (items: any[]) => {
-    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'Act Type', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
+    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
     const rows = items.map(b => {
       const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
         ? b.registrationDate.toDate().toISOString()
@@ -446,7 +472,6 @@ const BeneficiariesPage = () => {
         b.phone,
         b.district,
         b.state,
-        b.actType,
         b.scStCertificate || '',
         reg,
         b.status || '',
@@ -489,14 +514,13 @@ const BeneficiariesPage = () => {
     doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, 28, { align: 'right' });
     doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
 
-    const head = [['ID', 'Name', 'District', 'Act', 'Status', 'Verification', 'Assigned']];
+    const head = [['ID', 'Name', 'District', 'Status', 'Verification', 'Assigned']];
     const body: any[] = [];
     items.forEach(b => {
       body.push([
         b.id,
         `${b.name}\n${b.phone}`,
         `${b.district}${b.state ? ', ' + b.state : ''}`,
-        b.actType,
         (b.status || '').toString().replace(/-/g, ' '),
         (b.verificationStatus || '').toString().replace(/-/g, ' '),
         b.assignedOfficer || ''
@@ -624,11 +648,6 @@ const BeneficiariesPage = () => {
       filtered = filtered.filter(beneficiary => beneficiary.status === statusFilter);
     }
 
-    // Act type filter
-    if (actTypeFilter !== 'all') {
-      filtered = filtered.filter(beneficiary => beneficiary.actType === actTypeFilter);
-    }
-
     // Category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(beneficiary => beneficiary.category === categoryFilter);
@@ -664,7 +683,7 @@ const BeneficiariesPage = () => {
     });
 
     return filtered;
-  }, [beneficiaries, searchQuery, statusFilter, actTypeFilter, categoryFilter, verificationFilter, sortBy, sortOrder]);
+  }, [beneficiaries, searchQuery, statusFilter, categoryFilter, verificationFilter, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredBeneficiaries.length / itemsPerPage);
@@ -1208,20 +1227,6 @@ const BeneficiariesPage = () => {
             icon: DollarSign,
             subtitle: t('extracted.disbursed_this_month')
           },
-          {
-            labelKey: 'extracted.pcr_act_disbursements',
-            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PCR Act').reduce((sum, b) => sum + (b.disbursedAmount || 0), 0)),
-            color: 'from-blue-500 to-cyan-500',
-            icon: Scale,
-            subtitle: t('extracted.beneficiaries_success_rate', { count: beneficiaries.filter(b => b.actType === 'PCR Act').length, rate: 70 })
-          },
-          {
-            labelKey: 'extracted.poa_act_disbursements',
-            value: formatCurrency(beneficiaries.filter(b => b.actType === 'PoA Act').reduce((sum, b) => sum + (b.disbursedAmount || 0), 0)),
-            color: 'from-purple-500 to-pink-500',
-            icon: Heart,
-            subtitle: t('extracted.beneficiaries_verified', { count: beneficiaries.filter(b => b.actType === 'PoA Act').length, rate: 70 })
-          }
         ].map((card, idx) => (
           <motion.div
             key={idx}
@@ -1376,7 +1381,7 @@ const BeneficiariesPage = () => {
                             >
                                 <Filter className="w-4 h-4" />
                                 <span>{t('extracted.filters')}</span>
-                                {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                                {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
                                     <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                                 )}
                             </motion.button>
@@ -1436,36 +1441,11 @@ const BeneficiariesPage = () => {
                       </select>
                     </motion.div>
 
-                    {/* Act Type Filter */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                          <Scale className="w-4 h-4 text-white" />
-                        </div>
-                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.act_type')}</label>
-                      </div>
-                      <select
-                        value={actTypeFilter}
-                        onChange={(e) => setActTypeFilter(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-lg"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <option value="all">{t('extracted.all_acts')}</option>
-                        <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                        <option value="PoA Act">{t('extracted.poa_act')}</option>
-                      </select>
-                    </motion.div>
-
                     {/* Category Filter */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
+                      transition={{ delay: 0.2 }}
                       className="space-y-3"
                     >
                       <div className="flex items-center gap-2">
@@ -1516,7 +1496,7 @@ const BeneficiariesPage = () => {
                   </div>
 
                   {/* Active Filters Display */}
-                  {(statusFilter !== 'all' || actTypeFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                  {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1537,21 +1517,6 @@ const BeneficiariesPage = () => {
                             <button
                               onClick={() => setStatusFilter('all')}
                               className="hover:bg-green-500/30 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        )}
-                        {actTypeFilter !== 'all' && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium border border-blue-500/30"
-                          >
-                            Act: {actTypeFilter}
-                            <button
-                              onClick={() => setActTypeFilter('all')}
-                              className="hover:bg-blue-500/30 rounded-full p-0.5"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -1592,7 +1557,6 @@ const BeneficiariesPage = () => {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => {
                             setStatusFilter('all');
-                            setActTypeFilter('all');
                             setCategoryFilter('all');
                             setVerificationFilter('all');
                           }}
@@ -1652,7 +1616,6 @@ const BeneficiariesPage = () => {
                 // Reset filters to show the new beneficiary
                 setSearchQuery('');
                 setStatusFilter('all');
-                setActTypeFilter('all');
                 setCategoryFilter('all');
                 setVerificationFilter('all');
               }
@@ -1738,7 +1701,19 @@ const BeneficiariesPage = () => {
                           <FileText className="w-3.5 h-3.5" />
                           {t('extracted.sc_st_certificate')}
                         </span>
-                        <span className="theme-text-primary font-medium">{beneficiary.scStCertificate || 'Not provided'}</span>
+                        {beneficiary.scStCertificate ? (
+                          <a
+                            href={beneficiary.scStCertificate}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="theme-text-primary font-medium underline hover:text-blue-500"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View File
+                          </a>
+                        ) : (
+                          <span className="theme-text-primary font-medium">Not provided</span>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
