@@ -572,6 +572,96 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                         ),
                                         const SizedBox(height: 12),
 
+                                        // Case details row
+                                        if (application.firReport != null ||
+                                            application.medicalReport != null ||
+                                            application.policeStation != null ||
+                                            application.caseNumber != null ||
+                                            application.courtName != null)
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                localeProvider.translate(
+                                                  'applications.caseDetails',
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: theme.primaryColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              if (application.firReport !=
+                                                      null &&
+                                                  application
+                                                      .firReport!
+                                                      .isNotEmpty)
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.description,
+                                                  localeProvider.translate(
+                                                    'applications.firReport',
+                                                  ),
+                                                  application.firReport!,
+                                                ),
+                                              if (application.medicalReport !=
+                                                      null &&
+                                                  application
+                                                      .medicalReport!
+                                                      .isNotEmpty)
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.medical_services,
+                                                  localeProvider.translate(
+                                                    'applications.medicalReport',
+                                                  ),
+                                                  application.medicalReport!,
+                                                ),
+                                              if (application.policeStation !=
+                                                      null &&
+                                                  application
+                                                      .policeStation!
+                                                      .isNotEmpty)
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.local_police,
+                                                  localeProvider.translate(
+                                                    'applications.policeStation',
+                                                  ),
+                                                  application.policeStation!,
+                                                ),
+                                              if (application.caseNumber !=
+                                                      null &&
+                                                  application
+                                                      .caseNumber!
+                                                      .isNotEmpty)
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.numbers,
+                                                  localeProvider.translate(
+                                                    'applications.caseNumber',
+                                                  ),
+                                                  application.caseNumber!,
+                                                ),
+                                              if (application.courtName !=
+                                                      null &&
+                                                  application
+                                                      .courtName!
+                                                      .isNotEmpty)
+                                                _buildDetailItem(
+                                                  context,
+                                                  Icons.gavel,
+                                                  localeProvider.translate(
+                                                    'applications.courtName',
+                                                  ),
+                                                  application.courtName!,
+                                                ),
+                                              const SizedBox(height: 12),
+                                            ],
+                                          ),
+
                                         // Additional details: contact, beneficiary, owner, timestamps
                                         Row(
                                           children: [
@@ -767,6 +857,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
   final _beneficiaryIdCtrl = TextEditingController();
   final _incidentDateCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
+  final _firReportCtrl = TextEditingController();
+  final _medicalReportCtrl = TextEditingController();
+  final _policeStationCtrl = TextEditingController();
+  final _caseNumberCtrl = TextEditingController();
+  final _courtNameCtrl = TextEditingController();
   bool _saving = false;
   bool _beneficiaryValid = false;
   bool _checkingBeneficiary = false;
@@ -791,6 +886,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _beneficiaryIdCtrl.dispose();
     _incidentDateCtrl.dispose();
     _amountCtrl.dispose();
+    _firReportCtrl.dispose();
+    _medicalReportCtrl.dispose();
+    _policeStationCtrl.dispose();
+    _caseNumberCtrl.dispose();
+    _courtNameCtrl.dispose();
     super.dispose();
   }
 
@@ -895,6 +995,21 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         actType: _actTypeCtrl.text.trim(),
         beneficiaryId: _beneficiaryIdCtrl.text.trim(),
         incidentDate: _incidentDateCtrl.text.trim(),
+        firReport: _firReportCtrl.text.trim().isNotEmpty
+            ? _firReportCtrl.text.trim()
+            : null,
+        medicalReport: _medicalReportCtrl.text.trim().isNotEmpty
+            ? _medicalReportCtrl.text.trim()
+            : null,
+        policeStation: _policeStationCtrl.text.trim().isNotEmpty
+            ? _policeStationCtrl.text.trim()
+            : null,
+        caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
+            ? _caseNumberCtrl.text.trim()
+            : null,
+        courtName: _courtNameCtrl.text.trim().isNotEmpty
+            ? _courtNameCtrl.text.trim()
+            : null,
         amount: double.tryParse(_amountCtrl.text.trim()),
         status: ApplicationStatus.pending,
         applicationDate: DateTime.now(),
@@ -1193,6 +1308,142 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
+
+                        // Case Details Section
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.primaryColor.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                localeProvider.translate(
+                                  'applications.caseDetails',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.primaryColor,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _firReportCtrl,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'applications.firReport',
+                                  ),
+                                  hintText: localeProvider.translate(
+                                    'applications.enterFirReport',
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _medicalReportCtrl,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'applications.medicalReport',
+                                  ),
+                                  hintText: localeProvider.translate(
+                                    'applications.enterMedicalReport',
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _policeStationCtrl,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'applications.policeStation',
+                                  ),
+                                  hintText: localeProvider.translate(
+                                    'applications.enterPoliceStation',
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _caseNumberCtrl,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'applications.caseNumber',
+                                  ),
+                                  hintText: localeProvider.translate(
+                                    'applications.enterCaseNumber',
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _courtNameCtrl,
+                                decoration: InputDecoration(
+                                  labelText: localeProvider.translate(
+                                    'applications.courtName',
+                                  ),
+                                  hintText: localeProvider.translate(
+                                    'applications.enterCourtName',
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.cardColor.withOpacity(0.03),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _amountCtrl,
