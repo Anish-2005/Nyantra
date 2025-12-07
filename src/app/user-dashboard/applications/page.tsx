@@ -168,7 +168,6 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           fatherName: (formData as any).fatherName || null,
           email: (formData as any).email || null,
           address: (formData as any).address || null,
-          caseNumber: (formData as any).caseNumber || null,
           registrationDate: (formData as any).registrationDate || null,
           applicationDate: Timestamp.fromDate(new Date()),
           status: 'pending',
