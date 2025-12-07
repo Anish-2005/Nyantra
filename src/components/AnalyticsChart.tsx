@@ -66,7 +66,7 @@ export default function AnalyticsChart({
 
       // Status distribution (for bar chart)
       const statusCounts = applications.reduce((acc, app) => {
-        const status = app.status || 'pending';
+        const status = (app as any).status || 'pending';
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
@@ -84,7 +84,7 @@ export default function AnalyticsChart({
             appDate.setHours(0, 0, 0, 0);
             return appDate.getTime() === date.getTime();
           })
-          .reduce((sum, app) => sum + (app.amount || 0), 0);
+          .reduce((sum, app) => sum + ((app as any).amount || 0), 0);
         return { x: date, y: total };
       });
 

@@ -85,7 +85,8 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
       const notificationsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+        read: doc.data().read || false
       }));
 
       // Sort client-side to avoid composite index requirement
