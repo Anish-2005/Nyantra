@@ -683,7 +683,6 @@ export default function ApplicationsPage() {
           fatherName: data.fatherName || '',
           email: data.email || '',
           address: data.address || '',
-          caseNumber: data.caseNumber || '',
           registrationDate: data.registrationDate || null,
           category: data.category || '',
           age: data.age || null,
