@@ -18,7 +18,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
   late TextEditingController _actTypeCtrl;
-  late TextEditingController _reliefAmountCtrl;
   late TextEditingController _categoryCtrl;
   late TextEditingController _fatherNameCtrl;
   late TextEditingController _districtCtrl;
@@ -39,7 +38,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _phoneCtrl = TextEditingController();
     _addressCtrl = TextEditingController();
     _actTypeCtrl = TextEditingController();
-    _reliefAmountCtrl = TextEditingController();
     _categoryCtrl = TextEditingController();
     _fatherNameCtrl = TextEditingController();
     _districtCtrl = TextEditingController();
@@ -59,7 +57,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
     _actTypeCtrl.dispose();
-    _reliefAmountCtrl.dispose();
     _categoryCtrl.dispose();
     _fatherNameCtrl.dispose();
     _districtCtrl.dispose();
@@ -222,15 +219,6 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'Act Type',
                 border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _reliefAmountCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Relief Amount',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             TextFormField(

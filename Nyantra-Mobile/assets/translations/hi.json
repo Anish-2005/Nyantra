@@ -661,7 +661,8 @@
     "category": "श्रेणी",
     "maritalStatus": "वैवाहिक स्थिति",
     "bankAccount": "बैंक खाता",
-    "ifscCode": "IFSC कोड"
+    "ifscCode": "IFSC कोड",
+    "sc_st_certificate": "एससी/एसटी प्रमाणपत्र"
   },
   "grievances": {
     "pageTitle": "शिकायतें",

@@ -245,6 +245,13 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                 controller: _ifscCtrl,
                 labelKey: 'beneficiaries.ifscCode',
               ),
+              const SizedBox(height: 8),
+              _buildInput(
+                theme,
+                locale,
+                controller: _scStCertificateCtrl,
+                labelKey: 'beneficiaries.sc_st_certificate',
+              ),
             ],
           ),
         ),

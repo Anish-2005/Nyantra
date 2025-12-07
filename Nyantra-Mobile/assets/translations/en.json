@@ -748,6 +748,7 @@
     "reliefAmountINR": "Relief Amount (₹)",
     "amountRequested": "Amount Requested (₹)",
     "case_details": "Case Details",
+    "sc_st_certificate": "SC/ST Certificate",
     "enterPhoneNumber": "Enter phone number",
     "failed_to_submit_grievance": "Failed to submit grievance",
     "loading_grievances": "Loading grievances...",

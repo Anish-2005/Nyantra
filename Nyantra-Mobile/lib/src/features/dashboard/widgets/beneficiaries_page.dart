@@ -593,6 +593,8 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
 
                                         const SizedBox(height: 12),
 
+                                        const SizedBox(height: 12),
+
                                         Row(
                                           children: [
                                             Expanded(
