@@ -132,7 +132,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
     // SC/ST Certificate validation (required for SC/ST category)
     if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
-      newErrors.scStCertificate = 'SC/ST certificate upload is required for SC/ST category';
+      newErrors.scStCertificate = 'SC/ST certificate URL is required for SC/ST category';
     }
 
     // Age validation (optional but must be valid number if provided)
@@ -289,56 +289,18 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setIsSubmitting(true);
-                      try {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        formData.append('beneficiaryId', formData.id || 'temp');
-
-                        const response = await fetch('/api/upload-certificate', {
-                          method: 'POST',
-                          body: formData,
-                        });
-
-                        const result = await response.json();
-                        if (result.success) {
-                          handleInputChange('scStCertificate', result.url);
-                          showToast('success', 'Certificate uploaded successfully');
-                        } else {
-                          showToast('error', result.error || 'Upload failed');
-                        }
-                      } catch (error) {
-                        console.error('Upload error:', error);
-                        showToast('error', 'Failed to upload certificate');
-                      } finally {
-                        setIsSubmitting(false);
-                      }
-                    }
-                  }}
-                  className={`flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="button"
-                  onClick={() => document.querySelector('input[type="file"]')?.click()}
-                  className={`px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${errors.scStCertificate ? 'border-red-500' : ''}`}
-                  disabled={isSubmitting}
-                >
-                  <Upload className="w-4 h-4" />
-                  {isSubmitting ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
+              <input
+                type="url"
+                value={formData.scStCertificate}
+                onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
+                placeholder="Enter certificate URL (e.g., https://example.com/certificate.pdf)"
+                className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                disabled={isSubmitting}
+              />
               {formData.scStCertificate && (
                 <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
                   <File className="w-4 h-4 text-green-500" />
-                  <span className="text-sm theme-text-primary">Certificate uploaded successfully</span>
+                  <span className="text-sm theme-text-primary">Certificate URL provided</span>
                   <button
                     onClick={() => window.open(formData.scStCertificate, '_blank')}
                     className="text-blue-500 hover:text-blue-600 text-sm underline"
