@@ -47,19 +47,31 @@ export default function BlockCard({ block, index }: any) {
         </div>
       </div>
 
+      {/* UTP & Transaction */}
+      <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+        <div>
+          <p className="theme-text-muted text-xs">UTP:</p>
+          <p className="theme-text-primary font-mono text-xs truncate">{block.utp_number}</p>
+        </div>
+        <div>
+          <p className="theme-text-muted text-xs">TXN ID:</p>
+          <p className="theme-text-primary font-mono text-xs truncate">{block.transaction_id}</p>
+        </div>
+      </div>
+
       {/* Hash Preview */}
       <div className="flex items-center space-x-2 mb-4">
         <Hash className="w-4 h-4 text-purple-400" />
         <span className="text-xs theme-text-muted font-mono">
-          {block.hash?.substring(0, 12)}...
+          {block.cur_hash?.substring(0, 12)}...
         </span>
       </div>
 
-      {/* Timestamp */}
+      {/* Date */}
       <div className="flex items-center space-x-2">
         <Clock className="w-4 h-4 text-orange-400" />
         <span className="text-xs theme-text-muted">
-          {new Date(block.timestamp).toLocaleDateString()}
+          {block.date}
         </span>
       </div>
 
@@ -87,7 +99,7 @@ export default function BlockCard({ block, index }: any) {
             <div className="flex justify-between items-center">
               <span className="text-xs theme-text-muted">Merkle Root:</span>
               <span className="text-xs theme-text-primary font-mono text-xs">
-                {block.merkleRoot?.substring(0, 16)}...
+                {block.merkle_root?.substring(0, 16)}...
               </span>
             </div>
           </div>

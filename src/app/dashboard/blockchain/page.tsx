@@ -31,11 +31,20 @@ export default function BlockchainDashboard() {
     try {
       setFetchLoading(true);
       const res = await fetch("/api/blockchain");
+      if (!res.ok) {
+        throw new Error(`API returned ${res.status}`);
+      }
       const data = await res.json();
-      setChain(data.chain || []);
-      setMessage(data.message);
+      
+      if (data.chain && Array.isArray(data.chain)) {
+        setChain(data.chain);
+        setMessage(data.message || "Blockchain loaded successfully");
+      } else {
+        setMessage("Invalid blockchain data format");
+      }
     } catch (err) {
-      setMessage("Failed to fetch blockchain");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch blockchain";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setFetchLoading(false);
     }
@@ -119,7 +128,7 @@ export default function BlockchainDashboard() {
               <div>
                 <p className="text-sm theme-text-muted">Last Updated</p>
                 <p className="text-sm theme-text-primary">
-                  {chain.length > 0 ? new Date(chain[chain.length - 1]?.timestamp).toLocaleString() : 'Never'}
+                  {chain.length > 0 ? new Date(chain[chain.length - 1]?.date).toLocaleString() : 'Never'}
                 </p>
               </div>
             </div>

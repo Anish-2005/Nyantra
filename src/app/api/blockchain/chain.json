@@ -97,5 +97,16 @@
         "merkle_root": "dfc91cb66bd7794ceadc9daf7663ef4eaaabf66e3452e74e93fd5dd14fae5565",
         "prev_hash": "8522bc45ef78734008612e30b34d01d0fc074f4729e30822a18a60f8bb99ee28",
         "cur_hash": "e74de027dc182697ab33fa0e35010fa253e33b92b2f4e89dec1b4f80ea0303e4"
+    },
+    {
+        "block_index": 9,
+        "date": "2025-12-08",
+        "beneficiary_id": "1012",
+        "utp_number": "021",
+        "transaction_id": "121212121",
+        "amount": 1000000000,
+        "merkle_root": "dfc91cb66bd7794ceadc9daf7663ef4eaaabf66e3452e74e93fd5dd14fae5565",
+        "prev_hash": "e74de027dc182697ab33fa0e35010fa253e33b92b2f4e89dec1b4f80ea0303e4",
+        "cur_hash": "76fe6c08d05ac877bdb6871a5d6e768691831150f505d2f3cea9f54117338660"
     }
 ]

@@ -91,19 +91,27 @@ export default function ChainView({ chain }: { chain: any[] }) {
                           <div className="grid grid-cols-1 gap-1 text-xs">
                             <div className="flex justify-between">
                               <span className="theme-text-muted">Hash:</span>
-                              <span className="theme-text-primary font-mono text-xs">{block.hash?.substring(0, 16)}...</span>
+                              <span className="theme-text-primary font-mono text-xs">{block.cur_hash?.substring(0, 16)}...</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="theme-text-muted">Prev Hash:</span>
-                              <span className="theme-text-primary font-mono text-xs">{block.previousHash?.substring(0, 16)}...</span>
+                              <span className="theme-text-primary font-mono text-xs">{block.prev_hash?.substring(0, 16)}...</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="theme-text-muted">Merkle Root:</span>
-                              <span className="theme-text-primary font-mono text-xs">{block.merkleRoot?.substring(0, 16)}...</span>
+                              <span className="theme-text-primary font-mono text-xs">{block.merkle_root?.substring(0, 16)}...</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="theme-text-muted">Timestamp:</span>
-                              <span className="theme-text-primary">{new Date(block.timestamp).toLocaleString()}</span>
+                              <span className="theme-text-muted">Date:</span>
+                              <span className="theme-text-primary">{block.date}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="theme-text-muted">UTP:</span>
+                              <span className="theme-text-primary font-mono text-xs">{block.utp_number}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="theme-text-muted">TXN ID:</span>
+                              <span className="theme-text-primary font-mono text-xs">{block.transaction_id}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="theme-text-muted">Beneficiary:</span>
@@ -113,6 +121,18 @@ export default function ChainView({ chain }: { chain: any[] }) {
                               <span className="theme-text-muted">Amount:</span>
                               <span className="text-green-400 font-semibold">₹{block.amount?.toLocaleString()}</span>
                             </div>
+                            {globalIndex > 0 && (
+                              <div className="flex justify-between pt-2 border-t theme-border-glass">
+                                <span className="theme-text-muted">Prev Block:</span>
+                                <span className="theme-text-primary">#{globalIndex - 1}</span>
+                              </div>
+                            )}
+                            {globalIndex < chain.length - 1 && (
+                              <div className="flex justify-between">
+                                <span className="theme-text-muted">Next Block:</span>
+                                <span className="theme-text-primary">#{globalIndex + 1}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent theme-border-glass"></div>
