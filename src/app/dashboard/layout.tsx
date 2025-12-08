@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight } from "lucide-react";
+import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight, Link } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
@@ -30,8 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { id: 'disbursements', label: t('extracted.disbursements'), icon: Wallet },
         { id: 'analytics', label: t('extracted.analytics_reports'), icon: BarChart3 },
         { id: 'grievance', label: t('extracted.grievance_hub') || t('extracted.grievance'), icon: MessageCircle },
-    { id: 'integrations', label: t('nav.integrations'), icon: Database },
-        { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud }
+        { id: 'integrations', label: t('nav.integrations'), icon: Database },
+        { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud },
+        { id: 'blockchain', label: 'Blockchain', icon: Link }
     ];
     
     const router = useRouter();
