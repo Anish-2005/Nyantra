@@ -339,14 +339,12 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
                   <File className="w-4 h-4 text-green-500" />
                   <span className="text-sm theme-text-primary">Certificate uploaded successfully</span>
-                  <a
-                    href={formData.scStCertificate}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => window.open(formData.scStCertificate, '_blank')}
                     className="text-blue-500 hover:text-blue-600 text-sm underline"
                   >
                     View File
-                  </a>
+                  </button>
                 </div>
               )}
               {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
@@ -909,14 +907,12 @@ export default function BeneficiariesPage() {
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
                                 }`}>
                                   {beneficiary.scStCertificate ? (
-                                    <a
-                                      href={beneficiary.scStCertificate}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
                                       className="text-blue-500 hover:text-blue-600 underline"
                                     >
                                       View Certificate
-                                    </a>
+                                    </button>
                                   ) : 'Not provided'}
                                 </p>
                               </div>
@@ -1100,14 +1096,12 @@ export default function BeneficiariesPage() {
                         <div className="text-sm theme-text-muted mb-1">{t('extracted.sc_st_certificate')}</div>
                         <div className="font-medium theme-text-primary">
                           {selectedBeneficiary.scStCertificate ? (
-                            <a
-                              href={selectedBeneficiary.scStCertificate}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
                               className="text-blue-500 hover:text-blue-600 underline"
                             >
                               View Certificate
-                            </a>
+                            </button>
                           ) : '—'}
                         </div>
                       </div>
