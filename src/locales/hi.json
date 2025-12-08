@@ -3484,7 +3484,18 @@
     "footer_language_logout_mobile": "",
     "desktop_sidebar": "",
     "textractedportal": "",
-    "footer_language_logout_desktop": ""
+    "footer_language_logout_desktop": "",
+    "exportTitle": "संवितरण निर्यात करें",
+    "exportSubtitle": "संवितरण डेटा के लिए निर्यात प्रारूप चुनें",
+    "sendViaEmail": "ईमेल के माध्यम से भेजें",
+    "enterEmailToSendReport": "रिपोर्ट भेजने के लिए ईमेल पता दर्ज करें",
+    "enterEmailAddress": "ईमेल पता दर्ज करें",
+    "csv": "CSV",
+    "pdf": "PDF",
+    "exportAllTitle": "सभी संवितरण",
+    "exportFilteredTitle": "फ़िल्टर किए गए परिणाम",
+    "exportCsv": "CSV निर्यात करें",
+    "exportPdf": "PDF निर्यात करें"
   },
   "extracted_grouped": {
     "misc": {

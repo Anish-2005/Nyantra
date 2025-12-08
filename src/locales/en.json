@@ -3496,7 +3496,18 @@
     "footer_language_logout_mobile": "{/* Footer: Language + Logout (Mobile) */}",
     "desktop_sidebar": "{/* Desktop Sidebar */}",
     "textractedportal": "{t('extracted.portal')}",
-    "footer_language_logout_desktop": "{/* Footer: Language + Logout (Desktop) */}"
+    "footer_language_logout_desktop": "{/* Footer: Language + Logout (Desktop) */}",
+    "exportTitle": "Export Disbursements",
+    "exportSubtitle": "Choose export format for disbursements data",
+    "sendViaEmail": "Send via Email",
+    "enterEmailToSendReport": "Enter email address to send report",
+    "enterEmailAddress": "Enter email address",
+    "csv": "CSV",
+    "pdf": "PDF",
+    "exportAllTitle": "All Disbursements",
+    "exportFilteredTitle": "Filtered Results",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF"
   },
   "extracted_grouped": {
     "misc": {

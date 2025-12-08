@@ -39,6 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-firestore.rules
 firestore.indexes.json
 user_dashboard_app/

@@ -1,4 +1,4 @@
-// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers
+// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers, annotate_overrides
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +11,66 @@ import '../../../core/models/application_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/application_edit_page.dart';
+
+// PoA Act Offences Data Structure
+const Map<String, Map<String, dynamic>> poaOffences = {
+  "1. Offences leading to Death / Murder": {
+    "Murder of SC/ST person": 825000,
+    "Death due to injury inflicted during atrocity": 825000,
+    "Death after rape / gang rape": 825000,
+  },
+  "2. Rape and Sexual Offences": {
+    "Rape": 500000,
+    "Gang rape": 825000,
+    "Attempt to rape": 100000,
+    "Parading naked / semi-naked": 200000,
+    "Sexual harassment / use of criminal force": 100000,
+  },
+  "3. Grievous Hurt / Injury": {
+    "Grievous hurt": 125000,
+    "Permanent disability": 500000,
+    "Partial disability": 250000,
+    "Acid attack – deformity / disability": 825000,
+    "Acid attack – injury without deformity": 500000,
+  },
+  "4. Offences Against Women & Dignity": {
+    "Outraging modesty of SC/ST woman": 100000,
+    "Sexual exploitation / trafficking": 200000,
+    "Forced to work naked / semi-naked": 200000,
+  },
+  "5. Property Damage / Arson": {
+    "Burning of house / arson": "225000-425000",
+    "Destruction of household / property": "100000-200000",
+    "Destruction of crops": 100000,
+    "Destruction of cattle / livestock": 60000,
+  },
+  "6. Land & Economic Offences": {
+    "Wrongful dispossession from land": 200000,
+    "Destruction of standing crops": 100000,
+    "Economic boycott": 100000,
+    "Social boycott": 100000,
+    "Bonded labour / forced labour": 100000,
+  },
+  "7. Caste Atrocity / Humiliation Offences": {
+    "Intentional insult, intimidation, caste abuse": 100000,
+    "Preventing entry into public place": 100000,
+    "Preventing access to public well/tank/roads": 100000,
+    "Compelling to eat inedible / obnoxious substances": 100000,
+  },
+  "8. Kidnapping / Abduction": {
+    "Kidnapping SC/ST person": "100000-200000",
+    "Abduction with intent to outrage modesty": 200000,
+  },
+  "9. Mental Torture / Harassment": {
+    "Harassing, humiliating, intimidating": 100000,
+    "Public humiliation": "100000-200000",
+  },
+  "10. Other Serious Offences": {
+    "Preventing from voting": 100000,
+    "Poll violence against SC/ST": 200000,
+    "False, malicious, vexatious legal cases": 100000,
+  },
+};
 
 class ApplicationsPage extends StatefulWidget {
   const ApplicationsPage({super.key});
@@ -835,22 +895,35 @@ class NewApplicationDialog extends StatefulWidget {
 class _NewApplicationDialogState extends State<NewApplicationDialog> {
   final _formKey = GlobalKey<FormState>();
   final _applicantNameCtrl = TextEditingController();
+  final _contactNumberCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _aadhaarCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
+  final _beneficiaryIdCtrl = TextEditingController();
+  final _fatherNameCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   final _districtCtrl = TextEditingController();
   final _stateCtrl = TextEditingController();
-  final _actTypeCtrl = TextEditingController();
-  final _beneficiaryIdCtrl = TextEditingController();
   final _incidentDateCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
+  final _priorityCtrl = TextEditingController(text: 'medium');
+  final _caseNumberCtrl = TextEditingController();
+  final _categoryCtrl = TextEditingController();
+  final _ageCtrl = TextEditingController();
+  final _maritalStatusCtrl = TextEditingController();
+  final _bankAccountCtrl = TextEditingController();
+  final _ifscCtrl = TextEditingController();
   final _firReportCtrl = TextEditingController();
   final _medicalReportCtrl = TextEditingController();
   final _policeStationCtrl = TextEditingController();
-  final _caseNumberCtrl = TextEditingController();
   bool _saving = false;
   bool _beneficiaryValid = false;
   bool _checkingBeneficiary = false;
   String? _beneficiaryError;
+  String? _selectedActType;
+  String? _selectedGender;
+  String? _selectedMaritalStatus;
+  String? _selectedOffenceCategory;
+  String? _selectedOffenceType;
 
   @override
   void initState() {
@@ -858,23 +931,36 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _beneficiaryValid = false;
     _checkingBeneficiary = false;
     _beneficiaryError = null;
+    _selectedActType = 'PCR Act';
+    _selectedGender = 'M';
+    _selectedMaritalStatus = 'Single';
+    _selectedOffenceCategory = null;
+    _selectedOffenceType = null;
   }
 
   @override
   void dispose() {
     _applicantNameCtrl.dispose();
+    _contactNumberCtrl.dispose();
+    _emailCtrl.dispose();
     _aadhaarCtrl.dispose();
-    _phoneCtrl.dispose();
+    _beneficiaryIdCtrl.dispose();
+    _fatherNameCtrl.dispose();
+    _addressCtrl.dispose();
     _districtCtrl.dispose();
     _stateCtrl.dispose();
-    _actTypeCtrl.dispose();
-    _beneficiaryIdCtrl.dispose();
     _incidentDateCtrl.dispose();
     _amountCtrl.dispose();
+    _priorityCtrl.dispose();
+    _caseNumberCtrl.dispose();
+    _categoryCtrl.dispose();
+    _ageCtrl.dispose();
+    _maritalStatusCtrl.dispose();
+    _bankAccountCtrl.dispose();
+    _ifscCtrl.dispose();
     _firReportCtrl.dispose();
     _medicalReportCtrl.dispose();
     _policeStationCtrl.dispose();
-    _caseNumberCtrl.dispose();
     super.dispose();
   }
 
@@ -910,17 +996,41 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
           if (_applicantNameCtrl.text.isEmpty) {
             _applicantNameCtrl.text = data['name'] ?? '';
           }
+          if (_contactNumberCtrl.text.isEmpty) {
+            _contactNumberCtrl.text = data['phone'] ?? '';
+          }
+          if (_emailCtrl.text.isEmpty) {
+            _emailCtrl.text = data['email'] ?? '';
+          }
           if (_aadhaarCtrl.text.isEmpty) {
             _aadhaarCtrl.text = data['aadhaar'] ?? '';
           }
-          if (_phoneCtrl.text.isEmpty) {
-            _phoneCtrl.text = data['phone'] ?? '';
+          if (_fatherNameCtrl.text.isEmpty) {
+            _fatherNameCtrl.text = data['fatherName'] ?? '';
+          }
+          if (_addressCtrl.text.isEmpty) {
+            _addressCtrl.text = data['address'] ?? '';
           }
           if (_districtCtrl.text.isEmpty) {
             _districtCtrl.text = data['district'] ?? '';
           }
           if (_stateCtrl.text.isEmpty) {
             _stateCtrl.text = data['state'] ?? '';
+          }
+          if (_ageCtrl.text.isEmpty && data['age'] != null) {
+            _ageCtrl.text = data['age'].toString();
+          }
+          if (_selectedGender == null || _selectedGender!.isEmpty) {
+            _selectedGender = data['gender'] ?? 'M';
+          }
+          if (_maritalStatusCtrl.text.isEmpty) {
+            _maritalStatusCtrl.text = data['maritalStatus'] ?? '';
+          }
+          if (_bankAccountCtrl.text.isEmpty) {
+            _bankAccountCtrl.text = data['bankAccount'] ?? '';
+          }
+          if (_ifscCtrl.text.isEmpty) {
+            _ifscCtrl.text = data['ifsc'] ?? '';
           }
         });
       } else {
@@ -972,13 +1082,39 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
       final application = ApplicationModel(
         id: 'APP$randomId',
         applicantName: _applicantNameCtrl.text.trim(),
+        contactNumber: _contactNumberCtrl.text.trim(),
+        email: _emailCtrl.text.trim().isNotEmpty
+            ? _emailCtrl.text.trim()
+            : null,
         aadhaar: _aadhaarCtrl.text.trim(),
-        contactNumber: _phoneCtrl.text.trim(),
+        beneficiaryId: _beneficiaryIdCtrl.text.trim(),
+        fatherName: _fatherNameCtrl.text.trim().isNotEmpty
+            ? _fatherNameCtrl.text.trim()
+            : null,
+        address: _addressCtrl.text.trim().isNotEmpty
+            ? _addressCtrl.text.trim()
+            : null,
         district: _districtCtrl.text.trim(),
         state: _stateCtrl.text.trim(),
-        actType: _actTypeCtrl.text.trim(),
-        beneficiaryId: _beneficiaryIdCtrl.text.trim(),
+        actType: _selectedActType ?? 'PCR Act',
         incidentDate: _incidentDateCtrl.text.trim(),
+        amount: double.tryParse(_amountCtrl.text.trim()),
+        priority: _priorityCtrl.text.trim(),
+        caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
+            ? _caseNumberCtrl.text.trim()
+            : null,
+        category: _categoryCtrl.text.trim().isNotEmpty
+            ? _categoryCtrl.text.trim()
+            : null,
+        age: int.tryParse(_ageCtrl.text.trim()),
+        gender: _selectedGender,
+        maritalStatus: _maritalStatusCtrl.text.trim().isNotEmpty
+            ? _maritalStatusCtrl.text.trim()
+            : null,
+        bankAccount: _bankAccountCtrl.text.trim().isNotEmpty
+            ? _bankAccountCtrl.text.trim()
+            : null,
+        ifsc: _ifscCtrl.text.trim().isNotEmpty ? _ifscCtrl.text.trim() : null,
         firReport: _firReportCtrl.text.trim().isNotEmpty
             ? _firReportCtrl.text.trim()
             : null,
@@ -988,17 +1124,14 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         policeStation: _policeStationCtrl.text.trim().isNotEmpty
             ? _policeStationCtrl.text.trim()
             : null,
-        caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
-            ? _caseNumberCtrl.text.trim()
-            : null,
-        amount: double.tryParse(_amountCtrl.text.trim()),
         status: ApplicationStatus.pending,
         applicationDate: DateTime.now(),
-        priority: 'medium',
         ownerId: currentUser.uid,
         userId: currentUser.uid,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        offenceCategory: _selectedOffenceCategory,
+        offenceType: _selectedOffenceType,
       );
 
       await DataService.createApplication(application);
@@ -1028,7 +1161,303 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     }
   }
 
-  @override
+  Widget _buildInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    String? Function(String?)? validator,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildDateInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    String? Function(String?)? validator,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      validator: validator,
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) {
+          controller.text = picked.toIso8601String().split('T')[0];
+        }
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        suffixIcon: Icon(Icons.calendar_today),
+      ),
+    );
+  }
+
+  Widget _buildActTypeDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedActType,
+      isExpanded: true,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedActType = newValue;
+          });
+        }
+      },
+      items: ['PCR Act', 'PoA Act'].map<DropdownMenuItem<String>>((
+        String value,
+      ) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedGender = newValue;
+          });
+        }
+      },
+      items: ['M', 'F'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildMaritalStatusDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedMaritalStatus,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedMaritalStatus = newValue;
+          });
+        }
+      },
+      items: ['Single', 'Married', 'Divorced', 'Widowed']
+          .map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          })
+          .toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildOffenceCategoryDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label = 'Offence Category';
+
+    return DropdownButtonFormField<String>(
+      value: _selectedOffenceCategory,
+      isExpanded: true,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedOffenceCategory = newValue;
+            _selectedOffenceType =
+                null; // Reset offence type when category changes
+            // Auto-set amount based on first offence in category
+            final category = poaOffences[newValue];
+            if (category != null && category.isNotEmpty) {
+              final firstOffence = category.keys.first;
+              final compensation = category[firstOffence];
+              if (compensation is int) {
+                _amountCtrl.text = compensation.toString();
+              } else if (compensation is String && compensation.contains('-')) {
+                // For range values, take the first value
+                final firstValue = compensation.split('-')[0];
+                _amountCtrl.text = firstValue;
+              }
+            }
+          });
+        }
+      },
+      items: poaOffences.keys.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value, overflow: TextOverflow.ellipsis, softWrap: true),
+        );
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildOffenceTypeDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label = 'Specific Offence';
+
+    if (_selectedOffenceCategory == null) {
+      return Container(); // Don't show if no category selected
+    }
+
+    final offences = poaOffences[_selectedOffenceCategory!] ?? {};
+
+    return DropdownButtonFormField<String>(
+      value: _selectedOffenceType,
+      isExpanded: true,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedOffenceType = newValue;
+            // Auto-set amount based on selected offence
+            final compensation = offences[newValue];
+            if (compensation is int) {
+              _amountCtrl.text = compensation.toString();
+            } else if (compensation is String && compensation.contains('-')) {
+              // For range values, take the first value
+              final firstValue = compensation.split('-')[0];
+              _amountCtrl.text = firstValue;
+            }
+          });
+        }
+      },
+      items: offences.keys.map<DropdownMenuItem<String>>((String offence) {
+        final compensation = offences[offence];
+        final compensationText = compensation is int
+            ? '₹${compensation.toString()}'
+            : compensation is String && compensation.contains('-')
+            ? '₹${compensation.replaceAll('-', ' - ₹')} (range)'
+            : '₹${compensation.toString()}';
+        return DropdownMenuItem<String>(
+          value: offence,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Text(
+              '$offence • $compensationText',
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              maxLines: 2,
+            ),
+          ),
+        );
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  String _getCompensationText() {
+    if (_selectedOffenceCategory == null || _selectedOffenceType == null) {
+      return '₹0';
+    }
+
+    final category = poaOffences[_selectedOffenceCategory];
+    if (category == null) return '₹0';
+
+    final amount = category[_selectedOffenceType];
+    if (amount == null) return '₹0';
+
+    if (amount is int) {
+      return '₹${amount.toStringAsFixed(0)}';
+    } else if (amount is String && amount.contains('-')) {
+      // For range values, show the range
+      return '₹${amount.replaceAll('-', ' - ₹')}';
+    } else {
+      return '₹${amount.toString()}';
+    }
+  }
+
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
@@ -1036,7 +1465,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 700),
         decoration: BoxDecoration(
           color: theme.dialogBackgroundColor,
           borderRadius: BorderRadius.circular(16),
@@ -1066,68 +1495,32 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        TextFormField(
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _applicantNameCtrl,
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.applicant_name',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            labelStyle: theme.textTheme.bodySmall,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.applicant_name',
+                          keyboardType: TextInputType.name,
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _aadhaarCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.aadhaar',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.aadhaar',
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _phoneCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.phone_number',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _contactNumberCtrl,
+                          labelKey: 'applications.phone_number',
                           keyboardType: TextInputType.phone,
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
@@ -1137,22 +1530,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFormField(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
                                 controller: _districtCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'extracted.district',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
+                                labelKey: 'applications.district',
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
                                         'common.required',
@@ -1160,24 +1542,13 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                     : null,
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 8),
                             Expanded(
-                              child: TextFormField(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
                                 controller: _stateCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'extracted.state',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
+                                labelKey: 'applications.state',
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
                                         'common.required',
@@ -1188,27 +1559,82 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _actTypeCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.act_type',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          validator: (value) => value?.isEmpty ?? true
-                              ? localeProvider.translate('common.required')
-                              : null,
+                        _buildActTypeDropdown(
+                          theme,
+                          localeProvider,
+                          labelKey: 'applications.act_type',
                         ),
+                        const SizedBox(height: 16),
+                        // PoA Offence Selection - only show when PoA is selected
+                        if (_selectedActType == 'PoA Act') ...[
+                          _buildOffenceCategoryDropdown(
+                            theme,
+                            localeProvider,
+                            labelKey: 'offence_category',
+                          ),
+                          const SizedBox(height: 16),
+                          if (_selectedOffenceCategory != null)
+                            _buildOffenceTypeDropdown(
+                              theme,
+                              localeProvider,
+                              labelKey: 'offence_type',
+                            ),
+                          if (_selectedOffenceCategory != null &&
+                              _selectedOffenceType != null)
+                            Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.account_balance_wallet,
+                                        color: Colors.green[700],
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Expected Compensation',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green[700],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _getCompensationText(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[800],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Based on PoA Act compensation guidelines',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _beneficiaryIdCtrl,
@@ -1269,160 +1695,134 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             );
                           },
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildDateInput(
+                          theme,
+                          localeProvider,
                           controller: _incidentDateCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.incidentDateHint',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.incidentDateHint',
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
-                        const SizedBox(height: 16),
-
-                        // Case Details Section
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.primaryColor.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.primaryColor.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                localeProvider.translate(
-                                  'applications.caseDetails',
-                                ),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.primaryColor,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _firReportCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.firReport',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterFirReport',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                maxLines: 3,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _medicalReportCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.medicalReport',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterMedicalReport',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                maxLines: 3,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _policeStationCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.policeStation',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterPoliceStation',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _caseNumberCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.caseNumber',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterCaseNumber',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _amountCtrl,
+                          labelKey: 'applications.reliefAmountINR',
+                          keyboardType: TextInputType.number,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _emailCtrl,
+                          labelKey: 'extracted.email',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _fatherNameCtrl,
+                          labelKey: 'applications.fatherName',
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _addressCtrl,
+                          maxLines: 3,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
-                              'applications.amountRequested',
+                              'extracted.address',
                             ),
                             filled: true,
                             fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _ageCtrl,
+                                labelKey: 'extracted.age',
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildGenderDropdown(
+                                theme,
+                                localeProvider,
+                                labelKey: 'extracted.gender',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildMaritalStatusDropdown(
+                          theme,
+                          localeProvider,
+                          labelKey: 'applications.maritalStatus',
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _bankAccountCtrl,
+                                labelKey: 'applications.bankAccount',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _ifscCtrl,
+                                labelKey: 'applications.ifsc',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _firReportCtrl,
+                          labelKey: 'applications.firReport',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _medicalReportCtrl,
+                          labelKey: 'applications.medicalReport',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _policeStationCtrl,
+                          labelKey: 'applications.policeStation',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _caseNumberCtrl,
+                          labelKey: 'applications.caseNumber',
                         ),
                       ],
                     ),

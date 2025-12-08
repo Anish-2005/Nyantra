@@ -223,6 +223,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'Category',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Category is required';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -231,6 +235,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'Father\'s Name',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Father\'s name is required';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -239,6 +247,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'District',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'District is required';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -247,6 +259,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'State',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'State is required';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -276,6 +292,14 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Age is required';
+                final age = int.tryParse(value!);
+                if (age == null) return 'Please enter a valid age';
+                if (age < 0 || age > 120)
+                  return 'Please enter a valid age (0-120)';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -284,6 +308,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'Gender',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Gender is required';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -292,6 +320,10 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 labelText: 'Marital Status',
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Marital status is required';
+                return null;
+              },
             ),
             const SizedBox(height: 32),
             ElevatedButton(

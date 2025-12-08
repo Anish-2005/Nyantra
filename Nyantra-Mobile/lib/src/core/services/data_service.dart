@@ -139,8 +139,6 @@ class DataService {
           ? await _firestore
                 .collection('applications')
                 .where('beneficiaryId', whereIn: beneficiaryIds.take(10))
-                .orderBy('applicationDate', descending: true)
-                .limit(limit)
                 .get()
           : null;
 
@@ -252,7 +250,6 @@ class DataService {
             .collection('disbursements')
             .where('applicationId', whereIn: applicationIdsList.take(10))
             .where('status', isEqualTo: 'completed')
-            .orderBy('disbursementDate', descending: true)
             .limit(limit - activities.length)
             .get();
 

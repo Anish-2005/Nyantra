@@ -708,6 +708,7 @@
     "maritalStatus": "Marital Status",
     "bankAccount": "Bank Account",
     "ifscCode": "IFSC Code",
+    "sc_st_certificate": "SC/ST Certificate URL",
     "cannotOpenUrl": "Cannot open URL",
     "viewCertificate": "View Certificate"
   },

@@ -12,8 +12,68 @@ import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timest
 import {
     Search, Filter, Download, Plus, Eye, Edit, ChevronLeft, ChevronRight, X, Check,
     Clock, AlertCircle, FileText, User, Phone, MapPin,
-    DollarSign, MessageSquare, AlertTriangle, ChevronDown, Trash
+    DollarSign, MessageSquare, AlertTriangle, ChevronDown, Trash, Shield
 } from 'lucide-react';
+
+// PoA Act Offences Data Structure
+const POA_OFFENCES = {
+  "1. Offences leading to Death / Murder": {
+    "Murder of SC/ST person": 825000,
+    "Death due to injury inflicted during atrocity": 825000,
+    "Death after rape / gang rape": 825000
+  },
+  "2. Rape and Sexual Offences": {
+    "Rape": 500000,
+    "Gang rape": 825000,
+    "Attempt to rape": 100000,
+    "Parading naked / semi-naked": 200000,
+    "Sexual harassment / use of criminal force": 100000
+  },
+  "3. Grievous Hurt / Injury": {
+    "Grievous hurt": 125000,
+    "Permanent disability": 500000,
+    "Partial disability": 250000,
+    "Acid attack – deformity / disability": 825000,
+    "Acid attack – injury without deformity": 500000
+  },
+  "4. Offences Against Women & Dignity": {
+    "Outraging modesty of SC/ST woman": 100000,
+    "Sexual exploitation / trafficking": 200000,
+    "Forced to work naked / semi-naked": 200000
+  },
+  "5. Property Damage / Arson": {
+    "Burning of house / arson": "225000-425000",
+    "Destruction of household / property": "100000-200000",
+    "Destruction of crops": 100000,
+    "Destruction of cattle / livestock": 60000
+  },
+  "6. Land & Economic Offences": {
+    "Wrongful dispossession from land": 200000,
+    "Destruction of standing crops": 100000,
+    "Economic boycott": 100000,
+    "Social boycott": 100000,
+    "Bonded labour / forced labour": 100000
+  },
+  "7. Caste Atrocity / Humiliation Offences": {
+    "Intentional insult, intimidation, caste abuse": 100000,
+    "Preventing entry into public place": 100000,
+    "Preventing access to public well/tank/roads": 100000,
+    "Compelling to eat inedible / obnoxious substances": 100000
+  },
+  "8. Kidnapping / Abduction": {
+    "Kidnapping SC/ST person": "100000-200000",
+    "Abduction with intent to outrage modesty": 200000
+  },
+  "9. Mental Torture / Harassment": {
+    "Harassing, humiliating, intimidating": 100000,
+    "Public humiliation": "100000-200000"
+  },
+  "10. Other Serious Offences": {
+    "Preventing from voting": 100000,
+    "Poll violence against SC/ST": 200000,
+    "False, malicious, vexatious legal cases": 100000
+  }
+};
 
 // New Application Form Component
 const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: Application | null, onSaved?: () => void }) => {
@@ -34,7 +94,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
         caseNumber: '',
         amount: '',
         priority: 'medium',
-        assignedOfficer: ''
+        assignedOfficer: '',
+        offenceCategory: '',
+        offenceType: ''
     });
     const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
     const [beneficiaryAutoFilled, setBeneficiaryAutoFilled] = useState<boolean>(false);
@@ -87,6 +149,8 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     priority: formData.priority,
                     assignedOfficer: formData.assignedOfficer,
                     documents: initialData.documents || 0,
+                    offenceCategory: formData.offenceCategory,
+                    offenceType: formData.offenceType,
                 };
 
                 await updateDoc(ref, updatedApplication);
@@ -116,6 +180,8 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     assignedOfficer: formData.assignedOfficer,
                     documents: 0,
                     lastUpdate: Timestamp.fromDate(new Date()),
+                    offenceCategory: formData.offenceCategory,
+                    offenceType: formData.offenceType,
                     id: newId
                 };
 
@@ -158,7 +224,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 caseNumber: (initialData as any).caseNumber || '',
                 amount: String(initialData.amount || ''),
                 priority: initialData.priority || 'medium',
-                assignedOfficer: initialData.assignedOfficer || ''
+                assignedOfficer: initialData.assignedOfficer || '',
+                offenceCategory: (initialData as any).offenceCategory || '',
+                offenceType: (initialData as any).offenceType || ''
             });
             // if editing and beneficiaryId present, set and validate later
             if ((initialData as any).beneficiaryId) {
@@ -183,7 +251,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                 caseNumber: '',
                 amount: '',
                 priority: 'medium',
-                assignedOfficer: ''
+                assignedOfficer: '',
+                offenceCategory: '',
+                offenceType: ''
             });
             setBeneficiaryExists(null);
             setBeneficiaryAutoFilled(false);
@@ -402,6 +472,91 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     </div>
                 </div>
 
+                {/* POA Act Offence Selection */}
+                {formData.actType === 'PoA Act' && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold theme-text-primary mb-4">PoA Act Offence Classification</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium theme-text-muted mb-2">Offence Category *</label>
+                        <select
+                          required={formData.actType === 'PoA Act'}
+                          value={formData.offenceCategory}
+                          onChange={(e) => handleInputChange('offenceCategory', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        >
+                          <option value="">Select Offence Category</option>
+                          {Object.keys(POA_OFFENCES).map((category) => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {formData.offenceCategory && (
+                        <div>
+                          <label className="block text-sm font-medium theme-text-muted mb-2">Specific Offence *</label>
+                          <select
+                            required={formData.actType === 'PoA Act'}
+                            value={formData.offenceType}
+                            onChange={(e) => handleInputChange('offenceType', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                          >
+                            <option value="">Select Specific Offence</option>
+                            {Object.entries(POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES] || {}).map(([offence, compensation]) => {
+                              const compensationText = typeof compensation === 'string' && compensation.includes('-')
+                                ? `₹${compensation.replace('-', ' - ₹')} (range)`
+                                : `₹${compensation.toLocaleString('en-IN')}`;
+                              return (
+                                <option key={offence} value={offence}>
+                                  {offence} • {compensationText}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Expected Compensation Display */}
+                    {formData.offenceType && formData.offenceCategory && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-500 dark:to-green-300 border-2 border-green-100 dark:border-green-400 rounded-xl shadow-md">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 bg-gradient-to-r from-green-600 to-emerald-700 rounded-full flex items-center justify-center shadow-sm">
+                            <span className="text-white text-xs font-bold">₹</span>
+                          </div>
+                          <span className="font-semibold text-green-900 dark:text-green-200 text-sm uppercase tracking-wide">
+                            Expected Compensation
+                          </span>
+                        </div>
+
+                        <div className="text-3xl font-bold text-green-800 dark:text-green-100 mb-2">
+                          {(() => {
+                            const category = POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
+                            const compensation = category && formData.offenceType in category
+                              ? category[formData.offenceType as keyof typeof category] as string | number
+                              : null;
+                            if (compensation && typeof compensation === "string" && compensation.includes("-")) {
+                              return `₹${compensation.replace("-", " - ₹")}`;
+                            }
+                            return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
+                          })()}
+                        </div>
+
+                        <div className="text-sm text-green-900 dark:text-green-300 font-medium leading-relaxed">
+                          Based on <span className="font-semibold">{formData.offenceType}</span> under{" "}
+                          <span className="font-semibold">{formData.offenceCategory}</span>
+                        </div>
+
+                        <div className="mt-3 p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                          <div className="text-xs text-green-900 dark:text-green-200">
+                            💡 This is the guideline amount. Officers can adjust the final compensation amount.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-4 mt-4">
                     <div>
                         <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
@@ -549,6 +704,8 @@ interface Application {
     assignedOfficer: string;
     documents: number;
     lastUpdate: string;
+    offenceCategory?: string;
+    offenceType?: string;
 }
 
 // Function to export applications data as PDF (professional A4 report)
@@ -770,11 +927,14 @@ const ApplicationsPage = () => {
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
     const [isMobile, setIsMobile] = useState<boolean>(false);
     const [showExportModal, setShowExportModal] = useState(false);
+    const [emailAddress, setEmailAddress] = useState('');
+    const [sendingEmail, setSendingEmail] = useState(false);
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(true);
     const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
     const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
     const [confirmModal, setConfirmModal] = useState<{ open: boolean; id?: string; message?: string }>({ open: false });
+    const [expectedAmount, setExpectedAmount] = useState<number>(0);
 
     // Filter and sort applications
     const filteredApplications = useMemo(() => {
@@ -934,6 +1094,280 @@ const ApplicationsPage = () => {
         document.body.removeChild(link);
     };
 
+    // Function to send applications data via email
+    const sendApplicationsEmail = async (items: Application[], format: 'csv' | 'pdf') => {
+        if (!emailAddress.trim()) {
+            alert('Please enter an email address');
+            return;
+        }
+
+        setSendingEmail(true);
+        try {
+            let attachmentData: string | Buffer;
+            let attachmentName: string;
+            let attachmentType: string;
+
+            if (format === 'csv') {
+                // Generate CSV data directly
+                const headers = [
+                    'Application ID',
+                    'Applicant Name',
+                    'Beneficiary ID',
+                    'Aadhaar Number',
+                    'Phone Number',
+                    'District',
+                    'State',
+                    'Act Type',
+                    'Incident Date',
+                    'FIR Report',
+                    'Medical Report',
+                    'Police Station',
+                    'Case Number',
+                    t("applications.sortOptions.applicationDate") || 'Application Date',
+                    'Status',
+                    'Amount (INR)',
+                    'Priority',
+                    'Assigned Officer',
+                    'Documents Count',
+                    'Last Update'
+                ];
+
+                const rows = items.map(app => [
+                    app.id,
+                    app.applicantName,
+                    app.beneficiaryId || '',
+                    app.aadhaar,
+                    app.phone,
+                    app.district,
+                    app.state,
+                    app.actType,
+                    app.incidentDate,
+                    (app as any).firReport || '',
+                    (app as any).medicalReport || '',
+                    (app as any).policeStation || '',
+                    (app as any).caseNumber || '',
+                    app.applicationDate,
+                    app.status,
+                    app.amount.toString(),
+                    app.priority,
+                    app.assignedOfficer,
+                    app.documents.toString(),
+                    app.lastUpdate
+                ]);
+
+                const csvContent = [headers, ...rows]
+                    .map(row => row.map(field => `"${field}"`).join(','))
+                    .join('\n');
+
+                attachmentData = csvContent;
+                attachmentName = `nyantra_applications_report_${new Date().toISOString().split('T')[0]}.csv`;
+                attachmentType = 'text/csv';
+            } else {
+                // Generate PDF data
+                const pdfDoc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+                const pageWidth = pdfDoc.internal.pageSize.getWidth();
+                const pageHeight = pdfDoc.internal.pageSize.getHeight();
+                const margin = 20;
+                const contentWidth = pageWidth - (margin * 2);
+
+                // Professional header
+                pdfDoc.setFillColor(30, 64, 175);
+                pdfDoc.rect(0, 0, pageWidth, 35, 'F');
+
+                // Title
+                pdfDoc.setFontSize(20);
+                pdfDoc.setTextColor(255, 255, 255);
+                pdfDoc.setFont('helvetica', 'bold');
+                pdfDoc.text('NYANTRA - Applications Report', margin, 22);
+
+                // Subtitle
+                pdfDoc.setFontSize(10);
+                pdfDoc.setTextColor(255, 255, 255);
+                pdfDoc.setFont('helvetica', 'normal');
+                pdfDoc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
+
+                // Report metadata
+                pdfDoc.setFontSize(8);
+                pdfDoc.setTextColor(255, 255, 255);
+                const currentDate = new Date().toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                pdfDoc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
+                pdfDoc.text(`Total Records: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
+
+                let yPosition = 50;
+
+                // Summary section
+                pdfDoc.setFillColor(240, 240, 240);
+                pdfDoc.rect(margin, yPosition, contentWidth, 25, 'F');
+
+                pdfDoc.setFontSize(12);
+                pdfDoc.setTextColor(30, 64, 175);
+                pdfDoc.setFont('helvetica', 'bold');
+                pdfDoc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
+
+                // Calculate summary data
+                const totalAmount = items.reduce((sum, app) => sum + (app.amount || 0), 0);
+                const approvedCount = items.filter(app => app.status === 'approved').length;
+                const pendingCount = items.filter(app => app.status === 'pending').length;
+                const rejectedCount = items.filter(app => app.status === 'rejected').length;
+
+                pdfDoc.setFontSize(9);
+                pdfDoc.setTextColor(0, 0, 0);
+                pdfDoc.setFont('helvetica', 'normal');
+                pdfDoc.text(`Total Applications: ${items.length}`, margin + 5, yPosition + 18);
+                pdfDoc.text(`Total Amount: ₹${totalAmount.toLocaleString('en-IN')}`, margin + 5, yPosition + 25);
+
+                yPosition += 35;
+
+                // Table
+                const tableColumns = [
+                    { header: 'ID', width: 20 },
+                    { header: 'Applicant', width: 35 },
+                    { header: 'District', width: 25 },
+                    { header: 'Act Type', width: 20 },
+                    { header: 'Amount', width: 20 },
+                    { header: 'Status', width: 15 },
+                    { header: 'Priority', width: 15 },
+                    { header: 'Date', width: 25 }
+                ];
+
+                const tableRows = items.map(app => ({
+                    id: app.id || '',
+                    applicantName: app.applicantName || '',
+                    district: app.district || '',
+                    actType: app.actType || '',
+                    amount: app.amount ? `₹${app.amount.toLocaleString('en-IN')}` : '₹0',
+                    status: (app.status || '').toUpperCase(),
+                    priority: (app.priority || '').toUpperCase(),
+                    applicationDate: app.applicationDate || ''
+                }));
+
+                // Table header
+                pdfDoc.setFillColor(30, 64, 175);
+                pdfDoc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+                pdfDoc.setFontSize(8);
+                pdfDoc.setTextColor(255, 255, 255);
+                pdfDoc.setFont('helvetica', 'bold');
+
+                let xPos = margin + 2;
+                tableColumns.forEach(col => {
+                    pdfDoc.text(col.header, xPos, yPosition + 5);
+                    xPos += col.width;
+                });
+
+                yPosition += 10;
+
+                // Table rows
+                pdfDoc.setFontSize(6);
+                pdfDoc.setTextColor(0, 0, 0);
+                pdfDoc.setFont('helvetica', 'normal');
+
+                tableRows.forEach((row, index) => {
+                    if (yPosition > pageHeight - 20) {
+                        pdfDoc.addPage();
+                        yPosition = margin;
+
+                        // Repeat header on new page
+                        pdfDoc.setFillColor(30, 64, 175);
+                        pdfDoc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+                        pdfDoc.setFontSize(8);
+                        pdfDoc.setTextColor(255, 255, 255);
+                        pdfDoc.setFont('helvetica', 'bold');
+
+                        xPos = margin + 2;
+                        tableColumns.forEach(col => {
+                            pdfDoc.text(col.header, xPos, yPosition + 5);
+                            xPos += col.width;
+                        });
+
+                        yPosition += 10;
+                    }
+
+                    xPos = margin + 2;
+                    tableColumns.forEach(col => {
+                        const value = row[col.header.toLowerCase().replace(' ', '') as keyof typeof row] || '';
+                        pdfDoc.text(String(value), xPos, yPosition + 3);
+                        xPos += col.width;
+                    });
+
+                    yPosition += 5;
+                });
+
+                // Footer
+                const footerY = pageHeight - 15;
+                pdfDoc.setFontSize(8);
+                pdfDoc.setTextColor(128, 128, 128);
+                pdfDoc.setFont('helvetica', 'italic');
+                pdfDoc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
+                pdfDoc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
+
+                // Get PDF as buffer
+                attachmentData = Buffer.from(pdfDoc.output('arraybuffer'));
+                attachmentName = `nyantra_applications_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                attachmentType = 'application/pdf';
+            }
+
+            // Send email
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: emailAddress,
+                    subject: `Nyantra Applications Report - ${new Date().toLocaleDateString()}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #1e40af;">Nyantra - Applications Report</h2>
+                            <p>Dear User,</p>
+                            <p>Please find attached the applications report containing ${items.length} records.</p>
+                            <p><strong>Report Details:</strong></p>
+                            <ul>
+                                <li>Total Records: ${items.length}</li>
+                                <li>Format: ${format.toUpperCase()}</li>
+                                <li>Generated: ${new Date().toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}</li>
+                            </ul>
+                            <p>This report is generated by the Nyantra Direct Benefit Transfer System.</p>
+                            <p>Best regards,<br>Nyantra Team</p>
+                        </div>
+                    `,
+                    attachments: [{
+                        filename: attachmentName,
+                        content: attachmentData,
+                        contentType: attachmentType,
+                        encoding: format === 'csv' ? 'utf8' : undefined
+                    }]
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send email');
+            }
+
+            alert('Email sent successfully!');
+            setEmailAddress('');
+            setShowExportModal(false);
+        } catch (error) {
+            console.error('Error sending email:', error);
+            alert('Failed to send email. Please try again.');
+        } finally {
+            setSendingEmail(false);
+        }
+    };
+
     // Detect small screens and adjust UI defaults for better mobile UX
     useEffect(() => {
         const mq = window.matchMedia('(max-width: 640px)');
@@ -985,7 +1419,9 @@ const ApplicationsPage = () => {
                     priority: data.priority || 'medium',
                     assignedOfficer: data.assignedOfficer || '',
                     documents: data.documents || 0,
-                    lastUpdate: toIso(data.lastUpdate)
+                    lastUpdate: toIso(data.lastUpdate),
+                    offenceCategory: data.offenceCategory || '',
+                    offenceType: data.offenceType || ''
                 });
             });
             setApplications(apps);
@@ -1099,6 +1535,7 @@ const ApplicationsPage = () => {
 
     useEffect(() => {
         setDetailStatus(selectedApplication?.status || 'pending');
+        setExpectedAmount(selectedApplication?.amount || 0);
     }, [selectedApplication]);
 
     // Allow officers to update application status
@@ -1112,6 +1549,20 @@ const ApplicationsPage = () => {
         } catch (err) {
             const m = (err as any)?.message || String(err);
             showToast('error', `Failed to update status: ${m}`);
+        }
+    };
+
+    // Allow officers to update application amount
+    const updateApplicationAmount = async (id: string, amount: number) => {
+        if (!id) return;
+        try {
+            await updateDoc(doc(db, 'applications', id), { amount, lastUpdate: Timestamp.fromDate(new Date()) });
+            setApplications(prev => prev.map(a => a.id === id ? { ...a, amount } : a));
+            setSelectedApplication(prev => prev ? { ...prev, amount } : prev);
+            showToast('success', `Updated amount for ${id} to ₹${amount.toLocaleString('en-IN')}`);
+        } catch (err) {
+            const m = (err as any)?.message || String(err);
+            showToast('error', `Failed to update amount: ${m}`);
         }
     };
 
@@ -1132,6 +1583,7 @@ const ApplicationsPage = () => {
 
 return (
   <div data-theme={theme} className="relative z-10 theme-text-primary flex min-h-screen">
+    <style dangerouslySetInnerHTML={{ __html: sliderStyles }} />
     {/* Three.js Canvas Background */}
     <BackgroundAnimation />
     <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 flex-1">
@@ -1498,6 +1950,58 @@ return (
                   >
                     {t("applications.exportPdf") || "Export PDF"}
                   </button>
+                </div>
+              </div>
+
+              {/* Email Export Section */}
+              <div className="p-4 rounded-lg border theme-border-glass">
+                <div className="mb-3">
+                  <h4 className="font-medium theme-text-primary mb-2">Email Export</h4>
+                  <input
+                    type="email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    placeholder={t("applications.enterEmailAddress") || "Enter email address"}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex gap-3">
+                    <button
+                      disabled={!emailAddress.trim() || sendingEmail}
+                      onClick={() => sendApplicationsEmail(applications, 'csv')}
+                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    >
+                      {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                      Send CSV
+                    </button>
+                    <button
+                      disabled={!emailAddress.trim() || sendingEmail}
+                      onClick={() => sendApplicationsEmail(applications, 'pdf')}
+                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                    >
+                      {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                      Send PDF
+                    </button>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
+                      onClick={() => sendApplicationsEmail(filteredApplications, 'csv')}
+                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    >
+                      {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                      Send Filtered CSV
+                    </button>
+                    <button
+                      disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
+                      onClick={() => sendApplicationsEmail(filteredApplications, 'pdf')}
+                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                    >
+                      {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                      Send Filtered PDF
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2281,6 +2785,108 @@ return (
                 </p>
               </div>
 
+              {/* POA Offence Information */}
+              {selectedApplication.actType === 'PoA Act' && (selectedApplication.offenceCategory || selectedApplication.offenceType) && (
+                <div className="md:col-span-2 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    PoA Act Offence Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {selectedApplication.offenceCategory && (
+                      <div>
+                        <p className="text-xs theme-text-muted mb-1">Offence Category</p>
+                        <p className="font-medium theme-text-primary">{selectedApplication.offenceCategory}</p>
+                      </div>
+                    )}
+                    {selectedApplication.offenceType && (
+                      <div>
+                        <p className="text-xs theme-text-muted mb-1">Specific Offence</p>
+                        <p className="font-medium theme-text-primary">{selectedApplication.offenceType}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expected Amount Adjustment */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium theme-text-primary">Expected Relief Amount</label>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                          ₹{expectedAmount.toLocaleString('en-IN')}
+                        </div>
+                        <div className="text-xs theme-text-muted">Adjustable by officer</div>
+                      </div>
+                    </div>
+
+                    {/* Slider */}
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="2000000"
+                        step="10000"
+                        value={expectedAmount}
+                        onChange={(e) => setExpectedAmount(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
+                      />
+                      <div className="flex justify-between text-xs theme-text-muted">
+                        <span>₹0</span>
+                        <span>₹20,00,000</span>
+                      </div>
+                    </div>
+
+                    {/* Text Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={expectedAmount}
+                        onChange={(e) => setExpectedAmount(Number(e.target.value) || 0)}
+                        className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-sm"
+                        placeholder="Enter amount"
+                      />
+                      <button
+                        onClick={() => {
+                          if (selectedApplication) {
+                            updateApplicationAmount(selectedApplication.id, expectedAmount);
+                          }
+                        }}
+                        disabled={!selectedApplication || expectedAmount === selectedApplication.amount}
+                        className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${
+                          theme === "light" ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"
+                        } disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                      >
+                        Update Amount
+                      </button>
+                    </div>
+
+                    {/* Guideline Amount Display */}
+                    {selectedApplication.offenceCategory && selectedApplication.offenceType && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-green-800 dark:text-green-200">PoA Guideline Amount</span>
+                        </div>
+                        <div className="text-lg font-bold text-green-700 dark:text-green-300">
+                          {(() => {
+                            const category = POA_OFFENCES[selectedApplication.offenceCategory as keyof typeof POA_OFFENCES];
+                            const compensation = category && selectedApplication.offenceType in category
+                              ? category[selectedApplication.offenceType as keyof typeof category] as string | number
+                              : null;
+                            if (compensation && typeof compensation === "string" && compensation.includes("-")) {
+                              return `₹${compensation.replace("-", " - ₹")}`;
+                            }
+                            return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                 <p className="text-xs theme-text-muted mb-1">
                   {t("extracted.status")}
@@ -2366,5 +2972,34 @@ return (
 );
 
 };
+
+// Custom CSS for slider
+const sliderStyles = `
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px #3b82f6;
+  }
+  .slider::-webkit-slider-thumb:hover {
+    background: #2563eb;
+  }
+  .slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px #3b82f6;
+  }
+  .slider::-moz-range-thumb:hover {
+    background: #2563eb;
+  }
+`;
 
 export default ApplicationsPage;
