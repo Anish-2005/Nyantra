@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar } from 'lucide-react';
+import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar, Mic, MicOff } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -304,6 +304,8 @@ const GrievancePage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<any[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -456,6 +458,38 @@ const GrievancePage = () => {
     handler(mq);
     mq.addEventListener('change', handler as EventListener);
     return () => mq.removeEventListener('change', handler as EventListener);
+  }, []);
+
+  // Voice recognition initialization
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setNewMessage(prev => prev + (prev ? ' ' : '') + transcript);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
   }, []);
 
   // Auto-scroll to bottom of chat when messages change
@@ -626,6 +660,18 @@ const GrievancePage = () => {
     } catch (err) {
       console.error('Failed to send message', err);
       setPendingMessages(prev => prev.filter(msg => msg !== pendingMessage));
+    }
+  };
+
+  const startVoiceRecording = () => {
+    if (recognition && !isRecording) {
+      recognition.start();
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (recognition && isRecording) {
+      recognition.stop();
     }
   };
 
@@ -1251,16 +1297,32 @@ const GrievancePage = () => {
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       placeholder={t('extracted.write_message') || 'Write a message...'}
-                      className="w-full px-4 py-3 pr-12 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="w-full px-4 py-3 pr-20 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                     />
-                    <button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
-                      aria-label={t('extracted.send_message') || 'Send message'}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </button>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      {recognition && (
+                        <button
+                          onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                          className={`p-2 rounded-lg transition-all hover:shadow-lg ${
+                            isRecording
+                              ? 'bg-red-500 text-white animate-pulse'
+                              : 'accent-gradient text-white hover:opacity-90'
+                          }`}
+                          aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+                          title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                        >
+                          {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                        </button>
+                      )}
+                      <button
+                        onClick={sendMessage}
+                        disabled={!newMessage.trim()}
+                        className="p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+                        aria-label={t('extracted.send_message') || 'Send message'}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

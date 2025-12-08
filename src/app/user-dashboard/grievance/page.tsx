@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import LoadingState from '@/components/LoadingState';
-import { Shield, MessageCircle } from 'lucide-react';
+import { Shield, MessageCircle, Mic, MicOff } from 'lucide-react';
 // Grievance type definition matching the admin page
 type Grievance = {
   id: string;
@@ -210,6 +210,8 @@ export default function GrievancePage() {
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('');
   const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
   const { theme } = useTheme();
@@ -288,6 +290,38 @@ export default function GrievancePage() {
       return () => clearTimeout(timer);
     }
   }, [pendingMessages.length, selectedGrv?.communication]);
+
+  // Voice recognition initialization
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setNewMessage(prev => prev + (prev ? ' ' : '') + transcript);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
 
   const submitGrievance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -376,6 +410,18 @@ export default function GrievancePage() {
       console.error('Error sending message:', error);
       // Remove from pending messages on error
       setPendingMessages(prev => prev.filter(msg => msg !== pendingMessage));
+    }
+  };
+
+  const startVoiceRecording = () => {
+    if (recognition && !isRecording) {
+      recognition.start();
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (recognition && isRecording) {
+      recognition.stop();
     }
   };
 
@@ -1036,14 +1082,30 @@ export default function GrievancePage() {
 
                       {/* Message Input */}
                       <div className="mt-3 flex gap-2">
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder={t('extracted.write_message')}
-                          className="flex-1 px-4 py-3 text-sm rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                        />
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder={t('extracted.write_message')}
+                            className="w-full px-4 py-3 pr-12 text-sm rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                          />
+                          {recognition && (
+                            <button
+                              onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all hover:shadow-lg ${
+                                isRecording
+                                  ? 'bg-red-500 text-white animate-pulse'
+                                  : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                              }`}
+                              aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+                              title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                            >
+                              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                            </button>
+                          )}
+                        </div>
                         <button
                           onClick={sendMessage}
                           disabled={!newMessage.trim()}

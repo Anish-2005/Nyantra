@@ -296,8 +296,9 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
                 if (value?.isEmpty ?? true) return 'Age is required';
                 final age = int.tryParse(value!);
                 if (age == null) return 'Please enter a valid age';
-                if (age < 0 || age > 120)
+                if (age < 0 || age > 120) {
                   return 'Please enter a valid age (0-120)';
+                }
                 return null;
               },
             ),

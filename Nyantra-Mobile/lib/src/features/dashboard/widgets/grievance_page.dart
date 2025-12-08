@@ -1,9 +1,10 @@
-// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides, avoid_unnecessary_containers
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides, avoid_unnecessary_containers, avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'dart:math';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart' as app_auth;
@@ -1069,6 +1070,15 @@ class GrievanceDetailsScreen extends StatefulWidget {
 class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   final _messageCtrl = TextEditingController();
   bool _sending = false;
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _lastWords = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+  }
 
   @override
   void dispose() {
@@ -1109,6 +1119,35 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
       }
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _lastWords = val.recognizedWords;
+            _messageCtrl.text = _messageCtrl.text.isEmpty
+                ? _lastWords
+                : '${_messageCtrl.text} $_lastWords';
+          }),
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 5),
+          partialResults: true,
+          onSoundLevelChange: (level) {
+            // You can use this to show visual feedback
+          },
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
     }
   }
 
@@ -1400,7 +1439,27 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                         maxLines: 4,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _listen,
+                      icon: Icon(
+                        _isListening ? Icons.mic_off : Icons.mic,
+                        color: _isListening ? Colors.red : theme.primaryColor,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: _isListening
+                            ? Colors.red.withOpacity(0.1)
+                            : theme.primaryColor.withOpacity(0.1),
+                        padding: const EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      tooltip: _isListening
+                          ? 'Stop recording'
+                          : 'Start voice recording',
+                    ),
+                    const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: _sending ? null : _sendMessage,
                       style: ElevatedButton.styleFrom(

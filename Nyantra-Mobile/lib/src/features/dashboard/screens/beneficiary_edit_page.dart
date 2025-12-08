@@ -242,8 +242,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                     if (value?.isEmpty ?? true) return 'Age is required';
                     final age = int.tryParse(value!);
                     if (age == null) return 'Please enter a valid age';
-                    if (age < 0 || age > 120)
+                    if (age < 0 || age > 120) {
                       return 'Please enter a valid age (0-120)';
+                    }
                     return null;
                   },
                 ),
@@ -273,8 +274,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                   locale,
                   labelKey: 'beneficiaries.maritalStatus',
                   validator: (value) {
-                    if (value?.isEmpty ?? true)
+                    if (value?.isEmpty ?? true) {
                       return 'Marital status is required';
+                    }
                     return null;
                   },
                 ),
@@ -285,8 +287,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                   controller: _bankCtrl,
                   labelKey: 'beneficiaries.bankAccount',
                   validator: (value) {
-                    if (value?.isEmpty ?? true)
+                    if (value?.isEmpty ?? true) {
                       return 'Bank account is required';
+                    }
                     return null;
                   },
                 ),
