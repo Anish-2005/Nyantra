@@ -10,7 +10,7 @@ import {
   Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users, Banknote,
   DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon,
   Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3, Target,
-  Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter, ChevronDown
+  Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter, ChevronDown, Mail, X
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -40,6 +40,11 @@ const AnalyticsPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+
+  // Export modal and email states
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   // Combine disbursements
   const allDisbursements = useMemo(() => [...disbursements, ...manualDisbursements], [disbursements, manualDisbursements]);
@@ -795,6 +800,167 @@ const AnalyticsPage = () => {
     doc.save('monthly-analytics-report.pdf');
   };
 
+  // Email export function
+  const sendAnalyticsEmail = async (format: 'csv' | 'pdf') => {
+    if (!emailAddress.trim()) {
+      alert(t('extracted.please_enter_valid_email') || 'Please enter a valid email address');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      let attachmentData: string;
+      let filename: string;
+      let mimeType: string;
+
+      if (format === 'csv') {
+        // Generate CSV data
+        const csvData = [
+          ['Metric', 'Value'],
+          ['Total Applications', analyticsData.overview.totalApplications.toString()],
+          ['Total Disbursements', analyticsData.overview.totalDisbursements.toString()],
+          ['Total Amount', `₹${analyticsData.overview.totalAmount.toLocaleString()}`],
+          ['Success Rate', `${analyticsData.overview.successRate.toFixed(1)}%`],
+          ['Pending Applications', analyticsData.overview.pendingApplications.toString()],
+          ['Rejected Applications', analyticsData.overview.rejectedApplications.toString()],
+          ['Top District', analyticsData.topDistricts[0]?.district || 'N/A'],
+          ['Top State', analyticsData.stateWiseData[0]?.state || 'N/A'],
+          ['Report Period', timeRange],
+          ['Generated Date', new Date().toLocaleDateString()]
+        ];
+
+        // Add state-wise data
+        csvData.push(['', '']);
+        csvData.push(['State-wise Data', '']);
+        csvData.push(['State', 'Applications', 'Disbursements', 'Amount', 'Success Rate']);
+        analyticsData.stateWiseData.forEach((state: any) => {
+          csvData.push([
+            state.state,
+            state.applications.toString(),
+            state.disbursements.toString(),
+            `₹${state.amount.toLocaleString()}`,
+            `${state.successRate.toFixed(1)}%`
+          ]);
+        });
+
+        attachmentData = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+        filename = 'analytics-report.csv';
+        mimeType = 'text/csv';
+      } else {
+        // Generate PDF
+        const doc = new jsPDF();
+        doc.setFontSize(20);
+        doc.text('Analytics Report', 20, 30);
+        doc.setFontSize(12);
+        doc.text(`Report Period: ${timeRange}`, 20, 40);
+        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 50);
+
+        // Summary metrics
+        doc.setFontSize(16);
+        doc.text('Summary Metrics', 20, 70);
+
+        const summaryData = [
+          ['Total Applications', analyticsData.overview.totalApplications.toString()],
+          ['Total Disbursements', analyticsData.overview.totalDisbursements.toString()],
+          ['Total Amount', `₹${analyticsData.overview.totalAmount.toLocaleString()}`],
+          ['Success Rate', `${analyticsData.overview.successRate.toFixed(1)}%`],
+          ['Pending Applications', analyticsData.overview.pendingApplications.toString()],
+          ['Rejected Applications', analyticsData.overview.rejectedApplications.toString()],
+          ['Top District', analyticsData.topDistricts[0]?.district || 'N/A'],
+          ['Top State', analyticsData.stateWiseData[0]?.state || 'N/A']
+        ];
+
+        autoTable(doc, {
+          body: summaryData,
+          startY: 80,
+          styles: { fontSize: 10 },
+          columnStyles: {
+            0: { fontStyle: 'bold', fillColor: [240, 240, 240] }
+          }
+        });
+
+        // State-wise data
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text('State-wise Analytics', 20, 30);
+
+        const stateHeaders = [['State', 'Applications', 'Disbursements', 'Amount (₹)', 'Success Rate']];
+        const stateData = analyticsData.stateWiseData.map((state: any) => [
+          state.state,
+          state.applications.toString(),
+          state.disbursements.toString(),
+          state.amount.toLocaleString(),
+          `${state.successRate.toFixed(1)}%`
+        ]);
+
+        autoTable(doc, {
+          head: stateHeaders,
+          body: stateData,
+          startY: 40,
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [59, 130, 246] }
+        });
+
+        attachmentData = doc.output('datauristring').split(',')[1];
+        filename = 'analytics-report.pdf';
+        mimeType = 'application/pdf';
+      }
+
+      // Send email
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailAddress.trim(),
+          subject: `Nyantra Analytics Report - ${timeRange}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #1e40af;">Nyantra - Analytics Report</h2>
+              <p>Dear User,</p>
+              <p>Please find attached the analytics report for the ${timeRange} period.</p>
+              <p><strong>Report Details:</strong></p>
+              <ul>
+                <li>Report Period: ${timeRange}</li>
+                <li>Format: ${format.toUpperCase()}</li>
+                <li>Generated: ${new Date().toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</li>
+              </ul>
+              <p>This report is generated by the Nyantra Analytics Dashboard.</p>
+              <p>Best regards,<br>Nyantra Team</p>
+            </div>
+          `,
+          attachments: [{
+            filename,
+            content: attachmentData,
+            contentType: mimeType,
+            encoding: format === 'csv' ? 'utf8' : 'base64'
+          }]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      const result = await response.json();
+      alert(t('extracted.email_sent_successfully') || 'Email sent successfully!');
+      setEmailAddress('');
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert(t('extracted.failed_to_send_email') || 'Failed to send email. Please try again.');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const generatePerformanceReport = () => {
     const doc = new jsPDF();
     
@@ -1131,7 +1297,7 @@ const AnalyticsPage = () => {
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => exportByFormat(exportFormat)}
+                onClick={() => setShowExportModal(true)}
                 className="p-2 rounded theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
                 title={t('extracted.export')}
               >
@@ -1946,6 +2112,124 @@ const AnalyticsPage = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
+              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <Download className="w-5 h-5 text-accent-gradient" />
+                    {t('extracted.export') || 'Export Data'}
+                  </h3>
+                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export analytics data as CSV or PDF report.'}</p>
+                </div>
+                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                  <X className="w-5 h-5 theme-text-primary" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full analytics dataset in the chosen format.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{analyticsData.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm theme-text-muted">{analyticsData.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Export Section */}
+              <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                <div className="mb-4">
+                  <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    {t('extracted.emailExport') || 'Email Export'}
+                  </h4>
+                  <input
+                    type="email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allAnalytics') || 'All Analytics'}</h5>
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendAnalyticsEmail('csv')}
+                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendCsv') || 'Send CSV'}
+                      </button>
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendAnalyticsEmail('pdf')}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendPdf') || 'Send PDF'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
