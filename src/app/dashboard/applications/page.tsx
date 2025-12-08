@@ -551,69 +551,6 @@ interface Application {
     lastUpdate: string;
 }
 
-// Function to export applications data as CSV
-const exportApplicationsData = (applications: Application[]) => {
-    const headers = [
-        'Application ID',
-        'Applicant Name',
-        'Beneficiary ID',
-        'Aadhaar Number',
-        'Phone Number',
-        'District',
-        'State',
-        'Act Type',
-        'Incident Date',
-        'FIR Report',
-        'Medical Report',
-        'Police Station',
-        'Case Number',
-        t("applications.sortOptions.applicationDate") || 'Application Date',
-        'Status',
-        'Amount (INR)',
-        'Priority',
-        'Assigned Officer',
-        'Documents Count',
-        'Last Update'
-    ];
-
-    const rows = applications.map(app => [
-        app.id,
-        app.applicantName,
-        app.beneficiaryId || '',
-        app.aadhaar,
-        app.phone,
-        app.district,
-        app.state,
-        app.actType,
-        app.incidentDate,
-        (app as any).firReport || '',
-        (app as any).medicalReport || '',
-        (app as any).policeStation || '',
-        (app as any).caseNumber || '',
-        app.applicationDate,
-        app.status,
-        app.amount.toString(),
-        app.priority,
-        app.assignedOfficer,
-        app.documents.toString(),
-        app.lastUpdate
-    ]);
-
-    const csvContent = [headers, ...rows]
-        .map(row => row.map(field => `"${field}"`).join(','))
-        .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `applications_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-};
-
 // Function to export applications data as PDF (professional A4 report)
 const exportApplicationsPDF = (applications: Application[]) => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -873,8 +810,8 @@ const ApplicationsPage = () => {
 
             if (sortBy === 'amount') {
                 // Numeric sorting for amount
-                aVal = parseFloat(a.amount) || 0;
-                bVal = parseFloat(b.amount) || 0;
+                aVal = a.amount || 0;
+                bVal = b.amount || 0;
             } else if (sortBy === 'status') {
                 // Custom status order: approved -> in-review -> pending -> documents-required -> rejected
                 const statusOrder = {
@@ -933,6 +870,69 @@ const ApplicationsPage = () => {
             documentsRequired: applications.filter(a => a.status === 'documents-required').length
         };
     }, [applications]);
+
+    // Function to export applications data as CSV
+    const exportApplicationsData = (applications: Application[]) => {
+        const headers = [
+            'Application ID',
+            'Applicant Name',
+            'Beneficiary ID',
+            'Aadhaar Number',
+            'Phone Number',
+            'District',
+            'State',
+            'Act Type',
+            'Incident Date',
+            'FIR Report',
+            'Medical Report',
+            'Police Station',
+            'Case Number',
+            t("applications.sortOptions.applicationDate") || 'Application Date',
+            'Status',
+            'Amount (INR)',
+            'Priority',
+            'Assigned Officer',
+            'Documents Count',
+            'Last Update'
+        ];
+
+        const rows = applications.map(app => [
+            app.id,
+            app.applicantName,
+            app.beneficiaryId || '',
+            app.aadhaar,
+            app.phone,
+            app.district,
+            app.state,
+            app.actType,
+            app.incidentDate,
+            (app as any).firReport || '',
+            (app as any).medicalReport || '',
+            (app as any).policeStation || '',
+            (app as any).caseNumber || '',
+            app.applicationDate,
+            app.status,
+            app.amount.toString(),
+            app.priority,
+            app.assignedOfficer,
+            app.documents.toString(),
+            app.lastUpdate
+        ]);
+
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(field => `"${field}"`).join(','))
+            .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `applications_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     // Detect small screens and adjust UI defaults for better mobile UX
     useEffect(() => {

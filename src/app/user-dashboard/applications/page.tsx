@@ -266,8 +266,8 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
       // Handle offence selection for PoA Act
       if (field === 'offenceType' && value && prev.offenceCategory) {
         const category = POA_OFFENCES[prev.offenceCategory as keyof typeof POA_OFFENCES];
-        if (category && category[value]) {
-          const compensation = category[value];
+        if (category && value in category) {
+          const compensation = category[value as keyof typeof category] as string | number;
           // Store the compensation value (string for ranges, number for fixed amounts)
           newData.amount = compensation.toString();
         }
@@ -662,11 +662,13 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
       {(() => {
         const category =
           POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
-        const compensation = category?.[formData.offenceType];
-        if (typeof compensation === "string" && compensation.includes("-")) {
+        const compensation = category && formData.offenceType in category
+          ? category[formData.offenceType as keyof typeof category] as string | number
+          : null;
+        if (compensation && typeof compensation === "string" && compensation.includes("-")) {
           return `₹${compensation.replace("-", " - ₹")}`;
         }
-        return `₹${(compensation as number).toLocaleString("en-IN")}`;
+        return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
       })()}
     </div>
 

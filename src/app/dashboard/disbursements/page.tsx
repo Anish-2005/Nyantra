@@ -626,7 +626,7 @@ const DisbursementsPage: React.FC = () => {
 
     Object.entries(statusCounts).forEach(([status, count]) => {
         const statusText = status.replace(/-/g, ' ').toUpperCase();
-        const percentage = ((count / items.length) * 100).toFixed(1);
+        const percentage = ((count as number/ items.length) * 100).toFixed(1);
         doc.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
         yPosition += 5;
     });
