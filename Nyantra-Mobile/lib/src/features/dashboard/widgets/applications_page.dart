@@ -1,4 +1,4 @@
-// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers
+// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, deprecated_member_use, avoid_unnecessary_containers, annotate_overrides
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -861,6 +861,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
   String? _beneficiaryError;
   String? _selectedActType;
   String? _selectedGender;
+  String? _selectedMaritalStatus;
 
   @override
   void initState() {
@@ -870,6 +871,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _beneficiaryError = null;
     _selectedActType = 'PCR';
     _selectedGender = 'M';
+    _selectedMaritalStatus = 'Single';
   }
 
   @override
@@ -1100,6 +1102,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     required String labelKey,
     TextInputType keyboardType = TextInputType.text,
     bool readOnly = false,
+    String? Function(String?)? validator,
   }) {
     final label =
         labelKey.startsWith('applications.') ||
@@ -1107,10 +1110,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         ? locale.translate(labelKey)
         : labelKey;
 
-    return TextField(
+    return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       readOnly: readOnly,
+      validator: validator,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -1125,6 +1129,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     LocaleProvider locale, {
     required TextEditingController controller,
     required String labelKey,
+    String? Function(String?)? validator,
   }) {
     final label =
         labelKey.startsWith('applications.') ||
@@ -1132,9 +1137,10 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         ? locale.translate(labelKey)
         : labelKey;
 
-    return TextField(
+    return TextFormField(
       controller: controller,
       readOnly: true,
+      validator: validator,
       onTap: () async {
         final DateTime? picked = await showDatePicker(
           context: context,
@@ -1220,7 +1226,40 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     );
   }
 
-  @override
+  Widget _buildMaritalStatusDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedMaritalStatus,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedMaritalStatus = newValue;
+          });
+        }
+      },
+      items: ['Single', 'Married', 'Divorced', 'Widowed']
+          .map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          })
+          .toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
@@ -1258,68 +1297,32 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        TextFormField(
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _applicantNameCtrl,
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.applicant_name',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            labelStyle: theme.textTheme.bodySmall,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.applicant_name',
+                          keyboardType: TextInputType.name,
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _aadhaarCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.aadhaar',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.aadhaar',
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
                               : null,
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _contactNumberCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.phone_number',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.phone_number',
                           keyboardType: TextInputType.phone,
                           validator: (value) => value?.isEmpty ?? true
                               ? localeProvider.translate('common.required')
@@ -1329,22 +1332,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFormField(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
                                 controller: _districtCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'extracted.district',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
+                                labelKey: 'applications.district',
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
                                         'common.required',
@@ -1352,24 +1344,13 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                                     : null,
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 8),
                             Expanded(
-                              child: TextFormField(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
                                 controller: _stateCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'extracted.state',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
+                                labelKey: 'applications.state',
                                 validator: (value) => value?.isEmpty ?? true
                                     ? localeProvider.translate(
                                         'common.required',
@@ -1445,160 +1426,134 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                             );
                           },
                         ),
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildDateInput(
+                          theme,
+                          localeProvider,
                           controller: _incidentDateCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.incidentDateHint',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          labelKey: 'applications.incidentDateHint',
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
                         ),
-                        const SizedBox(height: 16),
-
-                        // Case Details Section
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.primaryColor.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.primaryColor.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                localeProvider.translate(
-                                  'applications.caseDetails',
-                                ),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.primaryColor,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _firReportCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.firReport',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterFirReport',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                maxLines: 3,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _medicalReportCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.medicalReport',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterMedicalReport',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                maxLines: 3,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _policeStationCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.policeStation',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterPoliceStation',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _caseNumberCtrl,
-                                decoration: InputDecoration(
-                                  labelText: localeProvider.translate(
-                                    'applications.caseNumber',
-                                  ),
-                                  hintText: localeProvider.translate(
-                                    'applications.enterCaseNumber',
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.cardColor.withOpacity(0.03),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
                           controller: _amountCtrl,
+                          labelKey: 'applications.reliefAmountINR',
+                          keyboardType: TextInputType.number,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? localeProvider.translate('common.required')
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _emailCtrl,
+                          labelKey: 'extracted.email',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _fatherNameCtrl,
+                          labelKey: 'applications.fatherName',
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _addressCtrl,
+                          maxLines: 3,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
-                              'applications.amountRequested',
+                              'extracted.address',
                             ),
                             filled: true,
                             fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _ageCtrl,
+                                labelKey: 'extracted.age',
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildGenderDropdown(
+                                theme,
+                                localeProvider,
+                                labelKey: 'extracted.gender',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildMaritalStatusDropdown(
+                          theme,
+                          localeProvider,
+                          labelKey: 'applications.maritalStatus',
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _bankAccountCtrl,
+                                labelKey: 'applications.bankAccount',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildInput(
+                                theme,
+                                localeProvider,
+                                controller: _ifscCtrl,
+                                labelKey: 'applications.ifsc',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _firReportCtrl,
+                          labelKey: 'applications.firReport',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _medicalReportCtrl,
+                          labelKey: 'applications.medicalReport',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _policeStationCtrl,
+                          labelKey: 'applications.policeStation',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildInput(
+                          theme,
+                          localeProvider,
+                          controller: _caseNumberCtrl,
+                          labelKey: 'applications.caseNumber',
                         ),
                       ],
                     ),
