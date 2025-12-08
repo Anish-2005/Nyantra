@@ -945,7 +945,7 @@ const ApplicationsPage = () => {
 
         setSendingEmail(true);
         try {
-            let attachmentData: string | ArrayBuffer;
+            let attachmentData: string | Buffer;
             let attachmentName: string;
             let attachmentType: string;
 
@@ -1151,7 +1151,7 @@ const ApplicationsPage = () => {
                 pdfDoc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
 
                 // Get PDF as buffer
-                attachmentData = pdfDoc.output('arraybuffer');
+                attachmentData = Buffer.from(pdfDoc.output('arraybuffer'));
                 attachmentName = `nyantra_applications_report_${new Date().toISOString().split('T')[0]}.pdf`;
                 attachmentType = 'application/pdf';
             }
