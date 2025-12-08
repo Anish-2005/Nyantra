@@ -1502,7 +1502,7 @@ const DisbursementsPage: React.FC = () => {
                     <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
                       <ArrowUpDown className="w-3 h-3 text-white" />
                     </div>
-                    <label className="text-sm font-medium theme-text-primary">{t("extracted.sortBy") || "Sort By"}</label>
+                    <label className="text-sm font-medium theme-text-primary">{t("extracted_grouped.hero.sortBy") || "Sort By"}</label>
                   </div>
                   <select
                     value={sortBy}
@@ -1510,9 +1510,9 @@ const DisbursementsPage: React.FC = () => {
                     className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                   >
-                    <option value="initiatedDate">{t("extracted.sortOptions.initiatedDate") || "Initiated Date"}</option>
-                    <option value="reliefAmount">{t("extracted.sortOptions.reliefAmount") || "Amount"}</option>
-                    <option value="status">{t("extracted.sortOptions.status") || "Status"}</option>
+                    <option value="initiatedDate">{t("extracted_grouped.hero.sortOptions.initiatedDate") || "Initiated Date"}</option>
+                    <option value="reliefAmount">{t("extracted_grouped.hero.sortOptions.reliefAmount") || "Amount"}</option>
+                    <option value="status">{t("extracted_grouped.hero.sortOptions.status") || "Status"}</option>
                   </select>
                 </div>
                 <div>
@@ -1520,7 +1520,7 @@ const DisbursementsPage: React.FC = () => {
                     <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
                       <ArrowUpDown className="w-3 h-3 text-white" />
                     </div>
-                    <label className="text-sm font-medium theme-text-primary">{t("extracted.sortOrder") || "Sort Order"}</label>
+                    <label className="text-sm font-medium theme-text-primary">{t("extracted_grouped.hero.sortOrder") || "Sort Order"}</label>
                   </div>
                   <select
                     value={sortOrder}
@@ -1530,11 +1530,11 @@ const DisbursementsPage: React.FC = () => {
                   >
                     <option value="desc">
                       {sortBy === 'reliefAmount' ? (t("extracted.sortOrderOptions.highToLow") || 'High to Low') : 
-                       sortBy === 'status' ? (t("extracted.sortOrderOptions.completedToPending") || 'Completed to Pending') : (t("extracted.sortOrderOptions.newestFirst") || 'Newest First')}
+                       sortBy === 'status' ? (t("extracted.sortOrderOptions.completedToPending") || 'Completed to Pending') : (t("extracted_grouped.hero.sortOrderOptions.newestFirst") || 'Newest First')}
                     </option>
                     <option value="asc">
                       {sortBy === 'reliefAmount' ? (t("extracted.sortOrderOptions.lowToHigh") || 'Low to High') : 
-                       sortBy === 'status' ? (t("extracted.sortOrderOptions.pendingToCompleted") || 'Pending to Completed') : (t("extracted.sortOrderOptions.oldestFirst") || 'Oldest First')}
+                       sortBy === 'status' ? (t("extracted.sortOrderOptions.pendingToCompleted") || 'Pending to Completed') : (t("extracted_grouped.hero.sortOrderOptions.oldestFirst") || 'Oldest First')}
                     </option>
                   </select>
                 </div>
