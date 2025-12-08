@@ -378,7 +378,10 @@ class DataService {
   }
 
   static Future<void> createBeneficiary(BeneficiaryModel beneficiary) async {
-    await _firestore.collection('beneficiaries').add(beneficiary.toFirestore());
+    await _firestore
+        .collection('beneficiaries')
+        .doc(beneficiary.id)
+        .set(beneficiary.toFirestore());
   }
 
   static Future<void> updateBeneficiary(

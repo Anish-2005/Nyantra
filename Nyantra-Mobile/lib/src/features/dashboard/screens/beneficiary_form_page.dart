@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/beneficiary_model.dart';
 import '../../../core/services/data_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 
 class BeneficiaryFormPage extends StatefulWidget {
   const BeneficiaryFormPage({super.key});
@@ -77,8 +78,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         throw Exception('User not authenticated');
       }
 
+      // Generate a random 13-digit number for the beneficiary ID
+      final random = Random();
+      final randomId =
+          '${random.nextInt(900000000) + 100000000}${random.nextInt(10000) + 1000}';
+
       final beneficiary = BeneficiaryModel(
-        id: '',
+        id: 'BEN$randomId',
         name: _nameCtrl.text.trim(),
         aadhaar: _aadhaarCtrl.text.trim(),
         bankAccount: _bankCtrl.text.trim(),
@@ -96,6 +102,8 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         ownerId: user.uid,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        registrationDate: DateTime.now(),
+        status: 'pending-verification',
       );
 
       await DataService.createBeneficiary(beneficiary);

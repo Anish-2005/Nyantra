@@ -161,12 +161,19 @@ const AnalyticsPage = () => {
 
   // Fetch beneficiaries data
   useEffect(() => {
-    const q = query(collection(db, 'beneficiaries'), orderBy('registrationDate', 'desc'));
+    // Remove orderBy to include beneficiaries without registrationDate
+    const q = query(collection(db, 'beneficiaries'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const items = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      // Sort in memory to handle missing registrationDate
+      items.sort((a, b) => {
+        const aDate = new Date((a.registrationDate || a.createdAt)?.toDate?.() || '1970-01-01');
+        const bDate = new Date((b.registrationDate || b.createdAt)?.toDate?.() || '1970-01-01');
+        return bDate.getTime() - aDate.getTime();
+      });
       setBeneficiaries(items);
     });
     return () => unsubscribe();

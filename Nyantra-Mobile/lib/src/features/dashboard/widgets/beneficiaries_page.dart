@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/services/data_service.dart';
@@ -299,6 +300,80 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // Beneficiary ID at the top with copy button
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.badge,
+                                                size: 16,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '${localeProvider.translate('extracted.beneficiaryId')}: ${beneficiary.id}',
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                              const Spacer(),
+                                              IconButton(
+                                                onPressed: () async {
+                                                  await Clipboard.setData(
+                                                    ClipboardData(
+                                                      text: beneficiary.id,
+                                                    ),
+                                                  );
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        localeProvider.translate(
+                                                          'copied_to_clipboard',
+                                                        ),
+                                                      ),
+                                                      duration: const Duration(
+                                                        seconds: 2,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                icon: Icon(
+                                                  Icons.copy,
+                                                  size: 16,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
+                                                tooltip: localeProvider
+                                                    .translate('copy_id'),
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 16),
+
                                         // Header with name and bank account indicator
                                         Row(
                                           children: [
@@ -435,16 +510,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
-                                                Icons.badge,
-                                                localeProvider.translate(
-                                                  'extracted.beneficiaryId',
-                                                ),
-                                                beneficiary.id,
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
                                                 Icons.event_available,
                                                 localeProvider.translate(
                                                   'extracted.created',
@@ -456,13 +521,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                     : 'N/A',
                                               ),
                                             ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 12),
-
-                                        Row(
-                                          children: [
                                             Expanded(
                                               child: _buildDetailItem(
                                                 context,
@@ -471,22 +529,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
                                                   'extracted.category',
                                                 ),
                                                 beneficiary.category ?? 'N/A',
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: _buildDetailItem(
-                                                context,
-                                                Icons.date_range,
-                                                localeProvider.translate(
-                                                  'applications.registration_date',
-                                                ),
-                                                beneficiary.registrationDate !=
-                                                        null
-                                                    ? beneficiary
-                                                          .registrationDate!
-                                                          .toString()
-                                                          .split(' ')[0]
-                                                    : 'N/A',
                                               ),
                                             ),
                                           ],

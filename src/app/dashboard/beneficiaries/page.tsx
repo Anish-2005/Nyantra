@@ -990,7 +990,8 @@ const BeneficiariesPage = () => {
   // Subscribe to beneficiaries collection in Firestore
   useEffect(() => {
     const beneficiariesRef = collection(db, 'beneficiaries');
-    const q = query(beneficiariesRef, orderBy('registrationDate', 'desc'));
+    // Remove orderBy to include beneficiaries without registrationDate
+    const q = query(beneficiariesRef);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const items: any[] = [];
@@ -1016,7 +1017,7 @@ const BeneficiariesPage = () => {
           status: data.status || 'pending-verification',
           verificationStatus: data.verificationStatus || 'pending',
           category: data.category || 'SC',
-          registrationDate: toIso(data.registrationDate),
+          registrationDate: toIso(data.registrationDate || data.createdAt),
           priority: data.priority || 'medium',
           assignedOfficer: data.assignedOfficer || '',
           age: data.age || null,
@@ -1026,6 +1027,16 @@ const BeneficiariesPage = () => {
           ifsc: data.ifsc || null
         });
       });
+      
+      // Sort in memory to handle missing registrationDate
+      items.sort((a, b) => {
+        const aDateStr = a.registrationDate || '1970-01-01T00:00:00.000Z';
+        const bDateStr = b.registrationDate || '1970-01-01T00:00:00.000Z';
+        const aDate = new Date(aDateStr);
+        const bDate = new Date(bDateStr);
+        return bDate.getTime() - aDate.getTime();
+      });
+      
       setBeneficiaries(items);
       setLoading(false);
     }, (error) => {

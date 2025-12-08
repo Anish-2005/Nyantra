@@ -681,65 +681,6 @@ class _GrievancePageState extends State<GrievancePage> {
                                         textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(height: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(16),
-                                        margin: const EdgeInsets.symmetric(
-                                          horizontal: 32,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: theme.cardColor,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: theme.dividerColor
-                                                .withValues(alpha: 77),
-                                          ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              localeProvider.translate(
-                                                'grievances.firebaseInstruction',
-                                              ),
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: theme
-                                                    .scaffoldBackgroundColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: SelectableText(
-                                                currentUser?.uid ??
-                                                    localeProvider.translate(
-                                                      'grievances.noUserId',
-                                                    ),
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontFamily: 'monospace',
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              '${localeProvider.translate('grievances.firebaseConsoleInstruction')} "${currentUser?.uid ?? 'your-user-id'}"',
-                                              style: theme.textTheme.bodySmall,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ).animate().fadeIn(
