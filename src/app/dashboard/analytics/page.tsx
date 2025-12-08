@@ -2156,7 +2156,7 @@ const AnalyticsPage = () => {
                           <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full analytics dataset in the chosen format.'}</p>
                         </div>
                       </div>
-                      <p className="text-sm theme-text-muted">{analyticsData.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                      <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
@@ -2177,7 +2177,7 @@ const AnalyticsPage = () => {
                           <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
                         </div>
                       </div>
-                      <p className="text-sm theme-text-muted">{analyticsData.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                      <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>

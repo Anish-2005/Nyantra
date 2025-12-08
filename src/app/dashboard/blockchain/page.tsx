@@ -10,13 +10,14 @@ import BackgroundAnimation from "@/components/BackgroundAnimation";
 import ChainView from "./ChainView";
 import AddBlockForm from "./AddBlockForm";
 import { RefreshCw, Database, Shield, Activity, Lock, Key, Check } from "lucide-react";
+import { Block } from "@/app/api/blockchain/block";
 
 export default function BlockchainDashboard() {
   const { theme } = useTheme();
   const { user, profile, loading } = useAuth();
   const { t } = useLocale();
   const router = useRouter();
-  const [chain, setChain] = useState([]);
+  const [chain, setChain] = useState<Block[]>([]);
   const [message, setMessage] = useState("");
   const [fetchLoading, setFetchLoading] = useState(false);
 
@@ -30,7 +31,7 @@ export default function BlockchainDashboard() {
   const generateWeeklyKey = () => {
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
     
     // Create a deterministic key based on year and week
     const baseString = `${now.getFullYear()}W${weekNumber}NYANTRA`;
