@@ -44,6 +44,9 @@ class ApplicationModel {
   final String? firReport;
   final String? medicalReport;
   final String? policeStation;
+  // PoA specific fields
+  final String? offenceCategory;
+  final String? offenceType;
 
   ApplicationModel({
     required this.id,
@@ -85,6 +88,8 @@ class ApplicationModel {
     this.firReport,
     this.medicalReport,
     this.policeStation,
+    this.offenceCategory,
+    this.offenceType,
   });
 
   factory ApplicationModel.fromFirestore(Map<String, dynamic> data, String id) {
@@ -147,6 +152,8 @@ class ApplicationModel {
       firReport: data['firReport'] as String?,
       medicalReport: data['medicalReport'] as String?,
       policeStation: data['policeStation'] as String?,
+      offenceCategory: data['offenceCategory'] as String?,
+      offenceType: data['offenceType'] as String?,
     );
   }
 
@@ -190,6 +197,8 @@ class ApplicationModel {
       if (firReport != null) 'firReport': firReport,
       if (medicalReport != null) 'medicalReport': medicalReport,
       if (policeStation != null) 'policeStation': policeStation,
+      if (offenceCategory != null) 'offenceCategory': offenceCategory,
+      if (offenceType != null) 'offenceType': offenceType,
     };
   }
 
@@ -243,6 +252,8 @@ class ApplicationModel {
       firReport: json['firReport'],
       medicalReport: json['medicalReport'],
       policeStation: json['policeStation'],
+      offenceCategory: json['offenceCategory'],
+      offenceType: json['offenceType'],
     );
   }
 
@@ -287,6 +298,8 @@ class ApplicationModel {
       'firReport': firReport,
       'medicalReport': medicalReport,
       'policeStation': policeStation,
+      'offenceCategory': offenceCategory,
+      'offenceType': offenceType,
     };
   }
 

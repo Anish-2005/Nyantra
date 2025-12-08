@@ -12,6 +12,66 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/application_edit_page.dart';
 
+// PoA Act Offences Data Structure
+const Map<String, Map<String, dynamic>> poaOffences = {
+  "1. Offences leading to Death / Murder": {
+    "Murder of SC/ST person": 825000,
+    "Death due to injury inflicted during atrocity": 825000,
+    "Death after rape / gang rape": 825000,
+  },
+  "2. Rape and Sexual Offences": {
+    "Rape": 500000,
+    "Gang rape": 825000,
+    "Attempt to rape": 100000,
+    "Parading naked / semi-naked": 200000,
+    "Sexual harassment / use of criminal force": 100000,
+  },
+  "3. Grievous Hurt / Injury": {
+    "Grievous hurt": 125000,
+    "Permanent disability": 500000,
+    "Partial disability": 250000,
+    "Acid attack – deformity / disability": 825000,
+    "Acid attack – injury without deformity": 500000,
+  },
+  "4. Offences Against Women & Dignity": {
+    "Outraging modesty of SC/ST woman": 100000,
+    "Sexual exploitation / trafficking": 200000,
+    "Forced to work naked / semi-naked": 200000,
+  },
+  "5. Property Damage / Arson": {
+    "Burning of house / arson": "225000-425000",
+    "Destruction of household / property": "100000-200000",
+    "Destruction of crops": 100000,
+    "Destruction of cattle / livestock": 60000,
+  },
+  "6. Land & Economic Offences": {
+    "Wrongful dispossession from land": 200000,
+    "Destruction of standing crops": 100000,
+    "Economic boycott": 100000,
+    "Social boycott": 100000,
+    "Bonded labour / forced labour": 100000,
+  },
+  "7. Caste Atrocity / Humiliation Offences": {
+    "Intentional insult, intimidation, caste abuse": 100000,
+    "Preventing entry into public place": 100000,
+    "Preventing access to public well/tank/roads": 100000,
+    "Compelling to eat inedible / obnoxious substances": 100000,
+  },
+  "8. Kidnapping / Abduction": {
+    "Kidnapping SC/ST person": "100000-200000",
+    "Abduction with intent to outrage modesty": 200000,
+  },
+  "9. Mental Torture / Harassment": {
+    "Harassing, humiliating, intimidating": 100000,
+    "Public humiliation": "100000-200000",
+  },
+  "10. Other Serious Offences": {
+    "Preventing from voting": 100000,
+    "Poll violence against SC/ST": 200000,
+    "False, malicious, vexatious legal cases": 100000,
+  },
+};
+
 class ApplicationsPage extends StatefulWidget {
   const ApplicationsPage({super.key});
 
@@ -862,6 +922,8 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
   String? _selectedActType;
   String? _selectedGender;
   String? _selectedMaritalStatus;
+  String? _selectedOffenceCategory;
+  String? _selectedOffenceType;
 
   @override
   void initState() {
@@ -869,9 +931,11 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _beneficiaryValid = false;
     _checkingBeneficiary = false;
     _beneficiaryError = null;
-    _selectedActType = 'PCR';
+    _selectedActType = 'PCR Act';
     _selectedGender = 'M';
     _selectedMaritalStatus = 'Single';
+    _selectedOffenceCategory = null;
+    _selectedOffenceType = null;
   }
 
   @override
@@ -1032,7 +1096,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
             : null,
         district: _districtCtrl.text.trim(),
         state: _stateCtrl.text.trim(),
-        actType: _selectedActType ?? 'PCR',
+        actType: _selectedActType ?? 'PCR Act',
         incidentDate: _incidentDateCtrl.text.trim(),
         amount: double.tryParse(_amountCtrl.text.trim()),
         priority: _priorityCtrl.text.trim(),
@@ -1066,6 +1130,8 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         userId: currentUser.uid,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        offenceCategory: _selectedOffenceCategory,
+        offenceType: _selectedOffenceType,
       );
 
       await DataService.createApplication(application);
@@ -1175,6 +1241,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
 
     return DropdownButtonFormField<String>(
       value: _selectedActType,
+      isExpanded: true,
       onChanged: (String? newValue) {
         if (newValue != null) {
           setState(() {
@@ -1182,7 +1249,9 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
           });
         }
       },
-      items: ['PCR', 'PoA'].map<DropdownMenuItem<String>>((String value) {
+      items: ['PCR Act', 'PoA Act'].map<DropdownMenuItem<String>>((
+        String value,
+      ) {
         return DropdownMenuItem<String>(value: value, child: Text(value));
       }).toList(),
       decoration: InputDecoration(
@@ -1260,6 +1329,135 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     );
   }
 
+  Widget _buildOffenceCategoryDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label = 'Offence Category';
+
+    return DropdownButtonFormField<String>(
+      value: _selectedOffenceCategory,
+      isExpanded: true,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedOffenceCategory = newValue;
+            _selectedOffenceType =
+                null; // Reset offence type when category changes
+            // Auto-set amount based on first offence in category
+            final category = poaOffences[newValue];
+            if (category != null && category.isNotEmpty) {
+              final firstOffence = category.keys.first;
+              final compensation = category[firstOffence];
+              if (compensation is int) {
+                _amountCtrl.text = compensation.toString();
+              } else if (compensation is String && compensation.contains('-')) {
+                // For range values, take the first value
+                final firstValue = compensation.split('-')[0];
+                _amountCtrl.text = firstValue;
+              }
+            }
+          });
+        }
+      },
+      items: poaOffences.keys.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value, overflow: TextOverflow.ellipsis, softWrap: true),
+        );
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildOffenceTypeDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label = 'Specific Offence';
+
+    if (_selectedOffenceCategory == null) {
+      return Container(); // Don't show if no category selected
+    }
+
+    final offences = poaOffences[_selectedOffenceCategory!] ?? {};
+
+    return DropdownButtonFormField<String>(
+      value: _selectedOffenceType,
+      isExpanded: true,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedOffenceType = newValue;
+            // Auto-set amount based on selected offence
+            final compensation = offences[newValue];
+            if (compensation is int) {
+              _amountCtrl.text = compensation.toString();
+            } else if (compensation is String && compensation.contains('-')) {
+              // For range values, take the first value
+              final firstValue = compensation.split('-')[0];
+              _amountCtrl.text = firstValue;
+            }
+          });
+        }
+      },
+      items: offences.keys.map<DropdownMenuItem<String>>((String offence) {
+        final compensation = offences[offence];
+        final compensationText = compensation is int
+            ? '₹${compensation.toString()}'
+            : compensation is String && compensation.contains('-')
+            ? '₹${compensation.replaceAll('-', ' - ₹')} (range)'
+            : '₹${compensation.toString()}';
+        return DropdownMenuItem<String>(
+          value: offence,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Text(
+              '$offence • $compensationText',
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              maxLines: 2,
+            ),
+          ),
+        );
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  String _getCompensationText() {
+    if (_selectedOffenceCategory == null || _selectedOffenceType == null) {
+      return '₹0';
+    }
+
+    final category = poaOffences[_selectedOffenceCategory];
+    if (category == null) return '₹0';
+
+    final amount = category[_selectedOffenceType];
+    if (amount == null) return '₹0';
+
+    if (amount is int) {
+      return '₹${amount.toStringAsFixed(0)}';
+    } else if (amount is String && amount.contains('-')) {
+      // For range values, show the range
+      return '₹${amount.replaceAll('-', ' - ₹')}';
+    } else {
+      return '₹${amount.toString()}';
+    }
+  }
+
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localeProvider = context.watch<LocaleProvider>();
@@ -1267,7 +1465,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 700),
         decoration: BoxDecoration(
           color: theme.dialogBackgroundColor,
           borderRadius: BorderRadius.circular(16),
@@ -1366,6 +1564,77 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           localeProvider,
                           labelKey: 'applications.act_type',
                         ),
+                        const SizedBox(height: 16),
+                        // PoA Offence Selection - only show when PoA is selected
+                        if (_selectedActType == 'PoA Act') ...[
+                          _buildOffenceCategoryDropdown(
+                            theme,
+                            localeProvider,
+                            labelKey: 'offence_category',
+                          ),
+                          const SizedBox(height: 16),
+                          if (_selectedOffenceCategory != null)
+                            _buildOffenceTypeDropdown(
+                              theme,
+                              localeProvider,
+                              labelKey: 'offence_type',
+                            ),
+                          if (_selectedOffenceCategory != null &&
+                              _selectedOffenceType != null)
+                            Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.account_balance_wallet,
+                                        color: Colors.green[700],
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Expected Compensation',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green[700],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _getCompensationText(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[800],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Based on PoA Act compensation guidelines',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _beneficiaryIdCtrl,

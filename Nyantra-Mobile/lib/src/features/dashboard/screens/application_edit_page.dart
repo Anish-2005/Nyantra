@@ -497,7 +497,9 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
           });
         }
       },
-      items: ['PCR', 'PoA'].map<DropdownMenuItem<String>>((String value) {
+      items: ['PCR Act', 'PoA Act'].map<DropdownMenuItem<String>>((
+        String value,
+      ) {
         return DropdownMenuItem<String>(value: value, child: Text(value));
       }).toList(),
       decoration: InputDecoration(
