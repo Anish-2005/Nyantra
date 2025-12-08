@@ -1,0 +1,10 @@
+{
+    "block_index": 1,
+    "timestamp": "2025-11-01",
+    "month": "October-2025",
+    "num_disbursements": 638,
+    "total_amount": 41320000,
+    "merkle_root": "fa93b9ff...",
+    "prev_hash": "0",
+    "hash": "d1a079d58f67a13cc30c8f048cc5fbd7c2b59bb7e33a294d981d8d06de3d1341"
+}

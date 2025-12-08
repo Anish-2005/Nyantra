@@ -1,0 +1,29 @@
+[
+    {
+        "block_index": 0,
+        "date": "2025-12-08",
+        "num_disbursements": 0,
+        "total_amount": 0,
+        "merkle_root": "",
+        "prev_hash": "0",
+        "cur_hash": "e07a41c691cab349f160c7ddcf77961934c1040bb68e49e8224add1501f108fc"
+    },
+    {
+        "block_index": 1,
+        "date": "2025-12-08",
+        "num_disbursements": 3,
+        "total_amount": 8000,
+        "merkle_root": "8506021bb9e7fbd697b6874a624f59797f02643cd6a23027ecb58f8db65b88b9",
+        "prev_hash": "e07a41c691cab349f160c7ddcf77961934c1040bb68e49e8224add1501f108fc",
+        "cur_hash": "fe96db6f9b2783b2fd2259c247f54670f0c9efed43de295905b96144ec484ca8"
+    },
+    {
+        "block_index": 2,
+        "date": "2025-12-08",
+        "num_disbursements": 3,
+        "total_amount": 13500,
+        "merkle_root": "8506021bb9e7fbd697b6874a624f59797f02643cd6a23027ecb58f8db65b88b9",
+        "prev_hash": "fe96db6f9b2783b2fd2259c247f54670f0c9efed43de295905b96144ec484ca8",
+        "cur_hash": "81a4231fa4f860cc6e5c626e93b190bdc5fbabcc53ce5e3645fe17281b46be05"
+    }
+]
