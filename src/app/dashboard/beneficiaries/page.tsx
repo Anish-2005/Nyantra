@@ -10,6 +10,14 @@ import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
 import { CldUploadWidget } from 'next-cloudinary';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+// Extend jsPDF type to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 import {
   Search, Filter, Download, Plus, Eye, Edit,
   ChevronLeft, ChevronRight, X, Check,
@@ -292,14 +300,14 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
                           setUploadProgress(prev => Math.min(90, prev + 10));
                         }, 200);
 
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        formData.append('beneficiaryId', formData.id || 'temp');
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('file', file);
+                        uploadFormData.append('beneficiaryId', initialData?.id || 'temp');
 
                         console.log('Starting upload...');
                         const response = await fetch('/api/upload-certificate', {
                           method: 'POST',
-                          body: formData,
+                          body: uploadFormData,
                         });
 
                         clearInterval(progressInterval);
@@ -331,7 +339,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
                 />
                 <button
                   type="button"
-                  onClick={() => document.querySelector('input[type="file"]')?.click()}
+                  onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                   className={`px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
                   disabled={isSubmitting || isUploading}
                 >
@@ -580,7 +588,7 @@ const BeneficiariesPage = () => {
       ]);
     });
 
-    autoTable(doc, {
+    doc.autoTable({
       head,
       body,
       startY: 70,

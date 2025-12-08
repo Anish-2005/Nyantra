@@ -7,13 +7,9 @@ const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/divkhffav/image/upload';
 const CLOUDINARY_API_KEY = '344177124323371';
 const CLOUDINARY_API_SECRET = 'xNYuEetboQKiRyfp5AsVhY-qTNg';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   console.log('Upload API called');
   try {
     const form = formidable.default({
