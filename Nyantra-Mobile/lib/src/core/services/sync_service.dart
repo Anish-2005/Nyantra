@@ -11,13 +11,25 @@ import '../models/disbursement_model.dart';
 import '../models/grievance_model.dart';
 import '../models/feedback_model.dart';
 import '../models/report_model.dart';
+import '../providers/sync_status_provider.dart';
 
 class SyncService {
-  static final SyncService _instance = SyncService._internal();
+  static SyncService? _instance;
   static DatabaseHelper? _dbHelper;
   static Connectivity? _connectivity;
+  static SyncStatusProvider? _syncStatusProvider;
 
-  factory SyncService() => _instance;
+  factory SyncService({SyncStatusProvider? syncStatusProvider}) {
+    _instance ??= SyncService._internal();
+    if (syncStatusProvider != null) {
+      _syncStatusProvider = syncStatusProvider;
+    }
+    return _instance!;
+  }
+
+  static void setSyncStatusProvider(SyncStatusProvider provider) {
+    _syncStatusProvider = provider;
+  }
 
   SyncService._internal() {
     _dbHelper = DatabaseHelper();
@@ -222,15 +234,211 @@ class SyncService {
     }
   }
 
+  // Create or update beneficiary with sync tracking
+  Future<void> createOrUpdateBeneficiary(BeneficiaryModel beneficiary) async {
+    await _dbHelper!.upsertWithSync(
+      'beneficiaries',
+      beneficiary.toJson(),
+      markForSync: true,
+    );
+    await _dbHelper!.insertBeneficiary(beneficiary); // Ensure it's in the DB
+    _syncStatusProvider?.incrementPendingSync();
+
+    // Try to sync immediately if online
+    if (await isOnline()) {
+      try {
+        await syncToFirestore();
+      } catch (e) {
+        print('Error syncing beneficiary immediately: $e');
+      }
+    }
+  }
+
+  // Create or update application with sync tracking
+  Future<void> createOrUpdateApplication(ApplicationModel application) async {
+    await _dbHelper!.upsertWithSync(
+      'applications',
+      application.toJson(),
+      markForSync: true,
+    );
+    await _dbHelper!.insertApplication(application); // Ensure it's in the DB
+    _syncStatusProvider?.incrementPendingSync();
+
+    // Try to sync immediately if online
+    if (await isOnline()) {
+      try {
+        await syncToFirestore();
+      } catch (e) {
+        print('Error syncing application immediately: $e');
+      }
+    }
+  }
+
+  // Create or update grievance with sync tracking
+  Future<void> createOrUpdateGrievance(GrievanceModel grievance) async {
+    await _dbHelper!.upsertWithSync(
+      'grievances',
+      grievance.toJson(),
+      markForSync: true,
+    );
+    await _dbHelper!.insertGrievance(grievance); // Ensure it's in the DB
+    _syncStatusProvider?.incrementPendingSync();
+
+    // Try to sync immediately if online
+    if (await isOnline()) {
+      try {
+        await syncToFirestore();
+      } catch (e) {
+        print('Error syncing grievance immediately: $e');
+      }
+    }
+  }
+
+  // Create or update feedback with sync tracking
+  Future<void> createOrUpdateFeedback(FeedbackModel feedback) async {
+    await _dbHelper!.upsertWithSync(
+      'feedback',
+      feedback.toMap(),
+      markForSync: true,
+    );
+    await _dbHelper!.insertFeedback(feedback); // Ensure it's in the DB
+    _syncStatusProvider?.incrementPendingSync();
+
+    // Try to sync immediately if online
+    if (await isOnline()) {
+      try {
+        await syncToFirestore();
+      } catch (e) {
+        print('Error syncing feedback immediately: $e');
+      }
+    }
+  }
+
   // Sync local changes to Firestore
   Future<void> syncToFirestore() async {
     if (!await isOnline()) return;
 
+    _syncStatusProvider?.setStatus(SyncStatus.syncing);
+
     try {
-      // For now, assume all local data is synced. In a full implementation,
-      // you'd track changes and only sync modified records.
-      // This is a simplified version.
+      final currentUser = FirebaseService.auth.currentUser;
+      if (currentUser == null) {
+        _syncStatusProvider?.setStatus(
+          SyncStatus.error,
+          error: 'User not authenticated',
+        );
+        return;
+      }
+
+      // Get pending sync count
+      final unsyncedBeneficiaries = await _dbHelper!.getRecordsNeedingSync(
+        'beneficiaries',
+      );
+      final unsyncedApplications = await _dbHelper!.getRecordsNeedingSync(
+        'applications',
+      );
+      final unsyncedGrievances = await _dbHelper!.getRecordsNeedingSync(
+        'grievances',
+      );
+      final unsyncedFeedback = await _dbHelper!.getRecordsNeedingSync(
+        'feedback',
+      );
+
+      final totalPending =
+          unsyncedBeneficiaries.length +
+          unsyncedApplications.length +
+          unsyncedGrievances.length +
+          unsyncedFeedback.length;
+
+      _syncStatusProvider?.setPendingSyncCount(totalPending);
+
+      // Sync beneficiaries that need syncing
+      for (var beneficiaryData in unsyncedBeneficiaries) {
+        try {
+          final beneficiary = BeneficiaryModel.fromJson(beneficiaryData);
+          if (beneficiary.ownerId == currentUser.uid) {
+            await FirebaseService.firestore
+                .collection('beneficiaries')
+                .doc(beneficiary.id)
+                .set(beneficiary.toJson());
+            await _dbHelper!.markAsSynced('beneficiaries', beneficiary.id);
+            _syncStatusProvider?.decrementPendingSync();
+            print(
+              'SyncService: syncToFirestore - Synced beneficiary: ${beneficiary.name}',
+            );
+          }
+        } catch (e) {
+          print('Error syncing beneficiary ${beneficiaryData['id']}: $e');
+        }
+      }
+
+      // Sync applications that need syncing
+      for (var applicationData in unsyncedApplications) {
+        try {
+          final application = ApplicationModel.fromJson(applicationData);
+          if (application.ownerId == currentUser.uid) {
+            await FirebaseService.firestore
+                .collection('applications')
+                .doc(application.id)
+                .set(application.toJson());
+            await _dbHelper!.markAsSynced('applications', application.id);
+            _syncStatusProvider?.decrementPendingSync();
+            print(
+              'SyncService: syncToFirestore - Synced application: ${application.id}',
+            );
+          }
+        } catch (e) {
+          print('Error syncing application ${applicationData['id']}: $e');
+        }
+      }
+
+      // Sync grievances that need syncing
+      for (var grievanceData in unsyncedGrievances) {
+        try {
+          final grievance = GrievanceModel.fromJson(grievanceData);
+          if (grievance.userId == currentUser.uid) {
+            await FirebaseService.firestore
+                .collection('grievances')
+                .doc(grievance.id)
+                .set(grievance.toJson());
+            await _dbHelper!.markAsSynced('grievances', grievance.id);
+            _syncStatusProvider?.decrementPendingSync();
+            print(
+              'SyncService: syncToFirestore - Synced grievance: ${grievance.title}',
+            );
+          }
+        } catch (e) {
+          print('Error syncing grievance ${grievanceData['id']}: $e');
+        }
+      }
+
+      // Sync feedback that need syncing
+      for (var feedbackData in unsyncedFeedback) {
+        try {
+          final feedback = FeedbackModel.fromMap(
+            feedbackData['id'],
+            feedbackData,
+          );
+          if (feedback.userId == currentUser.uid) {
+            await FirebaseService.firestore
+                .collection('feedback')
+                .doc(feedback.id)
+                .set(feedback.toMap());
+            await _dbHelper!.markAsSynced('feedback', feedback.id);
+            _syncStatusProvider?.decrementPendingSync();
+            print(
+              'SyncService: syncToFirestore - Synced feedback: ${feedback.id}',
+            );
+          }
+        } catch (e) {
+          print('Error syncing feedback ${feedbackData['id']}: $e');
+        }
+      }
+
+      _syncStatusProvider?.setStatus(SyncStatus.success);
+      print('SyncService: syncToFirestore - Upload sync completed');
     } catch (e) {
+      _syncStatusProvider?.setStatus(SyncStatus.error, error: e.toString());
       print('Error syncing to Firestore: $e');
     }
   }

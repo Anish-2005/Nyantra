@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/beneficiary_model.dart';
 import '../../../core/services/data_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 
 class BeneficiaryFormPage extends StatefulWidget {
   const BeneficiaryFormPage({super.key});
@@ -77,8 +78,13 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         throw Exception('User not authenticated');
       }
 
+      // Generate a random 13-digit number for the beneficiary ID
+      final random = Random();
+      final randomId =
+          '${random.nextInt(900000000) + 100000000}${random.nextInt(10000) + 1000}';
+
       final beneficiary = BeneficiaryModel(
-        id: '',
+        id: 'BEN$randomId',
         name: _nameCtrl.text.trim(),
         aadhaar: _aadhaarCtrl.text.trim(),
         bankAccount: _bankCtrl.text.trim(),
@@ -96,6 +102,8 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
         ownerId: user.uid,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        registrationDate: DateTime.now(),
+        status: 'pending-verification',
       );
 
       await DataService.createBeneficiary(beneficiary);
@@ -244,23 +252,18 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
             TextFormField(
               controller: _scStCertificateCtrl,
               decoration: const InputDecoration(
-                labelText: 'SC/ST Certificate Number',
+                labelText: 'SC/ST Certificate URL',
                 border: OutlineInputBorder(),
+                hintText: 'https://example.com/certificate.pdf',
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return 'SC/ST Certificate Number is required';
+                  return 'SC/ST Certificate URL is required';
                 }
-                if (value!.length < 5) {
-                  return 'Certificate Number must be at least 5 characters';
-                }
-                if (value.length > 20) {
-                  return 'Certificate Number must be less than 20 characters';
-                }
-                // Basic pattern validation - alphanumeric with possible slashes or hyphens
-                final certPattern = RegExp(r'^[A-Za-z0-9/-]+$');
-                if (!certPattern.hasMatch(value)) {
-                  return 'Certificate Number can only contain letters, numbers, slashes, and hyphens';
+                // Basic URL validation
+                final urlPattern = RegExp(r'^https?://[^\s/$.?#].[^\s]*$');
+                if (!urlPattern.hasMatch(value!)) {
+                  return 'Please enter a valid URL (starting with http:// or https://)';
                 }
                 return null;
               },

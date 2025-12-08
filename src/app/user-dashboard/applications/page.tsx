@@ -13,6 +13,66 @@ import {
   Shield, BadgeCheck, Banknote, Download, Copy
 } from 'lucide-react';
 
+// PoA Act Offences Data Structure
+const POA_OFFENCES = {
+  "1. Offences leading to Death / Murder": {
+    "Murder of SC/ST person": 825000,
+    "Death due to injury inflicted during atrocity": 825000,
+    "Death after rape / gang rape": 825000
+  },
+  "2. Rape and Sexual Offences": {
+    "Rape": 500000,
+    "Gang rape": 825000,
+    "Attempt to rape": 100000,
+    "Parading naked / semi-naked": 200000,
+    "Sexual harassment / use of criminal force": 100000
+  },
+  "3. Grievous Hurt / Injury": {
+    "Grievous hurt": 125000,
+    "Permanent disability": 500000,
+    "Partial disability": 250000,
+    "Acid attack – deformity / disability": 825000,
+    "Acid attack – injury without deformity": 500000
+  },
+  "4. Offences Against Women & Dignity": {
+    "Outraging modesty of SC/ST woman": 100000,
+    "Sexual exploitation / trafficking": 200000,
+    "Forced to work naked / semi-naked": 200000
+  },
+  "5. Property Damage / Arson": {
+    "Burning of house / arson": "225000-425000",
+    "Destruction of household / property": "100000-200000",
+    "Destruction of crops": 100000,
+    "Destruction of cattle / livestock": 60000
+  },
+  "6. Land & Economic Offences": {
+    "Wrongful dispossession from land": 200000,
+    "Destruction of standing crops": 100000,
+    "Economic boycott": 100000,
+    "Social boycott": 100000,
+    "Bonded labour / forced labour": 100000
+  },
+  "7. Caste Atrocity / Humiliation Offences": {
+    "Intentional insult, intimidation, caste abuse": 100000,
+    "Preventing entry into public place": 100000,
+    "Preventing access to public well/tank/roads": 100000,
+    "Compelling to eat inedible / obnoxious substances": 100000
+  },
+  "8. Kidnapping / Abduction": {
+    "Kidnapping SC/ST person": "100000-200000",
+    "Abduction with intent to outrage modesty": 200000
+  },
+  "9. Mental Torture / Harassment": {
+    "Harassing, humiliating, intimidating": 100000,
+    "Public humiliation": "100000-200000"
+  },
+  "10. Other Serious Offences": {
+    "Preventing from voting": 100000,
+    "Poll violence against SC/ST": 200000,
+    "False, malicious, vexatious legal cases": 100000
+  }
+};
+
 // Application data type
 interface Application {
   id: string;
@@ -47,6 +107,9 @@ interface Application {
   maritalStatus?: string;
   bankAccount?: string;
   ifsc?: string;
+  // PoA specific fields
+  offenceCategory?: string;
+  offenceType?: string;
 }
 
 // New Application Form Component for Users
@@ -85,7 +148,10 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
     bankAccount: '',
     ifsc: '',
     priority: 'medium',
-    assignedOfficer: ''
+    assignedOfficer: '',
+    // PoA specific fields
+    offenceCategory: '',
+    offenceType: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
@@ -138,6 +204,9 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           priority: formData.priority,
           assignedOfficer: formData.assignedOfficer,
           documents: initialData.documents || 0,
+          // PoA specific fields
+          offenceCategory: (formData as any).offenceCategory || null,
+          offenceType: (formData as any).offenceType || null,
         };
 
         await updateDoc(ref, updatedApplication);
@@ -172,7 +241,10 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           assignedOfficer: formData.assignedOfficer,
           documents: 0,
           lastUpdate: Timestamp.fromDate(new Date()),
-          id: newId
+          id: newId,
+          // PoA specific fields
+          offenceCategory: (formData as any).offenceCategory || null,
+          offenceType: (formData as any).offenceType || null,
         };
 
         const ref = doc(db, 'applications', newId);
@@ -188,7 +260,28 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+
+      // Handle offence selection for PoA Act
+      if (field === 'offenceType' && value && prev.offenceCategory) {
+        const category = POA_OFFENCES[prev.offenceCategory as keyof typeof POA_OFFENCES];
+        if (category && value in category) {
+          const compensation = category[value as keyof typeof category] as string | number;
+          // Store the compensation value (string for ranges, number for fixed amounts)
+          newData.amount = compensation.toString();
+        }
+      }
+
+      // Reset offence fields when act type changes
+      if (field === 'actType' && value !== 'PoA Act') {
+        newData.offenceCategory = '';
+        newData.offenceType = '';
+      }
+
+      return newData;
+    });
+
     if (field === 'beneficiaryId') {
       setBeneficiaryExists(null);
     }
@@ -223,7 +316,10 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         bankAccount: (initialData as any).bankAccount || '',
         ifsc: (initialData as any).ifsc || '',
         priority: initialData.priority || 'medium',
-        assignedOfficer: initialData.assignedOfficer || ''
+        assignedOfficer: initialData.assignedOfficer || '',
+        // PoA specific fields
+        offenceCategory: (initialData as any).offenceCategory || '',
+        offenceType: (initialData as any).offenceType || ''
       });
       if (initialData.beneficiaryId) {
         setBeneficiaryExists(true);
@@ -255,7 +351,10 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
         bankAccount: userBeneficiary?.bankAccount || '',
         ifsc: userBeneficiary?.ifsc || '',
         priority: 'medium',
-        assignedOfficer: ''
+        assignedOfficer: '',
+        // PoA specific fields
+        offenceCategory: '',
+        offenceType: ''
       });
       setBeneficiaryExists(userBeneficiary ? true : null);
     }
@@ -484,20 +583,127 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           </div>
         </div>
 
+        {/* Relief Amount / Offence Selection */}
         <div className="grid grid-cols-1 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => handleInputChange('amount', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enterReliefAmount')}
-            />
-          </div>
+          {formData.actType === 'PoA Act' ? (
+            <>
+              {/* Offence Category Selection */}
+              <div>
+                <label className="block text-sm font-medium theme-text-muted mb-2">Offence Category *</label>
+                <select
+                  required
+                  value={formData.offenceCategory}
+                  onChange={(e) => handleInputChange('offenceCategory', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                >
+                  <option value="">Select Offence Category</option>
+                  {Object.keys(POA_OFFENCES).map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Offence Type Selection */}
+              {formData.offenceCategory && (
+                <div>
+                  <label className="block text-sm font-medium theme-text-muted mb-2">Specific Offence *</label>
+                  <select
+                    required
+                    value={formData.offenceType}
+                    onChange={(e) => handleInputChange('offenceType', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                  >
+                    <option value="">Select Specific Offence</option>
+                    {Object.entries(POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES] || {}).map(([offence, compensation]) => {
+                      const compensationText = typeof compensation === 'string' && compensation.includes('-')
+                        ? `₹${compensation.replace('-', ' - ₹')} (range)`
+                        : `₹${compensation.toLocaleString('en-IN')}`;
+                      return (
+                        <option key={offence} value={offence}>
+                          {offence} • {compensationText}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+
+      {formData.offenceType && formData.offenceCategory && (
+  <div
+    className="
+      p-4
+      bg-gradient-to-r from-green-50 to-green-100
+      dark:from-green-500 dark:to-green-300
+      border-2 border-green-100 dark:border-green-400
+      rounded-xl shadow-md
+    "
+  >
+    <div className="flex items-center gap-3 mb-3">
+      <div
+        className="
+          w-6 h-6
+          bg-gradient-to-r from-green-600 to-emerald-700
+          rounded-full flex items-center justify-center shadow-sm
+        "
+      >
+        <span className="text-white text-xs font-bold">₹</span>
+      </div>
+      <span
+        className="
+          font-semibold text-green-900 dark:text-green-200
+          text-sm uppercase tracking-wide
+        "
+      >
+        Expected Compensation
+      </span>
+    </div>
+
+    <div className="text-3xl font-bold text-green-800 dark:text-green-100 mb-2">
+      {(() => {
+        const category =
+          POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
+        const compensation = category && formData.offenceType in category
+          ? category[formData.offenceType as keyof typeof category] as string | number
+          : null;
+        if (compensation && typeof compensation === "string" && compensation.includes("-")) {
+          return `₹${compensation.replace("-", " - ₹")}`;
+        }
+        return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
+      })()}
+    </div>
+
+    <div className="text-sm text-green-900 dark:text-green-300 font-medium leading-relaxed">
+      Based on <span className="font-semibold">{formData.offenceType}</span> under{" "}
+      <span className="font-semibold">{formData.offenceCategory}</span>
+    </div>
+
+    <div className="mt-3 p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+      <div className="text-xs text-green-900 dark:text-green-200">
+        💡 This amount is automatically calculated based on PoA Act compensation guidelines
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+            </>
+          ) : (
+            /* PCR Act - Relief Amount Input */
+            <div>
+              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => handleInputChange('amount', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder={t('applications.enterReliefAmount')}
+              />
+            </div>
+          )}
         </div>
       </div>
 

@@ -378,7 +378,10 @@ class DataService {
   }
 
   static Future<void> createBeneficiary(BeneficiaryModel beneficiary) async {
-    await _firestore.collection('beneficiaries').add(beneficiary.toFirestore());
+    await _firestore
+        .collection('beneficiaries')
+        .doc(beneficiary.id)
+        .set(beneficiary.toFirestore());
   }
 
   static Future<void> updateBeneficiary(
@@ -648,7 +651,10 @@ class DataService {
   }
 
   static Future<void> createGrievance(GrievanceModel grievance) async {
-    await _firestore.collection('grievances').add(grievance.toFirestore());
+    await _firestore
+        .collection('grievances')
+        .doc(grievance.id)
+        .set(grievance.toFirestore());
   }
 
   // Append a communication message to a grievance's `communication` array

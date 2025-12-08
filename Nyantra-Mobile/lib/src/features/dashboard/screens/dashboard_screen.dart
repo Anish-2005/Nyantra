@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/connectivity_provider.dart';
+import '../../../core/providers/sync_status_provider.dart';
+import '../../../core/services/sync_service.dart';
 import '../../../components/AnimatedBackground.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_content.dart';
+import '../widgets/sync_status_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,6 +29,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Set initial sidebar state based on screen size
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateSidebarState();
+      // Initialize SyncService with SyncStatusProvider
+      final syncStatusProvider = context.read<SyncStatusProvider>();
+      SyncService.setSyncStatusProvider(syncStatusProvider);
     });
   }
 
@@ -157,6 +163,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         );
                       },
+                    ),
+                    // Sync Status Widget
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: SyncStatusWidget(),
                     ),
                     // User Menu
                     PopupMenuButton<String>(

@@ -423,7 +423,7 @@ export default function UserDashboard() {
                     {t('extracted.view_beneficiaries') || 'View Beneficiaries'}
                   </h3>
                   <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
-                    {t('extracted.see_beneficiary_list') || 'See the list of beneficiaries'}
+                    {t('extracted.see_beneficiary_list') || 'View my beneficiary'}
                   </p>
                 </div>
               </motion.div>

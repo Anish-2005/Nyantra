@@ -81,6 +81,7 @@ class BeneficiaryModel {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'id': id,
       'name': name,
       if (phone != null) 'phone': phone,
       if (aadhaar != null) 'aadhaar': aadhaar,

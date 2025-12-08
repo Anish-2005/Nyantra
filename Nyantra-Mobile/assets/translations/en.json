@@ -166,6 +166,39 @@
       }
     ]
   },
+  "auth": {
+    "applicant": "Applicant",
+    "your_portal": "Your Portal",
+    "sign_out": "Sign Out",
+    "googleSignInFailed": "Google sign-in failed",
+    "signingIn": "Signing in...",
+    "continueWithGoogle": "Continue with Google",
+    "languageHindi": "हिंदी",
+    "languageEnglish": "English",
+    "features": {
+      "quickAccess": {
+        "title": "Quick & Secure Access",
+        "description": "Fast verification and instant relief disbursement"
+      },
+      "transparentProcess": {
+        "title": "Transparent Process",
+        "description": "Track your application status in real-time"
+      },
+      "support247": {
+        "title": "24/7 Support",
+        "description": "Get help whenever you need it"
+      }
+    },
+    "welcomeBack": "Welcome Back",
+    "greeting": "Welcome back",
+    "continueToDashboard": "Continue to Dashboard",
+    "signOut": "Sign Out",
+    "stats": {
+      "applications": "Applications",
+      "disbursed": "Disbursed",
+      "pending": "Pending"
+    }
+  },
   "features": {
     "title": "Powerful Features",
     "subtitle": "Everything You Need for Seamless DBT",
@@ -674,7 +707,9 @@
     "category": "Category",
     "maritalStatus": "Marital Status",
     "bankAccount": "Bank Account",
-    "ifscCode": "IFSC Code"
+    "ifscCode": "IFSC Code",
+    "cannotOpenUrl": "Cannot open URL",
+    "viewCertificate": "View Certificate"
   },
   "grievances": {
     "pageTitle": "Grievances",
@@ -760,7 +795,7 @@
     "reliefAmountINR": "Relief Amount (₹)",
     "amountRequested": "Amount Requested (₹)",
     "case_details": "Case Details",
-    "sc_st_certificate": "SC/ST Certificate",
+    "sc_st_certificate": "SC/ST Certificate URL",
     "enterPhoneNumber": "Enter phone number",
     "failed_to_submit_grievance": "Failed to submit grievance",
     "loading_grievances": "Loading grievances...",
@@ -773,6 +808,7 @@
     "created": "Created",
     "expected_resolution": "Expected resolution",
     "resolution_date": "Resolution date",
+    "completed_date": "Completed Date",
     "attachments_communication": "Attachments & Communication",
     "attachments_label": "Attachments",
     "messages_label": "Messages",
@@ -3622,11 +3658,6 @@
     "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location"
   },
   "beneficiary_lowercase": "Beneficiary Lowercase",
-  "auth": {
-    "applicant": "Applicant",
-    "your_portal": "Your Portal",
-    "sign_out": "Sign Out"
-  },
   "ui": {
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",

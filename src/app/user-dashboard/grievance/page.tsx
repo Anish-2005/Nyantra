@@ -198,7 +198,6 @@ export default function GrievancePage() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [subCategory, setSubCategory] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [category, setCategory] = useState('disbursement-delay');
   const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'pending' | 'resolved' | 'closed' | 'escalated'>('all');
   const [selectedGrv, setSelectedGrv] = useState<Grievance | null>(null);
@@ -308,7 +307,7 @@ export default function GrievancePage() {
         state: currentUser.state,
         category,
         subCategory: subCategory || null,
-        priority,
+        priority: 'medium', // Default priority for user-submitted grievances
         description: description.trim(),
         status: 'open',
         attachments: 0,
@@ -325,7 +324,6 @@ export default function GrievancePage() {
       // Reset form
       setDescription('');
       setSubCategory('');
-      setPriority('medium');
       setCategory('disbursement-delay');
       
     } catch (error) {
@@ -398,16 +396,6 @@ export default function GrievancePage() {
       'escalated': theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100'
     };
     const key = (status || '').toLowerCase() as keyof typeof colors;
-    return colors[key] || 'text-gray-300 bg-gray-800';
-  };
-
-  const getPriorityColor = (priority?: string) => {
-    const colors = {
-      'high': theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100',
-      'medium': theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
-      'low': theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100'
-    };
-    const key = (priority || '').toLowerCase() as keyof typeof colors;
     return colors[key] || 'text-gray-300 bg-gray-800';
   };
 
@@ -653,23 +641,6 @@ export default function GrievancePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium theme-text-muted block mb-2">
-                      {t('extracted.priority')}
-                    </label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                      <option value="low">{t('extracted.low')}</option>
-                      <option value="medium">{t('extracted.medium')}</option>
-                      <option value="high">{t('extracted.high')}</option>
-                    </select>
-                  </div>
-                </div>
-
                 <div>
                   <label className="text-sm font-medium theme-text-muted block mb-2">
                     {t('extracted.description')} *
@@ -805,11 +776,6 @@ export default function GrievancePage() {
                                      grievance.status === 'resolved' ? t('extracted.resolved') :
                                      grievance.status === 'closed' ? t('extracted.closed') :
                                      grievance.status || t('extracted.open')}
-                                  </span>
-                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(grievance.priority)}`}>
-                                    {grievance.priority === 'low' ? t('extracted.low_priority') :
-                                     grievance.priority === 'medium' ? t('extracted.medium_priority') :
-                                     t('extracted.high_priority')}
                                   </span>
                                   {grievance.category && (
                                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -966,15 +932,6 @@ export default function GrievancePage() {
                            selectedGrv.status === 'resolved' ? t('extracted.resolved') :
                            selectedGrv.status === 'closed' ? t('extracted.closed') :
                            selectedGrv.status || t('extracted.open')}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')}</div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedGrv.priority)}`}>
-                          {selectedGrv.priority === 'low' ? t('extracted.low') :
-                           selectedGrv.priority === 'medium' ? t('extracted.medium') :
-                           t('extracted.high')}
                         </span>
                       </div>
                     </div>

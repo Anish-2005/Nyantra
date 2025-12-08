@@ -112,6 +112,7 @@ class GrievanceModel {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'id': id,
       if (beneficiaryId != null) 'beneficiaryId': beneficiaryId,
       if (userId != null) 'userId': userId,
       if (beneficiaryName != null) 'beneficiaryName': beneficiaryName,

@@ -166,6 +166,39 @@
       }
     ]
   },
+  "auth": {
+    "googleSignInFailed": "Google साइन-इन विफल",
+    "signingIn": "साइन इन हो रहा है...",
+    "continueWithGoogle": "Google के साथ जारी रखें",
+    "languageHindi": "हिंदी",
+    "applicant": "आवेदक",
+    "your_portal": "आपका पोर्टल",
+    "sign_out": "साइन आउट",
+    "languageEnglish": "English",
+    "features": {
+      "quickAccess": {
+        "title": "त्वरित और सुरक्षित पहुंच",
+        "description": "त्वरित सत्यापन और तत्काल राहत वितरण"
+      },
+      "transparentProcess": {
+        "title": "पारदर्शी प्रक्रिया",
+        "description": "रीयल-टाइम में अपने आवेदन की स्थिति ट्रैक करें"
+      },
+      "support247": {
+        "title": "24/7 सहायता",
+        "description": "जब भी आवश्यक हो मदद प्राप्त करें"
+      }
+    },
+    "welcomeBack": "वापसी पर स्वागत है",
+    "greeting": "वापसी पर स्वागत है",
+    "continueToDashboard": "डैशबोर्ड पर जारी रखें",
+    "signOut": "साइन आउट",
+    "stats": {
+      "applications": "आवेदन",
+      "disbursed": "वितरित",
+      "pending": "लंबित"
+    }
+  },
   "features": {
     "title": "शक्तिशाली फ़ीचर",
     "subtitle": "सीमलेस DBT के लिए सभी कुछ",
@@ -664,7 +697,10 @@
     "maritalStatus": "वैवाहिक स्थिति",
     "bankAccount": "बैंक खाता",
     "ifscCode": "IFSC कोड",
-    "sc_st_certificate": "एससी/एसटी प्रमाणपत्र"
+    
+    "sc_st_certificate": "एससी/एसटी प्रमाणपत्र URL",
+    "cannotOpenUrl": "URL खोला नहीं जा सकता",
+    "viewCertificate": "प्रमाणपत्र देखें"
   },
   "grievances": {
     "pageTitle": "शिकायतें",
@@ -766,6 +802,7 @@
     "created": "निर्मित",
     "expected_resolution": "अपेक्षित समाधान",
     "resolution_date": "समाधान तिथि",
+    "completed_date": "पूर्ण तिथि",
     "attachments_communication": "संलग्नक और संचार",
     "attachments_label": "संलग्नक",
     "messages_label": "संदेश",
@@ -3595,11 +3632,6 @@
     "advanced_search": "एडवांस्ड सर्च"
   },
   "beneficiary_lowercase": "लाभार्थी",
-  "auth": {
-    "applicant": "आवेदक",
-    "your_portal": "आपका पोर्टल",
-    "sign_out": "साइन आउट"
-  },
   "ui": {
     "lightMode": "लाइट मोड",
     "darkMode": "डार्क मोड",

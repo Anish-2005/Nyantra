@@ -18,7 +18,7 @@ import {
    CheckCircle, XCircle, PlayCircle,
   RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText,
   AlertTriangle,
-  Receipt
+  Receipt, ArrowUpDown
 } from 'lucide-react';
 
 // Disbursements state — now all from Firestore
@@ -31,8 +31,8 @@ const DisbursementsPage: React.FC = () => {
   const [actTypeFilter, setActTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [sortBy] = useState('initiatedDate');
-  const [sortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState('initiatedDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
@@ -120,16 +120,43 @@ const DisbursementsPage: React.FC = () => {
       filtered = filtered.filter(disbursement => disbursement.priority === priorityFilter);
     }
 
-    // Sort
+    // Sort with proper type handling
     filtered.sort((a, b) => {
-      const aVal = String(a[sortBy as keyof typeof a] ?? '');
-      const bVal = String(b[sortBy as keyof typeof b] ?? '');
+      let aVal: any, bVal: any;
 
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+      if (sortBy === 'initiatedDate' || sortBy === 'applicationDate') {
+        // Date sorting
+        const aDate = a[sortBy as keyof typeof a];
+        const bDate = b[sortBy as keyof typeof b];
+        
+        aVal = aDate ? (typeof aDate === 'string' ? new Date(aDate).getTime() : 
+                       (aDate.toDate ? aDate.toDate().getTime() : new Date(aDate).getTime())) : 0;
+        bVal = bDate ? (typeof bDate === 'string' ? new Date(bDate).getTime() : 
+                       (bDate.toDate ? bDate.toDate().getTime() : new Date(bDate).getTime())) : 0;
+      } else if (sortBy === 'reliefAmount' || sortBy === 'disbursedAmount') {
+        // Numeric sorting
+        aVal = parseFloat(String(a[sortBy as keyof typeof a] || 0)) || 0;
+        bVal = parseFloat(String(b[sortBy as keyof typeof b] || 0)) || 0;
+      } else if (sortBy === 'status') {
+        // Custom status order: completed -> in_progress -> pending -> failed -> cancelled
+        const statusOrder = {
+          'completed': 1,
+          'in_progress': 2,
+          'pending': 3,
+          'failed': 4,
+          'cancelled': 5
+        };
+        aVal = statusOrder[a.status as keyof typeof statusOrder] || 99;
+        bVal = statusOrder[b.status as keyof typeof statusOrder] || 99;
       } else {
-        return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+        // Default string sorting
+        aVal = String(a[sortBy as keyof typeof a] ?? '');
+        bVal = String(b[sortBy as keyof typeof b] ?? '');
       }
+
+      if (aVal === bVal) return 0;
+      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
     });
 
     return filtered;
@@ -506,7 +533,7 @@ const DisbursementsPage: React.FC = () => {
 
   // Export CSV helper
   const exportDisbursementsData = (items: any[]) => {
-    const headers = ['Disbursement ID','Beneficiary ID','Beneficiary Name','Aadhaar','Phone','District','State','Act Type','Case Number','Relief Amount','Disbursed Amount','Net Amount','Status','Transaction ID','Initiated Date','Disbursement Date'];
+    const headers = ['Disbursement ID','Beneficiary ID','Beneficiary Name','Aadhaar','Phone','District','State','Act Type','Case Number','Relief Amount','Disbursed Amount','Net Amount','Status','Transaction ID', t("extracted.sortOptions.initiatedDate") || 'Initiated Date','Disbursement Date'];
     const rows = items.map(d => [
       d.id, d.beneficiaryId, d.beneficiaryName, d.aadhaarNumber, d.phone, d.district, d.state, d.actType, d.caseNumber, d.reliefAmount, d.disbursedAmount, d.netAmount, d.status, d.transactionId, d.initiatedDate, d.disbursementDate
     ]);
@@ -524,81 +551,187 @@ const DisbursementsPage: React.FC = () => {
 
   // Function to export disbursements data as PDF
   const exportDisbursementsPDF = (items: any[]) => {
-    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-    const margin = 36;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
 
-    // Header band
+    // Professional header
     doc.setFillColor(30, 64, 175);
-    doc.rect(0, 0, pageWidth, 56, 'F');
+    doc.rect(0, 0, pageWidth, 35, 'F');
 
-    doc.setFontSize(16);
+    // Title
+    doc.setFontSize(20);
     doc.setTextColor(255, 255, 255);
-    doc.text('Disbursements Report', margin, 36);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NYANTRA - Disbursements Report', margin, 22);
 
+    // Subtitle
     doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
-    doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
 
-    const head = [[
-      'Disbursement ID', 'Beneficiary', 'District', 'Act Type', 'Relief Amount', 'Status', 'Transaction ID', 'Initiated Date'
-    ]];
+    // Report metadata
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    const currentDate = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    doc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
+    doc.text(`Total Records: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
 
-    const body: any[] = [];
-    items.forEach(d => {
-      const beneficiaryCell = `${d.beneficiaryName}\n${d.phone || ''}`;
+    let yPosition = 50;
 
-      body.push([
-        d.id || '',
-        beneficiaryCell,
-        d.district || '',
-        d.actType || '',
-        formatCurrency(d.reliefAmount || 0),
-        d.status || '',
-        d.transactionId || '',
-        formatDate(d.initiatedDate)
-      ]);
+    // Summary section
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, yPosition, contentWidth, 25, 'F');
+
+    doc.setFontSize(12);
+    doc.setTextColor(30, 64, 175);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
+
+    // Summary stats
+    const totalAmount = items.reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
+    const statusCounts = items.reduce((acc, d) => {
+        acc[d.status] = (acc[d.status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Disbursements: ${items.length}`, margin + 5, yPosition + 18);
+    doc.text(`Total Amount: ₹${totalAmount.toLocaleString('en-IN')}`, pageWidth - margin - 5, yPosition + 18, { align: 'right' });
+
+    yPosition += 35;
+
+    // Status breakdown
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 64, 175);
+    doc.text('Status Breakdown:', margin, yPosition);
+
+    yPosition += 8;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+
+    Object.entries(statusCounts).forEach(([status, count]) => {
+        const statusText = status.replace(/-/g, ' ').toUpperCase();
+        const percentage = ((count as number/ items.length) * 100).toFixed(1);
+        doc.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
+        yPosition += 5;
     });
 
-    autoTable(doc, {
-      head,
-      body,
-      startY: 70,
-      styles: {
-        fontSize: 8,
-        cellPadding: 4,
-      },
-      headStyles: {
-        fillColor: [30, 64, 175],
-        textColor: 255,
-        fontSize: 9,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252],
-      },
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 100 },
-        2: { cellWidth: 60 },
-        3: { cellWidth: 60 },
-        4: { cellWidth: 70 },
-        5: { cellWidth: 60 },
-        6: { cellWidth: 80 },
-        7: { cellWidth: 70 },
-      },
-      margin: { top: 70 },
-      didDrawPage: (data: any) => {
-        // Footer
-        const pageCount = doc.getNumberOfPages();
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Page ${data.pageNumber} of ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 20, { align: 'right' });
-      }
+    yPosition += 10;
+
+    // Disbursements table
+    const tableColumns = [
+        { header: 'Disbursement ID', dataKey: 'id', width: 30 },
+        { header: 'Beneficiary', dataKey: 'beneficiaryName', width: 35 },
+        { header: 'District', dataKey: 'district', width: 25 },
+        { header: 'Act Type', dataKey: 'actType', width: 25 },
+        { header: 'Amount (₹)', dataKey: 'reliefAmount', width: 25 },
+        { header: 'Status', dataKey: 'status', width: 25 },
+        { header: 'Transaction ID', dataKey: 'transactionId', width: 30 }
+    ];
+
+    const tableRows = items.map(d => ({
+        id: d.id || '',
+        beneficiaryName: d.beneficiaryName || '',
+        district: d.district || '',
+        actType: d.actType || '',
+        reliefAmount: d.reliefAmount ? `₹${d.reliefAmount.toLocaleString('en-IN')}` : '₹0',
+        status: (d.status || '').toUpperCase(),
+        transactionId: d.transactionId || 'N/A'
+    }));
+
+    // Check if we need a new page
+    if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = margin;
+    }
+
+    // Table header
+    doc.setFillColor(30, 64, 175);
+    doc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+
+    let xPos = margin + 2;
+    tableColumns.forEach(col => {
+        doc.text(col.header, xPos, yPosition + 5.5);
+        xPos += col.width;
     });
 
-    doc.save(`disbursements_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    yPosition += 10;
+
+    // Table rows
+    doc.setFontSize(7);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+
+    tableRows.forEach((row, index) => {
+        if (yPosition > pageHeight - 20) {
+            doc.addPage();
+            yPosition = margin;
+
+            // Repeat header on new page
+            doc.setFillColor(30, 64, 175);
+            doc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+
+            xPos = margin + 2;
+            tableColumns.forEach(col => {
+                doc.text(col.header, xPos, yPosition + 5.5);
+                xPos += col.width;
+            });
+
+            yPosition += 10;
+            doc.setFontSize(7);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+        }
+
+        // Alternate row colors
+        if (index % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, yPosition - 3, contentWidth, 6, 'F');
+        }
+
+        xPos = margin + 2;
+        tableColumns.forEach(col => {
+            const value = row[col.dataKey as keyof typeof row] || '';
+            doc.text(String(value), xPos, yPosition + 2);
+            xPos += col.width;
+        });
+
+        yPosition += 6;
+    });
+
+    // Footer
+    const footerY = pageHeight - 15;
+    doc.setFontSize(6);
+    doc.setTextColor(128, 128, 128);
+    doc.setFont('helvetica', 'italic');
+    doc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
+    doc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
+
+    // Save the PDF
+    doc.save(`nyantra_disbursements_report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const handleDeleteDisbursement = async (disbursement: any) => {
@@ -1287,7 +1420,7 @@ const DisbursementsPage: React.FC = () => {
           >
             <Filter className="w-4 h-4" />
             <span>{t('extracted.filters')} </span>
-            {(statusFilter !== 'all' || actTypeFilter !== 'all' || dateFilter !== 'all' || priorityFilter !== 'all') && (
+            {(statusFilter !== 'all' || actTypeFilter !== 'all' || dateFilter !== 'all' || priorityFilter !== 'all' || sortBy !== 'initiatedDate' || sortOrder !== 'desc') && (
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
             )}
           </motion.button>
@@ -1358,6 +1491,51 @@ const DisbursementsPage: React.FC = () => {
                     <option value="high">{t('extracted.high')} </option>
                     <option value="medium">{t('extracted.medium')} </option>
                     <option value="low">{t('extracted.low')}</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Sorting Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t theme-border-glass">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <ArrowUpDown className="w-3 h-3 text-white" />
+                    </div>
+                    <label className="text-sm font-medium theme-text-primary">{t("extracted_grouped.hero.sortBy") || "Sort By"}</label>
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                  >
+                    <option value="initiatedDate">{t("extracted_grouped.hero.sortOptions.initiatedDate") || "Initiated Date"}</option>
+                    <option value="reliefAmount">{t("extracted_grouped.hero.sortOptions.reliefAmount") || "Amount"}</option>
+                    <option value="status">{t("extracted_grouped.hero.sortOptions.status") || "Status"}</option>
+                  </select>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
+                      <ArrowUpDown className="w-3 h-3 text-white" />
+                    </div>
+                    <label className="text-sm font-medium theme-text-primary">{t("extracted_grouped.hero.sortOrder") || "Sort Order"}</label>
+                  </div>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                  >
+                    <option value="desc">
+                      {sortBy === 'reliefAmount' ? (t("extracted.sortOrderOptions.highToLow") || 'High to Low') : 
+                       sortBy === 'status' ? (t("extracted.sortOrderOptions.completedToPending") || 'Completed to Pending') : (t("extracted_grouped.hero.sortOrderOptions.newestFirst") || 'Newest First')}
+                    </option>
+                    <option value="asc">
+                      {sortBy === 'reliefAmount' ? (t("extracted.sortOrderOptions.lowToHigh") || 'Low to High') : 
+                       sortBy === 'status' ? (t("extracted.sortOrderOptions.pendingToCompleted") || 'Pending to Completed') : (t("extracted_grouped.hero.sortOrderOptions.oldestFirst") || 'Oldest First')}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -2286,144 +2464,50 @@ const DisbursementsPage: React.FC = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-md mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
                     <Download className="w-5 h-5 text-accent-gradient" />
-                    {t('extracted.export') || 'Export Data'}
+                    {t("extracted.exportTitle") || "Export Disbursements"}
                   </h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
-                </div>
-                <button onClick={() => setShowExportModal(false)} aria-label={t('close_export_modal')} className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                  <X className="w-5 h-5 theme-text-primary" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Export All Card */}
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full disbursements dataset in the chosen format.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{allDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">{t('export_csv')}</button>
-                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">{t('export_pdf')}</button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Export Filtered Card */}
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                          <Download className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{filteredDisbursements.length} {t('extracted.disbursements_lowercase') || 'disbursements'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">{t('export_csv')}</button>
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">{t('export_pdf')}</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Export Modal */}
-      <AnimatePresence>
-        {showExportModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
-              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-            >
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
-                    <Download className="w-5 h-5 text-accent-gradient" />
-                    {t('extracted.export') || 'Export Data'}
-                  </h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export disbursements as CSV or a printable PDF report.'}</p>
+                  <p className="text-sm theme-text-muted mt-1">
+                    {t("extracted.exportSubtitle") || "Choose export format for disbursements data"}
+                  </p>
                 </div>
                 <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
                   <X className="w-5 h-5 theme-text-primary" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Export All Card */}
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
+              <div className="space-y-4">
+                {/* Export All Section */}
+                <div className="p-4 rounded-lg border theme-border-glass">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full disbursements dataset in the chosen format.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{allDisbursements.length} {t('extracted.disbursements') || 'disbursements'}</p>
+                      <h4 className="font-medium theme-text-primary">{t("extracted.exportAllTitle") || "All Disbursements"}</h4>
+                      <p className="text-sm theme-text-muted">{allDisbursements.length} records</p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
-                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => { exportDisbursementsData(allDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("extracted.exportCsv") || "Export CSV"}</button>
+                    <button onClick={() => { exportDisbursementsPDF(allDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md transition-shadow">{t("extracted.exportPdf") || "Export PDF"}</button>
                   </div>
                 </div>
 
-                {/* Export Filtered Card */}
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
+                {/* Export Filtered Section */}
+                <div className="p-4 rounded-lg border theme-border-glass">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                          <Download className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{filteredDisbursements.length} {t('extracted.disbursements') || 'disbursements'}</p>
+                      <h4 className="font-medium theme-text-primary">{t("extracted.exportFilteredTitle") || "Filtered Results"}</h4>
+                      <p className="text-sm theme-text-muted">{filteredDisbursements.length} records</p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
-                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("extracted.exportCsv") || "Export CSV"}</button>
+                    <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow">{t("extracted.exportPdf") || "Export PDF"}</button>
                   </div>
                 </div>
               </div>

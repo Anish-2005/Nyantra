@@ -1,9 +1,10 @@
-// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides, avoid_unnecessary_containers
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:math';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart' as app_auth;
 import '../../../core/widgets/loading_state.dart';
@@ -113,8 +114,13 @@ class _GrievancePageState extends State<GrievancePage> {
       final currentUser = context.read<app_auth.AuthProvider>().user;
       if (currentUser == null) throw Exception('User not authenticated');
 
+      // Generate a random 13-digit number for the grievance ID
+      final random = Random();
+      final randomId =
+          '${random.nextInt(900000000) + 100000000}${random.nextInt(10000) + 1000}';
+
       final grievance = GrievanceModel(
-        id: '',
+        id: 'GRV$randomId',
         beneficiaryId: _selectedBeneficiary!.id,
         userId: currentUser.uid,
         beneficiaryName: _selectedBeneficiary!.name,
@@ -645,9 +651,6 @@ class _GrievancePageState extends State<GrievancePage> {
                               final grievances = snapshot.data ?? [];
 
                               if (grievances.isEmpty) {
-                                final currentUser = context
-                                    .watch<app_auth.AuthProvider>()
-                                    .user;
                                 return Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -681,65 +684,6 @@ class _GrievancePageState extends State<GrievancePage> {
                                         textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(height: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(16),
-                                        margin: const EdgeInsets.symmetric(
-                                          horizontal: 32,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: theme.cardColor,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: theme.dividerColor
-                                                .withValues(alpha: 77),
-                                          ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              localeProvider.translate(
-                                                'grievances.firebaseInstruction',
-                                              ),
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: theme
-                                                    .scaffoldBackgroundColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: SelectableText(
-                                                currentUser?.uid ??
-                                                    localeProvider.translate(
-                                                      'grievances.noUserId',
-                                                    ),
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontFamily: 'monospace',
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              '${localeProvider.translate('grievances.firebaseConsoleInstruction')} "${currentUser?.uid ?? 'your-user-id'}"',
-                                              style: theme.textTheme.bodySmall,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ).animate().fadeIn(

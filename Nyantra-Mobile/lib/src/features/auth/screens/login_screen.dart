@@ -43,14 +43,19 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _signInWithGoogle() async {
+    final localeProvider = context.read<LocaleProvider>();
     setState(() => _isLoading = true);
     try {
       await context.read<AuthProvider>().signInWithGoogle();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Google sign-in failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${localeProvider.translate('auth.googleSignInFailed')}: $e',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -183,54 +188,48 @@ class _LoginScreenState extends State<LoginScreen>
 
                   const SizedBox(height: 60),
 
-                  // Stats Cards (like web app)
+                  // Welcome Section with key features
                   Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width < 400
-                              ? 5
-                              : MediaQuery.of(context).size.width < 600
-                              ? 10
-                              : 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
                           children: [
-                            Flexible(
-                              child: _buildStatCard(
-                                '45K+',
-                                localeProvider.translate('stats.beneficiaries'),
-                                Icons.people,
-                                isDark,
-                                MediaQuery.of(context).size.width < 400,
+                            // Feature 1: Quick Access
+                            _buildFeatureCard(
+                              icon: Icons.access_time,
+                              title: localeProvider.translate(
+                                'auth.features.quickAccess.title',
                               ),
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width < 400
-                                  ? 4
-                                  : 8,
-                            ),
-                            Flexible(
-                              child: _buildStatCard(
-                                '₹250Cr',
-                                localeProvider.translate('stats.disbursed'),
-                                Icons.account_balance_wallet,
-                                isDark,
-                                MediaQuery.of(context).size.width < 400,
+                              description: localeProvider.translate(
+                                'auth.features.quickAccess.description',
                               ),
+                              isDark: isDark,
+                              theme: theme,
                             ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width < 400
-                                  ? 4
-                                  : 8,
-                            ),
-                            Flexible(
-                              child: _buildStatCard(
-                                '72hrs',
-                                localeProvider.translate('stats.avgTime'),
-                                Icons.access_time,
-                                isDark,
-                                MediaQuery.of(context).size.width < 400,
+                            const SizedBox(height: 20),
+                            // Feature 2: Transparent Process
+                            _buildFeatureCard(
+                              icon: Icons.visibility,
+                              title: localeProvider.translate(
+                                'auth.features.transparentProcess.title',
                               ),
+                              description: localeProvider.translate(
+                                'auth.features.transparentProcess.description',
+                              ),
+                              isDark: isDark,
+                              theme: theme,
+                            ),
+                            const SizedBox(height: 20),
+                            // Feature 3: 24/7 Support
+                            _buildFeatureCard(
+                              icon: Icons.support_agent,
+                              title: localeProvider.translate(
+                                'auth.features.support247.title',
+                              ),
+                              description: localeProvider.translate(
+                                'auth.features.support247.description',
+                              ),
+                              isDark: isDark,
+                              theme: theme,
                             ),
                           ],
                         ),
@@ -297,26 +296,51 @@ class _LoginScreenState extends State<LoginScreen>
                                     Container(
                                       width: 24,
                                       height: 24,
-                                      decoration: const BoxDecoration(
-                                        color: Colors.blue,
-                                        shape: BoxShape.circle,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          400,
+                                        ),
                                       ),
-                                      child: const Center(
-                                        child: Text(
-                                          'G',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(2),
+                                        child: Image.network(
+                                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                                // Fallback to the original "G" if image fails to load
+                                                return Container(
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: Colors.blue,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                  child: const Center(
+                                                    child: Text(
+                                                      'G',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                         ),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       _isLoading
-                                          ? 'Signing in...'
-                                          : 'Continue with Google',
+                                          ? localeProvider.translate(
+                                              'auth.signingIn',
+                                            )
+                                          : localeProvider.translate(
+                                              'auth.continueWithGoogle',
+                                            ),
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -355,8 +379,12 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Text(
                                   localeProvider.locale == AppLocale.en
-                                      ? 'हिंदी'
-                                      : 'English',
+                                      ? localeProvider.translate(
+                                          'auth.languageHindi',
+                                        )
+                                      : localeProvider.translate(
+                                          'auth.languageEnglish',
+                                        ),
                                   style: TextStyle(
                                     color: theme.primaryColor,
                                     fontWeight: FontWeight.w500,
@@ -805,6 +833,68 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 40),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool isDark,
+    required ThemeData theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.cardColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.dividerColor.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color:
+                  (isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185))
+                      .withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: isDark ? const Color(0xFF06B6D4) : const Color(0xFFFB7185),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

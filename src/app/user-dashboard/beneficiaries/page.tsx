@@ -9,11 +9,11 @@ import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import LoadingState from '@/components/LoadingState';
 import {
-  User, Plus, Edit, Trash, Eye, Search,
+  User, Plus, Edit, Trash, Eye,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
   Shield, Award, MapPin, Phone, Calendar,
   DollarSign, FileText, Check, ChevronLeft, ChevronRight,
-  Upload, File
+  Upload, File, CheckCircle, XCircle, Hash
 } from 'lucide-react';
 
 type Beneficiary = {
@@ -266,6 +266,11 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
           <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.email')}</label>
+            <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.email ? 'border-red-500' : ''}`} />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
             <input required value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.district ? 'border-red-500' : ''}`} />
             {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
@@ -405,7 +410,6 @@ export default function BeneficiariesPage() {
   const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const { t } = useLocale();
   
   // Toasts
@@ -646,11 +650,7 @@ export default function BeneficiariesPage() {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const filteredBeneficiaries = beneficiaries.filter(beneficiary =>
-    beneficiary.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    beneficiary.aadhaarNumber.includes(searchTerm) ||
-    beneficiary.district.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBeneficiaries = beneficiaries;
 
   if (!user) {
     return (
@@ -792,16 +792,6 @@ export default function BeneficiariesPage() {
                 <h3 className="text-lg font-semibold theme-text-primary">
                   {t('extracted.your_beneficiary')}
                 </h3>
-                
-                <div className="relative flex-1 sm:flex-none sm:w-64">
-                  <input
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    placeholder={t('extracted.search_beneficiaries')}
-                    className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" />
-                </div>
               </div>
 
               <div className="space-y-4">
@@ -816,12 +806,10 @@ export default function BeneficiariesPage() {
                         <User className="w-8 h-8 theme-text-muted" />
                       </div>
                       <p className="theme-text-muted mb-2">
-                        {beneficiaries.length === 0 ? t('extracted.no_beneficiaries_yet') : t('extracted.no_matching_beneficiaries_found')}
+                        {t('extracted.no_beneficiaries_yet')}
                       </p>
                       <p className="text-sm theme-text-muted">
-                        {beneficiaries.length === 0 
-                          ? t('extracted.click_create_to_get_started') 
-                          : t('extracted.try_adjusting_search_terms')}
+                        {t('extracted.click_create_to_get_started')}
                       </p>
                     </motion.div>
                   ) : (
@@ -863,6 +851,18 @@ export default function BeneficiariesPage() {
                                 <p className={`text-xs ${
                                   selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
                                 }`}>
+                                  {t('extracted.email')}
+                                </p>
+                                <p className={`font-medium ${
+                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
+                                }`}>
+                                  {beneficiary.email || 'Not provided'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className={`text-xs ${
+                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
+                                }`}>
                                   {t('extracted.sc_st_certificate')}
                                 </p>
                                 <p className={`font-medium ${
@@ -871,8 +871,9 @@ export default function BeneficiariesPage() {
                                   {beneficiary.scStCertificate ? (
                                     <button
                                       onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                                      className="text-blue-500 hover:text-blue-600 underline"
+                                      className="px-3 py-1.5 rounded-lg accent-gradient text-white text-sm font-medium shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5 border border-white/20"
                                     >
+                                      <Eye className="w-3.5 h-3.5" />
                                       View Certificate
                                     </button>
                                   ) : 'Not provided'}
@@ -1011,82 +1012,270 @@ export default function BeneficiariesPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+                  className="theme-bg-card theme-border-glass border rounded-2xl p-6 shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold theme-text-primary">{t('extracted.beneficiary_details')}</h4>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h4 className="font-semibold theme-text-primary text-lg">{t('extracted.beneficiary_details')}</h4>
+                      <p className="text-sm theme-text-muted mt-1">{t('extracted.detailed_information')}</p>
+                    </div>
                     <button
                       onClick={() => setSelectedBeneficiary(null)}
-                      className="p-1 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
+                      className="p-2 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.full_name')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.name}</div>
+                  <div className="space-y-6">
+                    {/* Personal Information Card */}
+                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-medium theme-text-primary">{t('extracted.personal_information')}</h5>
+                          <p className="text-xs theme-text-muted">{t('extracted.basic_details')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.fatheraposs_name')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.fatherName || '—'}</div>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.aadhaar_number')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.aadhaarNumber}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.phone_number')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.phone}</div>
-                      </div>
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.full_name')}</div>
+                            <div className="font-medium theme-text-primary">{selectedBeneficiary.name}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.fatheraposs_name')}</div>
+                            <div className="font-medium theme-text-primary">{selectedBeneficiary.fatherName || '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.aadhaar_number')}</div>
+                            <div className="font-medium theme-text-primary font-mono">{selectedBeneficiary.aadhaarNumber}</div>
+                          </div>
+                        </div>
 
-                    <div>
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.address')}</div>
-                      <div className="font-medium theme-text-primary">
-                        {selectedBeneficiary.address}, {selectedBeneficiary.district}, {selectedBeneficiary.state}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.sc_st_certificate')}</div>
-                        <div className="font-medium theme-text-primary">
-                          {selectedBeneficiary.scStCertificate ? (
-                            <button
-                              onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
-                              className="text-blue-500 hover:text-blue-600 underline"
-                            >
-                              View Certificate
-                            </button>
-                          ) : '—'}
+                        <div className="space-y-3">
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.phone_number')}</div>
+                            <div className="font-medium theme-text-primary">{selectedBeneficiary.phone}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.email')}</div>
+                            <div className="font-medium theme-text-primary">{selectedBeneficiary.email || '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.category_1')}</div>
+                            <div className="font-medium theme-text-primary">{selectedBeneficiary.category}</div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.category_1')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.category}</div>
+                    {/* Address Information Card */}
+                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+                          <MapPin className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-medium theme-text-primary">{t('extracted.address_information')}</h5>
+                          <p className="text-xs theme-text-muted">{t('extracted.location_details')}</p>
+                        </div>
                       </div>
+
                       <div>
-                        <div className="text-sm theme-text-muted mb-1">{t('extracted.status')}</div>
-                        <div className="font-medium theme-text-primary">{selectedBeneficiary.status}</div>
+                        <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.complete_address')}</div>
+                        <div className="font-medium theme-text-primary leading-relaxed">
+                          {selectedBeneficiary.address}<br />
+                          {selectedBeneficiary.district}, {selectedBeneficiary.state}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t theme-border-glass">
-                      <div className="text-sm theme-text-muted mb-1">{t('extracted.beneficiary_id')}</div>
-                      <div className="font-mono text-xs theme-text-primary theme-bg-glass px-2 py-1 rounded">
-                        {selectedBeneficiary.id}
+                    {/* Documents & Status Card */}
+                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-medium theme-text-primary">{t('extracted.documents_status')}</h5>
+                          <p className="text-xs theme-text-muted">{t('extracted.verification_documents')}</p>
+                        </div>
                       </div>
-                      <div className="text-xs theme-text-muted mt-2">
-                        {t('extracted.added')}: {formatDate(selectedBeneficiary.createdAt)}
+
+                      <div className="space-y-6">
+                        {/* Certificate Section */}
+                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                              <FileText className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium theme-text-primary">{t('extracted.sc_st_certificate')}</div>
+                              <div className="text-xs theme-text-muted">{t('extracted.required_verification_document')}</div>
+                            </div>
+                          </div>
+
+                          {selectedBeneficiary.scStCertificate ? (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium theme-text-primary">{t('extracted.certificate_available')}</div>
+                                  <div className="text-xs theme-text-muted">{t('extracted.click_to_view_document')}</div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg accent-gradient text-white font-medium shadow-sm hover:shadow-md transition-all hover:scale-105 border border-white/20"
+                              >
+                                <Eye className="w-4 h-4" />
+                                {t('extracted.view_certificate')}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-yellow-500" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium theme-text-primary">{t('extracted.certificate_pending')}</div>
+                                <div className="text-xs theme-text-muted italic">{t('extracted.not_provided')}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Status Section */}
+                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium theme-text-primary">{t('extracted.verification_status')}</div>
+                              <div className="text-xs theme-text-muted">{t('extracted.current_application_status')}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${
+                                selectedBeneficiary.status === 'verified' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                selectedBeneficiary.status === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                selectedBeneficiary.status === 'pending' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
+                                selectedBeneficiary.status === 'documents-required' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
+                                'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                              }`}>
+                                {selectedBeneficiary.status === 'verified' && <CheckCircle className="w-4 h-4" />}
+                                {selectedBeneficiary.status === 'rejected' && <XCircle className="w-4 h-4" />}
+                                {selectedBeneficiary.status === 'pending' && <Clock className="w-4 h-4" />}
+                                {selectedBeneficiary.status === 'documents-required' && <AlertCircle className="w-4 h-4" />}
+                                {selectedBeneficiary.status === 'verified' ? t('extracted.verified') :
+                                 selectedBeneficiary.status === 'rejected' ? t('extracted.rejected') :
+                                 selectedBeneficiary.status === 'pending' ? t('extracted.pending') :
+                                 selectedBeneficiary.status === 'documents-required' ? t('extracted.documents_required') :
+                                 t('extracted.unknown')}
+                              </span>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-xs theme-text-muted uppercase tracking-wide">Status</div>
+                              <div className="text-sm font-medium theme-text-primary">
+                                {selectedBeneficiary.status === 'verified' ? t('extracted.approved') :
+                                 selectedBeneficiary.status === 'rejected' ? t('extracted.denied') :
+                                 selectedBeneficiary.status === 'pending' ? t('extracted.under_review') :
+                                 selectedBeneficiary.status === 'documents-required' ? t('extracted.action_required') :
+                                 t('extracted.processing')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Registration Information Card */}
+                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-medium theme-text-primary">{t('extracted.registration_info')}</h5>
+                          <p className="text-xs theme-text-muted">{t('extracted.registration_details')}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        {/* Beneficiary ID Section */}
+                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                              <Hash className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium theme-text-primary">{t('extracted.beneficiary_id')}</div>
+                              <div className="text-xs theme-text-muted">{t('extracted.unique_identification_number')}</div>
+                            </div>
+                          </div>
+
+                          <div className="font-mono text-lg theme-text-primary theme-bg-card px-4 py-3 rounded-lg border theme-border-glass font-semibold">
+                            {selectedBeneficiary.id}
+                          </div>
+                        </div>
+
+                        {/* Registration Date Section */}
+                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                              <Calendar className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium theme-text-primary">{t('extracted.registered_on')}</div>
+                              <div className="text-xs theme-text-muted">{t('extracted.account_creation_date')}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                              <Calendar className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <div className="text-lg font-semibold theme-text-primary">{formatDate(selectedBeneficiary.createdAt)}</div>
+                              <div className="text-xs theme-text-muted">{t('extracted.registration_timestamp')}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Last Updated Section */}
+                        {selectedBeneficiary.lastUpdate && (
+                          <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                                <Clock className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium theme-text-primary">{t('extracted.last_updated')}</div>
+                                <div className="text-xs theme-text-muted">{t('extracted.most_recent_modification')}</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-amber-500" />
+                              </div>
+                              <div>
+                                <div className="text-lg font-semibold theme-text-primary">{formatDate(selectedBeneficiary.lastUpdate)}</div>
+                                <div className="text-xs theme-text-muted">{t('extracted.last_activity_timestamp')}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

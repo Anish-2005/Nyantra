@@ -29,7 +29,75 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, 'nyantara.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add sync tracking columns to existing tables
+      await db.execute('ALTER TABLE users ADD COLUMN synced INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE users ADD COLUMN lastModified TEXT');
+      await db.execute(
+        'ALTER TABLE users ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE applications ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute('ALTER TABLE applications ADD COLUMN lastModified TEXT');
+      await db.execute(
+        'ALTER TABLE applications ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE beneficiaries ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE beneficiaries ADD COLUMN lastModified TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE beneficiaries ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE disbursements ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE disbursements ADD COLUMN lastModified TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE disbursements ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE grievances ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute('ALTER TABLE grievances ADD COLUMN lastModified TEXT');
+      await db.execute(
+        'ALTER TABLE grievances ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE feedback ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute('ALTER TABLE feedback ADD COLUMN lastModified TEXT');
+      await db.execute(
+        'ALTER TABLE feedback ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+
+      await db.execute(
+        'ALTER TABLE reports ADD COLUMN synced INTEGER DEFAULT 0',
+      );
+      await db.execute('ALTER TABLE reports ADD COLUMN lastModified TEXT');
+      await db.execute(
+        'ALTER TABLE reports ADD COLUMN needsSync INTEGER DEFAULT 0',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -41,7 +109,10 @@ class DatabaseHelper {
         displayName TEXT,
         role TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -60,7 +131,10 @@ class DatabaseHelper {
         documents TEXT,
         notes TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -78,8 +152,12 @@ class DatabaseHelper {
         aadhaarNumber TEXT,
         bankAccountNumber TEXT,
         ifscCode TEXT,
+        certificateUrl TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -95,7 +173,10 @@ class DatabaseHelper {
         referenceNumber TEXT,
         notes TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -104,6 +185,7 @@ class DatabaseHelper {
       CREATE TABLE grievances (
         id TEXT PRIMARY KEY,
         userId TEXT,
+        beneficiaryId TEXT,
         title TEXT,
         description TEXT,
         category TEXT,
@@ -113,7 +195,10 @@ class DatabaseHelper {
         resolution TEXT,
         createdAt TEXT,
         updatedAt TEXT,
-        resolvedAt TEXT
+        resolvedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -125,7 +210,10 @@ class DatabaseHelper {
         rating INTEGER,
         comment TEXT,
         category TEXT,
-        createdAt TEXT
+        createdAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
 
@@ -153,7 +241,10 @@ class DatabaseHelper {
         recipients TEXT,
         columns TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        synced INTEGER DEFAULT 0,
+        lastModified TEXT,
+        needsSync INTEGER DEFAULT 0
       )
     ''');
   }
@@ -284,5 +375,67 @@ class DatabaseHelper {
   Future<void> syncToFirestore() async {
     // This will be called when online to sync local changes to Firestore
     // Implementation will be added in sync service
+  }
+
+  // Mark record as needing sync
+  Future<void> markForSync(String table, String id) async {
+    await update(
+      table,
+      {'needsSync': 1, 'lastModified': DateTime.now().toIso8601String()},
+      'id = ?',
+      [id],
+    );
+  }
+
+  // Mark record as synced
+  Future<void> markAsSynced(String table, String id) async {
+    await update(
+      table,
+      {
+        'synced': 1,
+        'needsSync': 0,
+        'lastModified': DateTime.now().toIso8601String(),
+      },
+      'id = ?',
+      [id],
+    );
+  }
+
+  // Get records that need syncing
+  Future<List<Map<String, dynamic>>> getRecordsNeedingSync(String table) async {
+    return await query(table, where: 'needsSync = ?', whereArgs: [1]);
+  }
+
+  // Get all records for a table
+  Future<List<Map<String, dynamic>>> getAllRecords(String table) async {
+    return await query(table);
+  }
+
+  // Insert or update with sync tracking
+  Future<void> upsertWithSync(
+    String table,
+    Map<String, dynamic> data, {
+    bool markForSync = false,
+  }) async {
+    final id = data['id'];
+    if (id == null) return;
+
+    // Check if record exists
+    final existing = await query(table, where: 'id = ?', whereArgs: [id]);
+
+    if (existing.isNotEmpty) {
+      // Update existing record
+      data['lastModified'] = DateTime.now().toIso8601String();
+      if (markForSync) {
+        data['needsSync'] = 1;
+      }
+      await update(table, data, 'id = ?', [id]);
+    } else {
+      // Insert new record
+      data['synced'] = markForSync ? 0 : 1;
+      data['needsSync'] = markForSync ? 1 : 0;
+      data['lastModified'] = DateTime.now().toIso8601String();
+      await insert(table, data);
+    }
   }
 }
