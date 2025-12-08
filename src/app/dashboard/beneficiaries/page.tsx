@@ -91,6 +91,10 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
     } else if (!/^\d{10}$/.test(formData.phone)) {
       errors.phone = 'Phone number must be 10 digits';
     }
+    // Email validation (optional but must be valid if provided)
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address';
+    }
     if (!formData.district.trim()) {
       errors.district = 'District is required';
     }
@@ -256,6 +260,13 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
             <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.phone ? 'border-red-500' : ''}`} />
             {validationErrors.phone && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.email')}</label>
+            <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.email ? 'border-red-500' : ''}`} />
+            {validationErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
             )}
           </div>
           <div>
@@ -521,7 +532,7 @@ const BeneficiariesPage = () => {
 
   // Export helpers
   const exportBeneficiariesData = (items: any[]) => {
-    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'District', 'State', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
+    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'Email', 'District', 'State', 'SC/ST Certificate', 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
     const rows = items.map(b => {
       const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
         ? b.registrationDate.toDate().toISOString()
@@ -531,6 +542,7 @@ const BeneficiariesPage = () => {
         b.name,
         b.aadhaarNumber,
         b.phone,
+        b.email || '',
         b.district,
         b.state,
         b.scStCertificate || '',
@@ -1849,6 +1861,8 @@ const BeneficiariesPage = () => {
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary_id')} </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
                     <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.aadhaar')} </th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.phone')} </th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.email')} </th>
                     <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
                     <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
@@ -1879,6 +1893,12 @@ const BeneficiariesPage = () => {
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
                         {beneficiary.aadhaarNumber}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {beneficiary.phone}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">
+                        {beneficiary.email || '—'}
                       </td>
                       <td className="hidden md:table-cell px-4 py-3">
                         <div>
@@ -2175,6 +2195,10 @@ const BeneficiariesPage = () => {
                 <div>
                   <p className="text-xs theme-text-muted">{t('extracted.phone_number')}</p>
                   <p className="font-medium theme-text-primary">{selectedBeneficiary.phone}</p>
+                </div>
+                <div>
+                  <p className="text-xs theme-text-muted">{t('extracted.email')}</p>
+                  <p className="font-medium theme-text-primary">{selectedBeneficiary.email || '—'}</p>
                 </div>
               </div>
 
