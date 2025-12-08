@@ -379,8 +379,12 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Text(
                                   localeProvider.locale == AppLocale.en
-                                      ? 'हिंदी'
-                                      : 'English',
+                                      ? localeProvider.translate(
+                                          'auth.languageHindi',
+                                        )
+                                      : localeProvider.translate(
+                                          'auth.languageEnglish',
+                                        ),
                                   style: TextStyle(
                                     color: theme.primaryColor,
                                     fontWeight: FontWeight.w500,

@@ -167,6 +167,9 @@
     ]
   },
   "auth": {
+    "applicant": "Applicant",
+    "your_portal": "Your Portal",
+    "sign_out": "Sign Out",
     "googleSignInFailed": "Google sign-in failed",
     "signingIn": "Signing in...",
     "continueWithGoogle": "Continue with Google",
@@ -3654,11 +3657,6 @@
     "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location"
   },
   "beneficiary_lowercase": "Beneficiary Lowercase",
-  "auth": {
-    "applicant": "Applicant",
-    "your_portal": "Your Portal",
-    "sign_out": "Sign Out"
-  },
   "ui": {
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
