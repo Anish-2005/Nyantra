@@ -41,6 +41,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
   late TextEditingController _medicalReportCtrl;
   late TextEditingController _policeStationCtrl;
   bool _saving = false;
+  final _formKey = GlobalKey<FormState>();
   String? _selectedActType;
   String? _selectedGender;
 
@@ -130,6 +131,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
   }
 
   Future<void> _save() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
       final updates = <String, dynamic>{};
@@ -194,185 +196,212 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              _buildInput(
-                theme,
-                locale,
-                controller: _nameCtrl,
-                labelKey: 'applications.applicant_name',
-                keyboardType: TextInputType.name,
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _contactNumberCtrl,
-                labelKey: 'applications.phone_number',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _aadhaarCtrl,
-                labelKey: 'applications.aadhaar',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _beneficiaryIdCtrl,
-                labelKey: 'applications.beneficiaryId',
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInput(
-                      theme,
-                      locale,
-                      controller: _districtCtrl,
-                      labelKey: 'applications.district',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _nameCtrl,
+                  labelKey: 'applications.applicant_name',
+                  keyboardType: TextInputType.name,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _contactNumberCtrl,
+                  labelKey: 'applications.phone_number',
+                  keyboardType: TextInputType.phone,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _aadhaarCtrl,
+                  labelKey: 'applications.aadhaar',
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _beneficiaryIdCtrl,
+                  labelKey: 'applications.beneficiaryId',
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInput(
+                        theme,
+                        locale,
+                        controller: _districtCtrl,
+                        labelKey: 'applications.district',
+                        validator: (value) => value?.isEmpty ?? true
+                            ? locale.translate('common.required')
+                            : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildInput(
-                      theme,
-                      locale,
-                      controller: _stateCtrl,
-                      labelKey: 'applications.state',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildInput(
+                        theme,
+                        locale,
+                        controller: _stateCtrl,
+                        labelKey: 'applications.state',
+                        validator: (value) => value?.isEmpty ?? true
+                            ? locale.translate('common.required')
+                            : null,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _buildActTypeDropdown(
-                theme,
-                locale,
-                labelKey: 'applications.act_type',
-              ),
-              const SizedBox(height: 8),
-              _buildDateInput(
-                theme,
-                locale,
-                controller: _incidentDateCtrl,
-                labelKey: 'applications.incidentDateHint',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _amountCtrl,
-                labelKey: 'applications.reliefAmountINR',
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _priorityCtrl,
-                labelKey: 'applications.priorityLevel',
-                readOnly: true,
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _emailCtrl,
-                labelKey: 'extracted.email',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _fatherNameCtrl,
-                labelKey: 'applications.fatherName',
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _addressCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: locale.translate('extracted.address'),
-                  filled: true,
-                  fillColor: theme.cardColor.withOpacity(0.03),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildActTypeDropdown(
+                  theme,
+                  locale,
+                  labelKey: 'applications.act_type',
+                ),
+                const SizedBox(height: 8),
+                _buildDateInput(
+                  theme,
+                  locale,
+                  controller: _incidentDateCtrl,
+                  labelKey: 'applications.incidentDateHint',
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _amountCtrl,
+                  labelKey: 'applications.reliefAmountINR',
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? locale.translate('common.required')
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _priorityCtrl,
+                  labelKey: 'applications.priorityLevel',
+                  readOnly: true,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _emailCtrl,
+                  labelKey: 'extracted.email',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _fatherNameCtrl,
+                  labelKey: 'applications.fatherName',
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _addressCtrl,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: locale.translate('extracted.address'),
+                    filled: true,
+                    fillColor: theme.cardColor.withOpacity(0.03),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInput(
-                      theme,
-                      locale,
-                      controller: _ageCtrl,
-                      labelKey: 'extracted.age',
-                      keyboardType: TextInputType.number,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInput(
+                        theme,
+                        locale,
+                        controller: _ageCtrl,
+                        labelKey: 'extracted.age',
+                        keyboardType: TextInputType.number,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildGenderDropdown(
-                      theme,
-                      locale,
-                      labelKey: 'extracted.gender',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildGenderDropdown(
+                        theme,
+                        locale,
+                        labelKey: 'extracted.gender',
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInput(
-                      theme,
-                      locale,
-                      controller: _bankAccountCtrl,
-                      labelKey: 'applications.bankAccount',
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInput(
+                        theme,
+                        locale,
+                        controller: _bankAccountCtrl,
+                        labelKey: 'applications.bankAccount',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildInput(
-                      theme,
-                      locale,
-                      controller: _ifscCtrl,
-                      labelKey: 'applications.ifsc',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildInput(
+                        theme,
+                        locale,
+                        controller: _ifscCtrl,
+                        labelKey: 'applications.ifsc',
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _firReportCtrl,
-                labelKey: 'applications.firReport',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _medicalReportCtrl,
-                labelKey: 'applications.medicalReport',
-              ),
-              const SizedBox(height: 8),
-              _buildInput(
-                theme,
-                locale,
-                controller: _policeStationCtrl,
-                labelKey: 'applications.policeStation',
-              ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _firReportCtrl,
+                  labelKey: 'applications.firReport',
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _medicalReportCtrl,
+                  labelKey: 'applications.medicalReport',
+                ),
+                const SizedBox(height: 8),
+                _buildInput(
+                  theme,
+                  locale,
+                  controller: _policeStationCtrl,
+                  labelKey: 'applications.policeStation',
+                ),
 
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -386,6 +415,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     required String labelKey,
     TextInputType keyboardType = TextInputType.text,
     bool readOnly = false,
+    String? Function(String?)? validator,
   }) {
     final label =
         labelKey.startsWith('applications.') ||
@@ -393,10 +423,11 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
         ? locale.translate(labelKey)
         : labelKey;
 
-    return TextField(
+    return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       readOnly: readOnly,
+      validator: validator,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -411,6 +442,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     LocaleProvider locale, {
     required TextEditingController controller,
     required String labelKey,
+    String? Function(String?)? validator,
   }) {
     final label =
         labelKey.startsWith('applications.') ||
@@ -418,9 +450,10 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
         ? locale.translate(labelKey)
         : labelKey;
 
-    return TextField(
+    return TextFormField(
       controller: controller,
       readOnly: true,
+      validator: validator,
       onTap: () async {
         final DateTime? picked = await showDatePicker(
           context: context,
