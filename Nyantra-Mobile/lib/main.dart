@@ -9,6 +9,7 @@ import 'src/core/providers/theme_provider.dart';
 import 'src/core/providers/locale_provider.dart';
 import 'src/core/providers/auth_provider.dart';
 import 'src/core/providers/connectivity_provider.dart';
+import 'src/core/providers/sync_status_provider.dart';
 import 'src/features/auth/screens/login_screen.dart';
 import 'src/features/dashboard/screens/dashboard_screen.dart';
 
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        ChangeNotifierProvider(create: (_) => SyncStatusProvider()),
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, AuthProvider>(
         builder: (context, themeProvider, localeProvider, authProvider, child) {
