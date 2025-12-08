@@ -86,7 +86,8 @@ const DisbursementsPage: React.FC = () => {
 
     // Act type filter
     if (actTypeFilter !== 'all') {
-      filtered = filtered.filter(disbursement => disbursement.actType === actTypeFilter);
+      const actKey = actTypeFilter.toLowerCase().split(' ')[0]; // 'pcr' or 'poa'
+      filtered = filtered.filter(disbursement => (disbursement.actType || '').toLowerCase().includes(actKey));
     }
 
     // Date filter
@@ -1528,12 +1529,12 @@ const DisbursementsPage: React.FC = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.pcr_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {allDisbursements.filter(d => d.actType === 'PCR Act').length}
+                {allDisbursements.filter(d => (d.actType || '').toLowerCase().includes('pcr')).length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(allDisbursements.filter(d => d.actType === 'PCR Act' && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
+            {formatCurrency(allDisbursements.filter(d => (d.actType || '').toLowerCase().includes('pcr') && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
 
@@ -1548,12 +1549,12 @@ const DisbursementsPage: React.FC = () => {
             <div>
               <p className="text-sm theme-text-muted">{t('extracted.poa_act_disbursements')} </p>
               <p className="text-2xl font-bold theme-text-primary">
-                {allDisbursements.filter(d => d.actType === 'PoA Act').length}
+                {allDisbursements.filter(d => (d.actType || '').toLowerCase().includes('poa')).length}
               </p>
             </div>
           </div>
           <p className="text-sm theme-text-secondary">
-            {formatCurrency(allDisbursements.filter(d => d.actType === 'PoA Act' && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
+            {formatCurrency(allDisbursements.filter(d => (d.actType || '').toLowerCase().includes('poa') && (d.status || '').toLowerCase() === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0))} {t('extracted.disbursed')}
           </p>
         </motion.div>
       </motion.div>

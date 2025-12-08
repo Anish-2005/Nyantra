@@ -864,6 +864,9 @@ export default function ApplicationsPage() {
           maritalStatus: data.maritalStatus || '',
           bankAccount: data.bankAccount || '',
           ifsc: data.ifsc || '',
+          // PoA specific fields
+          offenceCategory: data.offenceCategory || '',
+          offenceType: data.offenceType || '',
           applicationDate: data.applicationDate?.toDate?.()?.toISOString() || '',
           status: data.status || 'pending',
           amount: data.amount || 0,
@@ -1507,6 +1510,44 @@ export default function ApplicationsPage() {
                         <div className="font-semibold theme-text-primary">{formatCurrency(selectedApplication.amount)}</div>
                       </div>
                     </div>
+
+                    {/* PoA Offence Information */}
+                    {selectedApplication.actType === 'PoA Act' && (selectedApplication.offenceCategory || selectedApplication.offenceType) && (
+                      <div className="pt-4 border-t theme-border-glass">
+                        <div className="text-sm font-medium theme-text-primary mb-3">PoA Act Offence Details</div>
+                        <div className="space-y-2">
+                          {selectedApplication.offenceCategory && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">Offence Category:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.offenceCategory}</span>
+                            </div>
+                          )}
+                          {selectedApplication.offenceType && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">Specific Offence:</span>
+                              <span className="text-sm font-medium theme-text-primary">{selectedApplication.offenceType}</span>
+                            </div>
+                          )}
+                          {selectedApplication.offenceCategory && selectedApplication.offenceType && (
+                            <div className="flex justify-between">
+                              <span className="text-sm theme-text-muted">Expected Compensation:</span>
+                              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                {(() => {
+                                  const category = POA_OFFENCES[selectedApplication.offenceCategory as keyof typeof POA_OFFENCES];
+                                  const compensation = category && selectedApplication.offenceType in category
+                                    ? category[selectedApplication.offenceType as keyof typeof category] as string | number
+                                    : null;
+                                  if (compensation && typeof compensation === "string" && compensation.includes("-")) {
+                                    return `₹${compensation.replace("-", " - ₹")}`;
+                                  }
+                                  return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>

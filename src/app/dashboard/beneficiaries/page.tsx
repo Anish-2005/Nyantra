@@ -520,6 +520,7 @@ const BeneficiariesPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [disbursements, setDisbursements] = useState<any[]>([]);
 
   // Email export state
   const [emailAddress, setEmailAddress] = useState('');
@@ -1288,7 +1289,31 @@ const BeneficiariesPage = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const disbursedAmount = beneficiaries.reduce((sum, b) => sum + (b.disbursedAmount || 0), 0);
+    const disbursedAmount = disbursements.filter(d => d.status === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
+    
+    // Calculate disbursed this month and last month
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    
+    const thisMonthDisbursed = disbursements
+      .filter(d => d.status === 'completed' && d.initiatedDate)
+      .filter(d => {
+        const date = new Date(d.initiatedDate);
+        return date >= thisMonth && date < nextMonth;
+      })
+      .reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
+    
+    const lastMonthDisbursed = disbursements
+      .filter(d => d.status === 'completed' && d.initiatedDate)
+      .filter(d => {
+        const date = new Date(d.initiatedDate);
+        return date >= lastMonth && date < thisMonth;
+      })
+      .reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
+    
+    const percentageChange = lastMonthDisbursed > 0 ? ((thisMonthDisbursed - lastMonthDisbursed) / lastMonthDisbursed) * 100 : 0;
     
     return {
       total: beneficiaries.length,
@@ -1296,9 +1321,10 @@ const BeneficiariesPage = () => {
       pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
       rejected: beneficiaries.filter(b => b.status === 'rejected').length,
       documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length,
-      disbursedAmount
+      disbursedAmount,
+      percentageChange
     };
-  }, [beneficiaries]);
+  }, [beneficiaries, disbursements]);
 
   // Category distribution
   const categoryStats = useMemo(() => {
@@ -1364,6 +1390,28 @@ const BeneficiariesPage = () => {
     }, (error) => {
       console.error('Error fetching beneficiaries:', error);
       setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Subscribe to disbursements collection in Firestore
+  useEffect(() => {
+    const disbursementsRef = collection(db, 'disbursements');
+    const q = query(disbursementsRef);
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const items: any[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        items.push({
+          id: doc.id,
+          ...data
+        });
+      });
+      setDisbursements(items);
+    }, (error) => {
+      console.error('Error fetching disbursements:', error);
     });
 
     return () => unsubscribe();
@@ -1870,7 +1918,7 @@ const BeneficiariesPage = () => {
             value: formatCurrency(stats.disbursedAmount),
             color: 'from-green-500 to-emerald-500',
             icon: DollarSign,
-            subtitle: t('extracted.disbursed_this_month')
+            subtitle: `Disbursed ${stats.percentageChange > 0 ? '+' : ''}${stats.percentageChange.toFixed(1)}% this month`
           },
         ].map((card, idx) => (
           <motion.div
