@@ -9,7 +9,7 @@ import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import LoadingState from '@/components/LoadingState';
 import {
-  User, Plus, Edit, Trash, Eye, Search,
+  User, Plus, Edit, Trash, Eye,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
   Shield, Award, MapPin, Phone, Calendar,
   DollarSign, FileText, Check, ChevronLeft, ChevronRight,
@@ -650,11 +650,7 @@ export default function BeneficiariesPage() {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const filteredBeneficiaries = beneficiaries.filter(beneficiary =>
-    beneficiary.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    beneficiary.aadhaarNumber.includes(searchTerm) ||
-    beneficiary.district.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBeneficiaries = beneficiaries;
 
   if (!user) {
     return (
@@ -810,12 +806,10 @@ export default function BeneficiariesPage() {
                         <User className="w-8 h-8 theme-text-muted" />
                       </div>
                       <p className="theme-text-muted mb-2">
-                        {beneficiaries.length === 0 ? t('extracted.no_beneficiaries_yet') : t('extracted.no_matching_beneficiaries_found')}
+                        {t('extracted.no_beneficiaries_yet')}
                       </p>
                       <p className="text-sm theme-text-muted">
-                        {beneficiaries.length === 0 
-                          ? t('extracted.click_create_to_get_started') 
-                          : t('extracted.try_adjusting_search_terms')}
+                        {t('extracted.click_create_to_get_started')}
                       </p>
                     </motion.div>
                   ) : (

@@ -27,7 +27,7 @@ import {
   Shield, Award, Heart, Scale, BadgeCheck,
   Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
   Target, Globe, Layers, Star,
-  CheckCircle, Tag, Upload, File
+  CheckCircle, Tag, Upload, File, ArrowUpDown
 } from 'lucide-react';
 
 // All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
@@ -503,8 +503,8 @@ const BeneficiariesPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [verificationFilter, setVerificationFilter] = useState('all');
-  const [sortBy] = useState('registrationDate');
-  const [sortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState('registrationDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
@@ -746,9 +746,40 @@ const BeneficiariesPage = () => {
       return String(val);
     };
 
+    // Custom sorting for status and verification fields
+    const getStatusOrder = (status: string) => {
+      const order = {
+        'pending-verification': 1,
+        'verified': 2,
+        'rejected': 3,
+        'documents-required': 4
+      };
+      return order[status as keyof typeof order] || 999;
+    };
+
+    const getVerificationOrder = (verification: string) => {
+      const order = {
+        'pending': 1,
+        'verified': 2,
+        'rejected': 3,
+        'documents-required': 4
+      };
+      return order[verification as keyof typeof order] || 999;
+    };
+
     filtered.sort((a, b) => {
-      const aVal = getComparable(a[sortBy as keyof typeof a]);
-      const bVal = getComparable(b[sortBy as keyof typeof b]);
+      let aVal: any, bVal: any;
+
+      if (sortBy === 'status') {
+        aVal = getStatusOrder(a.status || '');
+        bVal = getStatusOrder(b.status || '');
+      } else if (sortBy === 'verificationStatus' || sortBy === 'verification') {
+        aVal = getVerificationOrder(a.verificationStatus || '');
+        bVal = getVerificationOrder(b.verificationStatus || '');
+      } else {
+        aVal = getComparable(a[sortBy as keyof typeof a]);
+        bVal = getComparable(b[sortBy as keyof typeof b]);
+      }
 
       if (aVal === bVal) return 0;
       if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
@@ -1454,7 +1485,7 @@ const BeneficiariesPage = () => {
                             >
                                 <Filter className="w-4 h-4" />
                                 <span>{t('extracted.filters')}</span>
-                                {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                                {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
                                     <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                                 )}
                             </motion.button>
@@ -1568,8 +1599,68 @@ const BeneficiariesPage = () => {
                     </motion.div>
                   </div>
 
+                  {/* Sorting Controls */}
+                  <div className="mt-6 pt-4 border-t theme-border-glass relative z-20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Sort By */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="space-y-3 relative z-30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                            <ArrowUpDown className="w-4 h-4 text-white" />
+                          </div>
+                          <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">Sort By</label>
+                        </div>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-lg relative z-40"
+                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                        >
+                          <option value="registrationDate">Registration Date</option>
+                          <option value="status">Status</option>
+                          <option value="verification">Verification</option>
+                        </select>
+                      </motion.div>
+
+                      {/* Sort Order */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        className="space-y-3 relative z-30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
+                            <ArrowUpDown className="w-4 h-4 text-white" />
+                          </div>
+                          <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">Sort Order</label>
+                        </div>
+                        <select
+                          value={sortOrder}
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                          className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-sm font-medium shadow-lg relative z-40"
+                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                        >
+                          <option value="desc">
+                            {sortBy === 'status' ? 'Verified to Pending' : 
+                             sortBy === 'verification' ? 'Verified to Pending' : 'Newest First'}
+                          </option>
+                          <option value="asc">
+                            {sortBy === 'status' ? 'Pending to Verified' : 
+                             sortBy === 'verification' ? 'Pending to Verified' : 'Oldest First'}
+                          </option>
+                        </select>
+                      </motion.div>
+                    </div>
+                  </div>
+
                   {/* Active Filters Display */}
-                  {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all') && (
+                  {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1625,6 +1716,24 @@ const BeneficiariesPage = () => {
                             </button>
                           </motion.span>
                         )}
+                        {(sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium border border-blue-500/30"
+                          >
+                            Sort: {sortBy === 'status' ? 'Status' : sortBy === 'verificationStatus' || sortBy === 'verification' ? 'Verification' : 'Registration Date'} ({sortOrder === 'desc' ? 'Desc' : 'Asc'})
+                            <button
+                              onClick={() => {
+                                setSortBy('registrationDate');
+                                setSortOrder('desc');
+                              }}
+                              className="hover:bg-blue-500/30 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </motion.span>
+                        )}
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -1632,6 +1741,8 @@ const BeneficiariesPage = () => {
                             setStatusFilter('all');
                             setCategoryFilter('all');
                             setVerificationFilter('all');
+                            setSortBy('registrationDate');
+                            setSortOrder('desc');
                           }}
                           className="px-3 py-1.5 bg-gray-500/20 text-gray-700 dark:text-gray-400 rounded-full text-xs font-medium border border-gray-500/30 hover:bg-gray-500/30"
                         >

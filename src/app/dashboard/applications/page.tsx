@@ -722,8 +722,8 @@ const ApplicationsPage = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [actTypeFilter, setActTypeFilter] = useState('all');
     const [priorityFilter, setPriorityFilter] = useState('all');
-    const [sortBy] = useState('applicationDate');
-    const [sortOrder] = useState<'asc' | 'desc'>('desc');
+    const [sortBy, setSortBy] = useState('applicationDate');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [showFilters, setShowFilters] = useState(false);
@@ -765,12 +765,41 @@ const ApplicationsPage = () => {
             filtered = filtered.filter(app => app.priority === priorityFilter);
         }
 
-        // Sort (coerce undefined/null to '' and compare as strings to avoid TS errors)
+        // Custom sorting logic
         filtered.sort((a, b) => {
-            const rawA = a[sortBy as keyof Application];
-            const rawB = b[sortBy as keyof Application];
-            const aVal = rawA == null ? '' : String(rawA);
-            const bVal = rawB == null ? '' : String(rawB);
+            let aVal: any, bVal: any;
+
+            if (sortBy === 'amount') {
+                // Numeric sorting for amount
+                aVal = parseFloat(a.amount) || 0;
+                bVal = parseFloat(b.amount) || 0;
+            } else if (sortBy === 'status') {
+                // Custom status order: approved -> in-review -> pending -> documents-required -> rejected
+                const statusOrder = {
+                    'approved': 1,
+                    'in-review': 2,
+                    'pending': 3,
+                    'documents-required': 4,
+                    'rejected': 5
+                };
+                aVal = statusOrder[a.status as keyof typeof statusOrder] || 99;
+                bVal = statusOrder[b.status as keyof typeof statusOrder] || 99;
+            } else if (sortBy === 'priority') {
+                // Custom priority order: high -> medium -> low
+                const priorityOrder = {
+                    'high': 1,
+                    'medium': 2,
+                    'low': 3
+                };
+                aVal = priorityOrder[a.priority as keyof typeof priorityOrder] || 99;
+                bVal = priorityOrder[b.priority as keyof typeof priorityOrder] || 99;
+            } else {
+                // Default string sorting for other fields
+                const rawA = a[sortBy as keyof Application];
+                const rawB = b[sortBy as keyof Application];
+                aVal = rawA == null ? '' : String(rawA);
+                bVal = rawB == null ? '' : String(rawB);
+            }
 
             if (aVal === bVal) return 0;
 
@@ -1616,7 +1645,9 @@ return (
               <span>{t("applications.filters")}</span>
               {(statusFilter !== "all" ||
                 actTypeFilter !== "all" ||
-                priorityFilter !== "all") && (
+                priorityFilter !== "all" ||
+                sortBy !== "applicationDate" ||
+                sortOrder !== "desc") && (
                 <span className="w-2 h-2 bg-red-500 rounded-full" />
               )}
             </motion.button>
@@ -1692,6 +1723,46 @@ return (
                       <option value="high">{t("extracted.high")}</option>
                       <option value="medium">{t("extracted.medium")}</option>
                       <option value="low">{t("extracted.low")}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Sorting Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t theme-border-glass">
+                  <div>
+                    <label className="block text-sm font-medium theme-text-muted mb-2">
+                      Sort By
+                    </label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    >
+                      <option value="applicationDate">Application Date</option>
+                      <option value="amount">Amount</option>
+                      <option value="status">Status</option>
+                      <option value="priority">Priority</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium theme-text-muted mb-2">
+                      Sort Order
+                    </label>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    >
+                      <option value="desc">
+                        {sortBy === 'amount' ? 'High to Low' : 
+                         sortBy === 'status' ? 'Approved to Pending' : 
+                         sortBy === 'priority' ? 'High to Low' : 'Newest First'}
+                      </option>
+                      <option value="asc">
+                        {sortBy === 'amount' ? 'Low to High' : 
+                         sortBy === 'status' ? 'Pending to Approved' : 
+                         sortBy === 'priority' ? 'Low to High' : 'Oldest First'}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -1816,13 +1887,13 @@ return (
               <td className="py-3 px-2">
                 <div className="flex gap-1">
                   <button
-                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors"
+                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors"
                     onClick={() => setSelectedApplication(app)}
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-blue-500 transition-colors"
+                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedApplication(app);
@@ -1832,7 +1903,7 @@ return (
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 theme-text-muted hover:text-red-500 transition-colors"
+                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-red-500 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       requestDeleteApplication(app.id);
@@ -1954,7 +2025,7 @@ return (
                     </span>
                     <div className="flex items-center gap-1">
                       <button
-                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1.5 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedApplication(app);
@@ -1963,7 +2034,7 @@ return (
                         <Eye className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                       </button>
                       <button
-                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1.5 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedApplication(app);
@@ -1973,7 +2044,7 @@ return (
                         <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
                       </button>
                       <button
-                        className="p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1.5 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           requestDeleteApplication(app.id);
@@ -2001,7 +2072,7 @@ return (
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p: number) => p - 1)}
-                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:theme-bg-glass transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -2017,7 +2088,7 @@ return (
                       className={`px-3 py-1.5 rounded-lg ${
                         currentPage === pageNum
                           ? "accent-gradient text-white"
-                          : "theme-bg-card theme-border-glass border theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700"
+                          : "theme-bg-card theme-border-glass border theme-text-primary hover:theme-bg-glass"
                       } transition-colors`}
                     >
                       {pageNum}
@@ -2028,7 +2099,7 @@ return (
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p: number) => p + 1)}
-                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:theme-bg-glass transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
