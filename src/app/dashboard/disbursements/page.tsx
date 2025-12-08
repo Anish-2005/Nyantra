@@ -19,9 +19,7 @@ import {
   RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText,
   AlertTriangle,
   Receipt, ArrowUpDown
-} from 'lucide-react';
-
-// Disbursements state — now all from Firestore
+} from 'lucide-react';// Disbursements state — now all from Firestore
 
 const DisbursementsPage: React.FC = () => {
   const { theme } = useTheme();
@@ -37,6 +35,8 @@ const DisbursementsPage: React.FC = () => {
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [selectedDisbursement, setSelectedDisbursement] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -732,6 +732,233 @@ const DisbursementsPage: React.FC = () => {
 
     // Save the PDF
     doc.save(`nyantra_disbursements_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  // Function to send disbursements data via email
+  const sendDisbursementsEmail = async (items: any[], format: 'csv' | 'pdf') => {
+    if (!emailAddress.trim()) {
+      alert('Please enter an email address');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      let attachmentData: string | Buffer;
+      let attachmentName: string;
+      let attachmentType: string;
+
+      if (format === 'csv') {
+        // Generate CSV data directly
+        const headers = ['Disbursement ID','Beneficiary ID','Beneficiary Name','Aadhaar','Phone','District','State','Act Type','Case Number','Relief Amount','Disbursed Amount','Net Amount','Status','Transaction ID', t("extracted.sortOptions.initiatedDate") || 'Initiated Date','Disbursement Date'];
+        const rows = items.map(d => [
+          d.id, d.beneficiaryId, d.beneficiaryName, d.aadhaarNumber, d.phone, d.district, d.state, d.actType, d.caseNumber, d.reliefAmount, d.disbursedAmount, d.netAmount, d.status, d.transactionId, d.initiatedDate, d.disbursementDate
+        ]);
+        const csv = [headers, ...rows].map(r => r.map(f => `"${String(f ?? '')}"`).join(',')).join('\n');
+        attachmentData = csv;
+        attachmentName = `nyantra_disbursements_report_${new Date().toISOString().split('T')[0]}.csv`;
+        attachmentType = 'text/csv';
+      } else {
+        // Generate PDF data
+        const pdfDoc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const pageWidth = pdfDoc.internal.pageSize.getWidth();
+        const pageHeight = pdfDoc.internal.pageSize.getHeight();
+        const margin = 20;
+        const contentWidth = pageWidth - (margin * 2);
+
+        // Professional header
+        pdfDoc.setFillColor(30, 64, 175);
+        pdfDoc.rect(0, 0, pageWidth, 35, 'F');
+
+        // Title
+        pdfDoc.setFontSize(20);
+        pdfDoc.setTextColor(255, 255, 255);
+        pdfDoc.setFont('helvetica', 'bold');
+        pdfDoc.text('NYANTRA - Disbursements Report', margin, 22);
+
+        // Subtitle
+        pdfDoc.setFontSize(10);
+        pdfDoc.setTextColor(255, 255, 255);
+        pdfDoc.setFont('helvetica', 'normal');
+        pdfDoc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
+
+        // Report metadata
+        pdfDoc.setFontSize(8);
+        pdfDoc.setTextColor(255, 255, 255);
+        const currentDate = new Date().toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        pdfDoc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
+        pdfDoc.text(`Total Records: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
+
+        let yPosition = 50;
+
+        // Summary section
+        pdfDoc.setFillColor(240, 240, 240);
+        pdfDoc.rect(margin, yPosition, contentWidth, 25, 'F');
+
+        pdfDoc.setFontSize(12);
+        pdfDoc.setTextColor(30, 64, 175);
+        pdfDoc.setFont('helvetica', 'bold');
+        pdfDoc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
+
+        // Calculate summary data
+        const totalAmount = items.reduce((sum, d) => sum + (d.reliefAmount || 0), 0);
+        const completedCount = items.filter(d => d.status === 'completed').length;
+        const pendingCount = items.filter(d => d.status === 'pending').length;
+        const failedCount = items.filter(d => d.status === 'failed').length;
+
+        pdfDoc.setFontSize(9);
+        pdfDoc.setTextColor(0, 0, 0);
+        pdfDoc.setFont('helvetica', 'normal');
+        pdfDoc.text(`Total Disbursements: ₹${totalAmount.toLocaleString('en-IN')}`, margin + 5, yPosition + 18);
+        pdfDoc.text(`Completed: ${completedCount} | Pending: ${pendingCount} | Failed: ${failedCount}`, margin + 5, yPosition + 25);
+
+        yPosition += 35;
+
+        // Table
+        const tableColumns = [
+          { header: 'ID', width: 25 },
+          { header: 'Beneficiary', width: 40 },
+          { header: 'District', width: 30 },
+          { header: 'Act Type', width: 25 },
+          { header: 'Amount', width: 25 },
+          { header: 'Status', width: 20 },
+          { header: 'Transaction ID', width: 35 }
+        ];
+
+        const tableRows = items.map(d => ({
+          id: d.id || '',
+          beneficiaryName: d.beneficiaryName || '',
+          district: d.district || '',
+          actType: d.actType || '',
+          reliefAmount: d.reliefAmount ? `₹${d.reliefAmount.toLocaleString('en-IN')}` : '₹0',
+          status: (d.status || '').toUpperCase(),
+          transactionId: d.transactionId || 'N/A'
+        }));
+
+        // Table header
+        pdfDoc.setFillColor(30, 64, 175);
+        pdfDoc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+        pdfDoc.setFontSize(9);
+        pdfDoc.setTextColor(255, 255, 255);
+        pdfDoc.setFont('helvetica', 'bold');
+
+        let xPos = margin + 2;
+        tableColumns.forEach(col => {
+          pdfDoc.text(col.header, xPos, yPosition + 5.5);
+          xPos += col.width;
+        });
+
+        yPosition += 10;
+
+        // Table rows
+        pdfDoc.setFontSize(7);
+        pdfDoc.setTextColor(0, 0, 0);
+        pdfDoc.setFont('helvetica', 'normal');
+
+        tableRows.forEach((row, index) => {
+          if (yPosition > pageHeight - 20) {
+            pdfDoc.addPage();
+            yPosition = margin;
+
+            // Repeat header on new page
+            pdfDoc.setFillColor(30, 64, 175);
+            pdfDoc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+            pdfDoc.setFontSize(9);
+            pdfDoc.setTextColor(255, 255, 255);
+            pdfDoc.setFont('helvetica', 'bold');
+
+            xPos = margin + 2;
+            tableColumns.forEach(col => {
+              pdfDoc.text(col.header, xPos, yPosition + 5.5);
+              xPos += col.width;
+            });
+
+            yPosition += 10;
+          }
+
+          xPos = margin + 2;
+          tableColumns.forEach(col => {
+            const value = row[col.header.toLowerCase().replace(' ', '') as keyof typeof row] || '';
+            pdfDoc.text(String(value), xPos, yPosition + 3);
+            xPos += col.width;
+          });
+
+          yPosition += 6;
+        });
+
+        // Footer
+        const footerY = pageHeight - 15;
+        pdfDoc.setFontSize(8);
+        pdfDoc.setTextColor(128, 128, 128);
+        pdfDoc.setFont('helvetica', 'italic');
+        pdfDoc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
+        pdfDoc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
+
+        // Get PDF as buffer
+        attachmentData = pdfDoc.output('arraybuffer');
+        attachmentName = `nyantra_disbursements_report_${new Date().toISOString().split('T')[0]}.pdf`;
+        attachmentType = 'application/pdf';
+      }
+
+      // Send email
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailAddress,
+          subject: `Nyantra Disbursements Report - ${new Date().toLocaleDateString()}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #1e40af;">Nyantra - Disbursements Report</h2>
+              <p>Dear User,</p>
+              <p>Please find attached the disbursements report containing ${items.length} records.</p>
+              <p><strong>Report Details:</strong></p>
+              <ul>
+                <li>Total Records: ${items.length}</li>
+                <li>Format: ${format.toUpperCase()}</li>
+                <li>Generated: ${new Date().toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</li>
+              </ul>
+              <p>This report is generated by the Nyantra Direct Benefit Transfer System.</p>
+              <p>Best regards,<br>Nyantra Team</p>
+            </div>
+          `,
+          attachments: [{
+            filename: attachmentName,
+            content: attachmentData,
+            contentType: attachmentType,
+            encoding: format === 'csv' ? 'utf8' : undefined
+          }]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      alert('Email sent successfully!');
+      setEmailAddress('');
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleDeleteDisbursement = async (disbursement: any) => {
@@ -2508,6 +2735,58 @@ const DisbursementsPage: React.FC = () => {
                   <div className="flex gap-3">
                     <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsData(filteredDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("extracted.exportCsv") || "Export CSV"}</button>
                     <button disabled={filteredDisbursements.length === 0} onClick={() => { exportDisbursementsPDF(filteredDisbursements); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow">{t("extracted.exportPdf") || "Export PDF"}</button>
+                  </div>
+                </div>
+
+                {/* Email Export Section */}
+                <div className="p-4 rounded-lg border theme-border-glass">
+                  <div className="mb-3">
+                    <h4 className="font-medium theme-text-primary mb-2">Email Export</h4>
+                    <input
+                      type="email"
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
+                      placeholder={t("extracted.enterEmailAddress") || "Enter email address"}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendDisbursementsEmail(allDisbursements, 'csv')}
+                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                        Send CSV
+                      </button>
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendDisbursementsEmail(allDisbursements, 'pdf')}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                        Send PDF
+                      </button>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!emailAddress.trim() || filteredDisbursements.length === 0 || sendingEmail}
+                        onClick={() => sendDisbursementsEmail(filteredDisbursements, 'csv')}
+                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                        Send Filtered CSV
+                      </button>
+                      <button
+                        disabled={!emailAddress.trim() || filteredDisbursements.length === 0 || sendingEmail}
+                        onClick={() => sendDisbursementsEmail(filteredDisbursements, 'pdf')}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                        Send Filtered PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
