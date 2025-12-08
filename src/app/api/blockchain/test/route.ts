@@ -5,7 +5,7 @@ const transactionExample = {
     beneficiary_id: 'TEST_B002',
     utp_number: 'TEST_UTP002',
     transaction_id: 'TEST_TXN002',
-    amount: 10000
+    amount: 5000
 };  
 
 export async function GET() {
