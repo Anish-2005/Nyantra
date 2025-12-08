@@ -871,8 +871,9 @@ export default function BeneficiariesPage() {
                                   {beneficiary.scStCertificate ? (
                                     <button
                                       onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                                      className="text-blue-500 hover:text-blue-600 underline"
+                                      className="px-3 py-1.5 rounded-lg accent-gradient text-white text-sm font-medium shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5 border border-white/20"
                                     >
+                                      <Eye className="w-3.5 h-3.5" />
                                       View Certificate
                                     </button>
                                   ) : 'Not provided'}
@@ -1060,8 +1061,9 @@ export default function BeneficiariesPage() {
                           {selectedBeneficiary.scStCertificate ? (
                             <button
                               onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
-                              className="text-blue-500 hover:text-blue-600 underline"
+                              className="px-4 py-2 rounded-lg accent-gradient text-white font-medium shadow-sm hover:shadow-md transition-shadow flex items-center gap-2 border border-white/20"
                             >
+                              <Eye className="w-4 h-4" />
                               View Certificate
                             </button>
                           ) : '—'}

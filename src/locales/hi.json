@@ -505,6 +505,7 @@
     "timestamps": "समय-स्टैम्प",
     "expected_resolution": "अपेक्षित समाधान",
     "resolution_date": "समाधान तिथि",
+    "completed_date": "पूर्ण तिथि",
     "attachments_communication": "संलग्नक और संचार",
     "attachments_label": "संलग्नक",
     "messages_label": "संदेश",

@@ -470,160 +470,57 @@ const getStatusColor = (status: string) => {
                       </div>
                     </div>
 
-                    {/* User Editable Fields */}
+                    {/* Beneficiary Information */}
                     <div className="space-y-3">
                       <h5 className="text-sm font-semibold theme-text-primary">
-                        {t('extracted.your_contact_details')}
+                        {t('extracted.beneficiary_information')}
                       </h5>
 
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">
-                          {t('extracted.phone_number')}
-                        </div>
-                        {editingDisbursement?.id === selectedDisbursement.id ? (
-                          <input
-                            type="tel"
-                            value={editingDisbursement.userPhone || ''}
-                            onChange={e =>
-                              setEditingDisbursement({
-                                ...editingDisbursement,
-                                userPhone: e.target.value,
-                              })
-                            }
-                            onBlur={() =>
-                              handleUpdateUserDetails(
-                                'userPhone',
-                                editingDisbursement.userPhone || ''
-                              )
-                            }
-                            className="w-full px-3 py-1 rounded border theme-border-glass theme-bg-glass theme-text-primary text-sm"
-                          />
-                        ) : (
-                          <div className="font-medium theme-text-primary">
-                            {selectedDisbursement.userPhone ||
-                              t('extracted.not_provided')}
+                      <div className="grid grid-cols-1 gap-3">
+                        <div>
+                          <div className="text-sm theme-text-muted mb-1">
+                            {t('extracted.phone_number')}
                           </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">
-                          {t('extracted.email')}
-                        </div>
-                        {editingDisbursement?.id === selectedDisbursement.id ? (
-                          <input
-                            type="email"
-                            value={editingDisbursement.userEmail || ''}
-                            onChange={e =>
-                              setEditingDisbursement({
-                                ...editingDisbursement,
-                                userEmail: e.target.value,
-                              })
-                            }
-                            onBlur={() =>
-                              handleUpdateUserDetails(
-                                'userEmail',
-                                editingDisbursement.userEmail || ''
-                              )
-                            }
-                            className="w-full px-3 py-1 rounded border theme-border-glass theme-bg-glass theme-text-primary text-sm"
-                          />
-                        ) : (
                           <div className="font-medium theme-text-primary">
-                            {selectedDisbursement.userEmail ||
-                              t('extracted.not_provided')}
+                            {userBeneficiary?.phone || t('extracted.not_provided')}
                           </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">
-                          {t('extracted.bank_account')}
                         </div>
-                        {editingDisbursement?.id === selectedDisbursement.id ? (
-                          <input
-                            type="text"
-                            value={editingDisbursement.userBankAccount || ''}
-                            onChange={e =>
-                              setEditingDisbursement({
-                                ...editingDisbursement,
-                                userBankAccount: e.target.value,
-                              })
-                            }
-                            onBlur={() =>
-                              handleUpdateUserDetails(
-                                'userBankAccount',
-                                editingDisbursement.userBankAccount || ''
-                              )
-                            }
-                            className="w-full px-3 py-1 rounded border theme-border-glass theme-bg-glass theme-text-primary text-sm"
-                          />
-                        ) : (
+
+                        <div>
+                          <div className="text-sm theme-text-muted mb-1">
+                            {t('extracted.email')}
+                          </div>
                           <div className="font-medium theme-text-primary">
-                            {selectedDisbursement.userBankAccount ||
-                              t('extracted.not_provided')}
+                            {userBeneficiary?.email || t('extracted.not_provided')}
                           </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">
-                          {t('extracted.ifsc_code')}
                         </div>
-                        {editingDisbursement?.id === selectedDisbursement.id ? (
-                          <input
-                            type="text"
-                            value={editingDisbursement.userIFSC || ''}
-                            onChange={e =>
-                              setEditingDisbursement({
-                                ...editingDisbursement,
-                                userIFSC: e.target.value,
-                              })
-                            }
-                            onBlur={() =>
-                              handleUpdateUserDetails(
-                                'userIFSC',
-                                editingDisbursement.userIFSC || ''
-                              )
-                            }
-                            className="w-full px-3 py-1 rounded border theme-border-glass theme-bg-glass theme-text-primary text-sm"
-                          />
-                        ) : (
+
+                        <div>
+                          <div className="text-sm theme-text-muted mb-1">
+                            {t('extracted.bank_account')}
+                          </div>
                           <div className="font-medium theme-text-primary">
-                            {selectedDisbursement.userIFSC ||
-                              t('extracted.not_provided')}
+                            {userBeneficiary?.bankAccountNumber || t('extracted.not_provided')}
                           </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <div className="text-sm theme-text-muted mb-1">
-                          {t('extracted.address')}
                         </div>
-                        {editingDisbursement?.id === selectedDisbursement.id ? (
-                          <textarea
-                            value={editingDisbursement.userAddress || ''}
-                            onChange={e =>
-                              setEditingDisbursement({
-                                ...editingDisbursement,
-                                userAddress: e.target.value,
-                              })
-                            }
-                            onBlur={() =>
-                              handleUpdateUserDetails(
-                                'userAddress',
-                                editingDisbursement.userAddress || ''
-                              )
-                            }
-                            rows={2}
-                            className="w-full px-3 py-1 rounded border theme-border-glass theme-bg-glass theme-text-primary text-sm resize-none"
-                          />
-                        ) : (
+
+                        <div>
+                          <div className="text-sm theme-text-muted mb-1">
+                            {t('extracted.ifsc_code')}
+                          </div>
+                          <div className="font-medium theme-text-primary">
+                            {userBeneficiary?.ifscCode || t('extracted.not_provided')}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-sm theme-text-muted mb-1">
+                            {t('extracted.address')}
+                          </div>
                           <div className="font-medium theme-text-primary text-sm">
-                            {selectedDisbursement.userAddress ||
-                              t('extracted.not_provided')}
+                            {userBeneficiary?.address || t('extracted.not_provided')}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
 

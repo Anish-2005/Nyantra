@@ -808,6 +808,7 @@
     "created": "Created",
     "expected_resolution": "Expected resolution",
     "resolution_date": "Resolution date",
+    "completed_date": "Completed Date",
     "attachments_communication": "Attachments & Communication",
     "attachments_label": "Attachments",
     "messages_label": "Messages",
