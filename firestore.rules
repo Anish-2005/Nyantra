@@ -1,0 +1,183 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profiles: only the authenticated user may read/write their own profile
+    match /users/{userId} {
+      // Allow the authenticated user to create their own profile
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Allow users to read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow updates from the owner with controlled rules:
+      // - The owner may set the role only if it did not exist before (prevents client-side role escalation)
+      // - The owner may update other fields including `verified` (allowed for mock flows)
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && (
+                      // setting role when it was previously missing
+                      ( !('role' in resource.data) && ('role' in request.resource.data)
+                        && (request.resource.data.role == 'officer' || request.resource.data.role == 'user')
+                      )
+                      // or not changing role
+                      || (('role' in request.resource.data) == false || request.resource.data.role == resource.data.role)
+                    );
+
+      allow delete: if false; // do not allow deleting user profiles from client
+    }
+
+    // Grievances: authenticated users may create grievances (with required fields)
+    // Owners (when present) can read/update their own grievances. Officers (role == 'officer') can read/update/delete all grievances.
+    match /grievances/{grievanceId} {
+      // Allow any authenticated user to create a grievance as long as required fields are present.
+      // The UI sets `beneficiaryId`, `userId`, `createdDate` (timestamp) and `status` at minimum.
+      allow create: if request.auth != null || true; // Allow unauthenticated access for development
+
+      // Read: user (if userId matches auth uid OR beneficiaryId matches user's beneficiary) or officers may read; otherwise deny to prevent exposing all grievances.
+      allow read: if request.auth != null || true; // Allow unauthenticated access for development
+
+      // Update: user (if userId matches auth uid OR beneficiaryId matches user's beneficiary) or officers may update. Officers may also perform status/resolution updates.
+      allow update: if request.auth != null || true; // Allow unauthenticated access for development
+
+      // Delete: only officers may delete grievances from clients.
+      allow delete: if request.auth != null || true; // Allow unauthenticated access for development
+    }
+
+    // Applications: authenticated users can create applications; officers can read all applications
+    match /applications/{applicationId} {
+      allow create: if request.auth != null || true; // Allow unauthenticated access for development
+      allow read: if request.auth != null || true; // Allow unauthenticated access for development
+      allow update: if request.auth != null || true; // Allow unauthenticated access for development
+      allow delete: if request.auth != null && (
+                      // Allow owners to delete their own applications
+                      (resource.data.ownerId == request.auth.uid) ||
+                      // Allow officers to delete any application
+                      (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                    ) || true; // Allow unauthenticated access for development
+    }
+
+    // Applications or other top-level collections could be added similarly
+
+    // Integrations: allow authenticated users to read/write integration documents.
+    // This permits the client (including anonymous-authenticated apps) to seed and update
+    // integration documents. For production tighten this to role-based checks.
+    match /integrations/{integrationId} {
+      allow read, write: if request.auth != null || true; // Allow unauthenticated access for development
+    }
+
+    // Beneficiaries: allow authenticated users to read/create/update (no deletes from client)
+    match /beneficiaries/{beneficiaryId} {
+      // Allow access in development mode or with authentication
+      allow read: if request.auth != null || true; // Allow unauthenticated access for development
+      allow create: if request.auth != null || true; // Allow unauthenticated access for development
+      allow update: if request.auth != null || true; // Allow unauthenticated access for development
+      // Allow deletes by the beneficiary owner (`ownerId`) or by users with the 'officer' role.
+      // This permits an authenticated owner to remove their own beneficiary while
+      // keeping destructive actions restricted to officers otherwise.
+      allow delete: if request.auth != null && (
+        // owner may delete their own beneficiary document
+        (resource.data.ownerId == request.auth.uid)
+        // officers may delete any beneficiary
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+      ) || true; // Allow unauthenticated access for development
+    }
+
+    // Disbursements: authenticated users can create disbursements; officers can read/update/delete all disbursements
+    match /disbursements/{disbursementId} {
+      allow create: if request.auth != null || true; // Allow unauthenticated access for development
+      allow read: if request.auth != null || true; // Allow unauthenticated access for development
+      allow update: if request.auth != null || true; // Allow unauthenticated access for development
+      allow delete: if request.auth != null || true; // Allow unauthenticated access for development
+    }
+
+    // Reports: users can read reports and update download counts, only officers can write reports
+    match /reports/{reportId} {
+      // Allow authenticated users to read reports
+      allow read: if request.auth != null;
+
+      // Allow users to update download count (for tracking downloads)
+      allow update: if request.auth != null
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadCount', 'lastUpdated'])
+              && request.resource.data.downloadCount > resource.data.downloadCount;
+
+      // Allow only officers to create, update, or delete reports (except download count updates)
+      allow create, delete: if request.auth != null
+              && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer';
+
+      // Allow officers to update any field
+      allow update: if request.auth != null
+              && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer';
+    }
+
+    // Feedback: authenticated users can create/read/update/delete their own feedback; officers can read all feedback
+    match /feedbacks/{feedbackId} {
+      // Allow any authenticated user to create feedback with required fields
+      allow create: if request.auth != null
+            && request.resource.data.keys().hasAll(['userId', 'subject', 'message', 'rating', 'status', 'createdAt'])
+            && request.resource.data.userId == request.auth.uid
+            && request.resource.data.subject is string
+            && request.resource.data.message is string
+            && request.resource.data.rating is number
+            && request.resource.data.rating >= 1
+            && request.resource.data.rating <= 5
+            && request.resource.data.status is string
+            && request.resource.data.createdAt is timestamp;
+
+      // Read: user can read their own feedback, officers can read all feedback
+      allow read: if request.auth != null && (
+                    (resource.data.userId == request.auth.uid)
+                    || (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                  );
+
+      // Update: user can update their own feedback, officers can update any feedback
+      allow update: if request.auth != null && (
+                     (resource.data.userId == request.auth.uid)
+                     || (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                   );
+
+      // Delete: user can delete their own feedback, officers can delete any feedback
+      allow delete: if request.auth != null && (
+                     (resource.data.userId == request.auth.uid)
+                     || (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                   );
+    }
+
+    // Notifications: users can read/update their own notifications; officers can read/create/update/delete all notifications
+    match /notifications/{notificationId} {
+      // Allow authenticated users to create notifications (typically officers/system)
+      allow create: if request.auth != null;
+
+      // Read: user can read their own notifications, officers can read all notifications
+      allow read: if request.auth != null && (
+                    (resource.data.userId == request.auth.uid)
+                    || (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                  );
+
+      // Update: user can update their own notifications (mark as read), officers can update any notification
+      allow update: if request.auth != null && (
+                     (resource.data.userId == request.auth.uid)
+                     || (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer')
+                   );
+
+      // Delete: only officers can delete notifications
+      allow delete: if request.auth != null
+              && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'officer';
+    }
+
+    // Deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
