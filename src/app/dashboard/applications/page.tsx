@@ -567,7 +567,7 @@ const exportApplicationsData = (applications: Application[]) => {
         'Medical Report',
         'Police Station',
         'Case Number',
-        'Application Date',
+        t("applications.sortOptions.applicationDate") || 'Application Date',
         'Status',
         'Amount (INR)',
         'Priority',
@@ -614,86 +614,188 @@ const exportApplicationsData = (applications: Application[]) => {
     document.body.removeChild(link);
 };
 
-// Function to export applications data as PDF (compact professional report)
+// Function to export applications data as PDF (professional A4 report)
 const exportApplicationsPDF = (applications: Application[]) => {
-    // Keep landscape to be safe for slightly wider tables but use fewer columns
-    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-    const margin = 36;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
 
-    // Header band
+    // Professional header
     doc.setFillColor(30, 64, 175);
-    doc.rect(0, 0, pageWidth, 56, 'F');
+    doc.rect(0, 0, pageWidth, 35, 'F');
 
-    doc.setFontSize(16);
+    // Title
+    doc.setFontSize(20);
     doc.setTextColor(255, 255, 255);
-    doc.text('Applications Report', margin, 36);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NYANTRA - Applications Report', margin, 22);
 
+    // Subtitle
     doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
-    doc.text(`Total: ${applications.length}`, pageWidth - margin, 44, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
 
-    const head = [[
-        'Application ID', 'Applicant', 'Beneficiary ID', 'District', 'Act Type', 'Amount (INR)', 'Status', 'Priority', 'Actions'
-    ]];
+    // Report metadata
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    const currentDate = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    doc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
+    doc.text(`Total Records: ${applications.length}`, pageWidth - margin, 30, { align: 'right' });
 
-    const fmtCurrency = (n?: number) => {
-        if (n == null) return '';
-        try { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n); } catch { return String(n); }
-    };
+    let yPosition = 50;
 
-    const body: any[] = [];
-    applications.forEach(app => {
-        // Applicant cell: initials, full name, phone (multiline)
-        const initials = (app.applicantName || '').split(' ').map(n => n[0] || '').join('');
-        const applicantCell = `${initials}\n${app.applicantName}\n${app.phone}`;
+    // Summary section
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, yPosition, contentWidth, 25, 'F');
 
-        body.push([
-            app.id,
-            applicantCell,
-            app.beneficiaryId || '-',
-            `${app.district}${app.state ? ', ' + app.state : ''}`,
-            app.actType,
-            fmtCurrency(app.amount),
-            app.status.replace('-', ' '),
-            app.priority,
-            '—'
-        ]);
+    doc.setFontSize(12);
+    doc.setTextColor(30, 64, 175);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
+
+    // Summary stats
+    const totalAmount = applications.reduce((sum, app) => sum + (app.amount || 0), 0);
+    const statusCounts = applications.reduce((acc, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Applications: ${applications.length}`, margin + 5, yPosition + 18);
+    doc.text(`Total Amount: ₹${totalAmount.toLocaleString('en-IN')}`, pageWidth - margin - 5, yPosition + 18, { align: 'right' });
+
+    yPosition += 35;
+
+    // Status breakdown
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 64, 175);
+    doc.text('Status Breakdown:', margin, yPosition);
+
+    yPosition += 8;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+
+    Object.entries(statusCounts).forEach(([status, count]) => {
+        const statusText = status.replace(/-/g, ' ').toUpperCase();
+        const percentage = ((count / applications.length) * 100).toFixed(1);
+        doc.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
+        yPosition += 5;
     });
 
-    autoTable(doc, {
-        head,
-        body,
-        startY: 70,
-        styles: {
-            fontSize: 9,
-            cellPadding: 6,
-            overflow: 'linebreak',
-            cellWidth: 'wrap'
-        },
-        headStyles: {
-            fillColor: [59, 130, 246],
-            textColor: 255,
-            fontStyle: 'bold'
-        },
-        alternateRowStyles: { fillColor: [250, 250, 251] },
-        margin: { left: margin, right: margin, top: 70 },
-        tableWidth: 'auto',
-        columnStyles: {
-            0: { cellWidth: 80 },   // Application ID
-            1: { cellWidth: 180 },  // Applicant (multiline)
-            2: { cellWidth: 80 },   // Beneficiary ID
-            3: { cellWidth: 100 },  // District
-            4: { cellWidth: 100 },  // Act Type
-            5: { cellWidth: 80 },   // Amount
-            6: { cellWidth: 80 },   // Status
-            7: { cellWidth: 60 },   // Priority
-            8: { cellWidth: 50 }    // Actions
+    yPosition += 10;
+
+    // Applications table
+    const tableColumns = [
+        { header: 'Application ID', dataKey: 'id', width: 25 },
+        { header: 'Applicant Name', dataKey: 'applicantName', width: 35 },
+        { header: 'District', dataKey: 'district', width: 25 },
+        { header: 'Act Type', dataKey: 'actType', width: 25 },
+        { header: 'Amount (₹)', dataKey: 'amount', width: 25 },
+        { header: 'Status', dataKey: 'status', width: 25 },
+        { header: 'Priority', dataKey: 'priority', width: 20 }
+    ];
+
+    const tableRows = applications.map(app => ({
+        id: app.id,
+        applicantName: app.applicantName,
+        district: `${app.district}${app.state ? `, ${app.state}` : ''}`,
+        actType: app.actType,
+        amount: app.amount ? `₹${app.amount.toLocaleString('en-IN')}` : '₹0',
+        status: app.status.replace(/-/g, ' ').toUpperCase(),
+        priority: app.priority.toUpperCase()
+    }));
+
+    // Check if we need a new page
+    if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = margin;
+    }
+
+    // Table header
+    doc.setFillColor(30, 64, 175);
+    doc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+
+    let xPos = margin + 2;
+    tableColumns.forEach(col => {
+        doc.text(col.header, xPos, yPosition + 5.5);
+        xPos += col.width;
+    });
+
+    yPosition += 10;
+
+    // Table rows
+    doc.setFontSize(7);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+
+    tableRows.forEach((row, index) => {
+        if (yPosition > pageHeight - 20) {
+            doc.addPage();
+            yPosition = margin;
+
+            // Repeat header on new page
+            doc.setFillColor(30, 64, 175);
+            doc.rect(margin, yPosition, contentWidth, 8, 'F');
+
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+
+            xPos = margin + 2;
+            tableColumns.forEach(col => {
+                doc.text(col.header, xPos, yPosition + 5.5);
+                xPos += col.width;
+            });
+
+            yPosition += 10;
+            doc.setFontSize(7);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
         }
+
+        // Alternate row colors
+        if (index % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, yPosition - 3, contentWidth, 6, 'F');
+        }
+
+        xPos = margin + 2;
+        tableColumns.forEach(col => {
+            const value = row[col.dataKey as keyof typeof row] || '';
+            doc.text(String(value), xPos, yPosition + 2);
+            xPos += col.width;
+        });
+
+        yPosition += 6;
     });
 
-    doc.save(`applications_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Footer
+    const footerY = pageHeight - 15;
+    doc.setFontSize(6);
+    doc.setTextColor(128, 128, 128);
+    doc.setFont('helvetica', 'italic');
+    doc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
+    doc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
+
+    // Save the PDF
+    doc.save(`nyantra_applications_report_${new Date().toISOString().split('T')[0]}.pdf`);
 };
 
 const ApplicationsPage = () => {
@@ -1309,7 +1411,7 @@ return (
             initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.98, opacity: 0 }}
-            className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+            className="relative w-full max-w-md mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
             style={{
               background:
                 theme === "light"
@@ -1321,11 +1423,10 @@ return (
               <div>
                 <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
                   <Download className="w-5 h-5 text-accent-gradient" />
-                  {t("applications.export") || "Export Data"}
+                  {t("applications.exportTitle") || "Export Applications"}
                 </h3>
                 <p className="text-sm theme-text-muted mt-1">
-                  {t("applications.exportDescription") ||
-                    "Export applications as CSV or a printable PDF report."}
+                  {t("applications.exportSubtitle") || "Choose export format for applications data"}
                 </p>
               </div>
               <button
@@ -1337,106 +1438,66 @@ return (
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Export All Card */}
-              <div
-                className={`rounded-lg p-4 border ${
-                  theme === "light" ? "bg-white" : "bg-gray-900/90"
-                }`}
-              >
-                <div className="flex items-start justify-between">
+            <div className="space-y-4">
+              {/* Export All Section */}
+              <div className="p-4 rounded-lg border theme-border-glass">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold theme-text-primary">
-                          {t("applications.exportAll") || "Export All"}
-                        </h4>
-                        <p className="text-xs theme-text-muted">
-                          {t("applications.exportAllDescription") ||
-                            "Download the full applications dataset in the chosen format."}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-sm theme-text-muted">
-                      {applications.length}{" "}
-                      {t("extracted.applications_lowercase")}
-                    </p>
+                    <h4 className="font-medium theme-text-primary">{t("applications.exportAllTitle") || "All Applications"}</h4>
+                    <p className="text-sm theme-text-muted">{applications.length} records</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <button
-                      onClick={() => {
-                        exportApplicationsData(applications);
-                        setShowExportModal(false);
-                      }}
-                      className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      CSV
-                    </button>
-                    <button
-                      onClick={() => {
-                        exportApplicationsPDF(applications);
-                        setShowExportModal(false);
-                      }}
-                      className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow"
-                    >
-                      PDF
-                    </button>
-                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      exportApplicationsData(applications);
+                      setShowExportModal(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary transition-colors"
+                  >
+                    {t("applications.exportCsv") || "Export CSV"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      exportApplicationsPDF(applications);
+                      setShowExportModal(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md transition-shadow"
+                  >
+                    {t("applications.exportPdf") || "Export PDF"}
+                  </button>
                 </div>
               </div>
 
-              {/* Export Filtered Card */}
-              <div
-                className={`rounded-lg p-4 border ${
-                  theme === "light" ? "bg-white" : "bg-gray-900/90"
-                }`}
-              >
-                <div className="flex items-start justify-between">
+              {/* Export Filtered Section */}
+              <div className="p-4 rounded-lg border theme-border-glass">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                        <Download className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold theme-text-primary">
-                          {t("applications.exportFiltered") || "Export Filtered"}
-                        </h4>
-                        <p className="text-xs theme-text-muted">
-                          {t("applications.exportFilteredDescription") ||
-                            "Download only the results matching your current filters."}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-sm theme-text-muted">
-                      {filteredApplications.length}{" "}
-                      {t("extracted.applications_lowercase")}
-                    </p>
+                    <h4 className="font-medium theme-text-primary">{t("applications.exportFilteredTitle") || "Filtered Results"}</h4>
+                    <p className="text-sm theme-text-muted">{filteredApplications.length} records</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <button
-                      disabled={filteredApplications.length === 0}
-                      onClick={() => {
-                        exportApplicationsData(filteredApplications);
-                        setShowExportModal(false);
-                      }}
-                      className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      CSV
-                    </button>
-                    <button
-                      disabled={filteredApplications.length === 0}
-                      onClick={() => {
-                        exportApplicationsPDF(filteredApplications);
-                        setShowExportModal(false);
-                      }}
-                      className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50"
-                    >
-                      PDF
-                    </button>
-                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    disabled={filteredApplications.length === 0}
+                    onClick={() => {
+                      exportApplicationsData(filteredApplications);
+                      setShowExportModal(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {t("applications.exportCsv") || "Export CSV"}
+                  </button>
+                  <button
+                    disabled={filteredApplications.length === 0}
+                    onClick={() => {
+                      exportApplicationsPDF(filteredApplications);
+                      setShowExportModal(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow"
+                  >
+                    {t("applications.exportPdf") || "Export PDF"}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1731,22 +1792,22 @@ return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t theme-border-glass">
                   <div>
                     <label className="block text-sm font-medium theme-text-muted mb-2">
-                      Sort By
+                      {t("applications.sortBy") || "Sort By"}
                     </label>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                     >
-                      <option value="applicationDate">Application Date</option>
-                      <option value="amount">Amount</option>
-                      <option value="status">Status</option>
-                      <option value="priority">Priority</option>
+                      <option value="applicationDate">{t("applications.sortOptions.applicationDate") || "Application Date"}</option>
+                      <option value="amount">{t("applications.sortOptions.amount") || "Amount"}</option>
+                      <option value="status">{t("applications.sortOptions.status") || "Status"}</option>
+                      <option value="priority">{t("applications.sortOptions.priority") || "Priority"}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium theme-text-muted mb-2">
-                      Sort Order
+                      {t("applications.sortOrder") || "Sort Order"}
                     </label>
                     <select
                       value={sortOrder}
@@ -1754,14 +1815,14 @@ return (
                       className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                     >
                       <option value="desc">
-                        {sortBy === 'amount' ? 'High to Low' : 
-                         sortBy === 'status' ? 'Approved to Pending' : 
-                         sortBy === 'priority' ? 'High to Low' : 'Newest First'}
+                        {sortBy === 'amount' ? (t("applications.sortOrderOptions.highToLow") || 'High to Low') : 
+                         sortBy === 'status' ? (t("applications.sortOrderOptions.approvedToPending") || 'Approved to Pending') : 
+                         sortBy === 'priority' ? (t("applications.sortOrderOptions.highToLow") || 'High to Low') : (t("applications.sortOrderOptions.newestFirst") || 'Newest First')}
                       </option>
                       <option value="asc">
-                        {sortBy === 'amount' ? 'Low to High' : 
-                         sortBy === 'status' ? 'Pending to Approved' : 
-                         sortBy === 'priority' ? 'Low to High' : 'Oldest First'}
+                        {sortBy === 'amount' ? (t("applications.sortOrderOptions.lowToHigh") || 'Low to High') : 
+                         sortBy === 'status' ? (t("applications.sortOrderOptions.pendingToApproved") || 'Pending to Approved') : 
+                         sortBy === 'priority' ? (t("applications.sortOrderOptions.lowToHigh") || 'Low to High') : (t("applications.sortOrderOptions.oldestFirst") || 'Oldest First')}
                       </option>
                     </select>
                   </div>

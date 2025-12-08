@@ -479,7 +479,23 @@
     "confirmDeleteTitle": "हटाने की पुष्टि करें",
     "confirmDeleteMessage": "आवेदन {id} हटाएं? यह क्रिया वापस नहीं की जा सकती।",
     "pending": "लंबित",
-    "rejected": "अस्वीकृत"
+    "rejected": "अस्वीकृत",
+    "sortBy": "क्रमबद्ध करें",
+    "sortOrder": "क्रमबद्ध क्रम",
+    "sortOptions": {
+      "applicationDate": "आवेदन तिथि",
+      "amount": "राशि",
+      "status": "स्थिति",
+      "priority": "प्राथमिकता"
+    },
+    "sortOrderOptions": {
+      "newestFirst": "नवीनतम पहले",
+      "oldestFirst": "सबसे पुराना पहले",
+      "highToLow": "उच्च से निम्न",
+      "lowToHigh": "निम्न से उच्च",
+      "approvedToPending": "स्वीकृत से लंबित",
+      "pendingToApproved": "लंबित से स्वीकृत"
+    }
   },
   "extracted": {
     "grievance": "शिकायत",
@@ -4690,7 +4706,22 @@
       "therodescription": "{t('hero.description')}",
       "theroapplynow": "{t('hero.applyNow')}",
       "therowatchdemo": "{t('hero.watchDemo')}",
-      "apply_now_continue": "अभी आवेदन करें - जारी रखें"
+      "apply_now_continue": "अभी आवेदन करें - जारी रखें",
+      "sortBy": "क्रमबद्ध करें",
+      "sortOrder": "क्रमबद्ध क्रम",
+      "sortOptions": {
+        "initiatedDate": "आरंभ तिथि",
+        "reliefAmount": "राशि",
+        "status": "स्थिति"
+      },
+      "sortOrderOptions": {
+        "newestFirst": "नवीनतम पहले",
+        "oldestFirst": "सबसे पुराना पहले",
+        "highToLow": "उच्च से निम्न",
+        "lowToHigh": "निम्न से उच्च",
+        "completedToPending": "पूर्ण से लंबित",
+        "pendingToCompleted": "लंबित से पूर्ण"
+      }
     }
   },
   "a": "नमस्ते: A",
@@ -4702,7 +4733,20 @@
     "comprehensive_oversight_of_dbt_beneficiaries": "डीबीटी लाभार्थियों की संपूर्ण निगरानी एवं पर्यवेक्षण",
     "exportDescription": "लाभार्थियों का डेटा डाउनलोड करें या रिपोर्ट निर्यात करें",
     "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
-    "advanced_search": "एडवांस्ड सर्च"
+    "advanced_search": "एडवांस्ड सर्च",
+    "sortBy": "क्रमबद्ध करें",
+    "sortOrder": "क्रमबद्ध क्रम",
+    "sortOptions": {
+      "registrationDate": "पंजीकरण तिथि",
+      "status": "स्थिति",
+      "verification": "सत्यापन"
+    },
+    "sortOrderOptions": {
+      "newestFirst": "नवीनतम पहले",
+      "oldestFirst": "सबसे पुराना पहले",
+      "verifiedToPending": "सत्यापित से लंबित",
+      "pendingToVerified": "लंबित से सत्यापित"
+    }
   },
   "beneficiary_lowercase": "लाभार्थी"
 }

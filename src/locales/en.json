@@ -460,6 +460,12 @@
     "exportAllDescription": "Download the full applications dataset in the chosen format.",
     "exportFiltered": "Export Filtered",
     "exportFilteredDescription": "Download only the results matching your current filters.",
+    "exportTitle": "Export Applications",
+    "exportSubtitle": "Choose export format for applications data",
+    "exportAllTitle": "All Applications",
+    "exportFilteredTitle": "Filtered Results",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
     "selectBeneficiary": "Select Beneficiary",
     "beneficiaryId": "Beneficiary ID",
     "beneficiaryIdRequired": "Beneficiary is required.",
@@ -479,7 +485,23 @@
     "confirmDeleteTitle": "Confirm delete",
     "confirmDeleteMessage": "Delete application {id}? This action cannot be undone.",
     "pending": "Pending",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "sortBy": "Sort By",
+    "sortOrder": "Sort Order",
+    "sortOptions": {
+      "applicationDate": "Application Date",
+      "amount": "Amount",
+      "status": "Status",
+      "priority": "Priority"
+    },
+    "sortOrderOptions": {
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "highToLow": "High to Low",
+      "lowToHigh": "Low to High",
+      "approvedToPending": "Approved to Pending",
+      "pendingToApproved": "Pending to Approved"
+    }
   },
   "extracted": {
     "grievance": "Grievance",
@@ -4695,7 +4717,28 @@
       "therodescription": "{t('hero.description')}",
       "theroapplynow": "{t('hero.applyNow')}",
       "therowatchdemo": "{t('hero.watchDemo')}",
-      "apply_now_continue": "Apply Now - continue"
+      "apply_now_continue": "Apply Now - continue",
+      "exportTitle": "Export Disbursements",
+      "exportSubtitle": "Choose export format for disbursements data",
+      "exportAllTitle": "All Disbursements",
+      "exportFilteredTitle": "Filtered Results",
+      "exportCsv": "Export CSV",
+      "exportPdf": "Export PDF",
+      "sortBy": "Sort By",
+      "sortOrder": "Sort Order",
+      "sortOptions": {
+        "initiatedDate": "Initiated Date",
+        "reliefAmount": "Amount",
+        "status": "Status"
+      },
+      "sortOrderOptions": {
+        "newestFirst": "Newest First",
+        "oldestFirst": "Oldest First",
+        "highToLow": "High to Low",
+        "lowToHigh": "Low to High",
+        "completedToPending": "Completed to Pending",
+        "pendingToCompleted": "Pending to Completed"
+      }
     }
   },
   "a": "A",
@@ -4707,7 +4750,26 @@
     "advanced_search": "Advanced Search",
     "comprehensive_oversight_of_dbt_beneficiaries": "Comprehensive Oversight Of Dbt Beneficiaries",
     "exportDescription": "Export Description",
-    "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location"
+    "find_beneficiaries_by_name_id_or_location": "Find beneficiaries by name, ID, or location",
+    "exportTitle": "Export Beneficiaries",
+    "exportSubtitle": "Choose export format for beneficiaries data",
+    "exportAllTitle": "All Beneficiaries",
+    "exportFilteredTitle": "Filtered Results",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "sortBy": "Sort By",
+    "sortOrder": "Sort Order",
+    "sortOptions": {
+      "registrationDate": "Registration Date",
+      "status": "Status",
+      "verification": "Verification"
+    },
+    "sortOrderOptions": {
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "verifiedToPending": "Verified to Pending",
+      "pendingToVerified": "Pending to Verified"
+    }
   },
   "beneficiary_lowercase": "Beneficiary Lowercase"
 }
