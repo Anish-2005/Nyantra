@@ -9,8 +9,6 @@ import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { CldUploadWidget } from 'next-cloudinary';
 import {
   Search, Filter, Download, Plus, Eye, Edit,
@@ -27,7 +25,12 @@ import {
 // All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
 
 // New Beneficiary Form Component (client-side)
-const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: any | null, onSaved?: ((saved?: any) => void) | undefined }) => {
+const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: { 
+  onCancel: () => void, 
+  initialData?: any | null, 
+  onSaved?: ((saved?: any) => void) | undefined,
+  showToast: (type: 'success' | 'error' | 'info', message: string, ttl?: number) => void
+}) => {
   const { theme } = useTheme();
   const { t } = useLocale();
   const [formData, setFormData] = useState({
@@ -51,6 +54,8 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     scStCertificate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
@@ -272,46 +277,94 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
             <div className="space-y-2">
-              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' ? (
-                <CldUploadWidget
-                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                  onSuccess={(result: any) => {
-                    if (result?.info?.secure_url) {
-                      handleInputChange('scStCertificate', result.info.secure_url);
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setIsUploading(true);
+                      setUploadProgress(0);
+                      try {
+                        // Simple progress simulation
+                        const progressInterval = setInterval(() => {
+                          setUploadProgress(prev => Math.min(90, prev + 10));
+                        }, 200);
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('beneficiaryId', formData.id || 'temp');
+
+                        console.log('Starting upload...');
+                        const response = await fetch('/api/upload-certificate', {
+                          method: 'POST',
+                          body: formData,
+                        });
+
+                        clearInterval(progressInterval);
+                        setUploadProgress(100);
+
+                        console.log('Upload response status:', response.status);
+                        const result = await response.json();
+                        console.log('Upload result:', result);
+
+                        if (result.success) {
+                          console.log('Setting certificate URL:', result.url);
+                          setFormData(prev => ({ ...prev, scStCertificate: result.url }));
+                          setValidationErrors(prev => ({ ...prev, scStCertificate: '' }));
+                          showToast('success', 'Certificate uploaded successfully');
+                        } else {
+                          showToast('error', result.error || 'Upload failed');
+                        }
+                      } catch (error) {
+                        console.error('Upload error:', error);
+                        showToast('error', 'Failed to upload certificate. Please check your internet connection or enter URL manually.');
+                      } finally {
+                        setIsUploading(false);
+                        setUploadProgress(0);
+                      }
                     }
                   }}
-                  options={{
-                    maxFiles: 1,
-                    resourceType: 'auto',
-                    clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
-                    maxFileSize: 10000000, // 10MB
-                  }}
+                  className={`flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
+                  disabled={isSubmitting || isUploading}
+                />
+                <button
+                  type="button"
+                  onClick={() => document.querySelector('input[type="file"]')?.click()}
+                  className={`px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
+                  disabled={isSubmitting || isUploading}
                 >
-                  {({ open }) => (
-                    <button
-                      type="button"
-                      onClick={() => open?.()}
-                      className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
-                    >
-                      <Upload className="w-4 h-4" />
-                      {formData.scStCertificate ? 'Change Certificate File' : 'Upload Certificate (PDF/Image)'}
-                    </button>
-                  )}
-                </CldUploadWidget>
-              ) : (
-                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                    Cloudinary not configured. Please configure your Cloudinary credentials in the .env file.
-                  </p>
-                  <input
-                    type="url"
-                    value={formData.scStCertificate}
-                    onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
-                    className={`w-full mt-2 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
-                    placeholder="Enter certificate URL"
-                  />
+                  <Upload className="w-4 h-4" />
+                  {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload'}
+                </button>
+              </div>
+              {isUploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                  <div
+                    className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
                 </div>
               )}
+              <div className="flex items-center gap-2">
+                <span className="text-sm theme-text-muted">or</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = prompt('Enter certificate URL:');
+                    if (url && url.trim()) {
+                      setFormData(prev => ({ ...prev, scStCertificate: url.trim() }));
+                      setValidationErrors(prev => ({ ...prev, scStCertificate: '' }));
+                      showToast('success', 'Certificate URL added manually');
+                    }
+                  }}
+                  className="text-sm text-blue-500 hover:text-blue-600 underline"
+                  disabled={isSubmitting || isUploading}
+                >
+                  Enter URL manually
+                </button>
+              </div>
               {formData.scStCertificate && (
                 <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
                   <File className="w-4 h-4 text-green-500" />
@@ -393,7 +446,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           whileTap={{ scale: 0.98 }}
           onClick={onCancel}
           className="px-6 py-2.5 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-red-500/10 transition-colors"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
         >
           {t('extracted.cancel')}
         </motion.button>
@@ -402,7 +455,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
         >
           {isSubmitting ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1602,6 +1655,7 @@ const BeneficiariesPage = () => {
           <NewBeneficiaryForm
             onCancel={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }}
             initialData={selectedBeneficiary}
+            showToast={showToast}
             onSaved={(saved) => {
               if (saved) {
                 setBeneficiaries(prev => {
@@ -1858,6 +1912,18 @@ const BeneficiariesPage = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </motion.button>
+                          {beneficiary.scStCertificate && (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => window.open(beneficiary.scStCertificate, '_blank')}
+                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
+                              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+                              title="View Certificate"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </motion.button>
+                          )}
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -1937,7 +2003,9 @@ const BeneficiariesPage = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm theme-text-secondary">
                       <FileText className="w-4 h-4 flex-shrink-0" />
-                      <span>{beneficiary.scStCertificate || 'Not provided'}</span>
+                      <span className={beneficiary.scStCertificate ? 'text-green-500' : 'theme-text-muted'}>
+                        {beneficiary.scStCertificate ? 'Certificate uploaded' : 'No certificate'}
+                      </span>
                     </div>
                   </div>
                   
@@ -1962,6 +2030,19 @@ const BeneficiariesPage = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
+                      {beneficiary.scStCertificate && (
+                        <button
+                          aria-label="View certificate"
+                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(beneficiary.scStCertificate, '_blank');
+                          }}
+                          title="View Certificate"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         aria-label="Edit beneficiary"
                         className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"

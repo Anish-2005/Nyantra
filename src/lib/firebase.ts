@@ -47,14 +47,18 @@ export const db = getFirestore(app);
 // development to avoid inadvertently creating anonymous sessions in production.
 if (process.env.NODE_ENV === 'development') {
   try {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        signInAnonymously(auth).catch(() => {
-          // ignore errors — rules/deployment may not allow anonymous sign-in
-        });
+        try {
+          await signInAnonymously(auth);
+          console.log('Firebase: Signed in anonymously for development');
+        } catch (error) {
+          console.warn('Firebase: Anonymous sign-in failed, you may need to enable anonymous authentication in Firebase Console or sign in manually:', error);
+          // Don't throw - allow the app to continue without auth for development
+        }
       }
     });
   } catch (e) {
-    // noop
+    console.warn('Firebase: Auth state listener setup failed:', e);
   }
 }

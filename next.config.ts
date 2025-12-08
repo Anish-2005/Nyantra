@@ -25,7 +25,8 @@ const nextConfig: NextConfig = {
               script-src 'self' 'unsafe-inline' 'unsafe-eval'
                 https://www.gstatic.com
                 https://www.googleapis.com
-                https://apis.google.com;
+                https://apis.google.com
+                https://upload-widget.cloudinary.com;
               connect-src 'self'
                 https://*.googleapis.com
                 https://*.firebaseio.com

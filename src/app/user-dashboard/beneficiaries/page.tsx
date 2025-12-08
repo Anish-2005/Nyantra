@@ -8,7 +8,6 @@ import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import LoadingState from '@/components/LoadingState';
-import { CldUploadWidget } from 'next-cloudinary';
 import {
   User, Plus, Edit, Trash, Eye, Search,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
@@ -290,46 +289,52 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
             <div className="space-y-2">
-              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' ? (
-                <CldUploadWidget
-                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                  onSuccess={(result: any) => {
-                    if (result?.info?.secure_url) {
-                      handleInputChange('scStCertificate', result.info.secure_url);
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setIsSubmitting(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('beneficiaryId', formData.id || 'temp');
+
+                        const response = await fetch('/api/upload-certificate', {
+                          method: 'POST',
+                          body: formData,
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                          handleInputChange('scStCertificate', result.url);
+                          showToast('success', 'Certificate uploaded successfully');
+                        } else {
+                          showToast('error', result.error || 'Upload failed');
+                        }
+                      } catch (error) {
+                        console.error('Upload error:', error);
+                        showToast('error', 'Failed to upload certificate');
+                      } finally {
+                        setIsSubmitting(false);
+                      }
                     }
                   }}
-                  options={{
-                    maxFiles: 1,
-                    resourceType: 'auto',
-                    clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
-                    maxFileSize: 10000000, // 10MB
-                  }}
+                  className={`flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="button"
+                  onClick={() => document.querySelector('input[type="file"]')?.click()}
+                  className={`px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                  disabled={isSubmitting}
                 >
-                  {({ open }) => (
-                    <button
-                      type="button"
-                      onClick={() => open?.()}
-                      className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${errors.scStCertificate ? 'border-red-500' : ''}`}
-                    >
-                      <Upload className="w-4 h-4" />
-                      {formData.scStCertificate ? 'Change Certificate File' : 'Upload Certificate (PDF/Image)'}
-                    </button>
-                  )}
-                </CldUploadWidget>
-              ) : (
-                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                    Cloudinary not configured. Please configure your Cloudinary credentials in the .env file.
-                  </p>
-                  <input
-                    type="url"
-                    value={formData.scStCertificate}
-                    onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
-                    className={`w-full mt-2 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
-                    placeholder="Enter certificate URL"
-                  />
-                </div>
-              )}
+                  <Upload className="w-4 h-4" />
+                  {isSubmitting ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
               {formData.scStCertificate && (
                 <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
                   <File className="w-4 h-4 text-green-500" />

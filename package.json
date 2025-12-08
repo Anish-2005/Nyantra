@@ -18,10 +18,12 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@types/formidable": "^3.4.6",
     "chart.js": "^4.4.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-zoom": "^2.0.1",
     "firebase": "^12.3.0",
+    "formidable": "^3.5.4",
     "framer-motion": "^12.23.22",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
