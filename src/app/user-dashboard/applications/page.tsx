@@ -989,20 +989,75 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 theme-bg-primary">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
+    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div
+          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
+          style={{
+            backgroundColor:
+              theme === 'dark' ? '#1e40af' : '#3b82f6'
+          }}
+        ></div>
+        <div
+          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
+          style={{
+            backgroundColor:
+              theme === 'dark' ? '#7c3aed' : '#8b5cf6'
+          }}
+        ></div>
+      </div>
+
+      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Header Section */}
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 md:mb-8"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
-          <h1 className="text-2xl md:text-3xl font-bold theme-text-primary">
-            {t('extracted.my_applications')}
-          </h1>
-          <p className="theme-text-muted mt-2 text-sm md:text-base">
-            {t('extracted.manage_your_relief_applications')}
-          </p>
+          {/* Animated gradient background - theme aware */}
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.1, 0.2, 0.1]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl"
+            style={{
+              background: theme === 'dark'
+                ? 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))'
+                : 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))'
+            }}
+          />
+
+          <div className="relative z-10 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
+              <motion.div
+                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-indigo-500"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [1, 0.8, 1]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <span className="text-xs sm:text-sm font-medium theme-text-secondary">
+                {t('extracted.applications')} • {t('extracted.manage')}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+              {t('extracted.my_applications')}{' '}
+              <span className="text-accent-gradient inline-block leading-normal sm:ml-2">
+                {t('extracted.dashboard')}
+              </span>
+            </h1>
+            <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
+              {t('extracted.manage_your_relief_applications')}
+            </p>
+          </div>
+
+          <div className="relative z-10 flex flex-col sm:flex-row gap-3">
+           
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

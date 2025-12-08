@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import LoadingState from '@/components/LoadingState';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { MessageSquare } from 'lucide-react';
 
 type Feedback = {
   id: string;
@@ -157,17 +158,15 @@ export default function FeedbackPage() {
     return (
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <svg
+          <span
             key={star}
-            className={`w-4 h-4 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-            fill="currentColor"
-            viewBox="0 0 20 20"
+            className={`text-lg ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
           >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
+            ★
+          </span>
         ))}
         <span className="ml-1 text-sm font-medium" style={{ color: currentColors.textPrimary }}>
-          {rating}/ 5
+          {rating}/5
         </span>
       </div>
     );
@@ -180,30 +179,76 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ color: currentColors.foreground }}>
+    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: theme === 'light' ? '#3b82f6' : '#1e40af' }}></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: theme === 'light' ? '#8b5cf6' : '#7c3aed' }}></div>
+        <div
+          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
+          style={{
+            backgroundColor:
+              theme === 'dark' ? '#1e40af' : '#3b82f6'
+          }}
+        ></div>
+        <div
+          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
+          style={{
+            backgroundColor:
+              theme === 'dark' ? '#7c3aed' : '#8b5cf6'
+          }}
+        ></div>
       </div>
 
-      <div className="relative z-10">
-        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-          {/* Header */}
+      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        >
+          {/* Animated gradient background - theme aware */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 md:mb-8"
-          >
-            <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: currentColors.textPrimary }}>
-              {t('extracted.feedback') || 'Feedback'}
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.1, 0.2, 0.1]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl"
+            style={{
+              background: theme === 'dark'
+                ? 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))'
+                : 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))'
+            }}
+          />
+
+          <div className="relative z-10 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
+              <motion.div
+                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-indigo-500"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [1, 0.8, 1]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <span className="text-xs sm:text-sm font-medium theme-text-secondary">
+                {t('extracted.feedback')} • {t('extracted.support')}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+              {t('extracted.feedback') || 'Feedback'}{' '}
+              <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
+                {t('extracted.center')}
+              </span>
             </h1>
-            <p className="text-sm md:text-base" style={{ color: currentColors.textMuted }}>
+            <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
               {t('extracted.share_your_thoughts') || 'Share your feedback and help us improve our services'}
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Feedback Form */}
@@ -516,6 +561,5 @@ export default function FeedbackPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
