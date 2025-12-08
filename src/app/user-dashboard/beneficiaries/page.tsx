@@ -410,7 +410,6 @@ export default function BeneficiariesPage() {
   const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const { t } = useLocale();
   
   // Toasts
@@ -797,16 +796,6 @@ export default function BeneficiariesPage() {
                 <h3 className="text-lg font-semibold theme-text-primary">
                   {t('extracted.your_beneficiary')}
                 </h3>
-                
-                <div className="relative flex-1 sm:flex-none sm:w-64">
-                  <input
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    placeholder={t('extracted.search_beneficiaries')}
-                    className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" />
-                </div>
               </div>
 
               <div className="space-y-4">

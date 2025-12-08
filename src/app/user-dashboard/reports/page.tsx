@@ -424,33 +424,8 @@ const UserReportsPage = () => {
             </div>
           </div>
 
-          {/* Status and Download */}
-          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
-            <div>
-              <h4 className="text-sm font-semibold theme-text-primary mb-1">
-                {t('extracted.status')}
-              </h4>
-              <p className="text-sm theme-text-muted">
-                {t('extracted.current_status')}:{' '}
-                <span
-                  className="font-medium"
-                  style={{
-                    color:
-                      selectedReport.status === 'completed'
-                        ? (theme === 'dark' ? '#10b981' : '#059669')
-                        : selectedReport.status === 'processing'
-                        ? (theme === 'dark' ? '#3b82f6' : '#2563eb')
-                        : selectedReport.status === 'scheduled'
-                        ? (theme === 'dark' ? '#f59e0b' : '#d97706')
-                        : selectedReport.status === 'failed'
-                        ? (theme === 'dark' ? '#ef4444' : '#dc2626')
-                        : (theme === 'dark' ? '#9ca3af' : '#6b7280')
-                  }}
-                >
-                  {selectedReport.status}
-                </span>
-              </p>
-            </div>
+          {/* Download */}
+          <div className="mt-4 sm:mt-6 flex justify-center sm:justify-end">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -626,46 +601,6 @@ const UserReportsPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
-                    <div
-                      className="px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1"
-                      style={{
-                        backgroundColor:
-                          report.status === 'completed'
-                            ? (theme === 'dark' ? '#16a34a' : '#059669')
-                            : report.status === 'processing'
-                            ? (theme === 'dark' ? '#2563eb' : '#2563eb')
-                            : report.status === 'scheduled'
-                            ? (theme === 'dark' ? '#d97706' : '#d97706')
-                            : report.status === 'failed'
-                            ? (theme === 'dark' ? '#dc2626' : '#dc2626')
-                            : (theme === 'dark' ? '#6b7280' : '#6b7280'),
-                        color: 'white',
-                        boxShadow:
-                          theme === 'light'
-                            ? '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            : '0 1px 3px rgba(0, 0, 0, 0.3)'
-                      }}
-                    >
-                      <div
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{
-                          backgroundColor:
-                            report.status === 'completed'
-                              ? '#10b981'
-                              : report.status === 'processing'
-                              ? '#3b82f6'
-                              : report.status === 'scheduled'
-                              ? '#f59e0b'
-                              : report.status === 'failed'
-                              ? '#ef4444'
-                              : '#9ca3af'
-                        }}
-                      />
-                      <span className="hidden sm:inline">{report.status.charAt(0).toUpperCase() + report.status.slice(1)}</span>
-                      <span className="sm:hidden">{report.status.charAt(0).toUpperCase()}</span>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Description */}
@@ -775,9 +710,6 @@ const UserReportsPage = () => {
                         {t('extracted.category')}
                       </th>
                       <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
-                        {t('extracted.status')}
-                      </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.records')}
                       </th>
                       <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
@@ -828,42 +760,6 @@ const UserReportsPage = () => {
                           <span className="text-sm theme-text-primary capitalize">
                             {report.category}
                           </span>
-                        </td>
-                        <td className="px-4 lg:px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  report.status === 'completed'
-                                    ? '#10b981'
-                                    : report.status === 'processing'
-                                    ? '#3b82f6'
-                                    : report.status === 'scheduled'
-                                    ? '#f59e0b'
-                                    : report.status === 'failed'
-                                    ? '#ef4444'
-                                    : '#9ca3af'
-                              }}
-                            />
-                            <span
-                              className="text-sm font-medium capitalize"
-                              style={{
-                                color:
-                                  report.status === 'completed'
-                                    ? (theme === 'dark' ? '#10b981' : '#059669')
-                                    : report.status === 'processing'
-                                    ? (theme === 'dark' ? '#3b82f6' : '#2563eb')
-                                    : report.status === 'scheduled'
-                                    ? (theme === 'dark' ? '#f59e0b' : '#d97706')
-                                    : report.status === 'failed'
-                                    ? (theme === 'dark' ? '#ef4444' : '#dc2626')
-                                    : (theme === 'dark' ? '#9ca3af' : '#6b7280')
-                              }}
-                            >
-                              {report.status}
-                            </span>
-                          </div>
                         </td>
                         <td className="px-4 lg:px-6 py-4">
                           <span className="text-sm theme-text-primary">
@@ -934,45 +830,6 @@ const UserReportsPage = () => {
                         <p className="theme-text-muted text-sm truncate">
                           {report.id}
                         </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-2">
-                      <div
-                        className="px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1"
-                        style={{
-                          backgroundColor:
-                            report.status === 'completed'
-                              ? (theme === 'dark' ? '#16a34a' : '#059669')
-                              : report.status === 'processing'
-                              ? (theme === 'dark' ? '#2563eb' : '#2563eb')
-                              : report.status === 'scheduled'
-                              ? (theme === 'dark' ? '#d97706' : '#d97706')
-                              : report.status === 'failed'
-                              ? (theme === 'dark' ? '#dc2626' : '#dc2626')
-                              : (theme === 'dark' ? '#6b7280' : '#6b7280'),
-                          color: 'white',
-                          boxShadow:
-                            theme === 'light'
-                              ? '0 1px 3px rgba(0, 0, 0, 0.1)'
-                              : '0 1px 3px rgba(0, 0, 0, 0.3)'
-                        }}
-                      >
-                        <div
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{
-                            backgroundColor:
-                              report.status === 'completed'
-                                ? '#10b981'
-                                : report.status === 'processing'
-                                ? '#3b82f6'
-                                : report.status === 'scheduled'
-                                ? '#f59e0b'
-                                : report.status === 'failed'
-                                ? '#ef4444'
-                                : '#9ca3af'
-                          }}
-                        />
-                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                       </div>
                     </div>
                   </div>
