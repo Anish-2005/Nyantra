@@ -164,10 +164,13 @@ const AnalyticsPage = () => {
     // Remove orderBy to include beneficiaries without registrationDate
     const q = query(collection(db, 'beneficiaries'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const items: any[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data
+        };
+      });
       // Sort in memory to handle missing registrationDate
       items.sort((a, b) => {
         const aDate = new Date((a.registrationDate || a.createdAt)?.toDate?.() || '1970-01-01');

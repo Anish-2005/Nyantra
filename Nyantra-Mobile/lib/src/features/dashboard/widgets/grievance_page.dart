@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:math';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart' as app_auth;
 import '../../../core/widgets/loading_state.dart';
@@ -113,8 +114,13 @@ class _GrievancePageState extends State<GrievancePage> {
       final currentUser = context.read<app_auth.AuthProvider>().user;
       if (currentUser == null) throw Exception('User not authenticated');
 
+      // Generate a random 13-digit number for the grievance ID
+      final random = Random();
+      final randomId =
+          '${random.nextInt(900000000) + 100000000}${random.nextInt(10000) + 1000}';
+
       final grievance = GrievanceModel(
-        id: '',
+        id: 'GRV$randomId',
         beneficiaryId: _selectedBeneficiary!.id,
         userId: currentUser.uid,
         beneficiaryName: _selectedBeneficiary!.name,
@@ -645,9 +651,6 @@ class _GrievancePageState extends State<GrievancePage> {
                               final grievances = snapshot.data ?? [];
 
                               if (grievances.isEmpty) {
-                                final currentUser = context
-                                    .watch<app_auth.AuthProvider>()
-                                    .user;
                                 return Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
