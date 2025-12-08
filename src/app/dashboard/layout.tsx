@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { id: 'grievance', label: t('extracted.grievance_hub') || t('extracted.grievance'), icon: MessageCircle },
         { id: 'integrations', label: t('nav.integrations'), icon: Database },
         { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud },
-        { id: 'blockchain', label: 'Blockchain', icon: Link }
+        { id: 'blockchain', label: t('blockchain.blockchainNav'), icon: Link }
     ];
     
     const router = useRouter();

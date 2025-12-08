@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
+import { useLocale } from "@/context/LocaleContext";
 import BlockCard from "./BlockCard";
 import { Link, ArrowRight, GitBranch } from "lucide-react";
 
 export default function ChainView({ chain }: { chain: any[] }) {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [openBlocks, setOpenBlocks] = useState<Set<number>>(new Set());
 
   const handleBlockOpenChange = (index: number, isOpen: boolean) => {
@@ -33,8 +35,8 @@ export default function ChainView({ chain }: { chain: any[] }) {
           <div className="p-4 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20">
             <GitBranch className="w-12 h-12 theme-text-primary" />
           </div>
-          <h3 className="text-xl font-semibold theme-text-primary">No Blocks Found</h3>
-          <p className="theme-text-muted">The blockchain is empty. Add your first block to get started.</p>
+          <h3 className="text-xl font-semibold theme-text-primary">{t('blockchain.noBlocksFound')}</h3>
+          <p className="theme-text-muted">{t('blockchain.emptyDescription')}</p>
         </div>
       </motion.div>
     );
@@ -50,7 +52,7 @@ export default function ChainView({ chain }: { chain: any[] }) {
         <div className="p-2 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20">
           <Link className="w-6 h-6 theme-text-primary" />
         </div>
-        <h2 className="text-2xl font-bold theme-text-primary">Blockchain Network</h2>
+        <h2 className="text-2xl font-bold theme-text-primary">{t('blockchain.networkTitle')}</h2>
         <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-sm theme-text-primary">
           {chain.length} Blocks
         </span>

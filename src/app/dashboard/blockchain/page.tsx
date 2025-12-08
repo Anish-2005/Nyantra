@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/context/LocaleContext";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import ChainView from "./ChainView";
 import AddBlockForm from "./AddBlockForm";
@@ -13,6 +14,7 @@ import { RefreshCw, Database, Shield, Activity } from "lucide-react";
 export default function BlockchainDashboard() {
   const { theme } = useTheme();
   const { user, profile, loading } = useAuth();
+  const { t } = useLocale();
   const router = useRouter();
   const [chain, setChain] = useState([]);
   const [message, setMessage] = useState("");
@@ -38,12 +40,12 @@ export default function BlockchainDashboard() {
       
       if (data.chain && Array.isArray(data.chain)) {
         setChain(data.chain);
-        setMessage(data.message || "Blockchain loaded successfully");
+        setMessage(data.message || t('blockchain.loadedSuccessfully'));
       } else {
-        setMessage("Invalid blockchain data format");
+        setMessage(t('blockchain.invalidDataFormat'));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch blockchain";
+      const errorMessage = err instanceof Error ? err.message : t('blockchain.fetchError');
       setMessage(`Error: ${errorMessage}`);
     } finally {
       setFetchLoading(false);
@@ -59,7 +61,7 @@ export default function BlockchainDashboard() {
           className="text-center"
         >
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 theme-text-primary mx-auto mb-4"></div>
-          <p className="theme-text-primary">Loading Blockchain Dashboard...</p>
+          <p className="theme-text-primary">{t('blockchain.loading')}</p>
         </motion.div>
       </div>
     );
@@ -81,11 +83,11 @@ export default function BlockchainDashboard() {
               <Database className="w-8 h-8 theme-text-primary" />
             </div>
             <h1 className="text-4xl font-bold animate-gradient-slow">
-              Blockchain Dashboard
+              {t('blockchain.title')}
             </h1>
           </div>
           <p className="text-lg theme-text-muted max-w-2xl mx-auto">
-            Secure, immutable ledger for all financial transactions and beneficiary records
+            {t('blockchain.description')}
           </p>
         </motion.div>
 
@@ -102,7 +104,7 @@ export default function BlockchainDashboard() {
                 <Shield className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm theme-text-muted">Total Blocks</p>
+                <p className="text-sm theme-text-muted">{t('blockchain.totalBlocks')}</p>
                 <p className="text-2xl font-bold theme-text-primary">{chain.length}</p>
               </div>
             </div>
@@ -114,8 +116,8 @@ export default function BlockchainDashboard() {
                 <Activity className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-sm theme-text-muted">Network Status</p>
-                <p className="text-lg font-semibold text-green-400">Active</p>
+                <p className="text-sm theme-text-muted">{t('blockchain.networkStatus')}</p>
+                <p className="text-lg font-semibold text-green-400">{t('blockchain.active')}</p>
               </div>
             </div>
           </div>
@@ -126,9 +128,9 @@ export default function BlockchainDashboard() {
                 <Database className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <p className="text-sm theme-text-muted">Last Updated</p>
+                <p className="text-sm theme-text-muted">{t('blockchain.lastUpdated')}</p>
                 <p className="text-sm theme-text-primary">
-                  {chain.length > 0 ? new Date(chain[chain.length - 1]?.date).toLocaleString() : 'Never'}
+                  {chain.length > 0 ? new Date(chain[chain.length - 1]?.date).toLocaleString() : t('blockchain.never')}
                 </p>
               </div>
             </div>
@@ -150,7 +152,7 @@ export default function BlockchainDashboard() {
             className="flex items-center space-x-2 px-6 py-3 rounded-xl theme-bg-glass theme-border-glass border backdrop-blur-xl theme-text-primary hover:theme-bg-glass/80 transition-all duration-200 disabled:opacity-50"
           >
             <RefreshCw className={`w-5 h-5 ${fetchLoading ? 'animate-spin' : ''}`} />
-            <span>{fetchLoading ? 'Refreshing...' : 'Refresh Chain'}</span>
+            <span>{fetchLoading ? t('blockchain.refreshing') : t('blockchain.refreshChain')}</span>
           </motion.button>
         </motion.div>
 

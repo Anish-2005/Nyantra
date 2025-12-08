@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
+import { useLocale } from "@/context/LocaleContext";
 import {
   ChevronDown,
   Hash,
@@ -21,6 +22,7 @@ import {
 
 export default function BlockCard({ block, index, onOpenChange }: any) {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [showFullHash, setShowFullHash] = useState(false);
 
@@ -130,7 +132,7 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
                   <User className="w-3 h-3 text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-blue-400 uppercase tracking-wide">Beneficiary</p>
+                  <p className="text-xs font-medium text-blue-400 uppercase tracking-wide">{t('blockchain.beneficiary')}</p>
                   <p className="text-xs font-semibold theme-text-primary truncate">{block.beneficiary_id}</p>
                 </div>
               </div>
@@ -145,7 +147,7 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
                   <DollarSign className="w-3 h-3 text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-green-400 uppercase tracking-wide">Amount</p>
+                  <p className="text-xs font-medium text-green-400 uppercase tracking-wide">{t('blockchain.amount')}</p>
                   <p className="text-sm font-bold text-green-400">₹{block.amount?.toLocaleString()}</p>
                 </div>
               </div>
@@ -157,7 +159,7 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
             <div className="flex items-center justify-between p-2 rounded-md bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/10">
               <div className="flex items-center space-x-2">
                 <Hash className="w-3 h-3 text-purple-400" />
-                <span className="text-xs font-medium theme-text-primary">Transaction Hash</span>
+                <span className="text-xs font-medium theme-text-primary">{t('blockchain.transactionHash')}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <span className="text-xs theme-text-muted font-mono">
@@ -186,11 +188,11 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 rounded-md bg-gradient-to-r from-orange-500/5 to-red-500/5 border border-orange-500/10">
-                <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">UTP Number</p>
+                <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">{t('blockchain.utpNumber')}</p>
                 <p className="text-xs font-mono theme-text-primary">{block.utp_number}</p>
               </div>
               <div className="p-2 rounded-md bg-gradient-to-r from-cyan-500/5 to-blue-500/5 border border-cyan-500/10">
-                <p className="text-xs font-medium text-cyan-400 uppercase tracking-wide mb-1">Transaction ID</p>
+                <p className="text-xs font-medium text-cyan-400 uppercase tracking-wide mb-1">{t('blockchain.transactionId')}</p>
                 <p className="text-xs font-mono theme-text-primary truncate">{block.transaction_id}</p>
               </div>
             </div>
@@ -200,11 +202,11 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
           <div className="flex items-center justify-between p-2 rounded-md bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-500/10">
             <div className="flex items-center space-x-1">
               <Lock className="w-3 h-3 text-green-400" />
-              <span className="text-xs font-medium theme-text-primary">Security Status</span>
+              <span className="text-xs font-medium theme-text-primary">{t('blockchain.securityStatus')}</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-xs text-green-400 font-semibold">Verified</span>
+              <span className="text-xs text-green-400 font-semibold">{t('blockchain.verified')}</span>
             </div>
           </div>
         </div>
@@ -222,33 +224,33 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
               <div className="p-4 space-y-3">
                 <h4 className="text-sm font-semibold theme-text-primary flex items-center">
                   <ArrowUpRight className="w-4 h-4 mr-2" />
-                  Detailed Information
+                  {t('blockchain.detailedInformation')}
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <div className="p-2 rounded-md bg-gradient-to-r from-slate-500/5 to-gray-500/5 border border-slate-500/10">
-                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Nonce</p>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">{t('blockchain.nonce')}</p>
                       <p className="text-xs font-semibold theme-text-primary">{block.nonce}</p>
                     </div>
 
                     <div className="p-2 rounded-md bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border border-indigo-500/10">
-                      <p className="text-xs font-medium text-indigo-400 uppercase tracking-wide mb-1">Merkle Root</p>
+                      <p className="text-xs font-medium text-indigo-400 uppercase tracking-wide mb-1">{t('blockchain.merkleRoot')}</p>
                       <p className="text-xs font-mono theme-text-primary break-all">{block.merkle_root}</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="p-2 rounded-md bg-gradient-to-r from-rose-500/5 to-pink-500/5 border border-rose-500/10">
-                      <p className="text-xs font-medium text-rose-400 uppercase tracking-wide mb-1">Previous Hash</p>
+                      <p className="text-xs font-medium text-rose-400 uppercase tracking-wide mb-1">{t('blockchain.previousHash')}</p>
                       <p className="text-xs font-mono theme-text-primary break-all">{block.prev_hash || 'N/A'}</p>
                     </div>
 
                     <div className="p-2 rounded-md bg-gradient-to-r from-teal-500/5 to-cyan-500/5 border border-teal-500/10">
-                      <p className="text-xs font-medium text-teal-400 uppercase tracking-wide mb-1">Block Status</p>
+                      <p className="text-xs font-medium text-teal-400 uppercase tracking-wide mb-1">{t('blockchain.blockStatus')}</p>
                       <div className="flex items-center space-x-1">
                         <CheckCircle className="w-3 h-3 text-green-400" />
-                        <span className="text-xs font-semibold text-green-400">Confirmed</span>
+                        <span className="text-xs font-semibold text-green-400">{t('blockchain.confirmed')}</span>
                       </div>
                     </div>
                   </div>
@@ -262,7 +264,7 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
                   >
                     <CheckCircle className="w-4 h-4 text-green-400" />
                   </motion.div>
-                  <span className="text-xs font-semibold text-green-400">Block Validated & Immutable</span>
+                  <span className="text-xs font-semibold text-green-400">{t('blockchain.blockValidated')}</span>
                 </div>
               </div>
             </motion.div>

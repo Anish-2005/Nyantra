@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
+import { useLocale } from "@/context/LocaleContext";
 import { Plus, Send, Loader2 } from "lucide-react";
 
 export default function AddBlockForm({ onSuccess }: any) {
   const { theme } = useTheme();
+  const { t } = useLocale();
   const [form, setForm] = useState({
     beneficiary_id: "",
     utp_number: "",
@@ -40,7 +42,7 @@ export default function AddBlockForm({ onSuccess }: any) {
       const data = await res.json();
 
       if (data.status === "success") {
-        setMessage("Block added successfully!");
+        setMessage(t('blockchain.blockAddedSuccessfully'));
         setForm({
           beneficiary_id: "",
           utp_number: "",
@@ -52,7 +54,7 @@ export default function AddBlockForm({ onSuccess }: any) {
         setMessage("Error: " + data.message);
       }
     } catch {
-      setMessage("Request failed");
+      setMessage(t('blockchain.requestFailed'));
     } finally {
       setLoading(false);
     }
@@ -68,16 +70,16 @@ export default function AddBlockForm({ onSuccess }: any) {
         <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
           <Plus className="w-6 h-6 text-white" />
         </div>
-        <h2 className="text-2xl font-bold theme-text-primary">Add New Block</h2>
+        <h2 className="text-2xl font-bold theme-text-primary">{t('blockchain.addNewBlock')}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
-            { key: "beneficiary_id", label: "Beneficiary ID", type: "text" },
-            { key: "utp_number", label: "UTP Number", type: "text" },
-            { key: "transaction_id", label: "Transaction ID", type: "text" },
-            { key: "amount", label: "Amount", type: "number" }
+            { key: "beneficiary_id", label: t('blockchain.beneficiaryId'), placeholder: t('blockchain.enterBeneficiaryId'), type: "text" },
+            { key: "utp_number", label: t('blockchain.utpNumber'), placeholder: t('blockchain.enterUtpNumber'), type: "text" },
+            { key: "transaction_id", label: t('blockchain.transactionId'), placeholder: t('blockchain.enterTransactionId'), type: "text" },
+            { key: "amount", label: t('blockchain.amount'), placeholder: t('blockchain.enterAmount'), type: "number" }
           ].map((field) => (
             <motion.div
               key={field.key}
@@ -90,7 +92,7 @@ export default function AddBlockForm({ onSuccess }: any) {
               </label>
               <input
                 type={field.type}
-                placeholder={`Enter ${field.label.toLowerCase()}`}
+                placeholder={field.placeholder}
                 value={form[field.key as keyof typeof form]}
                 onChange={(e) =>
                   setForm({ ...form, [field.key]: e.target.value })
@@ -115,12 +117,12 @@ export default function AddBlockForm({ onSuccess }: any) {
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Adding Block...</span>
+              <span>{t('blockchain.addingBlock')}</span>
             </>
           ) : (
             <>
               <Send className="w-5 h-5" />
-              <span>Add Block</span>
+              <span>{t('blockchain.addBlock')}</span>
             </>
           )}
         </motion.button>
