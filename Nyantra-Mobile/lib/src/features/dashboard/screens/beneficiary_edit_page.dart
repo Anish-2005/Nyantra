@@ -31,6 +31,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
   late TextEditingController _ifscCtrl;
   late TextEditingController _scStCertificateCtrl;
   bool _saving = false;
+  String? _selectedGender;
+  String? _selectedCategory;
+  String? _selectedMaritalStatus;
 
   @override
   void initState() {
@@ -55,6 +58,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
     _scStCertificateCtrl = TextEditingController(
       text: widget.beneficiary.scStCertificate,
     );
+    _selectedGender = widget.beneficiary.gender ?? 'M';
+    _selectedCategory = widget.beneficiary.category ?? 'SC';
+    _selectedMaritalStatus = widget.beneficiary.maritalStatus ?? 'Single';
   }
 
   @override
@@ -88,9 +94,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
       updates['state'] = _stateCtrl.text.trim();
       updates['address'] = _addressCtrl.text.trim();
       updates['age'] = int.tryParse(_ageCtrl.text.trim());
-      updates['gender'] = _genderCtrl.text.trim();
-      updates['category'] = _categoryCtrl.text.trim();
-      updates['maritalStatus'] = _maritalStatusCtrl.text.trim();
+      updates['gender'] = _selectedGender;
+      updates['category'] = _selectedCategory;
+      updates['maritalStatus'] = _selectedMaritalStatus;
       updates['bankAccount'] = _bankCtrl.text.trim();
       updates['ifsc'] = _ifscCtrl.text.trim();
       updates['scStCertificate'] = _scStCertificateCtrl.text.trim();
@@ -199,24 +205,21 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              _buildInput(
+              _buildGenderDropdown(
                 theme,
                 locale,
-                controller: _genderCtrl,
                 labelKey: 'beneficiaries.gender',
               ),
               const SizedBox(height: 8),
-              _buildInput(
+              _buildCategoryDropdown(
                 theme,
                 locale,
-                controller: _categoryCtrl,
                 labelKey: 'beneficiaries.category',
               ),
               const SizedBox(height: 8),
-              _buildInput(
+              _buildMaritalStatusDropdown(
                 theme,
                 locale,
-                controller: _maritalStatusCtrl,
                 labelKey: 'beneficiaries.maritalStatus',
               ),
               const SizedBox(height: 8),
@@ -265,6 +268,104 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('beneficiaries.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedGender = newValue;
+          });
+        }
+      },
+      items: ['M', 'F'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('beneficiaries.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedCategory,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedCategory = newValue;
+          });
+        }
+      },
+      items: ['SC', 'ST'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildMaritalStatusDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('beneficiaries.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedMaritalStatus,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedMaritalStatus = newValue;
+          });
+        }
+      },
+      items: ['Single', 'Married', 'Divorced', 'Widowed']
+          .map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          })
+          .toList(),
       decoration: InputDecoration(
         labelText: label,
         filled: true,

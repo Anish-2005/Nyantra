@@ -835,22 +835,32 @@ class NewApplicationDialog extends StatefulWidget {
 class _NewApplicationDialogState extends State<NewApplicationDialog> {
   final _formKey = GlobalKey<FormState>();
   final _applicantNameCtrl = TextEditingController();
+  final _contactNumberCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _aadhaarCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
+  final _beneficiaryIdCtrl = TextEditingController();
+  final _fatherNameCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   final _districtCtrl = TextEditingController();
   final _stateCtrl = TextEditingController();
-  final _actTypeCtrl = TextEditingController();
-  final _beneficiaryIdCtrl = TextEditingController();
   final _incidentDateCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
+  final _priorityCtrl = TextEditingController(text: 'medium');
+  final _caseNumberCtrl = TextEditingController();
+  final _categoryCtrl = TextEditingController();
+  final _ageCtrl = TextEditingController();
+  final _maritalStatusCtrl = TextEditingController();
+  final _bankAccountCtrl = TextEditingController();
+  final _ifscCtrl = TextEditingController();
   final _firReportCtrl = TextEditingController();
   final _medicalReportCtrl = TextEditingController();
   final _policeStationCtrl = TextEditingController();
-  final _caseNumberCtrl = TextEditingController();
   bool _saving = false;
   bool _beneficiaryValid = false;
   bool _checkingBeneficiary = false;
   String? _beneficiaryError;
+  String? _selectedActType;
+  String? _selectedGender;
 
   @override
   void initState() {
@@ -858,23 +868,33 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     _beneficiaryValid = false;
     _checkingBeneficiary = false;
     _beneficiaryError = null;
+    _selectedActType = 'PCR';
+    _selectedGender = 'M';
   }
 
   @override
   void dispose() {
     _applicantNameCtrl.dispose();
+    _contactNumberCtrl.dispose();
+    _emailCtrl.dispose();
     _aadhaarCtrl.dispose();
-    _phoneCtrl.dispose();
+    _beneficiaryIdCtrl.dispose();
+    _fatherNameCtrl.dispose();
+    _addressCtrl.dispose();
     _districtCtrl.dispose();
     _stateCtrl.dispose();
-    _actTypeCtrl.dispose();
-    _beneficiaryIdCtrl.dispose();
     _incidentDateCtrl.dispose();
     _amountCtrl.dispose();
+    _priorityCtrl.dispose();
+    _caseNumberCtrl.dispose();
+    _categoryCtrl.dispose();
+    _ageCtrl.dispose();
+    _maritalStatusCtrl.dispose();
+    _bankAccountCtrl.dispose();
+    _ifscCtrl.dispose();
     _firReportCtrl.dispose();
     _medicalReportCtrl.dispose();
     _policeStationCtrl.dispose();
-    _caseNumberCtrl.dispose();
     super.dispose();
   }
 
@@ -910,17 +930,41 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
           if (_applicantNameCtrl.text.isEmpty) {
             _applicantNameCtrl.text = data['name'] ?? '';
           }
+          if (_contactNumberCtrl.text.isEmpty) {
+            _contactNumberCtrl.text = data['phone'] ?? '';
+          }
+          if (_emailCtrl.text.isEmpty) {
+            _emailCtrl.text = data['email'] ?? '';
+          }
           if (_aadhaarCtrl.text.isEmpty) {
             _aadhaarCtrl.text = data['aadhaar'] ?? '';
           }
-          if (_phoneCtrl.text.isEmpty) {
-            _phoneCtrl.text = data['phone'] ?? '';
+          if (_fatherNameCtrl.text.isEmpty) {
+            _fatherNameCtrl.text = data['fatherName'] ?? '';
+          }
+          if (_addressCtrl.text.isEmpty) {
+            _addressCtrl.text = data['address'] ?? '';
           }
           if (_districtCtrl.text.isEmpty) {
             _districtCtrl.text = data['district'] ?? '';
           }
           if (_stateCtrl.text.isEmpty) {
             _stateCtrl.text = data['state'] ?? '';
+          }
+          if (_ageCtrl.text.isEmpty && data['age'] != null) {
+            _ageCtrl.text = data['age'].toString();
+          }
+          if (_selectedGender == null || _selectedGender!.isEmpty) {
+            _selectedGender = data['gender'] ?? 'M';
+          }
+          if (_maritalStatusCtrl.text.isEmpty) {
+            _maritalStatusCtrl.text = data['maritalStatus'] ?? '';
+          }
+          if (_bankAccountCtrl.text.isEmpty) {
+            _bankAccountCtrl.text = data['bankAccount'] ?? '';
+          }
+          if (_ifscCtrl.text.isEmpty) {
+            _ifscCtrl.text = data['ifsc'] ?? '';
           }
         });
       } else {
@@ -972,13 +1016,39 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
       final application = ApplicationModel(
         id: 'APP$randomId',
         applicantName: _applicantNameCtrl.text.trim(),
+        contactNumber: _contactNumberCtrl.text.trim(),
+        email: _emailCtrl.text.trim().isNotEmpty
+            ? _emailCtrl.text.trim()
+            : null,
         aadhaar: _aadhaarCtrl.text.trim(),
-        contactNumber: _phoneCtrl.text.trim(),
+        beneficiaryId: _beneficiaryIdCtrl.text.trim(),
+        fatherName: _fatherNameCtrl.text.trim().isNotEmpty
+            ? _fatherNameCtrl.text.trim()
+            : null,
+        address: _addressCtrl.text.trim().isNotEmpty
+            ? _addressCtrl.text.trim()
+            : null,
         district: _districtCtrl.text.trim(),
         state: _stateCtrl.text.trim(),
-        actType: _actTypeCtrl.text.trim(),
-        beneficiaryId: _beneficiaryIdCtrl.text.trim(),
+        actType: _selectedActType ?? 'PCR',
         incidentDate: _incidentDateCtrl.text.trim(),
+        amount: double.tryParse(_amountCtrl.text.trim()),
+        priority: _priorityCtrl.text.trim(),
+        caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
+            ? _caseNumberCtrl.text.trim()
+            : null,
+        category: _categoryCtrl.text.trim().isNotEmpty
+            ? _categoryCtrl.text.trim()
+            : null,
+        age: int.tryParse(_ageCtrl.text.trim()),
+        gender: _selectedGender,
+        maritalStatus: _maritalStatusCtrl.text.trim().isNotEmpty
+            ? _maritalStatusCtrl.text.trim()
+            : null,
+        bankAccount: _bankAccountCtrl.text.trim().isNotEmpty
+            ? _bankAccountCtrl.text.trim()
+            : null,
+        ifsc: _ifscCtrl.text.trim().isNotEmpty ? _ifscCtrl.text.trim() : null,
         firReport: _firReportCtrl.text.trim().isNotEmpty
             ? _firReportCtrl.text.trim()
             : null,
@@ -988,13 +1058,8 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
         policeStation: _policeStationCtrl.text.trim().isNotEmpty
             ? _policeStationCtrl.text.trim()
             : null,
-        caseNumber: _caseNumberCtrl.text.trim().isNotEmpty
-            ? _caseNumberCtrl.text.trim()
-            : null,
-        amount: double.tryParse(_amountCtrl.text.trim()),
         status: ApplicationStatus.pending,
         applicationDate: DateTime.now(),
-        priority: 'medium',
         ownerId: currentUser.uid,
         userId: currentUser.uid,
         createdAt: DateTime.now(),
@@ -1026,6 +1091,133 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Widget _buildInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildDateInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      readOnly: true,
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) {
+          controller.text = picked.toIso8601String().split('T')[0];
+        }
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        suffixIcon: Icon(Icons.calendar_today),
+      ),
+    );
+  }
+
+  Widget _buildActTypeDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedActType,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedActType = newValue;
+          });
+        }
+      },
+      items: ['PCR', 'PoA'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedGender = newValue;
+          });
+        }
+      },
+      items: ['M', 'F'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
   }
 
   @override
@@ -1113,7 +1305,7 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                         const SizedBox(height: 16),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: _phoneCtrl,
+                          controller: _contactNumberCtrl,
                           decoration: InputDecoration(
                             labelText: localeProvider.translate(
                               'extracted.phone_number',
@@ -1188,26 +1380,10 @@ class _NewApplicationDialogState extends State<NewApplicationDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _actTypeCtrl,
-                          decoration: InputDecoration(
-                            labelText: localeProvider.translate(
-                              'extracted.act_type',
-                            ),
-                            filled: true,
-                            fillColor: theme.cardColor.withOpacity(0.03),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          validator: (value) => value?.isEmpty ?? true
-                              ? localeProvider.translate('common.required')
-                              : null,
+                        _buildActTypeDropdown(
+                          theme,
+                          localeProvider,
+                          labelKey: 'applications.act_type',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(

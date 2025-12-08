@@ -41,6 +41,8 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
   late TextEditingController _medicalReportCtrl;
   late TextEditingController _policeStationCtrl;
   bool _saving = false;
+  String? _selectedActType;
+  String? _selectedGender;
 
   @override
   void initState() {
@@ -96,6 +98,8 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     _policeStationCtrl = TextEditingController(
       text: widget.application.policeStation,
     );
+    _selectedActType = widget.application.actType ?? 'PCR';
+    _selectedGender = widget.application.gender ?? 'M';
   }
 
   @override
@@ -130,7 +134,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
     try {
       final updates = <String, dynamic>{};
       updates['applicantName'] = _nameCtrl.text.trim();
-      updates['actType'] = _actCtrl.text.trim();
+      updates['actType'] = _selectedActType;
       final amount = double.tryParse(_amountCtrl.text.trim());
       if (amount != null) updates['amount'] = amount;
       updates['description'] = _descCtrl.text.trim();
@@ -147,7 +151,7 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
       updates['category'] = _categoryCtrl.text.trim();
       final age = int.tryParse(_ageCtrl.text.trim());
       if (age != null) updates['age'] = age;
-      updates['gender'] = _genderCtrl.text.trim();
+      updates['gender'] = _selectedGender;
       updates['maritalStatus'] = _maritalStatusCtrl.text.trim();
       updates['bankAccount'] = _bankAccountCtrl.text.trim();
       updates['ifsc'] = _ifscCtrl.text.trim();
@@ -245,14 +249,13 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildInput(
+              _buildActTypeDropdown(
                 theme,
                 locale,
-                controller: _actCtrl,
                 labelKey: 'applications.act_type',
               ),
               const SizedBox(height: 8),
-              _buildInput(
+              _buildDateInput(
                 theme,
                 locale,
                 controller: _incidentDateCtrl,
@@ -316,10 +319,9 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildInput(
+                    child: _buildGenderDropdown(
                       theme,
                       locale,
-                      controller: _genderCtrl,
                       labelKey: 'extracted.gender',
                     ),
                   ),
@@ -403,6 +405,108 @@ class _ApplicationEditPageState extends State<ApplicationEditPage> {
       ),
     );
   }
+
+  Widget _buildDateInput(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required TextEditingController controller,
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return TextField(
+      controller: controller,
+      readOnly: true,
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) {
+          controller.text = picked.toIso8601String().split(
+            'T',
+          )[0]; // Format as YYYY-MM-DD
+        }
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        suffixIcon: Icon(Icons.calendar_today),
+      ),
+    );
+  }
+
+  Widget _buildActTypeDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedActType,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedActType = newValue;
+          });
+        }
+      },
+      items: ['PCR', 'PoA'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown(
+    ThemeData theme,
+    LocaleProvider locale, {
+    required String labelKey,
+  }) {
+    final label =
+        labelKey.startsWith('applications.') ||
+            labelKey.startsWith('extracted.')
+        ? locale.translate(labelKey)
+        : labelKey;
+
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedGender = newValue;
+          });
+        }
+      },
+      items: ['M', 'F'].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: theme.cardColor.withOpacity(0.03),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 }
 
 // Reusable form widget for use inside modal sheets
@@ -440,6 +544,8 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
   late TextEditingController _medicalReportCtrl;
   late TextEditingController _policeStationCtrl;
   bool _saving = false;
+  String? _selectedActType;
+  String? _selectedGender;
 
   @override
   void initState() {
@@ -495,6 +601,8 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
     _policeStationCtrl = TextEditingController(
       text: widget.application.policeStation,
     );
+    _selectedActType = widget.application.actType ?? 'PCR';
+    _selectedGender = widget.application.gender ?? 'M';
   }
 
   @override
@@ -529,7 +637,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
     try {
       final updates = <String, dynamic>{};
       updates['applicantName'] = _nameCtrl.text.trim();
-      updates['actType'] = _actCtrl.text.trim();
+      updates['actType'] = _selectedActType;
       final amount = double.tryParse(_amountCtrl.text.trim());
       if (amount != null) updates['amount'] = amount;
       updates['description'] = _descCtrl.text.trim();
@@ -546,7 +654,7 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
       updates['category'] = _categoryCtrl.text.trim();
       final age = int.tryParse(_ageCtrl.text.trim());
       if (age != null) updates['age'] = age;
-      updates['gender'] = _genderCtrl.text.trim();
+      updates['gender'] = _selectedGender;
       updates['maritalStatus'] = _maritalStatusCtrl.text.trim();
       updates['bankAccount'] = _bankAccountCtrl.text.trim();
       updates['ifsc'] = _ifscCtrl.text.trim();
@@ -632,7 +740,26 @@ class _ApplicationEditFormState extends State<ApplicationEditForm> {
             const SizedBox(height: 8),
             TextField(
               controller: _incidentDateCtrl,
-              decoration: const InputDecoration(labelText: 'Incident Date'),
+              readOnly: true,
+              onTap: () async {
+                final DateTime? picked = await showDatePicker(
+                  context: context,
+                  initialDate:
+                      DateTime.tryParse(_incidentDateCtrl.text) ??
+                      DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null) {
+                  _incidentDateCtrl.text = picked.toIso8601String().split(
+                    'T',
+                  )[0]; // Format as YYYY-MM-DD
+                }
+              },
+              decoration: const InputDecoration(
+                labelText: 'Incident Date',
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
