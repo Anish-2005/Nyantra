@@ -244,23 +244,18 @@ class _BeneficiaryFormPageState extends State<BeneficiaryFormPage> {
             TextFormField(
               controller: _scStCertificateCtrl,
               decoration: const InputDecoration(
-                labelText: 'SC/ST Certificate Number',
+                labelText: 'SC/ST Certificate URL',
                 border: OutlineInputBorder(),
+                hintText: 'https://example.com/certificate.pdf',
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return 'SC/ST Certificate Number is required';
+                  return 'SC/ST Certificate URL is required';
                 }
-                if (value!.length < 5) {
-                  return 'Certificate Number must be at least 5 characters';
-                }
-                if (value.length > 20) {
-                  return 'Certificate Number must be less than 20 characters';
-                }
-                // Basic pattern validation - alphanumeric with possible slashes or hyphens
-                final certPattern = RegExp(r'^[A-Za-z0-9/-]+$');
-                if (!certPattern.hasMatch(value)) {
-                  return 'Certificate Number can only contain letters, numbers, slashes, and hyphens';
+                // Basic URL validation
+                final urlPattern = RegExp(r'^https?://[^\s/$.?#].[^\s]*$');
+                if (!urlPattern.hasMatch(value!)) {
+                  return 'Please enter a valid URL (starting with http:// or https://)';
                 }
                 return null;
               },

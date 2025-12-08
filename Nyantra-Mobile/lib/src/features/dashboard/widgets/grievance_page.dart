@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, annotate_overrides, avoid_unnecessary_containers
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
