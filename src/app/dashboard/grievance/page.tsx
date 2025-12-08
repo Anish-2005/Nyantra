@@ -303,6 +303,8 @@ const GrievancePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [newMessage, setNewMessage] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
@@ -799,6 +801,162 @@ const GrievancePage = () => {
     doc.save(`grievances_report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
+  // Email export function
+  const sendGrievancesEmail = async (items: Grievance[], format: 'csv' | 'pdf') => {
+    if (!emailAddress.trim()) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress.trim())) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      let attachmentData: string | Buffer;
+      let attachmentName: string;
+      let attachmentType: string;
+
+      if (format === 'csv') {
+        const headers = ['Grievance ID', 'Beneficiary Name', 'Phone', 'Email', 'District', 'State', 'Act Type', 'Category', 'Sub Category', 'Priority', 'Status', 'Assigned To', 'Created Date', 'Last Updated', 'Messages Count'];
+        const rows = items.map(g => [
+          g.id,
+          g.beneficiaryName || '',
+          g.phone || '',
+          g.email || '',
+          g.district || '',
+          g.state || '',
+          g.actType || '',
+          g.category || '',
+          g.subCategory || '',
+          g.priority || '',
+          g.status || '',
+          g.assignedTo || '',
+          g.createdDate || '',
+          g.lastUpdated || '',
+          (g.communication || []).length.toString()
+        ]);
+
+        attachmentData = [headers, ...rows].map(r => r.map(f => `"${(f ?? '')}"`).join(',')).join('\n');
+        attachmentName = `grievances_export_${new Date().toISOString().split('T')[0]}.csv`;
+        attachmentType = 'text/csv';
+      } else {
+        // Generate PDF as base64
+        const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
+        const margin = 36;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFillColor(30, 64, 175);
+        doc.rect(0, 0, pageWidth, 56, 'F');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Grievances Report', margin, 36);
+        doc.setFontSize(10);
+        doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, 28, { align: 'right' });
+        doc.text(`Total: ${items.length}`, pageWidth - margin, 44, { align: 'right' });
+
+        const head = [[
+          'Grievance ID', 'Beneficiary', 'District', 'Category', 'Priority', 'Status', 'Assigned', 'Messages'
+        ]];
+
+        const body: any[] = [];
+        items.forEach(g => {
+          const beneficiaryCell = `${g.beneficiaryName || ''}\n${g.phone || ''}`;
+          body.push([
+            g.id,
+            beneficiaryCell,
+            `${g.district || ''}${g.state ? ', ' + g.state : ''}`,
+            g.category || '',
+            g.priority || '',
+            (g.status || '').toString().replace('-', ' '),
+            g.assignedTo || '',
+            String((g.communication || []).length)
+          ]);
+        });
+
+        autoTable(doc, {
+          head,
+          body,
+          startY: 70,
+          styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak', cellWidth: 'wrap' },
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [250, 250, 251] },
+          margin: { left: margin, right: margin, top: 70 },
+          tableWidth: 'auto',
+          columnStyles: {
+            0: { cellWidth: 90 },
+            1: { cellWidth: 160 },
+            2: { cellWidth: 100 },
+            3: { cellWidth: 100 },
+            4: { cellWidth: 60 },
+            5: { cellWidth: 80 },
+            6: { cellWidth: 100 },
+            7: { cellWidth: 50 }
+          }
+        });
+
+        attachmentData = doc.output('datauristring').split(',')[1];
+        attachmentName = `grievances_report_${new Date().toISOString().split('T')[0]}.pdf`;
+        attachmentType = 'application/pdf';
+      }
+
+      // Send email via API
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailAddress.trim(),
+          subject: `Nyantra Grievances Export - ${items.length} Grievances`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #1e40af;">Nyantra - Grievances Export</h2>
+              <p>Dear User,</p>
+              <p>Please find attached the grievances export containing ${items.length} grievances.</p>
+              <p><strong>Report Details:</strong></p>
+              <ul>
+                <li>Total Grievances: ${items.length}</li>
+                <li>Format: ${format.toUpperCase()}</li>
+                <li>Generated: ${new Date().toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</li>
+              </ul>
+              <p>This report is generated by the Nyantra Grievance Management System.</p>
+              <p>Best regards,<br>Nyantra Team</p>
+            </div>
+          `,
+          attachments: [{
+            filename: attachmentName,
+            content: attachmentData,
+            contentType: attachmentType,
+            encoding: format === 'csv' ? 'utf8' : 'base64'
+          }]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      const result = await response.json();
+      alert(`Grievances report sent successfully to ${emailAddress}! Check your Gmail inbox.`);
+      setEmailAddress('');
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
 
  
 
@@ -1037,6 +1195,67 @@ const GrievancePage = () => {
                     <div className="flex flex-col items-end gap-2">
                       <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesData(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
                       <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesPDF(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Export Section */}
+              <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                <div className="mb-4">
+                  <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    {t('extracted.emailExport') || 'Email Export'}
+                  </h4>
+                  <input
+                    type="email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allGrievances') || 'All Grievances'} ({grievances.length})</h5>
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendGrievancesEmail(grievances, 'csv')}
+                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendCsv') || 'Send CSV'}
+                      </button>
+                      <button
+                        disabled={!emailAddress.trim() || sendingEmail}
+                        onClick={() => sendGrievancesEmail(grievances, 'pdf')}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendPdf') || 'Send PDF'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.filteredGrievances') || 'Filtered Grievances'} ({filteredGrievances.length})</h5>
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
+                        onClick={() => sendGrievancesEmail(filteredGrievances, 'csv')}
+                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendFilteredCsv') || 'Send Filtered CSV'}
+                      </button>
+                      <button
+                        disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
+                        onClick={() => sendGrievancesEmail(filteredGrievances, 'pdf')}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                        {t('extracted.sendFilteredPdf') || 'Send Filtered PDF'}
+                      </button>
                     </div>
                   </div>
                 </div>
