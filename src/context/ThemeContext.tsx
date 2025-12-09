@@ -10,7 +10,6 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Use a stable initial theme to avoid SSR/client hydration mismatches.
   // We'll default to 'dark' for the initial render (both server & first client render),
