@@ -515,7 +515,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                                     null) ...[
                                                   const SizedBox(height: 8),
                                                   Text(
-                                                    'â‚¹${application.amount!.toStringAsFixed(0)}',
+                                                    '₹${application.amount!.toStringAsFixed(0)}',
                                                     style: theme
                                                         .textTheme
                                                         .titleMedium
