@@ -918,8 +918,8 @@ const ApplicationsPage = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [actTypeFilter, setActTypeFilter] = useState('all');
     const [priorityFilter, setPriorityFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('applicationDate');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [sortBy, setSortBy] = useState('status');
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [showFilters, setShowFilters] = useState(false);
@@ -2211,8 +2211,8 @@ return (
               {(statusFilter !== "all" ||
                 actTypeFilter !== "all" ||
                 priorityFilter !== "all" ||
-                sortBy !== "applicationDate" ||
-                sortOrder !== "desc") && (
+                sortBy !== "status" ||
+                sortOrder !== "asc") && (
                 <span className="w-2 h-2 bg-red-500 rounded-full" />
               )}
             </motion.button>
