@@ -581,7 +581,14 @@
         "destruction_crops": "Destruction of crops",
         "destruction_cattle": "Destruction of cattle / livestock"
       }
-    }
+    },
+    "enterEmailAddress": "Enter email address",
+    "emailExport": "Email Export",
+    "sendCsv": "Send CSV",
+    "sendPdf": "Send PDF",
+    "sendFilteredCsv": "Send Filtered CSV",
+    "sendFilteredPdf": "Send Filtered PDF",
+    "records": "records"
   },
   "extracted": {
     "enterBeneficiaryName": "Enter beneficiary name",
@@ -3619,7 +3626,12 @@
     "exportAllTitle": "All Disbursements",
     "exportFilteredTitle": "Filtered Results",
     "exportCsv": "Export CSV",
-    "exportPdf": "Export PDF"
+    "exportPdf": "Export PDF",
+    "emailExport": "Email Export",
+    "sendCsv": "Send CSV",
+    "sendPdf": "Send PDF",
+    "sendFilteredCsv": "Send Filtered CSV",
+    "sendFilteredPdf": "Send Filtered PDF"
   },
   "extracted_grouped": {
     "misc": {
@@ -4888,6 +4900,13 @@
     "exportFilteredTitle": "Filtered Results",
     "exportCsv": "Export CSV",
     "exportPdf": "Export PDF",
+    "enterEmailAddress": "Enter email address",
+    "emailExport": "Email Export",
+    "sendCsv": "Send CSV",
+    "sendPdf": "Send PDF",
+    "sendFilteredCsv": "Send Filtered CSV",
+    "sendFilteredPdf": "Send Filtered PDF",
+    "records": "records",
     "sortBy": "Sort By",
     "sortOrder": "Sort Order",
     "sortOptions": {

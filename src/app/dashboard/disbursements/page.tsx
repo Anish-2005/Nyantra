@@ -3304,7 +3304,7 @@ const DisbursementsPage: React.FC = () => {
                 {/* Email Export Section */}
                 <div className="p-4 rounded-lg border theme-border-glass">
                   <div className="mb-3">
-                    <h4 className="font-medium theme-text-primary mb-2">Email Export</h4>
+                    <h4 className="font-medium theme-text-primary mb-2">{t("extracted.emailExport") || "Email Export"}</h4>
                     <input
                       type="email"
                       value={emailAddress}
@@ -3321,7 +3321,7 @@ const DisbursementsPage: React.FC = () => {
                         className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        Send CSV
+                        {t("extracted.sendCsv") || "Send CSV"}
                       </button>
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
@@ -3329,7 +3329,7 @@ const DisbursementsPage: React.FC = () => {
                         className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        Send PDF
+                        {t("extracted.sendPdf") || "Send PDF"}
                       </button>
                     </div>
                     <div className="flex gap-3">
@@ -3339,7 +3339,7 @@ const DisbursementsPage: React.FC = () => {
                         className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        Send Filtered CSV
+                        {t("extracted.sendFilteredCsv") || "Send Filtered CSV"}
                       </button>
                       <button
                         disabled={!emailAddress.trim() || filteredDisbursements.length === 0 || sendingEmail}
@@ -3347,7 +3347,7 @@ const DisbursementsPage: React.FC = () => {
                         className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        Send Filtered PDF
+                        {t("extracted.sendFilteredPdf") || "Send Filtered PDF"}
                       </button>
                     </div>
                   </div>

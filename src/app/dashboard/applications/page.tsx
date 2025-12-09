@@ -1909,7 +1909,7 @@ return (
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-medium theme-text-primary">{t("applications.exportAllTitle") || "All Applications"}</h4>
-                    <p className="text-sm theme-text-muted">{applications.length} records</p>
+                    <p className="text-sm theme-text-muted">{applications.length} {t("applications.records", { count: applications.length })}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -1939,7 +1939,7 @@ return (
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-medium theme-text-primary">{t("applications.exportFilteredTitle") || "Filtered Results"}</h4>
-                    <p className="text-sm theme-text-muted">{filteredApplications.length} records</p>
+                    <p className="text-sm theme-text-muted">{filteredApplications.length} {t("applications.records", { count: filteredApplications.length })}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -1969,7 +1969,7 @@ return (
               {/* Email Export Section */}
               <div className="p-4 rounded-lg border theme-border-glass">
                 <div className="mb-3">
-                  <h4 className="font-medium theme-text-primary mb-2">Email Export</h4>
+                  <h4 className="font-medium theme-text-primary mb-2">{t("applications.emailExport")}</h4>
                   <input
                     type="email"
                     value={emailAddress}
@@ -1986,7 +1986,7 @@ return (
                       className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                      Send CSV
+                      {t("applications.sendCsv")}
                     </button>
                     <button
                       disabled={!emailAddress.trim() || sendingEmail}
@@ -1994,7 +1994,7 @@ return (
                       className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                      Send PDF
+                      {t("applications.sendPdf")}
                     </button>
                   </div>
                   <div className="flex gap-3">
@@ -2004,7 +2004,7 @@ return (
                       className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                      Send Filtered CSV
+                      {t("applications.sendFilteredCsv")}
                     </button>
                     <button
                       disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
@@ -2012,7 +2012,7 @@ return (
                       className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                      Send Filtered PDF
+                      {t("applications.sendFilteredPdf")}
                     </button>
                   </div>
                 </div>

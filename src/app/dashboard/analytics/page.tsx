@@ -269,6 +269,7 @@ const AnalyticsPage = () => {
         existing.applications += 1;
         existing.disbursements += completed.length;
         existing.amount += amount;
+        existing.successRate = disbursements.length > 0 ? (completed.length / disbursements.length) * 100 : 0;
       } else {
         acc.push({
           state,
@@ -292,8 +293,7 @@ const AnalyticsPage = () => {
     // Category-wise data from beneficiaries (no date filtering for beneficiaries)
     const categoryWiseData = {
       SC: beneficiaries.filter(b => b.category === 'SC').length,
-      ST: beneficiaries.filter(b => b.category === 'ST').length,
-      OBC: beneficiaries.filter(b => b.category === 'OBC').length
+      ST: beneficiaries.filter(b => b.category === 'ST').length
     };
 
     // Top districts
@@ -321,7 +321,7 @@ const AnalyticsPage = () => {
 
     // Monthly trends (last 12 months)
     const monthlyTrends = {
-      labels: JSON.parse(t('extracted.months_short')),
+      labels: Array.isArray(t('extracted.months_short')) ? t('extracted.months_short') : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       applications: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       disbursements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       amounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -574,11 +574,11 @@ const AnalyticsPage = () => {
 
   const formatCurrency = (amount: number) => {
     if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(1)}Cr`;
+      return `INR ${(amount / 10000000).toFixed(1)}Cr`;
     } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)}L`;
+      return `INR ${(amount / 100000).toFixed(1)}L`;
     } else {
-      return `₹${(amount / 1000).toFixed(1)}K`;
+      return `INR ${(amount / 1000).toFixed(1)}K`;
     }
   };
 
@@ -729,9 +729,11 @@ const AnalyticsPage = () => {
     
     csvContent += '\nMonthly Trends\n';
     csvContent += 'Month,Applications,Disbursements,Amount\n';
-    analyticsData.monthlyTrends.labels.forEach((month: string, index: number) => {
-      csvContent += `${month},${analyticsData.monthlyTrends.applications[index]},${analyticsData.monthlyTrends.disbursements[index]},₹${(analyticsData.monthlyTrends.amounts[index] / 100000).toFixed(2)}L\n`;
-    });
+    if (Array.isArray(analyticsData.monthlyTrends.labels)) {
+      analyticsData.monthlyTrends.labels.forEach((month: string, index: number) => {
+        csvContent += `${month},${analyticsData.monthlyTrends.applications[index]},${analyticsData.monthlyTrends.disbursements[index]},₹${(analyticsData.monthlyTrends.amounts[index] / 100000).toFixed(2)}L\n`;
+      });
+    }
     
     // Download CSV
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -782,12 +784,14 @@ const AnalyticsPage = () => {
     doc.text('Monthly Trends', 20, 70);
     
     const monthlyHeaders = [['Month', 'Applications', 'Disbursements', 'Amount (₹)']];
-    const monthlyData = analyticsData.monthlyTrends.labels.map((month: string, index: number) => [
-      month,
-      analyticsData.monthlyTrends.applications[index].toString(),
-      analyticsData.monthlyTrends.disbursements[index].toString(),
-      (analyticsData.monthlyTrends.amounts[index] / 100000).toFixed(2) + 'L'
-    ]);
+    const monthlyData = Array.isArray(analyticsData.monthlyTrends.labels) 
+      ? analyticsData.monthlyTrends.labels.map((month: string, index: number) => [
+          month,
+          analyticsData.monthlyTrends.applications[index].toString(),
+          analyticsData.monthlyTrends.disbursements[index].toString(),
+          (analyticsData.monthlyTrends.amounts[index] / 100000).toFixed(2) + 'L'
+        ])
+      : [];
     
     autoTable(doc, {
       head: monthlyHeaders,
@@ -963,60 +967,180 @@ const AnalyticsPage = () => {
 
   const generatePerformanceReport = () => {
     const doc = new jsPDF();
-    
+
+    // Title
     doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
     doc.text('Performance Analytics Report', 20, 30);
     doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
     doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 40);
-    
-    // Performance indicators
+
+    let yPos = 60;
+
+    // Executive Summary
     doc.setFontSize(16);
-    doc.text('Key Performance Indicators', 20, 60);
-    
-    let yPos = 75;
-    performanceIndicators.forEach((indicator, index) => {
-      doc.setFontSize(12);
-      doc.text(`${indicator.labelKey}: ${indicator.value}`, 20, yPos);
-      yPos += 10;
-    });
-    
-    // Act-wise performance
+    doc.setFont('helvetica', 'bold');
+    doc.text('Executive Summary', 20, yPos);
+    yPos += 15;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    const summaryText = `This report provides a comprehensive analysis of DBT performance metrics, including application success rates, disbursement statistics, and act-wise performance breakdown for the selected time period.`;
+    const splitSummary = doc.splitTextToSize(summaryText, 170);
+    doc.text(splitSummary, 20, yPos);
+    yPos += splitSummary.length * 5 + 10;
+
+    // Key Performance Indicators
     if (yPos > 250) {
       doc.addPage();
       yPos = 30;
     }
-    
-    yPos += 20;
+
     doc.setFontSize(16);
-    doc.text('Act-wise Performance', 20, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Key Performance Indicators', 20, yPos);
     yPos += 15;
-    
-    const actHeaders = [['Act Type', 'Applications', 'Disbursements', 'Amount', 'Success Rate']];
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    performanceIndicators.forEach((indicator, index) => {
+      const displayLabel = indicator.labelKey.replace('extracted.', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      doc.text(`${displayLabel}: ${indicator.value}`, 20, yPos);
+      yPos += 8;
+    });
+
+    yPos += 10;
+
+    // Overall Statistics
+    if (yPos > 220) {
+      doc.addPage();
+      yPos = 30;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Overall Statistics', 20, yPos);
+    yPos += 12;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const overallStats = [
+      ['Total Applications', formatNumber(analyticsData.overview.totalApplications)],
+      ['Total Beneficiaries', formatNumber(analyticsData.overview.totalBeneficiaries)],
+      ['Total Disbursements', formatNumber(analyticsData.overview.totalDisbursements)],
+      ['Total Amount Disbursed', formatCurrency(analyticsData.overview.totalAmount)],
+      ['Success Rate', `${analyticsData.overview.successRate.toFixed(1)}%`],
+      ['Pending Applications', formatNumber(analyticsData.overview.pendingApplications)],
+      ['Rejected Applications', formatNumber(analyticsData.overview.rejectedApplications)]
+    ];
+
+    overallStats.forEach(([label, value]) => {
+      doc.text(`${label}: ${value}`, 20, yPos);
+      yPos += 7;
+    });
+
+    yPos += 10;
+
+    // Act-wise Performance
+    if (yPos > 180) {
+      doc.addPage();
+      yPos = 30;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Act-wise Performance Breakdown', 20, yPos);
+    yPos += 12;
+
+    const actHeaders = [['Act Type', 'Apps', 'Disb', 'Amount', 'Success', 'Avg/Disb']];
     const actData = [
       [
         'PCR Act',
-        analyticsData.actWiseBreakdown.pcr.applications.toString(),
-        analyticsData.actWiseBreakdown.pcr.disbursements.toString(),
-        `₹${(analyticsData.actWiseBreakdown.pcr.amount / 100000).toFixed(2)}L`,
-        `${analyticsData.actWiseBreakdown.pcr.successRate.toFixed(1)}%`
+        formatNumber(analyticsData.actWiseBreakdown.pcr.applications),
+        formatNumber(analyticsData.actWiseBreakdown.pcr.disbursements),
+        formatCurrency(analyticsData.actWiseBreakdown.pcr.amount),
+        `${analyticsData.actWiseBreakdown.pcr.successRate.toFixed(1)}%`,
+        analyticsData.actWiseBreakdown.pcr.disbursements > 0
+          ? `INR ${(analyticsData.actWiseBreakdown.pcr.amount / analyticsData.actWiseBreakdown.pcr.disbursements / 1000).toFixed(1)}K`
+          : 'INR 0K'
       ],
       [
         'PoA Act',
-        analyticsData.actWiseBreakdown.poa.applications.toString(),
-        analyticsData.actWiseBreakdown.poa.disbursements.toString(),
-        `₹${(analyticsData.actWiseBreakdown.poa.amount / 100000).toFixed(2)}L`,
-        `${analyticsData.actWiseBreakdown.poa.successRate.toFixed(1)}%`
+        formatNumber(analyticsData.actWiseBreakdown.poa.applications),
+        formatNumber(analyticsData.actWiseBreakdown.poa.disbursements),
+        formatCurrency(analyticsData.actWiseBreakdown.poa.amount),
+        `${analyticsData.actWiseBreakdown.poa.successRate.toFixed(1)}%`,
+        analyticsData.actWiseBreakdown.poa.disbursements > 0
+          ? `INR ${(analyticsData.actWiseBreakdown.poa.amount / analyticsData.actWiseBreakdown.poa.disbursements / 1000).toFixed(1)}K`
+          : 'INR 0K'
       ]
     ];
-    
+
     autoTable(doc, {
       head: actHeaders,
       body: actData,
       startY: yPos,
       styles: { fontSize: 9 },
-      headStyles: { fillColor: [59, 130, 246] }
+      headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 20, halign: 'right' },
+        2: { cellWidth: 20, halign: 'right' },
+        3: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 20, halign: 'center' },
+        5: { cellWidth: 30, halign: 'right' }
+      }
     });
-    
+
+    // Add page for additional insights if needed
+    const finalY = yPos + 80; // Approximate height for the table
+    if (finalY > 200) {
+      doc.addPage();
+      yPos = 30;
+    } else {
+      yPos = finalY;
+    }
+
+    // Performance Insights
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Performance Insights', 20, yPos);
+    yPos += 12;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const insights = [];
+
+    const pcrRate = analyticsData.actWiseBreakdown.pcr.successRate;
+    const poaRate = analyticsData.actWiseBreakdown.poa.successRate;
+
+    if (pcrRate > poaRate) {
+      insights.push(`• PCR Act shows higher success rate (${pcrRate.toFixed(1)}%) compared to PoA Act (${poaRate.toFixed(1)}%)`);
+    } else if (poaRate > pcrRate) {
+      insights.push(`• PoA Act shows higher success rate (${poaRate.toFixed(1)}%) compared to PCR Act (${pcrRate.toFixed(1)}%)`);
+    } else {
+      insights.push(`• Both acts show similar success rates (${pcrRate.toFixed(1)}%)`);
+    }
+
+    if (analyticsData.overview.pendingApplications > 0) {
+      const pendingPercentage = (analyticsData.overview.pendingApplications / analyticsData.overview.totalApplications) * 100;
+      insights.push(`• ${pendingPercentage.toFixed(1)}% of applications are still pending processing`);
+    }
+
+    if (analyticsData.overview.successRate >= 80) {
+      insights.push('• Overall performance is excellent with success rate above 80%');
+    } else if (analyticsData.overview.successRate >= 60) {
+      insights.push('• Overall performance is good with success rate above 60%');
+    } else {
+      insights.push('• Overall performance needs improvement with success rate below 60%');
+    }
+
+    insights.forEach(insight => {
+      doc.text(insight, 20, yPos);
+      yPos += 7;
+    });
+
     doc.save('performance-analytics-report.pdf');
   };
 
@@ -1510,7 +1634,7 @@ const AnalyticsPage = () => {
           <div className="h-48 sm:h-64 overflow-x-auto">
             {chartType === 'bar' && (
                 <div className="flex items-end gap-1 h-full">
-                {analyticsData.monthlyTrends.labels.map((month: string, index: number) => {
+                {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => {
                   const appHeight =
                   analyticsData.monthlyTrends.applications[index] > 0
                     ? (analyticsData.monthlyTrends.applications[index] /
@@ -1578,12 +1702,12 @@ const AnalyticsPage = () => {
                     fill="none"
                     stroke="#3b82f6"
                     strokeWidth="3"
-                    points={analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
+                    points={Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
                       const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
                       return `${x},${y}`;
-                    }).join(' ')}
+                    }).join(' ') : ''}
                   />
 
                   {/* Disbursements line */}
@@ -1591,16 +1715,16 @@ const AnalyticsPage = () => {
                     fill="none"
                     stroke="#10b981"
                     strokeWidth="3"
-                    points={analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
+                    points={Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxDisb = Math.max(...analyticsData.monthlyTrends.disbursements);
                       const y = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
                       return `${x},${y}`;
-                    }).join(' ')}
+                    }).join(' ') : ''}
                   />
 
                   {/* Month labels */}
-                  {analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
+                  {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
                     <text
                       key={month}
                       x={(index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20}
@@ -1635,12 +1759,12 @@ const AnalyticsPage = () => {
                     fill="url(#appGradient)"
                     stroke="#3b82f6"
                     strokeWidth="2"
-                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
+                    points={`20,180 ${Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
                       const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
                       const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
                       return `${x},${y}`;
-                    }).join(' ')} 380,180`}
+                    }).join(' ') : ''} 380,180`}
                   />
 
                   {/* Disbursements area */}
@@ -1648,16 +1772,16 @@ const AnalyticsPage = () => {
                     fill="url(#disbGradient)"
                     stroke="#10b981"
                     strokeWidth={2}
-                    points={`20,180 ${analyticsData.monthlyTrends.labels.map((_: string, index: number) => {
+                    points={`20,180 ${Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: string, index: number) => {
                       const x: number = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
                       const maxDisb: number = Math.max(...analyticsData.monthlyTrends.disbursements);
                       const y: number = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
                       return `${x},${y}`;
-                    }).join(' ')} 380,180`}
+                    }).join(' ') : ''} 380,180`}
                   />
 
                   {/* Month labels */}
-                  {analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
+                  {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
                     <text
                       key={month}
                       x={
@@ -1762,7 +1886,7 @@ const AnalyticsPage = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold theme-text-primary">{state.disbursements} {t('extracted.disbursements_lowercase')}</p>
-                  <p className="text-xs theme-text-muted">{state.successRate}% {t('extracted.success_lowercase')}</p>
+                  <p className="text-xs theme-text-muted">{state.successRate.toFixed(2)}% {t('extracted.success_lowercase')}</p>
                 </div>
               </div>
             ))}
@@ -1958,7 +2082,7 @@ const AnalyticsPage = () => {
             <tbody>
               {sortedDistricts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((district, idx) => (
                 <motion.tr
-                  key={district.district}
+                  key={`${district.district}-${district.state}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
@@ -2079,37 +2203,126 @@ const AnalyticsPage = () => {
             <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.generate_custom_reports')} </h3>
             <p className="text-sm theme-text-muted">{t('extracted.create_detailed_reports_for_analysis_and_compliance')} </p>
           </div>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={generateMonthlyReport}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center theme-text-primary"
-              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            >
-              <FileText className="w-4 h-4" />
-              <span>{t('extracted.monthly_report')} </span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={generatePerformanceReport}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 justify-center theme-text-primary"
-              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>{t('extracted.performance_report')} </span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => exportToCSV()}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 justify-center"
-            >
-              <Download className="w-4 h-4" />
-              <span>{t('extracted.export_all_data')} </span>
-            </motion.button>
-          </div>
+        </div>
+
+        {/* Professional Export Options Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {/* Monthly Report Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
+            onClick={generateMonthlyReport}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors duration-300">
+                  <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="text-xs font-medium px-2 py-1 rounded-full bg-blue-900/10 dark:bg-blue-900/30 text-blue-600 dark:text-blue-900">
+                  A4 Ready
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.monthly_report')}</h4>
+              <p className="text-sm theme-text-muted mb-4">
+                Comprehensive monthly overview with application trends, disbursement statistics, and performance metrics formatted for A4 printing.
+              </p>
+              <div className="space-y-2 text-xs theme-text-muted">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>Application Summary</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>Monthly Trends & Charts</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>State-wise Performance</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Performance Report Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
+            onClick={generatePerformanceReport}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors duration-300">
+                  <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="text-xs font-medium px-2 py-1 rounded-full bg-green-500/10 dark:bg-green-900/30 text-green-600 dark:text-green-900">
+                  Analytics
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.performance_report')}</h4>
+              <p className="text-sm theme-text-muted mb-4">
+                Detailed performance analysis with KPIs, success rates, and actionable insights optimized for A4 document format.
+              </p>
+              <div className="space-y-2 text-xs theme-text-muted">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span>Key Performance Indicators</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span>Success Rate Analysis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span>Trend Analysis & Insights</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Export All Data Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
+            onClick={() => exportToCSV()}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors duration-300">
+                  <Download className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="text-xs font-medium px-2 py-1 rounded-full bg-purple-500/10 dark:bg-purple-900/30 text-purple-600 dark:text-purple-900">
+                  Complete
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.export_all_data')}</h4>
+              <p className="text-sm theme-text-muted mb-4">
+                Complete dataset export including all applications, disbursements, and beneficiary data in structured CSV format.
+              </p>
+              <div className="space-y-2 text-xs theme-text-muted">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span>All Applications Data</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span>Disbursement Records</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span>Beneficiary Information</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 

@@ -575,7 +575,20 @@
         "destruction_crops": "फसलों का विनाश",
         "destruction_cattle": "मवेशी / पशुधन का विनाश"
       }
-    }
+    },
+    "exportTitle": "आवेदन निर्यात करें",
+    "exportSubtitle": "आवेदन डेटा के लिए निर्यात फ़ॉर्मेट चुनें",
+    "exportAllTitle": "सभी आवेदन",
+    "exportFilteredTitle": "फ़िल्टर किए गए परिणाम",
+    "exportCsv": "CSV निर्यात करें",
+    "exportPdf": "PDF निर्यात करें",
+    "enterEmailAddress": "ईमेल पता दर्ज करें",
+    "emailExport": "ईमेल निर्यात",
+    "sendCsv": "CSV भेजें",
+    "sendPdf": "PDF भेजें",
+    "sendFilteredCsv": "फ़िल्टर किया गया CSV भेजें",
+    "sendFilteredPdf": "फ़िल्टर किया गया PDF भेजें",
+    "records": "रिकॉर्ड"
   },
   "extracted": {
     "enterBeneficiaryName": "लाभार्थी का नाम दर्ज करें",
@@ -3599,7 +3612,12 @@
     "exportAllTitle": "सभी संवितरण",
     "exportFilteredTitle": "फ़िल्टर किए गए परिणाम",
     "exportCsv": "CSV निर्यात करें",
-    "exportPdf": "PDF निर्यात करें"
+    "exportPdf": "PDF निर्यात करें",
+    "emailExport": "ईमेल निर्यात",
+    "sendCsv": "CSV भेजें",
+    "sendPdf": "PDF भेजें",
+    "sendFilteredCsv": "फ़िल्टर किया गया CSV भेजें",
+    "sendFilteredPdf": "फ़िल्टर किया गया PDF भेजें"
   },
   "extracted_grouped": {
     "misc": {
@@ -4854,9 +4872,19 @@
     "beneficiary": "लाभार्थी",
     "management": "प्रबंधन",
     "comprehensive_oversight_of_dbt_beneficiaries": "डीबीटी लाभार्थियों की संपूर्ण निगरानी एवं पर्यवेक्षण",
-    "exportDescription": "लाभार्थियों का डेटा डाउनलोड करें या रिपोर्ट निर्यात करें",
-    "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें",
-    "advanced_search": "एडवांस्ड सर्च",
+    "exportTitle": "लाभार्थी निर्यात करें",
+    "exportSubtitle": "लाभार्थी डेटा के लिए निर्यात फ़ॉर्मेट चुनें",
+    "exportAllTitle": "सभी लाभार्थी",
+    "exportFilteredTitle": "फ़िल्टर किए गए परिणाम",
+    "exportCsv": "CSV निर्यात करें",
+    "exportPdf": "PDF निर्यात करें",
+    "enterEmailAddress": "ईमेल पता दर्ज करें",
+    "emailExport": "ईमेल निर्यात",
+    "sendCsv": "CSV भेजें",
+    "sendPdf": "PDF भेजें",
+    "sendFilteredCsv": "फ़िल्टर किया गया CSV भेजें",
+    "sendFilteredPdf": "फ़िल्टर किया गया PDF भेजें",
+    "records": "रिकॉर्ड",
     "sortBy": "क्रमबद्ध करें",
     "sortOrder": "क्रमबद्ध क्रम",
     "sortOptions": {
@@ -4869,7 +4897,9 @@
       "oldestFirst": "सबसे पुराना पहले",
       "verifiedToPending": "सत्यापित से लंबित",
       "pendingToVerified": "लंबित से सत्यापित"
-    }
+    },
+    "advanced_search": "एडवांस्ड सर्च",
+    "find_beneficiaries_by_name_id_or_location": "नाम, आईडी या स्थान से लाभार्थी खोजें"
   },
   "blockchain": {
     "loading": "ब्लॉकचेन डैशबोर्ड लोड हो रहा है...",
