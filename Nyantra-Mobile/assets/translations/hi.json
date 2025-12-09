@@ -21,6 +21,7 @@
     "loading": "लोड हो रहा है...",
     "required": "आवश्यक",
     "na": "N/A",
+    "save": "सहेजें",
     "status": "स्थिति"
   },
   "hero": {
@@ -550,6 +551,15 @@
     "selectActType": "अधिनियम प्रकार चुनें",
     "reliefAmountINR": "राहत राशि (₹)",
     "enterReliefAmount": "राहत राशि दर्ज करें",
+      "incidentDate": "घटना तिथि",
+    "actType": "अधिनियम प्रकार",
+    "financialInformation": "वित्तीय जानकारी",
+    "mediumPriority": "मध्यम प्राथमिकता",
+    "highPriority": "उच्च प्राथमिकता",
+    "lowPriority": "निम्न प्राथमिकता",
+    "beneficiaryInformation": "लाभार्थी जानकारी",
+    "fillDetailsBelow": "नीचे विवरण भरें",
+    "createNewApplication": "नया आवेदन बनाएं",
     "priorityLevel": "प्राथमिकता स्तर",
     "enterAssignedOfficerNameOptional": "नियुक्त अधिकारी का नाम दर्ज करें (वैकल्पिक)",
     "createApplication": "आवेदन बनाएं",
@@ -631,6 +641,14 @@
     "offenceType": "अपराध प्रकार",
     "other": "अन्य",
     "priority": "प्राथमिकता"
+  },
+  "alerts": {
+    "newUpdates": "नई अपडेट",
+    "dismissAll": "सभी खारिज करें",
+    "newDisbursement": "नई निकासी",
+    "installmentReceived": "किस्त प्राप्त हुई",
+    "paymentCompleted": "भुगतान पूरा हुआ",
+    "moreUpdates": "+{$count} और अपडेट"
   },
   "reports": {
     "pageTitle": "रिपोर्ट",

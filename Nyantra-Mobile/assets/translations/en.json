@@ -533,6 +533,15 @@
     "gender": "Gender",
     "bankAccount": "Bank Account",
     "ifsc": "IFSC",
+    "incidentDate": "Incident Date",
+    "actType": "Act Type",
+    "financialInformation": "Financial Information",
+    "mediumPriority": "Medium Priority",
+    "highPriority": "High Priority",
+    "lowPriority": "Low Priority",
+    "beneficiaryInformation": "Beneficiary Information",
+    "fillDetailsBelow": "Fill in the details below to create a new relief application.",
+    "createNewApplication": "Create New Application",
     "applicant_name": "Applicant Name",
     "aadhaar": "Aadhaar",
     "caseNumber": "Case Number",
@@ -638,6 +647,14 @@
     "offenceType": "Offence Type",
     "other": "Other",
     "priority": "Priority"
+  },
+  "alerts": {
+    "newUpdates": "New Updates",
+    "dismissAll": "Dismiss All",
+    "newDisbursement": "New Disbursement",
+    "installmentReceived": "Installment Received",
+    "paymentCompleted": "Payment Completed",
+    "moreUpdates": "+{$count} more updates"
   },
   "reports": {
     "pageTitle": "Reports",

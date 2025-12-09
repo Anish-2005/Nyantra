@@ -368,7 +368,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'New Updates',
+                                        localeProvider.translate(
+                                          'alerts.newUpdates',
+                                        ),
                                         style: theme.textTheme.titleMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.w600,
@@ -379,7 +381,9 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                       TextButton(
                                         onPressed: _dismissAllAlerts,
                                         child: Text(
-                                          'Dismiss All',
+                                          localeProvider.translate(
+                                            'alerts.dismissAll',
+                                          ),
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: theme.primaryColor,
@@ -442,12 +446,21 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                       alert.type ==
                                                               AlertType
                                                                   .newDisbursement
-                                                          ? 'New Disbursement'
+                                                          ? localeProvider
+                                                                .translate(
+                                                                  'alerts.newDisbursement',
+                                                                )
                                                           : alert.type ==
                                                                 AlertType
                                                                     .installmentCompleted
-                                                          ? 'Installment Received'
-                                                          : 'Payment Completed',
+                                                          ? localeProvider
+                                                                .translate(
+                                                                  'alerts.installmentReceived',
+                                                                )
+                                                          : localeProvider
+                                                                .translate(
+                                                                  'alerts.paymentCompleted',
+                                                                ),
                                                       style: theme
                                                           .textTheme
                                                           .bodyMedium
@@ -494,7 +507,11 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                   if (_alerts.length > 3)
                                     Center(
                                       child: Text(
-                                        '+${_alerts.length - 3} more updates',
+                                        localeProvider
+                                            .translate('alerts.moreUpdates', {
+                                              'count': (_alerts.length - 3)
+                                                  .toString(),
+                                            }),
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               color: theme

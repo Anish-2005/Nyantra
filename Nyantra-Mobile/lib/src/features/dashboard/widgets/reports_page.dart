@@ -9,6 +9,7 @@ import '../../../core/models/report_model.dart';
 import '../../../core/services/sync_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -1184,69 +1185,228 @@ class _ReportsPageState extends State<ReportsPage> {
             'lastUpdated': FieldValue.serverTimestamp(),
           });
 
-      // Generate PDF
+      // Generate beautiful A4 PDF report
       final pdf = pw.Document();
 
+      // Title page
       pdf.addPage(
         pw.Page(
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Header(
-                  level: 0,
-                  child: pw.Text(
+            return pw.Container(
+              color: PdfColors.blue900,
+              child: pw.Column(
+                children: [
+                  pw.SizedBox(height: 60),
+                  pw.Text(
                     'Report Download',
                     style: pw.TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
                     ),
                   ),
-                ),
-                pw.SizedBox(height: 20),
-                pw.Text(
-                  'Report Name: ${report.name}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Report ID: ${report.id}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Generated at: ${DateTime.now().toString()}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Category: ${report.category}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Type: ${report.type}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Status: ${report.status}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 20),
-                pw.Text(
-                  'Description:',
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
+                  pw.SizedBox(height: 20),
+                  pw.Text(
+                    'Nyantra - Direct Benefit Transfer Platform',
+                    style: pw.TextStyle(fontSize: 16, color: PdfColors.white),
                   ),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  report.description,
-                  style: const pw.TextStyle(fontSize: 12),
-                ),
-              ],
+                  pw.SizedBox(height: 20),
+                  pw.Text(
+                    'Generated on: ${DateTime.now().toString()}',
+                    style: pw.TextStyle(fontSize: 12, color: PdfColors.white),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      // Report details page
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Container(
+              padding: pw.EdgeInsets.all(36),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  pw.Container(
+                    padding: pw.EdgeInsets.all(16),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.blue50,
+                      borderRadius: pw.BorderRadius.circular(8),
+                    ),
+                    child: pw.Text(
+                      'Report Information',
+                      style: pw.TextStyle(
+                        fontSize: 20,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.blue900,
+                      ),
+                    ),
+                  ),
+                  pw.SizedBox(height: 20),
+
+                  // Report details table
+                  pw.Table(
+                    border: pw.TableBorder.all(color: PdfColors.grey300),
+                    children: [
+                      pw.TableRow(
+                        decoration: pw.BoxDecoration(color: PdfColors.grey100),
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(
+                              'Field',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(
+                              'Value',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Report Name'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(report.name),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        decoration: pw.BoxDecoration(color: PdfColors.grey50),
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Report ID'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(report.id),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Category'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(report.category),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        decoration: pw.BoxDecoration(color: PdfColors.grey50),
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Type'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(report.type),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Status'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(report.status),
+                          ),
+                        ],
+                      ),
+                      pw.TableRow(
+                        decoration: pw.BoxDecoration(color: PdfColors.grey50),
+                        children: [
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text('Generated Date'),
+                          ),
+                          pw.Container(
+                            padding: pw.EdgeInsets.all(8),
+                            child: pw.Text(DateTime.now().toString()),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  pw.SizedBox(height: 30),
+
+                  // Description section
+                  pw.Container(
+                    padding: pw.EdgeInsets.all(16),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.green50,
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColors.green200),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'Description',
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.green900,
+                          ),
+                        ),
+                        pw.SizedBox(height: 10),
+                        pw.Text(
+                          report.description.isNotEmpty
+                              ? report.description
+                              : 'No description available',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            color: PdfColors.green800,
+                            lineSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 30),
+
+                  // Footer
+                  pw.Container(
+                    alignment: pw.Alignment.center,
+                    child: pw.Text(
+                      'Generated by Nyantra DBT Platform',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
