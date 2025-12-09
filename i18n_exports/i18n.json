@@ -5035,7 +5035,66 @@
     "hi": "{/* Selected Transaction Details */}"
   },
   {
-    "key": "extracted.selectedtx",
+    "key": "applications.poa_act_offence_details",
+    "en": "PoA Act Offence Details",
+    "hi": "PoA अधिनियम अपराध विवरण"
+  },
+  {
+    "key": "applications.offence_category",
+    "en": "Offence Category:",
+    "hi": "अपराध श्रेणी:"
+  },
+  {
+    "key": "applications.specific_offence",
+    "en": "Specific Offence:",
+    "hi": "विशिष्ट अपराध:"
+  },
+  {
+    "key": "applications.expected_compensation",
+    "en": "Expected Compensation:",
+    "hi": "अपेक्षित मुआवजा:"
+  },
+  {
+    "key": "applications.status.approved",
+    "en": "Approved",
+    "hi": "स्वीकृत"
+  },
+  {
+    "key": "applications.status.pending",
+    "en": "Pending",
+    "hi": "लंबित"
+  },
+  {
+    "key": "applications.status.in_review",
+    "en": "In Review",
+    "hi": "समीक्षा में"
+  },
+  {
+    "key": "applications.status.rejected",
+    "en": "Rejected",
+    "hi": "अस्वीकृत"
+  },
+  {
+    "key": "applications.status.documents_required",
+    "en": "Documents Required",
+    "hi": "दस्तावेज़ आवश्यक"
+  },
+  {
+    "key": "applications.priority.high",
+    "en": "High",
+    "hi": "उच्च"
+  },
+  {
+    "key": "applications.priority.medium",
+    "en": "Medium",
+    "hi": "मध्यम"
+  },
+  {
+    "key": "applications.priority.low",
+    "en": "Low",
+    "hi": "निम्न"
+  }
+]
     "en": "{selectedTx && (",
     "hi": "{selectedTx && ("
   },
@@ -11968,5 +12027,65 @@
     "key": "extracted_grouped.hero.apply_now_continue",
     "en": "Apply Now - continue",
     "hi": "Apply Now - continue"
+  },
+  {
+    "key": "applications.poa_act_offence_details",
+    "en": "PoA Act Offence Details",
+    "hi": "PoA अधिनियम अपराध विवरण"
+  },
+  {
+    "key": "applications.offence_category",
+    "en": "Offence Category:",
+    "hi": "अपराध श्रेणी:"
+  },
+  {
+    "key": "applications.specific_offence",
+    "en": "Specific Offence:",
+    "hi": "विशिष्ट अपराध:"
+  },
+  {
+    "key": "applications.expected_compensation",
+    "en": "Expected Compensation:",
+    "hi": "अपेक्षित मुआवजा:"
+  },
+  {
+    "key": "applications.status.approved",
+    "en": "Approved",
+    "hi": "स्वीकृत"
+  },
+  {
+    "key": "applications.status.pending",
+    "en": "Pending",
+    "hi": "लंबित"
+  },
+  {
+    "key": "applications.status.in_review",
+    "en": "In Review",
+    "hi": "समीक्षा में"
+  },
+  {
+    "key": "applications.status.rejected",
+    "en": "Rejected",
+    "hi": "अस्वीकृत"
+  },
+  {
+    "key": "applications.status.documents_required",
+    "en": "Documents Required",
+    "hi": "दस्तावेज़ आवश्यक"
+  },
+  {
+    "key": "applications.priority.high",
+    "en": "High",
+    "hi": "उच्च"
+  },
+  {
+    "key": "applications.priority.medium",
+    "en": "Medium",
+    "hi": "मध्यम"
+  },
+  {
+    "key": "applications.priority.low",
+    "en": "Low",
+    "hi": "निम्न"
   }
 ]

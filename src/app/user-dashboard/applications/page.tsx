@@ -817,6 +817,18 @@ export default function ApplicationsPage() {
     return icons[status as keyof typeof icons] || Clock;
   };
 
+  // Get translated status text
+  const getTranslatedStatus = (status: string) => {
+    const statusKey = `applications.status.${status.replace('-', '_')}`;
+    return t(statusKey) || status.replace('-', ' ');
+  };
+
+  // Get translated priority text
+  const getTranslatedPriority = (priority: string) => {
+    const priorityKey = `applications.priority.${priority.toLowerCase()}`;
+    return t(priorityKey) || priority;
+  };
+
   // Fetch user's applications and beneficiary
   useEffect(() => {
     if (!user) {
@@ -1336,7 +1348,7 @@ export default function ApplicationsPage() {
                                   const Icon = getStatusIcon(application.status);
                                   return <Icon className="w-3 h-3" />;
                                 })()}
-                                {application.status.replace('-', ' ')}
+                                {getTranslatedStatus(application.status)}
                               </span>
                             </div>
                           </div>
@@ -1569,23 +1581,23 @@ export default function ApplicationsPage() {
                     {/* PoA Offence Information */}
                     {selectedApplication.actType === 'PoA Act' && (selectedApplication.offenceCategory || selectedApplication.offenceType) && (
                       <div className="pt-4 border-t theme-border-glass">
-                        <div className="text-sm font-medium theme-text-primary mb-3">PoA Act Offence Details</div>
+                        <div className="text-sm font-medium theme-text-primary mb-3">{t('applications.poa_act_offence_details')}</div>
                         <div className="space-y-2">
                           {selectedApplication.offenceCategory && (
                             <div className="flex justify-between">
-                              <span className="text-sm theme-text-muted">Offence Category:</span>
+                              <span className="text-sm theme-text-muted">{t('applications.offence_category')}</span>
                               <span className="text-sm font-medium theme-text-primary">{selectedApplication.offenceCategory}</span>
                             </div>
                           )}
                           {selectedApplication.offenceType && (
                             <div className="flex justify-between">
-                              <span className="text-sm theme-text-muted">Specific Offence:</span>
+                              <span className="text-sm theme-text-muted">{t('applications.specific_offence')}</span>
                               <span className="text-sm font-medium theme-text-primary">{selectedApplication.offenceType}</span>
                             </div>
                           )}
                           {selectedApplication.offenceCategory && selectedApplication.offenceType && (
                             <div className="flex justify-between">
-                              <span className="text-sm theme-text-muted">Expected Compensation:</span>
+                              <span className="text-sm theme-text-muted">{t('applications.expected_compensation')}</span>
                               <span className="text-sm font-medium text-green-600 dark:text-green-400">
                                 {(() => {
                                   const category = POA_OFFENCES[selectedApplication.offenceCategory as keyof typeof POA_OFFENCES];
@@ -1612,12 +1624,12 @@ export default function ApplicationsPage() {
                             const Icon = getStatusIcon(selectedApplication.status);
                             return <Icon className="w-3 h-3" />;
                           })()}
-                          {selectedApplication.status.replace('-', ' ')}
+                          {getTranslatedStatus(selectedApplication.status)}
                         </span>
                       </div>
                       <div>
                         <div className="text-sm theme-text-muted mb-1">{t('extracted.priority')}</div>
-                        <div className="font-medium theme-text-primary">{selectedApplication.priority}</div>
+                        <div className="font-medium theme-text-primary">{getTranslatedPriority(selectedApplication.priority)}</div>
                       </div>
                     </div>
 

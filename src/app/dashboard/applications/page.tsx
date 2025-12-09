@@ -914,6 +914,19 @@ const ApplicationsPage = () => {
             return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n).replace('₹', '₹');
         } catch { return String(n); }
     };
+
+    // Get translated status text
+    const getTranslatedStatus = (status: string) => {
+        const statusKey = `applications.status.${status.replace('-', '_')}`;
+        return t(statusKey) || status.replace('-', ' ');
+    };
+
+    // Get translated priority text
+    const getTranslatedPriority = (priority: string) => {
+        const priorityKey = `applications.priority.${priority.toLowerCase()}`;
+        return t(priorityKey) || priority;
+    };
+
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [actTypeFilter, setActTypeFilter] = useState('all');
@@ -2435,7 +2448,7 @@ return (
                     const Icon = getStatusIcon(app.status);
                     return <Icon className="w-3 h-3" />;
                   })()}
-                  {app.status.replace("-", " ")}
+                  {getTranslatedStatus(app.status)}
                 </span>
               </td>
 
@@ -2445,7 +2458,7 @@ return (
                     app.priority
                   )}`}
                 >
-                  {app.priority}
+                  {getTranslatedPriority(app.priority)}
                 </span>
               </td>
 
@@ -2586,7 +2599,7 @@ return (
                         const Icon = getStatusIcon(app.status);
                         return <Icon className="w-3 h-3" />;
                       })()}
-                      {app.status.replace("-", " ")}
+                      {getTranslatedStatus(app.status)}
                     </span>
                     <div className="flex items-center gap-1">
                       <button
@@ -2790,18 +2803,18 @@ return (
                 <div className="md:col-span-2 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
                   <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
                     <Shield className="w-4 h-4 text-blue-600" />
-                    PoA Act Offence Details
+                    {t('applications.poa_act_offence_details')}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     {selectedApplication.offenceCategory && (
                       <div>
-                        <p className="text-xs theme-text-muted mb-1">Offence Category</p>
+                        <p className="text-xs theme-text-muted mb-1">{t('applications.offence_category')}</p>
                         <p className="font-medium theme-text-primary">{selectedApplication.offenceCategory}</p>
                       </div>
                     )}
                     {selectedApplication.offenceType && (
                       <div>
-                        <p className="text-xs theme-text-muted mb-1">Specific Offence</p>
+                        <p className="text-xs theme-text-muted mb-1">{t('applications.specific_offence')}</p>
                         <p className="font-medium theme-text-primary">{selectedApplication.offenceType}</p>
                       </div>
                     )}

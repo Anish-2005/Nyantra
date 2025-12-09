@@ -1091,6 +1091,7 @@ useEffect(() => {
           --text-primary: #f1f5f9;
           --text-secondary: #94a3b8;
           --text-muted: #64748b;
+          --text-accent: #cbd5e1;
           --accent-primary: #06b6d4;
           --accent-secondary: #8b5cf6;
           --glass-bg: rgba(15, 23, 42, 0.6);
@@ -1107,6 +1108,7 @@ useEffect(() => {
           --text-primary: #0f172a;
           --text-secondary: #475569;
           --text-muted: #64748b;
+          --text-accent: #334155;
           --accent-primary: #fb7185;
           --accent-secondary: #fb923c;
           --glass-bg: rgba(255, 255, 255, 0.6);
@@ -1116,6 +1118,7 @@ useEffect(() => {
         .theme-text-primary { color: var(--text-primary) !important; }
         .theme-text-secondary { color: var(--text-secondary) !important; }
         .theme-text-muted { color: var(--text-muted) !important; }
+        .theme-text-accent { color: var(--text-accent) !important; }
         .theme-bg-card { background: var(--card-bg) !important; }
         .theme-border-card { border-color: var(--card-border) !important; }
         .theme-bg-glass { background: var(--glass-bg) !important; }

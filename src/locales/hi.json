@@ -429,6 +429,7 @@
     "incidentDetails": "घटना विवरण",
     "actType": "अधिनियम प्रकार",
     "offenceCategory": "अपराध श्रेणी",
+    "offence_category": "अपराध श्रेणी",
     "offenceType": "अपराध प्रकार",
     "incidentDate": "घटना तिथि",
     "financialInformation": "वित्तीय जानकारी",
@@ -527,6 +528,53 @@
       "lowToHigh": "निम्न से उच्च",
       "approvedToPending": "स्वीकृत से लंबित",
       "pendingToApproved": "लंबित से स्वीकृत"
+    },
+    "poa_act_offence_details": "PoA अधिनियम अपराध विवरण",
+    "specific_offence": "विशिष्ट अपराध",
+    "expected_compensation": "अपेक्षित मुआवजा",
+    "status": {
+      "approved": "स्वीकृत",
+      "pending": "लंबित",
+      "in_review": "समीक्षा में",
+      "rejected": "अस्वीकृत",
+      "documents_required": "दस्तावेज़ आवश्यक"
+    },
+    "priority": {
+      "high": "उच्च",
+      "medium": "मध्यम",
+      "low": "निम्न"
+    },
+    "poa_offences": {
+      "categories": {
+        "death_murder": "1. मौत / हत्या का कारण बनने वाले अपराध",
+        "rape_sexual": "2. बलात्कार और यौन अपराध",
+        "grievous_hurt": "3. गंभीर चोट / घायल",
+        "women_dignity": "4. महिलाओं और गरिमा के खिलाफ अपराध",
+        "property_arson": "5. संपत्ति क्षति / आगजनी",
+        "land_economic": "6. भूमि और आर्थिक अपराध"
+      },
+      "specific": {
+        "murder_sc_st": "एससी/एसटी व्यक्ति की हत्या",
+        "death_injury_atrocity": "अत्याचार के दौरान लगाई गई चोट से मौत",
+        "death_after_rape": "बलात्कार / सामूहिक बलात्कार के बाद मौत",
+        "rape": "बलात्कार",
+        "gang_rape": "सामूहिक बलात्कार",
+        "attempt_rape": "बलात्कार का प्रयास",
+        "parading_naked": "नंगा / अर्ध-नंगा परेड करना",
+        "sexual_harassment": "यौन उत्पीड़न / आपराधिक बल का प्रयोग",
+        "grievous_hurt": "गंभीर चोट",
+        "permanent_disability": "स्थायी विकलांगता",
+        "partial_disability": "आंशिक विकलांगता",
+        "acid_attack_deformity": "एसिड हमला - विकृति / विकलांगता",
+        "acid_attack_injury": "एसिड हमला - विकृति के बिना चोट",
+        "outraging_modesty": "एससी/एसटी महिला की शालीनता भंग करना",
+        "sexual_exploitation": "यौन शोषण / तस्करी",
+        "forced_work_naked": "नंगा / अर्ध-नंगा काम करने के लिए मजबूर करना",
+        "burning_house_arson": "घर जलाना / आगजनी",
+        "destruction_household": "घरेलू / संपत्ति का विनाश",
+        "destruction_crops": "फसलों का विनाश",
+        "destruction_cattle": "मवेशी / पशुधन का विनाश"
+      }
     }
   },
   "extracted": {

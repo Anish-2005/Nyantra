@@ -431,6 +431,7 @@
     "incidentDetails": "Incident Details",
     "actType": "Act Type",
     "offenceCategory": "Offence Category",
+    "offence_category": "Offence Category",
     "offenceType": "Offence Type",
     "incidentDate": "Incident Date",
     "financialInformation": "Financial Information",
@@ -533,6 +534,53 @@
       "lowToHigh": "Low to High",
       "approvedToPending": "Approved to Pending",
       "pendingToApproved": "Pending to Approved"
+    },
+    "poa_act_offence_details": "PoA Act Offence Details",
+    "specific_offence": "Specific Offence",
+    "expected_compensation": "Expected Compensation",
+    "status": {
+      "approved": "Approved",
+      "pending": "Pending",
+      "in_review": "In Review",
+      "rejected": "Rejected",
+      "documents_required": "Documents Required"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "poa_offences": {
+      "categories": {
+        "death_murder": "1. Offences leading to Death / Murder",
+        "rape_sexual": "2. Rape and Sexual Offences",
+        "grievous_hurt": "3. Grievous Hurt / Injury",
+        "women_dignity": "4. Offences Against Women & Dignity",
+        "property_arson": "5. Property Damage / Arson",
+        "land_economic": "6. Land & Economic Offences"
+      },
+      "specific": {
+        "murder_sc_st": "Murder of SC/ST person",
+        "death_injury_atrocity": "Death due to injury inflicted during atrocity",
+        "death_after_rape": "Death after rape / gang rape",
+        "rape": "Rape",
+        "gang_rape": "Gang rape",
+        "attempt_rape": "Attempt to rape",
+        "parading_naked": "Parading naked / semi-naked",
+        "sexual_harassment": "Sexual harassment / use of criminal force",
+        "grievous_hurt": "Grievous hurt",
+        "permanent_disability": "Permanent disability",
+        "partial_disability": "Partial disability",
+        "acid_attack_deformity": "Acid attack – deformity / disability",
+        "acid_attack_injury": "Acid attack – injury without deformity",
+        "outraging_modesty": "Outraging modesty of SC/ST woman",
+        "sexual_exploitation": "Sexual exploitation / trafficking",
+        "forced_work_naked": "Forced to work naked / semi-naked",
+        "burning_house_arson": "Burning of house / arson",
+        "destruction_household": "Destruction of household / property",
+        "destruction_crops": "Destruction of crops",
+        "destruction_cattle": "Destruction of cattle / livestock"
+      }
     }
   },
   "extracted": {
