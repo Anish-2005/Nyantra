@@ -13,13 +13,13 @@ import { db } from '@/lib/firebase';
 // Web Speech API type declarations
 declare global {
   interface SpeechRecognitionEvent extends Event {
-    results: SpeechRecognitionResultList;
-    resultIndex: number;
+    readonly results: SpeechRecognitionResultList;
+    readonly resultIndex: number;
   }
 
   interface SpeechRecognitionErrorEvent extends Event {
-    error: string;
-    message: string;
+    readonly error: SpeechRecognitionErrorCode;
+    readonly message: string;
   }
 
   interface SpeechRecognition extends EventTarget {
