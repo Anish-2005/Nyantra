@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:math';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/auth_provider.dart' as app_auth;
@@ -1124,6 +1125,21 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
 
   void _listen() async {
     if (!_isListening) {
+      // Request microphone permission
+      var status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Microphone permission is required for voice input',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       bool available = await _speech.initialize(
         onStatus: (val) => print('onStatus: $val'),
         onError: (val) => print('onError: $val'),
@@ -1144,6 +1160,14 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
             // You can use this to show visual feedback
           },
         );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Speech recognition is not available'),
+            ),
+          );
+        }
       }
     } else {
       setState(() => _isListening = false);

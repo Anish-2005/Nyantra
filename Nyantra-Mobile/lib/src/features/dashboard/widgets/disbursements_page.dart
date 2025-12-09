@@ -520,6 +520,181 @@ class _DisbursementsPageState extends State<DisbursementsPage> {
                                                 disbursement.transactionId ??
                                                     'Not available',
                                               ),
+
+                                              const SizedBox(height: 12),
+
+                                              // Progressive Payment Section
+                                              if (disbursement
+                                                  .isProgressivePayment) ...[
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    12,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primaryContainer
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary
+                                                          .withOpacity(0.2),
+                                                    ),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.trending_up,
+                                                            size: 16,
+                                                            color: theme
+                                                                .colorScheme
+                                                                .primary,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 6,
+                                                          ),
+                                                          Text(
+                                                            'Progressive Payment',
+                                                            style: theme
+                                                                .textTheme
+                                                                .bodySmall
+                                                                ?.copyWith(
+                                                                  color: theme
+                                                                      .colorScheme
+                                                                      .primary,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  'Installments',
+                                                                  style: theme
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        color: theme
+                                                                            .textTheme
+                                                                            .bodyMedium
+                                                                            ?.color
+                                                                            ?.withOpacity(
+                                                                              0.6,
+                                                                            ),
+                                                                      ),
+                                                                ),
+                                                                Text(
+                                                                  '${disbursement.completedInstallments}/${disbursement.totalInstallments}',
+                                                                  style: theme
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  'Disbursed',
+                                                                  style: theme
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        color: theme
+                                                                            .textTheme
+                                                                            .bodyMedium
+                                                                            ?.color
+                                                                            ?.withOpacity(
+                                                                              0.6,
+                                                                            ),
+                                                                      ),
+                                                                ),
+                                                                Text(
+                                                                  '₹${disbursement.disbursedAmount.toStringAsFixed(0)}',
+                                                                  style: theme
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                        color: theme
+                                                                            .colorScheme
+                                                                            .primary,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      LinearProgressIndicator(
+                                                        value:
+                                                            disbursement
+                                                                    .totalInstallments >
+                                                                0
+                                                            ? disbursement
+                                                                      .completedInstallments /
+                                                                  disbursement
+                                                                      .totalInstallments
+                                                            : 0,
+                                                        backgroundColor: theme
+                                                            .colorScheme
+                                                            .surfaceVariant,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                              Color
+                                                            >(
+                                                              theme
+                                                                  .colorScheme
+                                                                  .primary,
+                                                            ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        '${disbursement.disbursementProgress.toStringAsFixed(1)}% Complete',
+                                                        style: theme
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
+                                                              fontSize: 10,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ],
                                           );
                                         },

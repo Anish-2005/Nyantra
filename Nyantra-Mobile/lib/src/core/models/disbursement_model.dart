@@ -20,6 +20,13 @@ class DisbursementModel {
   final String? userBankAccount;
   final String? userIFSC;
   final String? userAddress;
+  // Progressive payment fields
+  final bool isProgressivePayment;
+  final double disbursementProgress;
+  final int completedInstallments;
+  final int totalInstallments;
+  final double disbursedAmount;
+  final String? actType;
 
   DisbursementModel({
     required this.id,
@@ -37,6 +44,12 @@ class DisbursementModel {
     this.userBankAccount,
     this.userIFSC,
     this.userAddress,
+    this.isProgressivePayment = false,
+    this.disbursementProgress = 0.0,
+    this.completedInstallments = 0,
+    this.totalInstallments = 1,
+    this.disbursedAmount = 0.0,
+    this.actType,
   });
 
   factory DisbursementModel.fromFirestore(
@@ -68,6 +81,13 @@ class DisbursementModel {
       userBankAccount: data['userBankAccount'] as String?,
       userIFSC: data['userIFSC'] as String?,
       userAddress: data['userAddress'] as String?,
+      isProgressivePayment: data['isProgressivePayment'] as bool? ?? false,
+      disbursementProgress:
+          (data['disbursementProgress'] as num?)?.toDouble() ?? 0.0,
+      completedInstallments: (data['completedInstallments'] as int?) ?? 0,
+      totalInstallments: (data['totalInstallments'] as int?) ?? 1,
+      disbursedAmount: (data['disbursedAmount'] as num?)?.toDouble() ?? 0.0,
+      actType: data['actType'] as String?,
     );
   }
 
@@ -88,6 +108,12 @@ class DisbursementModel {
       if (userBankAccount != null) 'userBankAccount': userBankAccount,
       if (userIFSC != null) 'userIFSC': userIFSC,
       if (userAddress != null) 'userAddress': userAddress,
+      'isProgressivePayment': isProgressivePayment,
+      'disbursementProgress': disbursementProgress,
+      'completedInstallments': completedInstallments,
+      'totalInstallments': totalInstallments,
+      'disbursedAmount': disbursedAmount,
+      if (actType != null) 'actType': actType,
     };
   }
 

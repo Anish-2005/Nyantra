@@ -64,6 +64,7 @@ dependencies:
 
   # Speech Recognition
   speech_to_text: ^7.0.0
+  permission_handler: ^11.3.1
 
   cupertino_icons: ^1.0.8
 
