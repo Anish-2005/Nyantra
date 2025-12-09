@@ -145,6 +145,16 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
       newErrors.gender = 'Gender is required';
     }
 
+    // Category validation
+    if (!formData.category) {
+      newErrors.category = 'Category is required';
+    }
+
+    // Marital Status validation
+    if (!formData.maritalStatus) {
+      newErrors.maritalStatus = 'Marital status is required';
+    }
+
     // Bank Account validation
     if (!formData.bankAccount.trim()) {
       newErrors.bankAccount = 'Bank account number is required';
@@ -340,22 +350,25 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.category_1') || 'Category'}</label>
-            <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            <select required value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.category ? 'border-red-500' : ''}`}>
+              <option value="">Select category</option>
               <option value="SC">SC</option>
               <option value="ST">ST</option>
               <option value="OBC">OBC</option>
               <option value="General">General</option>
             </select>
+            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.marital_status')}</label>
-            <select value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
+            <select required value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.maritalStatus ? 'border-red-500' : ''}`}>
               <option value="">{t('extracted.select_marital_status')}</option>
               <option value="Single">{t('extracted.single')}</option>
               <option value="Married">{t('extracted.married')}</option>
               <option value="Divorced">{t('extracted.divorced')}</option>
               <option value="Widowed">{t('extracted.widowed')}</option>
             </select>
+            {errors.maritalStatus && <p className="text-red-500 text-xs mt-1">{errors.maritalStatus}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>

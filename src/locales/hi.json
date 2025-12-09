@@ -702,6 +702,7 @@
     "categorywise_distribution": "{/* श्रेणी-वार वितरण */}",
     "categorywise_distribution_1": "श्रेणी-वार वितरण",
     "beneficiary_categories": "लाभार्थी श्रेणियाँ",
+    "beneficiary_created" : "लाभार्थी बनाए गए",
     "mathrounddataapplications_filtereddataoverviewtotalapplicati": "{Math.round((data.applications / filteredData.overview.totalApplications) * 100)}%",
     "formatnumberdataapplications_applications": "{formatNumber(data.applications)} आवेदन",
     "formatnumberdatadisbursements_disbursed": "{formatNumber(data.disbursements)} वितरित",

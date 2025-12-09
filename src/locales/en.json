@@ -693,6 +693,7 @@
     "categorywise_distribution": "{/* Category-wise Distribution */}",
     "categorywise_distribution_1": "Category-wise Distribution",
     "beneficiary_categories": "Beneficiary categories",
+    "beneficiary_created": "Beneficiary created",
     "sub_category": "Sub-category",
     "optional_sub_category": "Optional sub-category",
     "mathrounddataapplications_filtereddataoverviewtotalapplicati": "{Math.round((data.applications / filteredData.overview.totalApplications) * 100)}%",
