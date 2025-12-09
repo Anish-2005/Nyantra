@@ -145,7 +145,7 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
   const [email, setEmail] = useState('');
   const [category, setCategory] = useState('disbursement-delay');
   const [subCategory, setSubCategory] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -297,6 +297,16 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
           <input placeholder={t('extracted.sub_category') || 'Sub-category'} value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
         </div>
 
+        <div>
+          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.priority') || 'Priority'}</label>
+          <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')} className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
         <div className="md:col-span-2">
           <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.description') || 'Description'}</label>
           <textarea placeholder={t('extracted.description') || 'Description'} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
@@ -402,7 +412,18 @@ const GrievancePage = () => {
     if (actTypeFilter !== 'all') filtered = filtered.filter(g => g.actType === actTypeFilter);
     if (assignedToFilter !== 'all') filtered = filtered.filter(g => g.assignedTo === assignedToFilter);
     
+    // First sort by priority (urgent > high > medium > low), then by selected criteria
     filtered.sort((a, b) => {
+      // Priority order: urgent > high > medium > low
+      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+      const aPriority = priorityOrder[(a.priority || 'low').toLowerCase() as keyof typeof priorityOrder] || 1;
+      const bPriority = priorityOrder[(b.priority || 'low').toLowerCase() as keyof typeof priorityOrder] || 1;
+      
+      if (aPriority !== bPriority) {
+        return bPriority - aPriority; // Higher priority first
+      }
+      
+      // If priorities are equal, sort by selected criteria
       const getVal = (obj: Record<string, unknown>, key: string) => {
         const val = obj[key as keyof typeof obj];
         if (val === null || val === undefined) return '';
@@ -649,6 +670,7 @@ const GrievancePage = () => {
 
   const getPriorityColor = (priority?: string) => {
     const colors = {
+      urgent: theme === 'dark' ? 'text-purple-300 bg-purple-900/30' : 'text-purple-700 bg-purple-100',
       high: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100',
       medium: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
       low: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100'
@@ -1135,7 +1157,7 @@ const GrievancePage = () => {
           <h1 className="text-3xl font-bold theme-text-primary mb-2">
             {t('extracted.grievance')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
-          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_grievance_tracking_description')}</p>
+          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_grievance_tracking_description')} <span className="text-red-500 font-medium">• Sorted by priority (Urgent → High → Medium → Low)</span></p>
         </div>
         
         <div className="relative z-10 flex items-center justify-center lg:justify-end gap-3">
@@ -1978,7 +2000,7 @@ const GrievancePage = () => {
                       <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
                       <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
                       <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} </th>
+                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} <span className="text-red-500">⬇</span></th>
                       <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
                       <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
                     </tr>
