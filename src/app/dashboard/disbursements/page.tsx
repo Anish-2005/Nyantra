@@ -14,7 +14,7 @@ import {
   Calendar, DollarSign,
    MoreVertical, TrendingUp,
    Scale,
-  Banknote, CreditCard,
+  CreditCard,
    CheckCircle, XCircle, PlayCircle,
   RotateCcw, Edit, Heart, Filter, Fingerprint, Download, Trash2, FileText,
   AlertTriangle,
@@ -239,33 +239,78 @@ const DisbursementsPage: React.FC = () => {
           const disQuery = query(collection(db, 'disbursements'), where('applicationId', '==', doc.id));
           const disSnap = await getDocs(disQuery);
           if (disSnap.empty) {
-            // Create disbursement
-            const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
-            const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
-            await addDoc(collection(db, 'disbursements'), {
-              id: disId,
-              beneficiaryId: data.beneficiaryId || '',
-              beneficiaryName: data.applicantName || data.name || '',
-              district: data.district || '',
-              state: data.state || '',
-              transactionId: data.transactionId || null,
-              utrNumber: data.utrNumber || null,
-              paymentMethod: data.paymentMethod || null,
-              reliefAmount: data.amount || 0,
-              transactionFee: 0,
-              netAmount: data.amount || 0,
-              disbursedAmount: data.disbursedAmount || 0,
-              status: data.status === 'completed' ? 'completed' : (data.disbursementStatus || 'pending'),
-              initiatedDate,
-              actType: data.actType || data.caseType || 'relief',
-              retryCount: data.retryCount || 0,
-              failureReason: data.failureReason || null,
-              initiatedBy: data.assignedOfficer || null,
-              verifiedBy: data.verifiedBy || null,
-              applicationId: doc.id,
-              ownerId: data.ownerId || '',
-              isAuto: true
-            });
+            // Check if this is a POA Act application
+            const isPOAAct = data.actType === 'PoA Act' || data.actType?.toLowerCase().includes('poa');
+
+            if (isPOAAct) {
+              // Create single progressive disbursement for POA Act with progress tracking
+              const totalAmount = data.amount || 0;
+              const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
+              const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
+
+              await addDoc(collection(db, 'disbursements'), {
+                id: disId,
+                beneficiaryId: data.beneficiaryId || '',
+                beneficiaryName: data.applicantName || data.name || '',
+                district: data.district || '',
+                state: data.state || '',
+                transactionId: data.transactionId || null,
+                utrNumber: data.utrNumber || null,
+                paymentMethod: data.paymentMethod || null,
+                reliefAmount: totalAmount,
+                transactionFee: 0,
+                netAmount: totalAmount,
+                disbursedAmount: 0, // Will be updated as installments are completed
+                status: 'pending',
+                initiatedDate,
+                actType: data.actType || data.caseType || 'relief',
+                retryCount: data.retryCount || 0,
+                failureReason: data.failureReason || null,
+                initiatedBy: data.assignedOfficer || null,
+                verifiedBy: data.verifiedBy || null,
+                applicationId: doc.id,
+                ownerId: data.ownerId || '',
+                isAuto: true,
+                isProgressivePayment: true,
+                currentInstallment: 1,
+                totalInstallments: 3,
+                installmentAmounts: [Math.round(totalAmount * 0.25), Math.round(totalAmount * 0.75), totalAmount],
+                installmentPercentages: [25, 75, 100],
+                completedInstallments: 0,
+                disbursementProgress: 0, // Percentage completed
+                nextInstallmentAmount: Math.round(totalAmount * 0.25),
+                nextInstallmentPercentage: 25
+              });
+            } else {
+              // Create single disbursement for non-POA acts
+              const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
+              const initiatedDate = data.applicationDate && (data.applicationDate as any).toDate ? (data.applicationDate as any).toDate().toISOString() : new Date().toISOString();
+              await addDoc(collection(db, 'disbursements'), {
+                id: disId,
+                beneficiaryId: data.beneficiaryId || '',
+                beneficiaryName: data.applicantName || data.name || '',
+                district: data.district || '',
+                state: data.state || '',
+                transactionId: data.transactionId || null,
+                utrNumber: data.utrNumber || null,
+                paymentMethod: data.paymentMethod || null,
+                reliefAmount: data.amount || 0,
+                transactionFee: 0,
+                netAmount: data.amount || 0,
+                disbursedAmount: data.disbursedAmount || 0,
+                status: data.status === 'completed' ? 'completed' : (data.disbursementStatus || 'pending'),
+                initiatedDate,
+                actType: data.actType || data.caseType || 'relief',
+                retryCount: data.retryCount || 0,
+                failureReason: data.failureReason || null,
+                initiatedBy: data.assignedOfficer || null,
+                verifiedBy: data.verifiedBy || null,
+                applicationId: doc.id,
+                ownerId: data.ownerId || '',
+                isAuto: true,
+                isProgressivePayment: false
+              });
+            }
           }
         }
       } catch (err) {
@@ -650,7 +695,9 @@ const DisbursementsPage: React.FC = () => {
         beneficiaryName: d.beneficiaryName || '',
         district: d.district || '',
         actType: d.actType || '',
-        reliefAmount: d.reliefAmount ? `₹${d.reliefAmount.toLocaleString('en-IN')}` : '₹0',
+        reliefAmount: d.isProgressivePayment 
+            ? `₹${d.netAmount?.toLocaleString('en-IN') || 0} (${d.disbursementProgress || 0}% complete)`
+            : `₹${d.reliefAmount?.toLocaleString('en-IN') || 0}`,
         status: (d.status || '').toUpperCase(),
         transactionId: d.transactionId || 'N/A'
     }));
@@ -1019,10 +1066,13 @@ const DisbursementsPage: React.FC = () => {
           lastUpdated: new Date().toISOString()
         };
 
-        // If status changed to completed, set disbursedAmount
+        // If status changed to completed, set disbursedAmount and update progressive payment progress
         if (manualStatus === 'completed') {
           updateData.disbursedAmount = amount;
           updateData.completedDate = new Date().toISOString();
+          
+          // Update progressive payment progress if this is a progressive payment
+          await updateProgressivePaymentProgress(editingDisbursementId, manualStatus);
         }
 
         await updateDoc(disbursementRef, updateData);
@@ -1036,35 +1086,81 @@ const DisbursementsPage: React.FC = () => {
         }
 
         const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
-        await addDoc(collection(db, 'disbursements'), {
-          id: disId,
-          beneficiaryId: manualBeneficiaryId.trim(),
-          beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
-          district: selectedApp.district || '',
-          state: selectedApp.state || '',
-          transactionId: manualTransactionId.trim() || null,
-          utrNumber: manualUtrNumber.trim() || null,
-          paymentMethod: manualPaymentMethod.trim() || null,
-          reliefAmount: amount,
-          transactionFee: 0,
-          netAmount: amount,
-          disbursedAmount: manualStatus === 'completed' ? amount : 0,
-          status: manualStatus,
-          initiatedDate: new Date().toISOString(),
-          actType: manualActType,
-          retryCount: 0,
-          failureReason: null,
-          initiatedBy: 'manual', // or current user
-          verifiedBy: null,
-          applicationId: manualApplicationId,
-          ownerId: selectedApp.ownerId || '',
-          isManual: true
-        });
+        
+        // Check if this is a POA Act application for progressive payments
+        const isPOAAct = manualActType === 'PoA Act' || manualActType?.toLowerCase().includes('poa');
+        
+        if (isPOAAct) {
+          // Create single progressive disbursement for POA Act with progress tracking
+          const totalAmount = amount;
+          const disId = `DIS${Date.now()}${Math.floor(Math.random() * 100000)}`;
+          await addDoc(collection(db, 'disbursements'), {
+            id: disId,
+            beneficiaryId: manualBeneficiaryId.trim(),
+            beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
+            district: selectedApp.district || '',
+            state: selectedApp.state || '',
+            transactionId: manualTransactionId.trim() || null,
+            utrNumber: manualUtrNumber.trim() || null,
+            paymentMethod: manualPaymentMethod.trim() || null,
+            reliefAmount: totalAmount,
+            transactionFee: 0,
+            netAmount: totalAmount,
+            disbursedAmount: manualStatus === 'completed' ? totalAmount : 0,
+            status: manualStatus,
+            initiatedDate: new Date().toISOString(),
+            actType: manualActType,
+            retryCount: 0,
+            failureReason: null,
+            initiatedBy: 'manual',
+            verifiedBy: null,
+            applicationId: manualApplicationId,
+            ownerId: selectedApp.ownerId || '',
+            isManual: true,
+            isProgressivePayment: true,
+            currentInstallment: manualStatus === 'completed' ? 3 : 1,
+            totalInstallments: 3,
+            installmentAmounts: [Math.round(totalAmount * 0.25), Math.round(totalAmount * 0.75), totalAmount],
+            installmentPercentages: [25, 75, 100],
+            completedInstallments: manualStatus === 'completed' ? 3 : 0,
+            disbursementProgress: manualStatus === 'completed' ? 100 : 0,
+            nextInstallmentAmount: manualStatus === 'completed' ? totalAmount : Math.round(totalAmount * 0.25),
+            nextInstallmentPercentage: manualStatus === 'completed' ? 100 : 25
+          });
+        } else {
+          // Create single disbursement for non-POA acts
+          await addDoc(collection(db, 'disbursements'), {
+            id: disId,
+            beneficiaryId: manualBeneficiaryId.trim(),
+            beneficiaryName: selectedApp.applicantName || selectedApp.name || '',
+            district: selectedApp.district || '',
+            state: selectedApp.state || '',
+            transactionId: manualTransactionId.trim() || null,
+            utrNumber: manualUtrNumber.trim() || null,
+            paymentMethod: manualPaymentMethod.trim() || null,
+            reliefAmount: amount,
+            transactionFee: 0,
+            netAmount: amount,
+            disbursedAmount: manualStatus === 'completed' ? amount : 0,
+            status: manualStatus,
+            initiatedDate: new Date().toISOString(),
+            actType: manualActType,
+            retryCount: 0,
+            failureReason: null,
+            initiatedBy: 'manual',
+            verifiedBy: null,
+            applicationId: manualApplicationId,
+            ownerId: selectedApp.ownerId || '',
+            isManual: true,
+            isProgressivePayment: false
+          });
+        }
       }
 
       // Reset form
       setEditingDisbursementId(null);
       setIsEditingManual(false);
+      setSelectedDisbursement(null);
       setManualBeneficiaryId('');
       setManualApplicationId('');
       setAvailableApplications([]);
@@ -1082,16 +1178,45 @@ const DisbursementsPage: React.FC = () => {
     }
   };
 
-  // Handle editing disbursement
-  const handleEditDisbursement = () => {
-    if (!selectedDisbursement) return;
-
-    setEditStatus(selectedDisbursement.status);
-    setEditTransactionId(selectedDisbursement.transactionId || '');
-    setEditUtrNumber(selectedDisbursement.utrNumber || '');
-    setEditPaymentMethod(selectedDisbursement.paymentMethod || '');
-    setEditingDisbursementId(selectedDisbursement.firestoreId || selectedDisbursement.id || null);
-    setIsEditingManual(!!selectedDisbursement.firestoreId);
+  // Helper function to update progressive payment progress
+  const updateProgressivePaymentProgress = async (disbursementId: string, newStatus: string) => {
+    try {
+      const disbursementRef = doc(db, 'disbursements', disbursementId);
+      const disbursementDoc = await getDocs(query(collection(db, 'disbursements'), where('id', '==', disbursementId)));
+      
+      if (!disbursementDoc.empty) {
+        const disbursementData = disbursementDoc.docs[0].data();
+        
+        if (disbursementData.isProgressivePayment && newStatus === 'completed') {
+          const currentCompleted = disbursementData.completedInstallments || 0;
+          const totalInstallments = disbursementData.totalInstallments || 3;
+          const installmentAmounts = disbursementData.installmentAmounts || [];
+          const installmentPercentages = disbursementData.installmentPercentages || [25, 75, 100];
+          
+          // Calculate new progress
+          const newCompletedInstallments = Math.min(currentCompleted + 1, totalInstallments);
+          const newProgress = Math.min((newCompletedInstallments / totalInstallments) * 100, 100);
+          
+          // Calculate next installment info
+          const nextInstallmentIndex = newCompletedInstallments;
+          const nextInstallmentAmount = nextInstallmentIndex < installmentAmounts.length ? installmentAmounts[nextInstallmentIndex] : null;
+          const nextInstallmentPercentage = nextInstallmentIndex < installmentPercentages.length ? installmentPercentages[nextInstallmentIndex] : null;
+          
+          const updateData = {
+            completedInstallments: newCompletedInstallments,
+            disbursementProgress: Math.round(newProgress),
+            currentInstallment: Math.min(newCompletedInstallments + 1, totalInstallments),
+            nextInstallmentAmount: nextInstallmentAmount,
+            nextInstallmentPercentage: nextInstallmentPercentage,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          await updateDoc(disbursementRef, updateData);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating progressive payment progress:', error);
+    }
   };
 
   return (
@@ -1208,231 +1333,442 @@ const DisbursementsPage: React.FC = () => {
 
       {/* Manual Disbursement Form */}
       <AnimatePresence>
-        {showManualForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+  {showManualForm && (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.3 }}
+      className="overflow-hidden"
+    >
+      <motion.div
+        initial={{ y: -20 }}
+        animate={{ y: 0 }}
+        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl mb-6"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold theme-text-primary">
+            {editingDisbursementId
+              ? t('extracted.edit_disbursement') || 'Edit Disbursement'
+              : t('extracted.add_manual_disbursement')}
+          </h2>
+          <button
+            onClick={() => {
+              setShowManualForm(false);
+              setEditingDisbursementId(null);
+              setIsEditingManual(false);
+              setSelectedDisbursement(null);
+            }}
+            className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:shadow-md transition-shadow"
           >
-            <motion.div
-              initial={{ y: -20 }}
-              animate={{ y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl mb-6"
+            <X className="w-5 h-5 theme-text-primary" />
+          </button>
+        </div>
+
+        {/* Form grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.beneficiary_id')} *
+            </label>
+            <input
+              type="text"
+              value={manualBeneficiaryId}
+              onChange={(e) => setManualBeneficiaryId(e.target.value)}
+              onBlur={(e) => {
+                const id = e.target.value.trim();
+                if (id) {
+                  setManualBeneficiaryId(id);
+                } else {
+                  setAvailableApplications([]);
+                  setManualApplicationId('');
+                }
+              }}
+              disabled={!!editingDisbursementId}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder={t('extracted.enter_beneficiary_id')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.application_id')} *
+            </label>
+            <select
+              value={manualApplicationId}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                setManualApplicationId(selectedId);
+                if (selectedId) {
+                  const selectedApp = availableApplications.find(
+                    (app) => app.id === selectedId
+                  );
+                  if (selectedApp) {
+                    setManualReliefAmount(
+                      selectedApp.amount ? selectedApp.amount.toString() : ''
+                    );
+                    setManualActType(
+                      selectedApp.actType || selectedApp.caseType || 'relief'
+                    );
+                    setManualStatus('pending');
+                  }
+                } else {
+                  setManualReliefAmount('');
+                  setManualActType('relief');
+                  setManualStatus('pending');
+                }
+              }}
+              disabled={availableApplications.length === 0 || !!editingDisbursementId}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold theme-text-primary">
-                  {editingDisbursementId ? t('extracted.edit_disbursement') || 'Edit Disbursement' : t('extracted.add_manual_disbursement')}
-                </h2>
+              <option value="">
+                {availableApplications.length === 0
+                  ? t('extracted.no_applications_found')
+                  : t('extracted.select_application')}
+              </option>
+              {availableApplications.map((app) => (
+                <option key={app.id} value={app.id}>
+                  {app.id} - {app.actType || app.caseType} - {formatCurrency(app.amount)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.relief_amount')} *
+            </label>
+            <input
+              type="number"
+              value={manualReliefAmount}
+              onChange={(e) => setManualReliefAmount(e.target.value)}
+              disabled={!!editingDisbursementId}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="0"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.status')}
+            </label>
+            <select
+              value={manualStatus}
+              onChange={(e) => {
+                const newStatus = e.target.value;
+                if (newStatus === 'completed') {
+                  const isValidForCompletion =
+                    manualBeneficiaryId.trim() &&
+                    manualApplicationId &&
+                    manualReliefAmount.trim() &&
+                    manualActType &&
+                    manualTransactionId.trim() &&
+                    manualPaymentMethod;
+
+                  if (!isValidForCompletion) {
+                    alert(
+                      t('extracted.all_fields_required_for_completion') ||
+                        'All fields must be filled to mark as completed'
+                    );
+                    return;
+                  }
+                }
+                setManualStatus(newStatus);
+              }}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="pending">{t('extracted.pending')}</option>
+              <option value="in_progress">{t('extracted.in_progress')}</option>
+              <option value="completed">{t('extracted.completed')}</option>
+              <option value="failed">{t('extracted.failed')}</option>
+              <option value="cancelled">{t('extracted.cancelled')}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.act_type')}
+            </label>
+            <select
+              value={manualActType}
+              onChange={(e) => setManualActType(e.target.value)}
+              disabled={!!editingDisbursementId}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="relief">{t('extracted.relief')}</option>
+              <option value="PCR Act">{t('extracted.pcr_act')}</option>
+              <option value="PoA Act">{t('extracted.poa_act')}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.transaction_id')}
+            </label>
+            <input
+              type="text"
+              value={manualTransactionId}
+              onChange={(e) => setManualTransactionId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              placeholder={t('extracted.optional')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.utr_number')}
+            </label>
+            <input
+              type="text"
+              value={manualUtrNumber}
+              onChange={(e) => setManualUtrNumber(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              placeholder={t('extracted.optional')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-primary mb-2">
+              {t('extracted.payment_method')}
+            </label>
+            <select
+              value={manualPaymentMethod}
+              onChange={(e) => setManualPaymentMethod(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="">{t('extracted.select_payment_method')}</option>
+              <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
+              <option value="upi">{t('extracted.upi')}</option>
+              <option value="cash">{t('extracted.cash')}</option>
+              <option value="cheque">{t('extracted.cheque')}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Progressive Payment Progress Section */}
+        {editingDisbursementId &&
+          selectedDisbursement &&
+          selectedDisbursement.isProgressivePayment && (
+            <div className="mt-6 p-4 rounded-lg theme-bg-glass theme-border-glass border">
+              <h3 className="text-lg font-semibold theme-text-primary mb-4">
+                {t('extracted.progressive_payment_progress') ||
+                  'Progressive Payment Progress'}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <div className="text-sm theme-text-muted mb-1">
+                    {t('extracted.current_progress') || 'Current Progress'}
+                  </div>
+                  <div className="text-2xl font-bold theme-text-primary">
+                    {selectedDisbursement.disbursementProgress || 0}%
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm theme-text-muted mb-1">
+                    {t('extracted.completed_installments') ||
+                      'Completed Installments'}
+                  </div>
+                  <div className="text-2xl font-bold theme-text-primary">
+                    {selectedDisbursement.completedInstallments || 0} /{' '}
+                    {selectedDisbursement.totalInstallments || 3}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm theme-text-muted mb-1">
+                    {t('extracted.next_installment') || 'Next Installment'}
+                  </div>
+                  <div className="text-lg font-semibold theme-text-primary">
+                    {selectedDisbursement.nextInstallmentAmount
+                      ? formatCurrency(
+                          selectedDisbursement.nextInstallmentAmount
+                        )
+                      : t('extracted.all_completed') || 'All Completed'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm theme-text-muted mb-1">
+                    Disbursed Amount
+                  </div>
+                  <div className="text-lg font-semibold theme-text-primary">
+                    {formatCurrency(selectedDisbursement.disbursedAmount || 0)} / {formatCurrency(selectedDisbursement.reliefAmount)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="bg-blue-600 dark:bg-blue-500 h-3 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${selectedDisbursement.disbursementProgress || 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    setShowManualForm(false);
-                    setEditingDisbursementId(null);
+                  onClick={async () => {
+                    if (
+                      !manualTransactionId.trim() ||
+                      !manualUtrNumber.trim() ||
+                      !manualPaymentMethod
+                    ) {
+                      alert(
+                        t('extracted.all_fields_required_for_progressive') ||
+                          'Please fill Transaction ID, UTR Number, and Payment Method to proceed with disbursement.'
+                      );
+                      return;
+                    }
+                    if (editingDisbursementId) {
+                      const currentCompleted =
+                        selectedDisbursement.completedInstallments || 0;
+                      let nextAmount = 0;
+                      let nextPercentage = 0;
+                      if (currentCompleted === 0) {
+                        nextAmount = Math.round(
+                          selectedDisbursement.reliefAmount * 0.25
+                        );
+                        nextPercentage = 25;
+                      } else if (currentCompleted === 1) {
+                        nextAmount = Math.round(
+                          selectedDisbursement.reliefAmount * 0.5
+                        );
+                        nextPercentage = 50;
+                      } else if (currentCompleted === 2) {
+                        nextAmount = Math.round(
+                          selectedDisbursement.reliefAmount * 0.25
+                        );
+                        nextPercentage = 25;
+                      }
+                      const newDisbursedAmount =
+                        (selectedDisbursement.disbursedAmount || 0) + nextAmount;
+                      const newCompleted = currentCompleted + 1;
+                      const newProgress =
+                        (selectedDisbursement.disbursementProgress || 0) +
+                        nextPercentage;
+                      const updateData: any = {
+                        disbursedAmount: newDisbursedAmount,
+                        completedInstallments: newCompleted,
+                        disbursementProgress: newProgress,
+                        currentInstallment: newCompleted + 1,
+                        transactionId: manualTransactionId,
+                        utrNumber: manualUtrNumber,
+                        paymentMethod: manualPaymentMethod,
+                        lastUpdated: new Date().toISOString(),
+                      };
+                      if (newCompleted < 3) {
+                        updateData.nextInstallmentAmount =
+                          newCompleted === 1
+                            ? Math.round(selectedDisbursement.reliefAmount * 0.5)
+                            : Math.round(selectedDisbursement.reliefAmount * 0.25);
+                        updateData.nextInstallmentPercentage =
+                          newCompleted === 1 ? 50 : 25;
+                      }
+                      if (newCompleted === 3) {
+                        updateData.status = 'completed';
+                        updateData.nextInstallmentAmount = null;
+                        updateData.nextInstallmentPercentage = null;
+                      }
+                      const disbursementRef = doc(
+                        db,
+                        'disbursements',
+                        editingDisbursementId
+                      );
+                      await updateDoc(disbursementRef, updateData);
+                      const updatedDisbursement = manualDisbursements.find(
+                        (d) => d.firestoreId === editingDisbursementId
+                      );
+                      if (updatedDisbursement) {
+                        setSelectedDisbursement(updatedDisbursement);
+                      }
+                    }
                   }}
-                  className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:shadow-md transition-shadow"
+                  disabled={
+                    (selectedDisbursement.completedInstallments || 0) >= 3 ||
+                    !manualTransactionId.trim() ||
+                    !manualUtrNumber.trim() ||
+                    !manualPaymentMethod
+                  }
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
                 >
-                  <X className="w-5 h-5 theme-text-primary" />
+                  {(selectedDisbursement.completedInstallments || 0) === 0
+                    ? 'Disburse 25%'
+                    : (selectedDisbursement.completedInstallments || 0) === 1
+                    ? 'Disburse 75%'
+                    : (selectedDisbursement.completedInstallments || 0) === 2
+                    ? 'Disburse 100%'
+                    : 'Completed'}
                 </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.beneficiary_id')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={manualBeneficiaryId}
-                    onChange={(e) => setManualBeneficiaryId(e.target.value)}
-                    onBlur={(e) => {
-                      const id = e.target.value.trim();
-                      if (id) {
-                        // Trigger fetch by updating state, which will trigger the useEffect
-                        setManualBeneficiaryId(id);
-                      } else {
-                        setAvailableApplications([]);
-                        setManualApplicationId('');
-                      }
-                    }}
-                    disabled={!!editingDisbursementId}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder={t('extracted.enter_beneficiary_id')}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.application_id')} *
-                  </label>
-                  <select
-                    value={manualApplicationId}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      setManualApplicationId(selectedId);
-                      // Auto-fill form fields from selected application
-                      if (selectedId) {
-                        const selectedApp = availableApplications.find(app => app.id === selectedId);
-                        if (selectedApp) {
-                          // Auto-fill all relevant fields from the application
-                          setManualReliefAmount(selectedApp.amount ? selectedApp.amount.toString() : '');
-                          setManualActType(selectedApp.actType || selectedApp.caseType || 'relief');
-                          // Keep status as pending for new disbursements
-                          setManualStatus('pending');
-                        }
-                      } else {
-                        // Clear auto-filled fields when no application is selected
-                        setManualReliefAmount('');
-                        setManualActType('relief');
-                        setManualStatus('pending');
-                      }
-                    }}
-                    disabled={availableApplications.length === 0 || !!editingDisbursementId}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {availableApplications.length === 0 ? t('extracted.no_applications_found') : t('extracted.select_application')}
-                    </option>
-                    {availableApplications.map((app) => (
-                      <option key={app.id} value={app.id}>
-                        {app.id} - {app.actType || app.caseType} - {formatCurrency(app.amount)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.relief_amount')} *
-                  </label>
-                  <input
-                    type="number"
-                    value={manualReliefAmount}
-                    onChange={(e) => setManualReliefAmount(e.target.value)}
-                    disabled={!!editingDisbursementId}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.status')}
-                  </label>
-                  <select
-                    value={manualStatus}
-                    onChange={(e) => {
-                      const newStatus = e.target.value;
-                      if (newStatus === 'completed') {
-                        // Validate that all required fields are filled for completed status
-                        const isValidForCompletion =
-                          manualBeneficiaryId.trim() &&
-                          manualApplicationId &&
-                          manualReliefAmount.trim() &&
-                          manualActType &&
-                          manualTransactionId.trim() &&
-                          manualPaymentMethod;
-
-                        if (!isValidForCompletion) {
-                          alert(t('extracted.all_fields_required_for_completion') || 'All fields must be filled to mark as completed');
-                          return;
-                        }
-                      }
-                      setManualStatus(newStatus);
-                    }}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                  >
-                    <option value="pending">{t('extracted.pending')}</option>
-                    <option value="in_progress">{t('extracted.in_progress')}</option>
-                    <option value="completed">{t('extracted.completed')}</option>
-                    <option value="failed">{t('extracted.failed')}</option>
-                    <option value="cancelled">{t('extracted.cancelled')}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.act_type')}
-                  </label>
-                  <select
-                    value={manualActType}
-                    onChange={(e) => setManualActType(e.target.value)}
-                    disabled={!!editingDisbursementId}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="relief">{t('extracted.relief')}</option>
-                    <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                    <option value="PoA Act">{t('extracted.poa_act')}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.transaction_id')}
-                  </label>
-                  <input
-                    type="text"
-                    value={manualTransactionId}
-                    onChange={(e) => setManualTransactionId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                    placeholder={t('extracted.optional')}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.utr_number')}
-                  </label>
-                  <input
-                    type="text"
-                    value={manualUtrNumber}
-                    onChange={(e) => setManualUtrNumber(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                    placeholder={t('extracted.optional')}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    {t('extracted.payment_method')}
-                  </label>
-                  <select
-                    value={manualPaymentMethod}
-                    onChange={(e) => setManualPaymentMethod(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                  >
-                    <option value="">{t('extracted.select_payment_method')}</option>
-                    <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
-                    <option value="upi">{t('extracted.upi')}</option>
-                    <option value="cash">{t('extracted.cash')}</option>
-                    <option value="cheque">{t('extracted.cheque')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-4 mt-6">
                 <button
-                  onClick={() => {
-                    setShowManualForm(false);
-                    setEditingDisbursementId(null);
+                  onClick={async () => {
+                    if (editingDisbursementId) {
+                      const disbursementRef = doc(
+                        db,
+                        'disbursements',
+                        editingDisbursementId
+                      );
+                      await updateDoc(disbursementRef, {
+                        completedInstallments: 0,
+                        disbursementProgress: 0,
+                        currentInstallment: 1,
+                        nextInstallmentAmount:
+                          selectedDisbursement.installmentAmounts?.[0] ||
+                          Math.round(selectedDisbursement.reliefAmount * 0.25),
+                        nextInstallmentPercentage: 25,
+                        lastUpdated: new Date().toISOString(),
+                      });
+                      const updatedDisbursement = manualDisbursements.find(
+                        (d) => d.firestoreId === editingDisbursementId
+                      );
+                      if (updatedDisbursement) {
+                        setSelectedDisbursement(updatedDisbursement);
+                      }
+                    }
                   }}
-                  className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:shadow-md transition-shadow"
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
                 >
-                  {t('extracted.cancel')}
-                </button>
-                <button
-                  onClick={handleManualSubmit}
-                  className="px-4 py-2 rounded-lg accent-gradient text-white shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  {editingDisbursementId ? (t('extracted.update_disbursement') || 'Update Disbursement') : t('extracted.add_disbursement')}
+                  {t('extracted.reset_progress') || 'Reset Progress'}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+
+        {/* Footer buttons */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={() => {
+              setShowManualForm(false);
+              setEditingDisbursementId(null);
+              setIsEditingManual(false);
+              setSelectedDisbursement(null);
+            }}
+            className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:shadow-md transition-shadow"
+          >
+            {t('extracted.cancel')}
+          </button>
+          <button
+            onClick={handleManualSubmit}
+            className="px-4 py-2 rounded-lg accent-gradient text-white shadow-lg hover:shadow-xl transition-shadow"
+          >
+            {editingDisbursementId
+              ? t('extracted.update_disbursement') || 'Update Disbursement'
+              : t('extracted.add_disbursement')}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
       {/* Statistics Cards - Enhanced with Real-time Indicators */}
       <motion.div
@@ -1442,7 +1778,7 @@ const DisbursementsPage: React.FC = () => {
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: Banknote, statusColor: 'bg-cyan-500' },
+          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: DollarSign, statusColor: 'bg-cyan-500' },
           { labelKey: 'extracted.completed', value: stats.completed, color: 'from-green-500 to-emerald-500', icon: CheckCircle, statusColor: 'bg-green-500' },
           { labelKey: 'extracted.pending', value: stats.pending, color: 'from-amber-500 to-orange-500', icon: Clock, statusColor: 'bg-amber-500' },
           { labelKey: 'extracted.in_progress', value: stats.inProgress, color: 'from-purple-500 to-pink-500', icon: PlayCircle, statusColor: 'bg-purple-500' },
@@ -2107,9 +2443,31 @@ const DisbursementsPage: React.FC = () => {
                       <td className="hidden lg:table-cell px-4 py-3">
                         <div>
                           <p className="text-sm font-semibold theme-text-primary">
-                            {formatCurrency(disbursement.reliefAmount)}
+                            {formatCurrency(disbursement.disbursedAmount || 0)}
+                            {disbursement.isProgressivePayment && (
+                              <span className="text-xs theme-text-muted ml-1">
+                                / {formatCurrency(disbursement.reliefAmount)}
+                              </span>
+                            )}
                           </p>
-                          {disbursement.status === 'completed' && (
+                          {disbursement.isProgressivePayment && (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between text-xs theme-text-muted mb-1">
+                                <span>Progress</span>
+                                <span>{disbursement.disbursementProgress || 0}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${disbursement.disbursementProgress || 0}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs theme-text-muted mt-1">
+                                {disbursement.completedInstallments || 0} of {disbursement.totalInstallments || 3} installments
+                              </div>
+                            </div>
+                          )}
+                          {!disbursement.isProgressivePayment && disbursement.status === 'completed' && (
                             <p className="text-xs theme-text-muted">
                               Net: {formatCurrency(disbursement.netAmount)}
                             </p>
@@ -2469,6 +2827,8 @@ const DisbursementsPage: React.FC = () => {
                     console.log('Editing disbursement:', selectedDisbursement, 'Document ID:', docId);
                     setEditingDisbursementId(docId);
                     setIsEditingManual(!!selectedDisbursement.firestoreId);
+                    // Keep selectedDisbursement for progressive payment progress section
+                    setSelectedDisbursement(selectedDisbursement);
                     setManualBeneficiaryId(selectedDisbursement.beneficiaryId || '');
                     setManualApplicationId(selectedDisbursement.applicationId || '');
                     // Fetch applications for this beneficiary

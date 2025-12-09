@@ -33,6 +33,16 @@ interface Disbursement {
   verifiedBy?: string;
   applicationId: string;
   ownerId: string;
+  // Progressive payment fields
+  isProgressivePayment?: boolean;
+  currentInstallment?: number;
+  totalInstallments?: number;
+  installmentAmounts?: number[];
+  installmentPercentages?: number[];
+  completedInstallments?: number;
+  disbursementProgress?: number;
+  nextInstallmentAmount?: number;
+  nextInstallmentPercentage?: number;
   // User editable fields
   userPhone?: string;
   userEmail?: string;
@@ -127,6 +137,15 @@ export default function DisbursementsPage() {
           verifiedBy: data.verifiedBy,
           applicationId: data.applicationId || '',
           ownerId: data.ownerId || '',
+          isProgressivePayment: data.isProgressivePayment || false,
+          currentInstallment: data.currentInstallment,
+          totalInstallments: data.totalInstallments,
+          installmentAmounts: data.installmentAmounts,
+          installmentPercentages: data.installmentPercentages,
+          completedInstallments: data.completedInstallments,
+          disbursementProgress: data.disbursementProgress,
+          nextInstallmentAmount: data.nextInstallmentAmount,
+          nextInstallmentPercentage: data.nextInstallmentPercentage,
           userPhone: data.userPhone || '',
           userEmail: data.userEmail || '',
           userBankAccount: data.userBankAccount || '',
@@ -164,14 +183,27 @@ export default function DisbursementsPage() {
     }
   });
 
-  // Statistics
+  // Statistics - handle progressive payments
   const total = filteredDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
   const completedAmount = filteredDisbursements
     .filter(d => d.status === 'completed')
     .reduce((sum, d) => sum + d.disbursedAmount, 0);
   const pendingAmount = filteredDisbursements
     .filter(d => d.status === 'pending' || d.status === 'processing')
-    .reduce((sum, d) => sum + d.reliefAmount, 0);
+    .reduce((sum, d) => sum + d.netAmount, 0);
+
+  // Calculate progressive payment progress
+  const progressiveDisbursements = filteredDisbursements.filter(d => d.isProgressivePayment);
+  const totalProgressiveAmount = progressiveDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
+  const completedProgressiveAmount = progressiveDisbursements
+    .filter(d => d.status === 'completed')
+    .reduce((sum, d) => sum + d.disbursedAmount, 0);
+  const pendingProgressiveAmount = progressiveDisbursements
+    .filter(d => d.status === 'pending' || d.status === 'processing')
+    .reduce((sum, d) => sum + d.netAmount, 0);
+
+  const progressivePercentageReceived = totalProgressiveAmount > 0 ? Math.round((completedProgressiveAmount / totalProgressiveAmount) * 100) : 0;
+  const progressivePercentagePending = totalProgressiveAmount > 0 ? Math.round((pendingProgressiveAmount / totalProgressiveAmount) * 100) : 0;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -373,6 +405,11 @@ const getStatusColor = (status: string) => {
                     <div className="text-xs theme-text-muted">
                       {t('extracted.completed')}
                     </div>
+                    {progressiveDisbursements.length > 0 && (
+                      <div className="text-xs theme-text-accent mt-1">
+                        {progressivePercentageReceived}% received
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
@@ -382,6 +419,11 @@ const getStatusColor = (status: string) => {
                     <div className="text-xs theme-text-muted">
                       {t('extracted.pending')}
                     </div>
+                    {progressiveDisbursements.length > 0 && (
+                      <div className="text-xs theme-text-accent mt-1">
+                        {progressivePercentagePending}% remaining
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -461,8 +503,34 @@ const getStatusColor = (status: string) => {
                           {t('extracted.amount')}
                         </div>
                         <div className="font-bold text-lg theme-text-primary">
-                          {formatCurrency(selectedDisbursement.reliefAmount)}
+                          {formatCurrency(selectedDisbursement.netAmount)}
+                          {selectedDisbursement.isProgressivePayment && selectedDisbursement.disbursementProgress !== undefined && (
+                            <div className="text-xs theme-text-muted mt-1">
+                              Progress: {selectedDisbursement.disbursementProgress}%
+                            </div>
+                          )}
                         </div>
+                        {selectedDisbursement.isProgressivePayment && (
+                          <div className="mt-3">
+                            <div className="text-xs theme-text-accent mb-2">
+                              Total: {formatCurrency(selectedDisbursement.reliefAmount)}
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                              <div
+                                className="bg-blue-600 dark:bg-blue-500 h-3 rounded-full transition-all duration-300"
+                                style={{ width: `${selectedDisbursement.disbursementProgress || 0}%` }}
+                              ></div>
+                            </div>
+                            <div className="text-xs theme-text-muted mt-2">
+                              {selectedDisbursement.completedInstallments || 0} of {selectedDisbursement.totalInstallments || 3} installments completed
+                            </div>
+                            {selectedDisbursement.nextInstallmentAmount && selectedDisbursement.nextInstallmentPercentage && (
+                              <div className="text-xs theme-text-accent mt-1">
+                                Next: {formatCurrency(selectedDisbursement.nextInstallmentAmount)} ({selectedDisbursement.nextInstallmentPercentage}%)
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -805,9 +873,30 @@ const getStatusColor = (status: string) => {
             }`}
           >
             <div className="font-bold text-xl mb-1">
-              {formatCurrency(disbursement.reliefAmount)}
+              {formatCurrency(disbursement.netAmount)}
+              {disbursement.isProgressivePayment && disbursement.disbursementProgress !== undefined && (
+                <div className={`text-xs mt-1 ${selectedDisbursement?.id === disbursement.id ? 'text-white/70' : 'theme-text-muted'}`}>
+                  Progress: {disbursement.disbursementProgress}%
+                </div>
+              )}
             </div>
-            {disbursement.status === 'completed' && (
+            {disbursement.isProgressivePayment && (
+              <div className="mt-2">
+                <div className={`text-xs mb-1 ${selectedDisbursement?.id === disbursement.id ? 'text-white/80' : 'theme-text-accent'}`}>
+                  Total: {formatCurrency(disbursement.reliefAmount)}
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${disbursement.disbursementProgress || 0}%` }}
+                  ></div>
+                </div>
+                <div className={`text-xs mt-1 ${selectedDisbursement?.id === disbursement.id ? 'text-white/70' : 'theme-text-muted'}`}>
+                  {disbursement.completedInstallments || 0} of {disbursement.totalInstallments || 3} installments completed
+                </div>
+              </div>
+            )}
+            {disbursement.status === 'completed' && !disbursement.isProgressivePayment && (
               <div
                 className={`text-sm font-medium ${
                   selectedDisbursement?.id === disbursement.id

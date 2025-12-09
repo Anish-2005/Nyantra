@@ -7,7 +7,7 @@ import type * as THREE from 'three';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import {
-  Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users, Banknote,
+  Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users,
   DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon,
   Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3, Target,
   Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter, ChevronDown, Mail, X
@@ -1462,7 +1462,7 @@ const AnalyticsPage = () => {
         {[
           { labelKey: 'extracted.total_applications', value: formatNumber(analyticsData.overview.totalApplications), icon: FileText, color: 'from-blue-500 to-cyan-500' },
           { labelKey: 'extracted.beneficiaries', value: formatNumber(analyticsData.overview.totalBeneficiaries), icon: Users, color: 'from-green-500 to-emerald-500' },
-          { labelKey: 'extracted.disbursements', value: formatNumber(analyticsData.overview.totalDisbursements), icon: Banknote, color: 'from-purple-500 to-pink-500' },
+          { labelKey: 'extracted.disbursements', value: formatNumber(analyticsData.overview.totalDisbursements), icon: DollarSign, color: 'from-purple-500 to-pink-500' },
           { labelKey: 'extracted.amount_disbursed', value: formatCurrency(analyticsData.overview.totalAmount), icon: DollarSign, color: 'from-amber-500 to-orange-500' }
         ].map((stat, idx) => (
           <motion.div

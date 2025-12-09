@@ -2685,7 +2685,7 @@ useEffect(() => {
                                 }
                               };
                               
-                              const config = priorityConfig[grievance.priority as keyof typeof priorityConfig];
+                              const config = priorityConfig[grievance.priority as keyof typeof priorityConfig] || priorityConfig.medium;
                               const PriorityIcon = config.icon;
 
                               return (
