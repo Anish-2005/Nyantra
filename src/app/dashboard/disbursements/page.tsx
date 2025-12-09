@@ -2833,7 +2833,7 @@ const DisbursementsPage: React.FC = () => {
                         disabled={!tableInstallmentSelections[disbursement.id]}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleInstallmentDisbursement(disbursement, tableInstallmentSelections[disbursement.id]);
+                          handleInstallmentDisbursement(disbursement, tableInstallmentSelections[disbursement.id]!);
                         }}
                       >
                         Disburse

@@ -184,7 +184,7 @@ export default function DisbursementsPage() {
           }
           
           // Installment completion alert for progressive payments
-          if (disbursement.isProgressivePayment && disbursement.completedInstallments > 0) {
+          if (disbursement.isProgressivePayment && disbursement.completedInstallments && disbursement.completedInstallments > 0) {
             const lastCompletedInstallment = disbursement.completedInstallments;
             const alertId = `installment-${disbursement.id}-${lastCompletedInstallment}`;
             
