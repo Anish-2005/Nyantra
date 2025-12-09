@@ -14,6 +14,7 @@ type NavItem = {
   id: string;
   label: string;
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  notificationCount?: number;
 };
 
 type Props = {
@@ -98,7 +99,12 @@ export default function UserSidebar({
                   }`}
                 >
                   {item.icon ? <item.icon className="w-5 h-5 flex-shrink-0" /> : <span className="w-5 h-5" />}
-                  <span className="font-medium truncate">{item.label}</span>
+                  <span className="font-medium truncate flex-1">{item.label}</span>
+                  {item.notificationCount && item.notificationCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse flex-shrink-0">
+                      {item.notificationCount > 99 ? '99+' : item.notificationCount}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
@@ -186,7 +192,21 @@ export default function UserSidebar({
                   title={collapsed ? item.label : undefined}
                 >
                   {item.icon ? <item.icon className="w-5 h-5 flex-shrink-0" /> : <span className="w-5 h-5" />}
-                  {!collapsed && <span className="font-medium truncate">{item.label}</span>}
+                  {!collapsed && (
+                    <>
+                      <span className="font-medium truncate flex-1">{item.label}</span>
+                      {item.notificationCount && item.notificationCount > 0 && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse flex-shrink-0">
+                          {item.notificationCount > 99 ? '99+' : item.notificationCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {collapsed && item.notificationCount && item.notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                      {item.notificationCount > 9 ? '9+' : item.notificationCount}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}

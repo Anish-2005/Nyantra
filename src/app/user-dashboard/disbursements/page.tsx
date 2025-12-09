@@ -66,6 +66,13 @@ export default function DisbursementsPage() {
   const [selectedDisbursement, setSelectedDisbursement] = useState<Disbursement | null>(null);
   const [timeRange, setTimeRange] = useState<'all' | 'week' | 'month' | 'quarter'>('all');
   const { t } = useLocale();
+  
+  // Alert system for new disbursements/installments
+  const [newDisbursementAlerts, setNewDisbursementAlerts] = useState<any[]>([]);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [lastViewedTimestamp, setLastViewedTimestamp] = useState<string | null>(null);
+  const [emailedAlerts, setEmailedAlerts] = useState<Set<string>>(new Set());
+  const [emailedEvents, setEmailedEvents] = useState<Set<string>>(new Set()); // Track specific disbursement events
 
   // Fetch user's beneficiary first
   useEffect(() => {
@@ -157,12 +164,278 @@ export default function DisbursementsPage() {
           priority: data.priority || 'medium'
         });
       });
+      
+      // Check for new disbursements or installment updates
+      if (lastViewedTimestamp) {
+        const newAlerts: any[] = [];
+        userDisbursements.forEach(disbursement => {
+          const disbursementDate = new Date(disbursement.initiatedDate);
+          const lastViewed = new Date(lastViewedTimestamp);
+          
+          // New disbursement alert
+          if (disbursementDate > lastViewed && !dismissedAlerts.has(`new-${disbursement.id}`)) {
+            newAlerts.push({
+              id: `new-${disbursement.id}`,
+              type: 'new_disbursement',
+              disbursement: disbursement,
+              message: `New disbursement of ${formatCurrency(disbursement.reliefAmount)} has been initiated`,
+              timestamp: disbursement.initiatedDate
+            });
+          }
+          
+          // Installment completion alert for progressive payments
+          if (disbursement.isProgressivePayment && disbursement.completedInstallments > 0) {
+            const lastCompletedInstallment = disbursement.completedInstallments;
+            const alertId = `installment-${disbursement.id}-${lastCompletedInstallment}`;
+            
+            if (!dismissedAlerts.has(alertId)) {
+              const installmentAmount = disbursement.installmentAmounts?.[lastCompletedInstallment - 1] || 
+                                      (disbursement.reliefAmount * (disbursement.installmentPercentages?.[lastCompletedInstallment - 1] || 25) / 100);
+              
+              newAlerts.push({
+                id: alertId,
+                type: 'installment_completed',
+                disbursement: disbursement,
+                message: `Installment ${lastCompletedInstallment} of ${formatCurrency(installmentAmount)} has been disbursed`,
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+          
+          // Status change alerts
+          if (disbursement.status === 'completed' && !dismissedAlerts.has(`completed-${disbursement.id}`)) {
+            newAlerts.push({
+              id: `completed-${disbursement.id}`,
+              type: 'status_completed',
+              disbursement: disbursement,
+              message: `Your disbursement of ${formatCurrency(disbursement.disbursedAmount || disbursement.reliefAmount)} has been completed`,
+              timestamp: disbursement.completedDate || new Date().toISOString()
+            });
+          }
+        });
+        
+        if (newAlerts.length > 0) {
+          setNewDisbursementAlerts(prev => {
+            // Combine new alerts with existing ones, deduplicating by ID
+            const allAlerts = [...newAlerts, ...prev];
+            const uniqueAlerts = allAlerts.filter((alert, index, self) => 
+              index === self.findIndex(a => a.id === alert.id)
+            );
+            // Store alerts in localStorage for sidebar notification
+            if (user?.uid) {
+              const alertsKey = `disbursement_alerts_${user.uid}`;
+              localStorage.setItem(alertsKey, JSON.stringify(uniqueAlerts));
+            }
+            return uniqueAlerts;
+          });
+
+          // Send email notifications for new alerts (with slight delay to avoid spam)
+          newAlerts.forEach((alert, index) => {
+            const beneficiaryEmail = userBeneficiary?.email;
+            if (beneficiaryEmail && beneficiaryEmail.trim() && !emailedAlerts.has(alert.id)) {
+              console.log(`📧 Scheduling email notification for alert: ${alert.type} to ${beneficiaryEmail}`);
+              setTimeout(() => {
+                sendDisbursementNotificationEmail(alert, beneficiaryEmail);
+                setEmailedAlerts(prev => {
+                  const updated = new Set([...prev, alert.id]);
+                  // Save to localStorage
+                  if (user?.uid) {
+                    localStorage.setItem(`disbursements_emailed_${user.uid}`, JSON.stringify([...updated]));
+                  }
+                  return updated;
+                });
+              }, index * 1000); // 1 second delay between emails
+            } else if (emailedAlerts.has(alert.id)) {
+              console.log(`📧 Email already sent for alert: ${alert.id}, skipping`);
+            } else {
+              console.log(`⚠️ No email found for beneficiary, skipping notification for alert: ${alert.type}`);
+            }
+          });
+        }
+      }
+      
       setDisbursements(userDisbursements);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, [userBeneficiary]);
+
+  // Load last viewed timestamp on component mount
+  useEffect(() => {
+    if (user) {
+      const savedTimestamp = localStorage.getItem(`disbursements_last_viewed_${user.uid}`);
+      if (savedTimestamp) {
+        setLastViewedTimestamp(savedTimestamp);
+      }
+      
+      // Load emailed alerts
+      const savedEmailedAlerts = localStorage.getItem(`disbursements_emailed_${user.uid}`);
+      if (savedEmailedAlerts) {
+        try {
+          const emailed = JSON.parse(savedEmailedAlerts);
+          setEmailedAlerts(new Set(emailed));
+        } catch (error) {
+          console.error('Error loading emailed alerts:', error);
+        }
+      }
+      
+      // Load emailed events
+      const savedEmailedEvents = localStorage.getItem(`disbursements_emailed_events_${user.uid}`);
+      if (savedEmailedEvents) {
+        try {
+          const events = JSON.parse(savedEmailedEvents);
+          setEmailedEvents(new Set(events));
+        } catch (error) {
+          console.error('Error loading emailed events:', error);
+        }
+      }
+    }
+  }, [user]);
+
+  // Save last viewed timestamp when component unmounts or user leaves
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user) {
+        localStorage.setItem(`disbursements_last_viewed_${user.uid}`, new Date().toISOString());
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (user) {
+        localStorage.setItem(`disbursements_last_viewed_${user.uid}`, new Date().toISOString());
+      }
+    };
+  }, [user]);
+
+  // Mark page as viewed when user interacts
+  const markPageAsViewed = () => {
+    if (user) {
+      const now = new Date().toISOString();
+      setLastViewedTimestamp(now);
+      localStorage.setItem(`disbursements_last_viewed_${user.uid}`, now);
+      // Clear alerts from localStorage when viewed
+      const alertsKey = `disbursement_alerts_${user.uid}`;
+      localStorage.setItem(alertsKey, JSON.stringify([]));
+    }
+  };
+
+  // Function to dismiss alerts
+  const dismissAlert = (alertId: string) => {
+    setDismissedAlerts(prev => new Set([...prev, alertId]));
+    setNewDisbursementAlerts(prev => {
+      const updatedAlerts = prev.filter(alert => alert.id !== alertId);
+      // Update localStorage
+      if (user?.uid) {
+        const alertsKey = `disbursement_alerts_${user.uid}`;
+        localStorage.setItem(alertsKey, JSON.stringify(updatedAlerts));
+      }
+      return updatedAlerts;
+    });
+  };
+
+  // Function to dismiss all alerts
+  const dismissAllAlerts = () => {
+    const allAlertIds = newDisbursementAlerts.map(alert => alert.id);
+    setDismissedAlerts(prev => new Set([...prev, ...allAlertIds]));
+    setNewDisbursementAlerts([]);
+    // Update localStorage
+    if (user?.uid) {
+      const alertsKey = `disbursement_alerts_${user.uid}`;
+      localStorage.setItem(alertsKey, JSON.stringify([]));
+    }
+  };
+
+  // Function to send disbursement notification email
+  // Automatically sends beautiful HTML emails to beneficiaries when they receive disbursements or installments
+  const sendDisbursementNotificationEmail = async (alert: any, beneficiaryEmail: string) => {
+    if (!beneficiaryEmail) return;
+
+    try {
+      const subject = alert.type === 'new_disbursement' 
+        ? 'New Disbursement Initiated - Nyantra'
+        : alert.type === 'installment_completed'
+        ? 'Installment Payment Received - Nyantra'
+        : 'Payment Completed - Nyantra';
+
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: beneficiaryEmail,
+          subject: subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">Nyantra</h1>
+                <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Direct Benefit Transfer System</p>
+              </div>
+              
+              <div style="background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 4px solid #3b82f6;">
+                <h2 style="color: #1e40af; margin-top: 0;">
+                  ${alert.type === 'new_disbursement' ? 'New Disbursement Initiated' : 
+                    alert.type === 'installment_completed' ? 'Installment Payment Received' : 
+                    'Payment Completed'}
+                </h2>
+                
+                <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+                  ${alert.message}
+                </p>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                  <h3 style="margin-top: 0; color: #1e40af;">Disbursement Details:</h3>
+                  <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 5px 0;"><strong>Transaction ID:</strong> ${alert.disbursement.transactionId}</li>
+                    <li style="padding: 5px 0;"><strong>Amount:</strong> ₹${alert.disbursement.reliefAmount?.toLocaleString('en-IN')}</li>
+                    <li style="padding: 5px 0;"><strong>Status:</strong> ${alert.disbursement.status}</li>
+                    <li style="padding: 5px 0;"><strong>Date:</strong> ${new Date(alert.timestamp).toLocaleDateString('en-IN')}</li>
+                    ${alert.disbursement.actType ? `<li style="padding: 5px 0;"><strong>Act Type:</strong> ${alert.disbursement.actType}</li>` : ''}
+                  </ul>
+                </div>
+                
+                ${alert.type === 'installment_completed' ? `
+                  <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
+                    <p style="margin: 0; color: #065f46; font-weight: 500;">
+                      ✅ Installment ${alert.disbursement.completedInstallments} of ${alert.disbursement.totalInstallments} has been successfully disbursed to your account.
+                    </p>
+                  </div>
+                ` : ''}
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://nyantra.vercel.app'}/user-dashboard/disbursements" 
+                     style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">
+                    View Details
+                  </a>
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p>This is an automated notification from the Nyantra Direct Benefit Transfer System.</p>
+                <p>If you have any questions, please contact your assigned officer or use the grievance system.</p>
+                <p style="margin-top: 10px;">
+                  <a href="${window.location.origin}/user-dashboard/grievance" style="color: #3b82f6; text-decoration: none;">Submit a Grievance</a> | 
+                  <a href="${window.location.origin}/user-dashboard" style="color: #3b82f6; text-decoration: none;">Dashboard</a>
+                </p>
+              </div>
+            </div>
+          `
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send disbursement notification email');
+      } else {
+        console.log('Disbursement notification email sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending disbursement notification email:', error);
+    }
+  };
 
   // Filter disbursements
   const filteredDisbursements = disbursements.filter(disbursement => {
@@ -280,7 +553,11 @@ const getStatusColor = (status: string) => {
   }
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div 
+      data-theme={theme} 
+      className="min-h-screen relative overflow-hidden"
+      onClick={markPageAsViewed}
+    >
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -340,12 +617,91 @@ const getStatusColor = (status: string) => {
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.dashboard')}
               </span>
+              {newDisbursementAlerts.length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 ml-2 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                  {newDisbursementAlerts.length}
+                </span>
+              )}
             </h1>
             <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
               {t('extracted.track_your_payment_disbursements')}
             </p>
           </div>
         </motion.div>
+
+        {/* Disbursement Alerts */}
+        <AnimatePresence>
+          {newDisbursementAlerts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  New Updates
+                </h3>
+                <button
+                  onClick={dismissAllAlerts}
+                  className="text-sm theme-text-muted hover:theme-text-primary transition-colors"
+                >
+                  Dismiss All
+                </button>
+              </div>
+              
+              {newDisbursementAlerts.slice(0, 3).map((alert) => (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="p-4 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-sm shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {alert.type === 'new_disbursement' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        )}
+                        {alert.type === 'installment_completed' && (
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        )}
+                        {alert.type === 'status_completed' && (
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        )}
+                        <span className="text-sm font-medium theme-text-primary">
+                          {alert.type === 'new_disbursement' && 'New Disbursement'}
+                          {alert.type === 'installment_completed' && 'Installment Received'}
+                          {alert.type === 'status_completed' && 'Payment Completed'}
+                        </span>
+                      </div>
+                      <p className="text-sm theme-text-secondary">{alert.message}</p>
+                      <p className="text-xs theme-text-muted mt-1">
+                        {formatDate(alert.timestamp)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => dismissAlert(alert.id)}
+                      className="p-1 rounded-lg hover:theme-bg-glass transition-colors"
+                    >
+                      <X className="w-4 h-4 theme-text-muted" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+              
+              {newDisbursementAlerts.length > 3 && (
+                <div className="text-center">
+                  <span className="text-sm theme-text-muted">
+                    +{newDisbursementAlerts.length - 3} more updates
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

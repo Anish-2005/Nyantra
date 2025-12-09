@@ -27,13 +27,14 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [disbursementAlertCount, setDisbursementAlertCount] = useState(0);
 
   // User-focused navigation: only pages relevant to applicants are included
   const navigationItems = [
     { id: 'overview', label: t('extracted.dashboard'), icon: Home },
     { id: 'applications', label: t('extracted.my_applications'), icon: FileText },
     { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
-    { id: 'disbursements', label: t('extracted.payments'), icon: Wallet },
+    { id: 'disbursements', label: t('extracted.payments'), icon: Wallet, notificationCount: disbursementAlertCount },
     { id: 'reports', label: t('extracted.reports'), icon: FileText },
     { id: 'grievance', label: t('extracted.grievances'), icon: MessageCircle },
     { id: 'feedback', label: t('extracted.feedback'), icon: HelpCircle }
@@ -111,6 +112,47 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
     });
 
     return () => unsubscribe();
+  }, [user?.uid]);
+
+  // Listen for disbursement alert changes
+  useEffect(() => {
+    const updateDisbursementAlerts = () => {
+      if (user?.uid) {
+        try {
+          const alertsKey = `disbursement_alerts_${user.uid}`;
+          const storedAlerts = localStorage.getItem(alertsKey);
+          if (storedAlerts) {
+            const alerts = JSON.parse(storedAlerts);
+            setDisbursementAlertCount(alerts.length || 0);
+          } else {
+            setDisbursementAlertCount(0);
+          }
+        } catch (error) {
+          console.error('Error reading disbursement alerts:', error);
+          setDisbursementAlertCount(0);
+        }
+      }
+    };
+
+    // Initial load
+    updateDisbursementAlerts();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('disbursement_alerts_')) {
+        updateDisbursementAlerts();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check periodically for changes (since localStorage changes in same tab don't trigger storage event)
+    const interval = setInterval(updateDisbursementAlerts, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [user?.uid]);
 
   const handleSidebarChange = (id: string) => {
