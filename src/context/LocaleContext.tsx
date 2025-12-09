@@ -11,7 +11,6 @@ const TRANSLATIONS: Record<Locale, Translations> = {
   en,
   hi,
 };
-
 interface LocaleContextValue {
   locale: Locale;
   setLocale: (l: Locale) => void;
