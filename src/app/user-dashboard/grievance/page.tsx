@@ -661,7 +661,7 @@ export default function GrievancePage() {
                       value={beneficiaryName}
                       onChange={(e) => setBeneficiaryName(e.target.value)}
                       readOnly={!!selectedBeneficiary?.name}
-                      placeholder={t('enterBeneficiaryName')}
+                      placeholder={t('extracted.enterBeneficiaryName')}
                       className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>

@@ -536,6 +536,7 @@
     }
   },
   "extracted": {
+    "enterBeneficiaryName": "Enter beneficiary name",
     "create_beneficiary" : "Create Beneficiary",
     "add_your_beneficiary_details_to_get_started" : "Add your beneficiary details to get started",
     "grievance": "Grievance",
