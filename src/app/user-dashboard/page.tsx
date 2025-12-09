@@ -468,7 +468,7 @@ export default function UserDashboard() {
                       {t('extracted.your_applications_will_appear_here') || 'Your applications will appear here once submitted'}
                     </p>
                     <button
-                      onClick={() => router.push('/user-dashboard?tab=form')}
+                      onClick={() => router.push('/user-dashboard/applications')}
                       className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm underline"
                     >
                       {t('extracted.create_your_first_application') || 'Create your first application'}

@@ -530,6 +530,7 @@
     }
   },
   "extracted": {
+    "enterBeneficiaryName": "लाभार्थी का नाम दर्ज करें",
     "create_beneficiary": "लाभार्थी बनाएं",
     "add_your_beneficiary_details_to_get_started": "अपना लाभार्थी विवरण जोड़ें ताकि आप शुरू कर सकें",
     "grievance": "शिकायत",
