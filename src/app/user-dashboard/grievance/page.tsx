@@ -314,8 +314,8 @@ export default function GrievancePage() {
         setIsRecording(false);
       };
 
-      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
+      recognitionInstance.onerror = (event: Event) => {
+        console.error('Speech recognition error:', event);
         setIsRecording(false);
       };
 

@@ -17,11 +17,6 @@ declare global {
     readonly resultIndex: number;
   }
 
-  interface SpeechRecognitionErrorEvent extends Event {
-    readonly error: SpeechRecognitionErrorCode;
-    readonly message: string;
-  }
-
   interface SpeechRecognition extends EventTarget {
     continuous: boolean;
     interimResults: boolean;
@@ -32,7 +27,7 @@ declare global {
     onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
     onend: ((this: SpeechRecognition, ev: Event) => any) | null;
     onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+    onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
   }
 
   const SpeechRecognition: {
@@ -542,8 +537,8 @@ const GrievancePage = () => {
         setIsRecording(false);
       };
 
-      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
+      recognitionInstance.onerror = (event: Event) => {
+        console.error('Speech recognition error:', event);
         setIsRecording(false);
       };
 
