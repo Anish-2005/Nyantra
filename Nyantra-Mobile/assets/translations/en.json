@@ -20,7 +20,8 @@
   "common": {
     "loading": "Loading...",
     "required": "Required",
-    "status": "Status"
+    "status": "Status",
+    "na": "N/A"
   },
   "hero": {
     "badge": "Smart DBT Solution for Social Justice",
@@ -623,7 +624,19 @@
     "unknownApplicant": "Unknown Applicant",
     "idLabel": "ID:",
     "pending": "Pending",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "aadhaarNumber": "Aadhaar Number",
+    "amount": "Amount",
+    "applicantName": "Applicant Name",
+    "contactInformation": "Contact Information",
+    "contactNumber": "Contact Number",
+    "female": "Female",
+    "incidentDetails": "Incident Details",
+    "male": "Male",
+    "offenceCategory": "Offence Category",
+    "offenceType": "Offence Type",
+    "other": "Other",
+    "priority": "Priority"
   },
   "reports": {
     "pageTitle": "Reports",
@@ -672,7 +685,7 @@
     "daily": "Daily",
     "once": "Once",
     "quarterly": "Quarterly",
-     "generation_info": "Generation Info",
+    "generation_info": "Generation Info",
     "statistics": "Statistics",
     "no_description_available": "No description available.",
     "download_report": "Download Report",
@@ -3665,6 +3678,4 @@
     "changeLanguage": "Change Language",
     "signOut": "Sign Out"
   }
-
- 
 }

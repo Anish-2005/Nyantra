@@ -60,6 +60,9 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
       text: widget.beneficiary.scStCertificate,
     );
     _selectedGender = widget.beneficiary.gender ?? 'M';
+    // Normalize gender values to match dropdown options
+    if (_selectedGender == 'Male') _selectedGender = 'M';
+    if (_selectedGender == 'Female') _selectedGender = 'F';
     _selectedCategory = widget.beneficiary.category ?? 'SC';
     _selectedMaritalStatus = widget.beneficiary.maritalStatus ?? 'Single';
   }
@@ -382,7 +385,14 @@ class _BeneficiaryEditPageState extends State<BeneficiaryEditPage> {
         }
       },
       items: ['M', 'F'].map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(value: value, child: Text(value));
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value == 'M'
+                ? locale.translate('applications.male')
+                : locale.translate('applications.female'),
+          ),
+        );
       }).toList(),
       decoration: InputDecoration(
         labelText: label,

@@ -10,7 +10,7 @@
     "toggleTheme": "थीम बदलें",
     "dashboard": "डैशबोर्ड",
     "dashboardTitle": "न्यंत्र एप्लिकेशन डैशबोर्ड",
-    "reports":"रिपोर्ट",
+    "reports": "रिपोर्ट",
     "applications": "आवेदन",
     "beneficiaries": "लाभार्थी",
     "disbursements": "वितरण",
@@ -20,6 +20,7 @@
   "common": {
     "loading": "लोड हो रहा है...",
     "required": "आवश्यक",
+    "na": "N/A",
     "status": "स्थिति"
   },
   "hero": {
@@ -483,6 +484,7 @@
     "common": {
       "loading": "लोड हो रहा है...",
       "viewFull": "पूर्ण देखें",
+      "save": "सहेजें",
       "exploreTab": "{{tab}} का अन्वेषण करें",
       "tabManagement": "{{tab}} प्रबंधन",
       "tabManagementDescription": "{{tab}} प्रबंधन इंटरफेस जिसमें विस्तृत तालिकाएं, फॉर्म और विश्लेषण हैं।",
@@ -612,7 +614,19 @@
     "unknownApplicant": "अज्ञात आवेदक",
     "idLabel": "आईडी:",
     "pending": "लंबित",
-    "rejected": "अस्वीकृत"
+    "rejected": "अस्वीकृत",
+    "aadhaarNumber": "आधार संख्या",
+    "amount": "राशि",
+    "applicantName": "आवेदक का नाम",
+    "contactInformation": "संपर्क जानकारी",
+    "contactNumber": "संपर्क नंबर",
+    "female": "महिला",
+    "incidentDetails": "घटना विवरण",
+    "male": "पुरुष",
+    "offenceCategory": "अपराध श्रेणी",
+    "offenceType": "अपराध प्रकार",
+    "other": "अन्य",
+    "priority": "प्राथमिकता"
   },
   "reports": {
     "pageTitle": "रिपोर्ट",
@@ -697,7 +711,6 @@
     "maritalStatus": "वैवाहिक स्थिति",
     "bankAccount": "बैंक खाता",
     "ifscCode": "IFSC कोड",
-    
     "sc_st_certificate": "एससी/एसटी प्रमाणपत्र URL",
     "cannotOpenUrl": "URL खोला नहीं जा सकता",
     "viewCertificate": "प्रमाणपत्र देखें"
