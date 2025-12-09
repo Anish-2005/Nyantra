@@ -1,79 +1,273 @@
-# Nyantra — DBT Portal for Social Justice (Enhanced README)
+# Nyantra — Disaster Relief Management System
 
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
   <img src="/Logo-Light.png" alt="Nyantra" width="64" height="64" style="border-radius:8px;object-fit:cover;background:#fff;padding:6px"/>
   <div>
     <h1 style="margin:0">Nyantra</h1>
-    <p style="margin:4px 0 0;color:#6b7280;max-width:60ch">A demo portal built with Next.js + TypeScript — models applicant flows, disbursements, beneficiaries and a feedback/grievance system. Built to be fully localisable (English + हिन्दी), accessible, and responsive.</p>
+    <p style="margin:4px 0 0;color:#6b7280;max-width:60ch">A comprehensive disaster relief management platform with web and mobile applications for efficient beneficiary management, application processing, and fund disbursement tracking.</p>
   </div>
 </div>
 
 ---
 
-## Live snapshot
+## 🌟 Overview
 
-<div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0">
-  <div style="flex:1;min-width:280px;padding:14px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 30px rgba(2,6,23,0.06)">
-    <h3 style="margin:0 0 8px 0">Primary features</h3>
-    <ul>
-      <li>Applicant dashboard: applications, beneficiaries, disbursements, grievance & feedback.</li>
-      <li>Officer dashboard: analytics, integrations and reports.</li>
-      <li>Lightweight in-repo i18n (JSON) with a global Language Toggle (EN / हिंदी).</li>
-      <li>Theme-aware UI, accessible controls, and compact toggle shown above logout when sidebars are collapsed.</li>
-    </ul>
-  </div>
-  <div style="width:320px;padding:12px;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(2,6,23,0.04)">
-    <h4 style="margin:0 0 8px 0">Run locally</h4>
-    <pre style="background:#0f172a;color:#fff;padding:8px;border-radius:8px;margin:0">npm install
-npm run dev</pre>
-    <small style="color:#6b7280">Open <code>http://localhost:3000</code></small>
-  </div>
-</div>
+Nyantra is a dual-platform solution designed to streamline disaster relief operations under schemes like the Prime Minister's Citizen Assistance and Relief in Emergency Situations (PM-CARES) Fund. The system provides:
+
+- **Web Portal**: Administrative dashboard for officers to manage applications, beneficiaries, disbursements, and analytics
+- **Mobile App**: User-friendly interface for beneficiaries to submit applications, track status, and receive updates
+- **Real-time Tracking**: End-to-end monitoring of relief fund distribution with progressive payment support
+- **Multi-language Support**: English and Hindi localization
+- **Accessibility**: WCAG-compliant design with keyboard navigation and screen reader support
 
 ---
 
-## Quick start table
+## 🚀 Features
 
-<table>
-<thead><tr><th>Command</th><th>Action</th></tr></thead>
-<tbody>
-<tr><td><code>npm install</code></td><td>Install dependencies</td></tr>
-<tr><td><code>npm run dev</code></td><td>Start development server (open <code>/</code>)</td></tr>
-<tr><td><code>npm run build</code></td><td>Create a production build</td></tr>
-<tr><td><code>npm start</code></td><td>Run production server</td></tr>
-<tr><td><code>npm run lint</code></td><td>ESLint checks</td></tr>
-</tbody>
-</table>
+### Web Portal (Admin Dashboard)
+- **Beneficiary Management**: Register and manage disaster-affected individuals
+- **Application Processing**: Review and approve relief applications
+- **Disbursement Tracking**: Monitor fund distribution with progressive payment support
+- **Analytics & Reports**: Comprehensive dashboards with real-time statistics
+- **Grievance Management**: Handle feedback and complaints
+- **Multi-language Interface**: English/Hindi toggle with persistent preferences
 
----
+### Mobile Application
+- **Application Submission**: Easy form-based relief application process
+- **Status Tracking**: Real-time updates on application and disbursement status
+- **Document Upload**: Secure submission of supporting documents
+- **Offline Capability**: Basic functionality without internet connection
+- **Push Notifications**: Updates on application progress
 
-## Project layout (high level)
-
-<table>
-<thead><tr><th>Path</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td><code>src/app/</code></td><td>Pages and layouts (Next.js App Router)</td></tr>
-<tr><td><code>src/components/</code></td><td>UI components (Sidebar, UserSidebar, LanguageToggle, charts)</td></tr>
-<tr><td><code>src/context/</code></td><td>Providers (Auth, Theme, Locale)</td></tr>
-<tr><td><code>src/locales/</code></td><td>Translation JSONs</td></tr>
-<tr><td><code>src/lib/</code></td><td>Utility wrappers (firebase init)</td></tr>
-</tbody>
-</table>
+### Core Functionality
+- **Progressive Payments**: Support for installment-based disbursements (25%, 50%, 25% model)
+- **Real-time Synchronization**: Firebase-powered data sync between web and mobile
+- **Secure Authentication**: Firebase Auth with role-based access
+- **Audit Trail**: Complete transaction history and user activity logs
+- **Export Capabilities**: PDF reports and CSV data exports
 
 ---
 
-## UX & Accessibility notes
+## 🛠 Tech Stack
 
-- Language toggle: visible in header and sidebars; in collapsed sidebars a compact vertical toggle sits above the logout button.
-- Accessibility: aria-friendly toggles, keyboard navigable controls and visible focus states.
-- Design: theme-aware CSS variables, subtle gradients and glassmorphism cards.
+### Web Application
+- **Framework**: Next.js 14+ with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with custom theme variables
+- **State Management**: React Context API
+- **Backend**: Firebase (Firestore, Auth, Storage)
+- **Animations**: Framer Motion
+- **Charts**: Chart.js with date adapters
+
+### Mobile Application
+- **Framework**: Flutter
+- **Language**: Dart
+- **State Management**: Provider pattern
+- **Backend**: Firebase (same as web)
+- **Local Storage**: Shared Preferences
+- **PDF Generation**: pdf package
+- **Speech Recognition**: speech_to_text plugin
+
+### Shared Infrastructure
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **File Storage**: Firebase Storage / Cloudinary
+- **Email Service**: Gmail SMTP
+- **Deployment**: Docker-ready
 
 ---
 
-## Docker (optional)
+## 📁 Project Structure
 
-```powershell
-docker build -t nyantara:latest .
-docker run -p 3000:3000 nyantara:latest
 ```
+nyantara/
+├── src/                          # Web Application (Next.js)
+│   ├── app/                      # Next.js App Router pages
+│   │   ├── dashboard/            # Admin dashboard pages
+│   │   ├── user-dashboard/       # Beneficiary dashboard pages
+│   │   └── api/                  # API routes
+│   ├── components/               # Reusable UI components
+│   ├── context/                  # React contexts (Auth, Theme, Locale)
+│   ├── lib/                      # Utilities and Firebase config
+│   ├── locales/                  # Translation files (en.json, hi.json)
+│   └── types/                    # TypeScript type definitions
+├── Nyantra-Mobile/               # Flutter Mobile Application
+│   ├── lib/                      # Dart source code
+│   │   ├── src/                  # Feature modules
+│   │   └── main.dart             # App entry point
+│   ├── android/                  # Android-specific files
+│   ├── ios/                      # iOS-specific files
+│   └── pubspec.yaml              # Flutter dependencies
+├── i18n/                         # Internationalization utilities
+├── scripts/                      # Build and utility scripts
+├── public/                       # Static assets
+└── firebase.json                 # Firebase configuration
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Flutter SDK 3.0+
+- Firebase project with Firestore enabled
+- Android Studio (for mobile development)
+
+### Web Application Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env.local
+# Edit .env.local with your Firebase credentials
+
+# Start development server
+npm run dev
+
+# Open http://localhost:3000
+```
+
+### Mobile Application Setup
+
+```bash
+# Navigate to mobile app directory
+cd Nyantra-Mobile
+
+# Install Flutter dependencies
+flutter pub get
+
+# Configure Firebase (add google-services.json for Android)
+# Follow Firebase Flutter setup guide
+
+# Run on connected device/emulator
+flutter run
+```
+
+### Environment Configuration
+
+Create `.env.local` in the root directory:
+
+```env
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# Additional Services
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_URL=your_cloudinary_url
+GMAIL_USER=your_email@gmail.com
+GMAIL_APP_PASSWORD=your_app_password
+```
+
+---
+
+## 📊 Available Scripts
+
+### Web Application
+```bash
+npm run dev          # Start development server
+npm run build        # Create production build
+npm run start        # Run production server
+npm run lint         # Run ESLint
+npm run i18n:extract # Extract translation keys
+npm run i18n:replace # Update translations
+```
+
+### Mobile Application
+```bash
+flutter pub get      # Install dependencies
+flutter run          # Run on device/emulator
+flutter build apk    # Build Android APK
+flutter build ios    # Build iOS app
+```
+
+---
+
+## 🎨 Design System
+
+- **Themes**: Light/Dark mode with CSS custom properties
+- **Typography**: System fonts with fallbacks
+- **Color Palette**: Accessible color combinations
+- **Components**: Glassmorphism effects and smooth animations
+- **Responsive**: Mobile-first design with breakpoint system
+
+---
+
+## 🌐 Internationalization
+
+- **Languages**: English (en) and Hindi (hi)
+- **Implementation**: JSON-based translations with React Context
+- **Coverage**: Complete UI translation with RTL support ready
+- **Management**: Automated scripts for key extraction and validation
+
+---
+
+## 🔒 Security & Privacy
+
+- **Authentication**: Firebase Auth with email/password and Google sign-in
+- **Authorization**: Role-based access control (Admin/User)
+- **Data Encryption**: Firebase's built-in encryption at rest
+- **API Security**: Server-side validation and input sanitization
+- **Privacy**: GDPR-compliant data handling practices
+
+---
+
+## 📈 Performance
+
+- **Web Vitals**: Optimized for Core Web Vitals
+- **Bundle Size**: Tree-shaken imports and lazy loading
+- **Caching**: Intelligent caching strategies
+- **Mobile**: Optimized for low-bandwidth environments
+- **PWA Ready**: Service worker and offline capabilities
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow TypeScript strict mode
+- Use ESLint and Prettier for code formatting
+- Write tests for new features
+- Update documentation for API changes
+- Ensure accessibility compliance
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Built for disaster relief management under PM-CARES initiatives
+- Inspired by real-world humanitarian aid workflows
+- Thanks to the open-source community for the amazing tools and libraries
+
+---
+
+## 📞 Support
+
+For support and questions:
+- Create an issue in this repository
+- Contact the development team
+- Check the documentation in `/docs` folder
+
+---
+
+*Built with ❤️ for efficient disaster relief operations*
 
