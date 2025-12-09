@@ -66,6 +66,9 @@ dependencies:
   speech_to_text: ^7.0.0
   permission_handler: ^11.3.1
 
+  # Email functionality
+  http: ^1.2.1
+
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
