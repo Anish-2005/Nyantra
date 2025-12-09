@@ -186,24 +186,21 @@ export default function DisbursementsPage() {
   // Statistics - handle progressive payments
   const total = filteredDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
   const completedAmount = filteredDisbursements
-    .filter(d => d.status === 'completed')
+    .filter(d => d.status === 'completed' || (d.isProgressivePayment && d.disbursedAmount > 0))
     .reduce((sum, d) => sum + d.disbursedAmount, 0);
   const pendingAmount = filteredDisbursements
     .filter(d => d.status === 'pending' || d.status === 'processing')
-    .reduce((sum, d) => sum + d.netAmount, 0);
+    .reduce((sum, d) => sum + (d.isProgressivePayment ? Math.max(0, d.reliefAmount - (d.disbursedAmount || 0)) : d.netAmount), 0);
 
   // Calculate progressive payment progress
   const progressiveDisbursements = filteredDisbursements.filter(d => d.isProgressivePayment);
   const totalProgressiveAmount = progressiveDisbursements.reduce((sum, d) => sum + d.reliefAmount, 0);
   const completedProgressiveAmount = progressiveDisbursements
-    .filter(d => d.status === 'completed')
-    .reduce((sum, d) => sum + d.disbursedAmount, 0);
+    .reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
   const pendingProgressiveAmount = progressiveDisbursements
-    .filter(d => d.status === 'pending' || d.status === 'processing')
-    .reduce((sum, d) => sum + d.netAmount, 0);
+    .reduce((sum, d) => sum + Math.max(0, d.reliefAmount - (d.disbursedAmount || 0)), 0);
 
-  const progressivePercentageReceived = totalProgressiveAmount > 0 ? Math.round((completedProgressiveAmount / totalProgressiveAmount) * 100) : 0;
-  const progressivePercentagePending = totalProgressiveAmount > 0 ? Math.round((pendingProgressiveAmount / totalProgressiveAmount) * 100) : 0;
+  const overallCompletionPercentage = total > 0 ? Math.round((completedAmount / total) * 100) : 0;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -405,11 +402,9 @@ const getStatusColor = (status: string) => {
                     <div className="text-xs theme-text-muted">
                       {t('extracted.completed')}
                     </div>
-                    {progressiveDisbursements.length > 0 && (
-                      <div className="text-xs theme-text-accent mt-1">
-                        {progressivePercentageReceived}% received
-                      </div>
-                    )}
+                    <div className="text-xs theme-text-accent mt-1">
+                      {overallCompletionPercentage}% received
+                    </div>
                   </div>
 
                   <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass text-center">
@@ -419,11 +414,9 @@ const getStatusColor = (status: string) => {
                     <div className="text-xs theme-text-muted">
                       {t('extracted.pending')}
                     </div>
-                    {progressiveDisbursements.length > 0 && (
-                      <div className="text-xs theme-text-accent mt-1">
-                        {progressivePercentagePending}% remaining
-                      </div>
-                    )}
+                    <div className="text-xs theme-text-accent mt-1">
+                      {100 - overallCompletionPercentage}% remaining
+                    </div>
                   </div>
                 </div>
 
@@ -503,17 +496,20 @@ const getStatusColor = (status: string) => {
                           {t('extracted.amount')}
                         </div>
                         <div className="font-bold text-lg theme-text-primary">
-                          {formatCurrency(selectedDisbursement.netAmount)}
+                          {selectedDisbursement.isProgressivePayment 
+                            ? formatCurrency(selectedDisbursement.disbursedAmount || 0)
+                            : formatCurrency(selectedDisbursement.netAmount)
+                          }
                           {selectedDisbursement.isProgressivePayment && selectedDisbursement.disbursementProgress !== undefined && (
                             <div className="text-xs theme-text-muted mt-1">
-                              Progress: {selectedDisbursement.disbursementProgress}%
+                              / {formatCurrency(selectedDisbursement.reliefAmount)}
                             </div>
                           )}
                         </div>
                         {selectedDisbursement.isProgressivePayment && (
                           <div className="mt-3">
                             <div className="text-xs theme-text-accent mb-2">
-                              Total: {formatCurrency(selectedDisbursement.reliefAmount)}
+                              Progress: {selectedDisbursement.disbursementProgress?.toFixed(2)}%
                             </div>
                             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                               <div
@@ -873,17 +869,17 @@ const getStatusColor = (status: string) => {
             }`}
           >
             <div className="font-bold text-xl mb-1">
-              {formatCurrency(disbursement.netAmount)}
+              {formatCurrency(disbursement.disbursedAmount || 0)}
               {disbursement.isProgressivePayment && disbursement.disbursementProgress !== undefined && (
                 <div className={`text-xs mt-1 ${selectedDisbursement?.id === disbursement.id ? 'text-white/70' : 'theme-text-muted'}`}>
-                  Progress: {disbursement.disbursementProgress}%
+                  / {formatCurrency(disbursement.reliefAmount)}
                 </div>
               )}
             </div>
             {disbursement.isProgressivePayment && (
               <div className="mt-2">
                 <div className={`text-xs mb-1 ${selectedDisbursement?.id === disbursement.id ? 'text-white/80' : 'theme-text-accent'}`}>
-                  Total: {formatCurrency(disbursement.reliefAmount)}
+                  Progress: {disbursement.disbursementProgress?.toFixed(2)}%
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div

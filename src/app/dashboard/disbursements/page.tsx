@@ -41,6 +41,8 @@ const DisbursementsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [selectedInstallment, setSelectedInstallment] = useState<number | null>(null);
+  const [tableInstallmentSelections, setTableInstallmentSelections] = useState<Record<string, number | null>>({});
 
   // Edit disbursement form states
   const [editingDisbursementId, setEditingDisbursementId] = useState<string | null>(null);
@@ -1551,7 +1553,8 @@ const DisbursementsPage: React.FC = () => {
         {/* Progressive Payment Progress Section */}
         {editingDisbursementId &&
           selectedDisbursement &&
-          selectedDisbursement.isProgressivePayment && (
+          (selectedDisbursement.isProgressivePayment ||
+            selectedDisbursement.actType?.toLowerCase().includes('poa')) && (
             <div className="mt-6 p-4 rounded-lg theme-bg-glass theme-border-glass border">
               <h3 className="text-lg font-semibold theme-text-primary mb-4">
                 {t('extracted.progressive_payment_progress') ||
@@ -1564,7 +1567,7 @@ const DisbursementsPage: React.FC = () => {
                     {t('extracted.current_progress') || 'Current Progress'}
                   </div>
                   <div className="text-2xl font-bold theme-text-primary">
-                    {selectedDisbursement.disbursementProgress || 0}%
+                    {selectedDisbursement.disbursementProgress?.toFixed(2)}%
                   </div>
                 </div>
 
@@ -1613,6 +1616,22 @@ const DisbursementsPage: React.FC = () => {
                 </div>
               </div>
 
+              <div className="mb-4">
+                <label className="block text-sm font-medium theme-text-primary mb-2">
+                  Select Installment to Disburse
+                </label>
+                <select
+                  value={selectedInstallment || ''}
+                  onChange={(e) => setSelectedInstallment(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                >
+                  <option value="">Select Installment</option>
+                  <option value="1">Installment 1 (25%)</option>
+                  <option value="2">Installment 2 (50%)</option>
+                  <option value="3">Installment 3 (25%)</option>
+                </select>
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={async () => {
@@ -1627,22 +1646,24 @@ const DisbursementsPage: React.FC = () => {
                       );
                       return;
                     }
+                    if (!selectedInstallment) {
+                      alert('Please select an installment to disburse.');
+                      return;
+                    }
                     if (editingDisbursementId) {
-                      const currentCompleted =
-                        selectedDisbursement.completedInstallments || 0;
                       let nextAmount = 0;
                       let nextPercentage = 0;
-                      if (currentCompleted === 0) {
+                      if (selectedInstallment === 1) {
                         nextAmount = Math.round(
                           selectedDisbursement.reliefAmount * 0.25
                         );
                         nextPercentage = 25;
-                      } else if (currentCompleted === 1) {
+                      } else if (selectedInstallment === 2) {
                         nextAmount = Math.round(
                           selectedDisbursement.reliefAmount * 0.5
                         );
                         nextPercentage = 50;
-                      } else if (currentCompleted === 2) {
+                      } else if (selectedInstallment === 3) {
                         nextAmount = Math.round(
                           selectedDisbursement.reliefAmount * 0.25
                         );
@@ -1650,10 +1671,11 @@ const DisbursementsPage: React.FC = () => {
                       }
                       const newDisbursedAmount =
                         (selectedDisbursement.disbursedAmount || 0) + nextAmount;
-                      const newCompleted = currentCompleted + 1;
-                      const newProgress =
-                        (selectedDisbursement.disbursementProgress || 0) +
-                        nextPercentage;
+                      const newCompleted = Math.max(
+                        selectedDisbursement.completedInstallments || 0,
+                        selectedInstallment
+                      );
+                      const newProgress = (newDisbursedAmount / selectedDisbursement.reliefAmount) * 100;
                       const updateData: any = {
                         disbursedAmount: newDisbursedAmount,
                         completedInstallments: newCompleted,
@@ -1689,23 +1711,21 @@ const DisbursementsPage: React.FC = () => {
                       if (updatedDisbursement) {
                         setSelectedDisbursement(updatedDisbursement);
                       }
+                      setSelectedInstallment(null); // Reset selection after disbursement
                     }
                   }}
                   disabled={
                     (selectedDisbursement.completedInstallments || 0) >= 3 ||
+                    !selectedInstallment ||
                     !manualTransactionId.trim() ||
                     !manualUtrNumber.trim() ||
                     !manualPaymentMethod
                   }
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
                 >
-                  {(selectedDisbursement.completedInstallments || 0) === 0
-                    ? 'Disburse 25%'
-                    : (selectedDisbursement.completedInstallments || 0) === 1
-                    ? 'Disburse 75%'
-                    : (selectedDisbursement.completedInstallments || 0) === 2
-                    ? 'Disburse 100%'
-                    : 'Completed'}
+                  {selectedInstallment
+                    ? `Disburse Installment ${selectedInstallment}`
+                    : 'Select Installment'}
                 </button>
 
                 <button
@@ -2383,6 +2403,9 @@ const DisbursementsPage: React.FC = () => {
                     <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
                       {t('extracted.amount')}{' '}
                     </th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">
+                      Installments
+                    </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">
                       {t('extracted.status')}{' '}
                     </th>
@@ -2454,7 +2477,7 @@ const DisbursementsPage: React.FC = () => {
                             <div className="mt-2">
                               <div className="flex items-center justify-between text-xs theme-text-muted mb-1">
                                 <span>Progress</span>
-                                <span>{disbursement.disbursementProgress || 0}%</span>
+                                <span>{disbursement.disbursementProgress?.toFixed(2)}%</span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
@@ -2473,6 +2496,93 @@ const DisbursementsPage: React.FC = () => {
                             </p>
                           )}
                         </div>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        {disbursement.actType?.toLowerCase().includes('poa') ? (
+                          <div className="flex flex-col gap-2">
+                            <select
+                              value={tableInstallmentSelections[disbursement.id] || ''}
+                              className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                              onChange={(e) => {
+                                const value = e.target.value ? parseInt(e.target.value) : null;
+                                setTableInstallmentSelections(prev => ({
+                                  ...prev,
+                                  [disbursement.id]: value
+                                }));
+                              }}
+                            >
+                              <option value="">Select</option>
+                              <option value="1">Inst 1 (25%)</option>
+                              <option value="2">Inst 2 (50%)</option>
+                              <option value="3">Inst 3 (25%)</option>
+                            </select>
+                            <button
+                              className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
+                              disabled={!tableInstallmentSelections[disbursement.id]}
+                              onClick={async () => {
+                                const selectedInst = tableInstallmentSelections[disbursement.id];
+                                if (!selectedInst) return;
+
+                                // Check if required fields are set
+                                if (!disbursement.transactionId || !disbursement.utrNumber || !disbursement.paymentMethod) {
+                                  alert('Please edit this disbursement first to set Transaction ID, UTR Number, and Payment Method.');
+                                  return;
+                                }
+
+                                // Calculate amount
+                                let nextAmount = 0;
+                                if (selectedInst === 1) {
+                                  nextAmount = Math.round(disbursement.reliefAmount * 0.25);
+                                } else if (selectedInst === 2) {
+                                  nextAmount = Math.round(disbursement.reliefAmount * 0.5);
+                                } else if (selectedInst === 3) {
+                                  nextAmount = Math.round(disbursement.reliefAmount * 0.25);
+                                }
+
+                                const newDisbursedAmount = (disbursement.disbursedAmount || 0) + nextAmount;
+                                const newCompleted = Math.max(disbursement.completedInstallments || 0, selectedInst);
+                                const newProgress = (newDisbursedAmount / disbursement.reliefAmount) * 100;
+
+                                const updateData: any = {
+                                  disbursedAmount: newDisbursedAmount,
+                                  completedInstallments: newCompleted,
+                                  disbursementProgress: newProgress,
+                                  currentInstallment: newCompleted + 1,
+                                  lastUpdated: new Date().toISOString(),
+                                };
+
+                                if (newCompleted < 3) {
+                                  updateData.nextInstallmentAmount = newCompleted === 1
+                                    ? Math.round(disbursement.reliefAmount * 0.5)
+                                    : Math.round(disbursement.reliefAmount * 0.25);
+                                  updateData.nextInstallmentPercentage = newCompleted === 1 ? 50 : 25;
+                                }
+
+                                if (newCompleted === 3) {
+                                  updateData.status = 'completed';
+                                  updateData.nextInstallmentAmount = null;
+                                  updateData.nextInstallmentPercentage = null;
+                                }
+
+                                const disbursementRef = doc(db, 'disbursements', disbursement.firestoreId || disbursement.id);
+                                await updateDoc(disbursementRef, updateData);
+
+                                // Clear selection
+                                setTableInstallmentSelections(prev => ({
+                                  ...prev,
+                                  [disbursement.id]: null
+                                }));
+
+                                // Refresh data
+                                // The listener should update automatically
+                              }}
+                            >
+                              Disburse
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs theme-text-muted">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span

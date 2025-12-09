@@ -63,7 +63,7 @@ dependencies:
   printing: ^5.13.3
 
   # Speech Recognition
-  speech_to_text: ^6.6.1
+  speech_to_text: ^7.0.0
 
   cupertino_icons: ^1.0.8
 
