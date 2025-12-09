@@ -1026,6 +1026,48 @@ const DisbursementsPage: React.FC = () => {
     }
   };
 
+  const handleInstallmentDisbursement = async (disbursement: any, installmentNumber: number) => {
+    if (!installmentNumber) return;
+
+    try {
+      const disbursementRef = doc(db, 'disbursements', disbursement.firestoreId || disbursement.id);
+      const totalInstallments = disbursement.totalInstallments || 3;
+      const installmentPercentages = disbursement.installmentPercentages || [25, 50, 25];
+      
+      // Calculate the amount for this installment
+      const installmentPercentage = installmentPercentages[installmentNumber - 1] || 25;
+      const installmentAmount = (disbursement.reliefAmount * installmentPercentage) / 100;
+      
+      // Update the disbursement with new progress
+      const newCompletedInstallments = Math.min(disbursement.completedInstallments + 1, totalInstallments);
+      const newProgress = Math.min((newCompletedInstallments / totalInstallments) * 100, 100);
+      const newDisbursedAmount = (disbursement.disbursedAmount || 0) + installmentAmount;
+      
+      const updateData = {
+        completedInstallments: newCompletedInstallments,
+        disbursementProgress: Math.round(newProgress),
+        disbursedAmount: newDisbursedAmount,
+        status: newCompletedInstallments >= totalInstallments ? 'completed' : 'pending',
+        lastUpdated: new Date().toISOString(),
+        [`installment${installmentNumber}Date`]: new Date().toISOString(),
+        [`installment${installmentNumber}Amount`]: installmentAmount,
+      };
+      
+      await updateDoc(disbursementRef, updateData);
+      
+      // Clear the selection
+      setTableInstallmentSelections(prev => ({
+        ...prev,
+        [disbursement.id]: null
+      }));
+      
+      alert(`Installment ${installmentNumber} disbursed successfully!`);
+    } catch (error) {
+      console.error('Error disbursing installment:', error);
+      alert('Failed to disburse installment. Please try again.');
+    }
+  };
+
   const handleManualSubmit = async () => {
     if (!manualBeneficiaryId.trim() || !manualApplicationId.trim()) {
       alert(t('extracted.beneficiary_and_application_required'));
@@ -2727,9 +2769,29 @@ const DisbursementsPage: React.FC = () => {
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <DollarSign className="w-4 h-4" />
                     <span className="font-semibold">
-                      {formatCurrency(disbursement.reliefAmount)}
+                      {disbursement.isProgressivePayment
+                        ? `${formatCurrency(disbursement.disbursedAmount || 0)} / ${formatCurrency(disbursement.reliefAmount)}`
+                        : formatCurrency(disbursement.reliefAmount)
+                      }
                     </span>
                   </div>
+                  {disbursement.isProgressivePayment && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between text-xs theme-text-muted mb-1">
+                        <span>Progress</span>
+                        <span>{disbursement.disbursementProgress?.toFixed(2)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${disbursement.disbursementProgress || 0}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-xs theme-text-muted mt-1">
+                        {disbursement.completedInstallments || 0} of {disbursement.totalInstallments || 3} installments
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-sm theme-text-secondary">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(disbursement.initiatedDate)}</span>
@@ -2748,6 +2810,36 @@ const DisbursementsPage: React.FC = () => {
                     })()}
                     {disbursement.status.replace('-', ' ')}
                   </span>
+                  {disbursement.actType?.toLowerCase().includes('poa') && (
+                    <div className="flex flex-col gap-1">
+                      <select
+                        value={tableInstallmentSelections[disbursement.id] || ''}
+                        className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                        onChange={(e) => {
+                          const value = e.target.value ? parseInt(e.target.value) : null;
+                          setTableInstallmentSelections(prev => ({
+                            ...prev,
+                            [disbursement.id]: value
+                          }));
+                        }}
+                      >
+                        <option value="">Select</option>
+                        <option value="1">Inst 1 (25%)</option>
+                        <option value="2">Inst 2 (50%)</option>
+                        <option value="3">Inst 3 (25%)</option>
+                      </select>
+                      <button
+                        className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
+                        disabled={!tableInstallmentSelections[disbursement.id]}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInstallmentDisbursement(disbursement, tableInstallmentSelections[disbursement.id]);
+                        }}
+                      >
+                        Disburse
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
                     <button
                       className="p-1.5 rounded-lg hover:theme-bg-card theme-text-primary"
