@@ -2542,85 +2542,108 @@ const DisbursementsPage: React.FC = () => {
                       <td className="hidden md:table-cell px-4 py-3">
                         {disbursement.actType?.toLowerCase().includes('poa') ? (
                           <div className="flex flex-col gap-2">
-                            <select
-                              value={tableInstallmentSelections[disbursement.id] || ''}
-                              className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
-                              onChange={(e) => {
-                                const value = e.target.value ? parseInt(e.target.value) : null;
-                                setTableInstallmentSelections(prev => ({
-                                  ...prev,
-                                  [disbursement.id]: value
-                                }));
-                              }}
-                            >
-                              <option value="">Select</option>
-                              <option value="1">Inst 1 (25%)</option>
-                              <option value="2">Inst 2 (50%)</option>
-                              <option value="3">Inst 3 (25%)</option>
-                            </select>
-                            <button
-                              className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
-                              disabled={!tableInstallmentSelections[disbursement.id]}
-                              onClick={async () => {
-                                const selectedInst = tableInstallmentSelections[disbursement.id];
-                                if (!selectedInst) return;
+                            {(() => {
+                              const completedInstallments = disbursement.completedInstallments || 0;
+                              const totalInstallments = disbursement.totalInstallments || 3;
+                              const nextInstallment = completedInstallments + 1;
 
-                                // Check if required fields are set
-                                if (!disbursement.transactionId || !disbursement.utrNumber || !disbursement.paymentMethod) {
-                                  alert('Please edit this disbursement first to set Transaction ID, UTR Number, and Payment Method.');
-                                  return;
-                                }
+                              // If all installments are completed, don't show anything
+                              if (completedInstallments >= totalInstallments) {
+                                return (
+                                  <span className="text-xs theme-text-muted">All installments completed</span>
+                                );
+                              }
 
-                                // Calculate amount
-                                let nextAmount = 0;
-                                if (selectedInst === 1) {
-                                  nextAmount = Math.round(disbursement.reliefAmount * 0.25);
-                                } else if (selectedInst === 2) {
-                                  nextAmount = Math.round(disbursement.reliefAmount * 0.5);
-                                } else if (selectedInst === 3) {
-                                  nextAmount = Math.round(disbursement.reliefAmount * 0.25);
-                                }
+                              return (
+                                <>
+                                  <select
+                                    value={tableInstallmentSelections[disbursement.id] || ''}
+                                    className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                                    onChange={(e) => {
+                                      const value = e.target.value ? parseInt(e.target.value) : null;
+                                      setTableInstallmentSelections(prev => ({
+                                        ...prev,
+                                        [disbursement.id]: value
+                                      }));
+                                    }}
+                                  >
+                                    <option value="">Select</option>
+                                    {nextInstallment === 1 && (
+                                      <option value="1">Inst 1 (25%)</option>
+                                    )}
+                                    {nextInstallment === 2 && (
+                                      <option value="2">Inst 2 (50%)</option>
+                                    )}
+                                    {nextInstallment === 3 && (
+                                      <option value="3">Inst 3 (25%)</option>
+                                    )}
+                                  </select>
+                                  <button
+                                    className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
+                                    disabled={!tableInstallmentSelections[disbursement.id]}
+                                    onClick={async () => {
+                                      const selectedInst = tableInstallmentSelections[disbursement.id];
+                                      if (!selectedInst) return;
 
-                                const newDisbursedAmount = (disbursement.disbursedAmount || 0) + nextAmount;
-                                const newCompleted = Math.max(disbursement.completedInstallments || 0, selectedInst);
-                                const newProgress = (newDisbursedAmount / disbursement.reliefAmount) * 100;
+                                      // Check if required fields are set
+                                      if (!disbursement.transactionId || !disbursement.utrNumber || !disbursement.paymentMethod) {
+                                        alert('Please edit this disbursement first to set Transaction ID, UTR Number, and Payment Method.');
+                                        return;
+                                      }
 
-                                const updateData: any = {
-                                  disbursedAmount: newDisbursedAmount,
-                                  completedInstallments: newCompleted,
-                                  disbursementProgress: newProgress,
-                                  currentInstallment: newCompleted + 1,
-                                  lastUpdated: new Date().toISOString(),
-                                };
+                                      // Calculate amount
+                                      let nextAmount = 0;
+                                      if (selectedInst === 1) {
+                                        nextAmount = Math.round(disbursement.reliefAmount * 0.25);
+                                      } else if (selectedInst === 2) {
+                                        nextAmount = Math.round(disbursement.reliefAmount * 0.5);
+                                      } else if (selectedInst === 3) {
+                                        nextAmount = Math.round(disbursement.reliefAmount * 0.25);
+                                      }
 
-                                if (newCompleted < 3) {
-                                  updateData.nextInstallmentAmount = newCompleted === 1
-                                    ? Math.round(disbursement.reliefAmount * 0.5)
-                                    : Math.round(disbursement.reliefAmount * 0.25);
-                                  updateData.nextInstallmentPercentage = newCompleted === 1 ? 50 : 25;
-                                }
+                                      const newDisbursedAmount = (disbursement.disbursedAmount || 0) + nextAmount;
+                                      const newCompleted = Math.max(disbursement.completedInstallments || 0, selectedInst);
+                                      const newProgress = (newDisbursedAmount / disbursement.reliefAmount) * 100;
 
-                                if (newCompleted === 3) {
-                                  updateData.status = 'completed';
-                                  updateData.nextInstallmentAmount = null;
-                                  updateData.nextInstallmentPercentage = null;
-                                }
+                                      const updateData: any = {
+                                        disbursedAmount: newDisbursedAmount,
+                                        completedInstallments: newCompleted,
+                                        disbursementProgress: newProgress,
+                                        currentInstallment: newCompleted + 1,
+                                        lastUpdated: new Date().toISOString(),
+                                      };
 
-                                const disbursementRef = doc(db, 'disbursements', disbursement.firestoreId || disbursement.id);
-                                await updateDoc(disbursementRef, updateData);
+                                      if (newCompleted < 3) {
+                                        updateData.nextInstallmentAmount = newCompleted === 1
+                                          ? Math.round(disbursement.reliefAmount * 0.5)
+                                          : Math.round(disbursement.reliefAmount * 0.25);
+                                        updateData.nextInstallmentPercentage = newCompleted === 1 ? 50 : 25;
+                                      }
 
-                                // Clear selection
-                                setTableInstallmentSelections(prev => ({
-                                  ...prev,
-                                  [disbursement.id]: null
-                                }));
+                                      if (newCompleted === 3) {
+                                        updateData.status = 'completed';
+                                        updateData.nextInstallmentAmount = null;
+                                        updateData.nextInstallmentPercentage = null;
+                                      }
 
-                                // Refresh data
-                                // The listener should update automatically
-                              }}
-                            >
-                              Disburse
-                            </button>
+                                      const disbursementRef = doc(db, 'disbursements', disbursement.firestoreId || disbursement.id);
+                                      await updateDoc(disbursementRef, updateData);
+
+                                      // Clear selection
+                                      setTableInstallmentSelections(prev => ({
+                                        ...prev,
+                                        [disbursement.id]: null
+                                      }));
+
+                                      // Refresh data
+                                      // The listener should update automatically
+                                    }}
+                                  >
+                                    Disburse
+                                  </button>
+                                </>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <span className="text-xs theme-text-muted">-</span>
@@ -2812,32 +2835,55 @@ const DisbursementsPage: React.FC = () => {
                   </span>
                   {disbursement.actType?.toLowerCase().includes('poa') && (
                     <div className="flex flex-col gap-1">
-                      <select
-                        value={tableInstallmentSelections[disbursement.id] || ''}
-                        className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
-                        onChange={(e) => {
-                          const value = e.target.value ? parseInt(e.target.value) : null;
-                          setTableInstallmentSelections(prev => ({
-                            ...prev,
-                            [disbursement.id]: value
-                          }));
-                        }}
-                      >
-                        <option value="">Select</option>
-                        <option value="1">Inst 1 (25%)</option>
-                        <option value="2">Inst 2 (50%)</option>
-                        <option value="3">Inst 3 (25%)</option>
-                      </select>
-                      <button
-                        className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
-                        disabled={!tableInstallmentSelections[disbursement.id]}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleInstallmentDisbursement(disbursement, tableInstallmentSelections[disbursement.id]!);
-                        }}
-                      >
-                        Disburse
-                      </button>
+                      {(() => {
+                        const completedInstallments = disbursement.completedInstallments || 0;
+                        const totalInstallments = disbursement.totalInstallments || 3;
+                        const nextInstallment = completedInstallments + 1;
+
+                        // If all installments are completed, don't show anything
+                        if (completedInstallments >= totalInstallments) {
+                          return (
+                            <span className="text-xs theme-text-muted">All installments completed</span>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <select
+                              value={tableInstallmentSelections[disbursement.id] || ''}
+                              className="text-xs px-2 py-1 rounded theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                              onChange={(e) => {
+                                const value = e.target.value ? parseInt(e.target.value) : null;
+                                setTableInstallmentSelections(prev => ({
+                                  ...prev,
+                                  [disbursement.id]: value
+                                }));
+                              }}
+                            >
+                              <option value="">Select</option>
+                              {nextInstallment === 1 && (
+                                <option value="1">Inst 1 (25%)</option>
+                              )}
+                              {nextInstallment === 2 && (
+                                <option value="2">Inst 2 (50%)</option>
+                              )}
+                              {nextInstallment === 3 && (
+                                <option value="3">Inst 3 (25%)</option>
+                              )}
+                            </select>
+                            <button
+                              className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors disabled:bg-gray-400"
+                              disabled={!tableInstallmentSelections[disbursement.id]}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInstallmentDisbursement(disbursement, tableInstallmentSelections[disbursement.id]!);
+                              }}
+                            >
+                              Disburse
+                            </button>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                   <div className="flex items-center gap-1">
