@@ -436,7 +436,6 @@
     "incidentDate": "Incident Date",
     "financialInformation": "Financial Information",
     "amount": "Relief Amount",
-    "priority": "Priority",
     "bankAccount": "Bank Account Number",
     "ifsc": "IFSC Code",
     "lowPriority": "Low Priority",
@@ -3626,12 +3625,7 @@
     "exportAllTitle": "All Disbursements",
     "exportFilteredTitle": "Filtered Results",
     "exportCsv": "Export CSV",
-    "exportPdf": "Export PDF",
-    "emailExport": "Email Export",
-    "sendCsv": "Send CSV",
-    "sendPdf": "Send PDF",
-    "sendFilteredCsv": "Send Filtered CSV",
-    "sendFilteredPdf": "Send Filtered PDF"
+    "exportPdf": "Export PDF"
   },
   "extracted_grouped": {
     "misc": {
