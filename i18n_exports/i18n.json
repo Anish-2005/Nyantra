@@ -5093,8 +5093,8 @@
     "key": "applications.priority.low",
     "en": "Low",
     "hi": "निम्न"
-  }
-]
+  },
+  {
     "en": "{selectedTx && (",
     "hi": "{selectedTx && ("
   },
