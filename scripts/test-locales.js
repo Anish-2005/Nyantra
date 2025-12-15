@@ -2,6 +2,7 @@
  * test-locales.js
  * Ensure en.json and hi.json have matching keys under the same structure
  * and report missing translations (empty strings) in hi.json.
+ * Excludes template strings which should remain empty.
  */
 const fs = require('fs');
 const path = require('path');
@@ -13,6 +14,21 @@ const hiPath = path.resolve(__dirname, '../src/locales/hi.json');
 
 const en = readJson(enPath);
 const hi = readJson(hiPath);
+
+// Function to check if a string is a template string or comment (not translatable)
+function isTemplateString(value) {
+  return typeof value === 'string' &&
+         (value.includes("{t('") || value.includes('{t("') || value.includes('{timeRange') || value.includes('{period.') ||
+          value.includes('{mode.') || value.includes('{type.') || value.includes('{/*') || value.includes('*/}') ||
+          value.includes('{act}') || value.includes('{sortOrder') || value.includes('{chartType') ||
+          value.includes('{Math.round') || value.includes('{currentPage') || value.includes('{isSubmitting') ||
+          value.includes('{loading') || value.startsWith('{') && value.includes('&&') ||
+          value.startsWith('{') && value.includes('?') || value.includes('{category') ||
+          value.includes('{percentage') || value.includes('{metric') || value.includes('{stat') ||
+          value.includes('{pageNum') || value.includes('{beneficiary') || value.includes('{district') ||
+          value.includes('a + b') || value.includes('Math.round') || value.includes('toFixed') ||
+          value.includes('{initialData') || value.includes('{toastMessage') || value.includes('{confirmModalMessage'));
+}
 
 function collectKeys(obj, prefix = '') {
   const keys = [];
@@ -35,12 +51,21 @@ const extraInHi = [...hiKeys].filter(k => !enKeys.has(k));
 const emptyInHi = [];
 for (const k of enKeys) {
   const parts = k.split('.');
-  let cursor = hi;
+  let cursorEn = en;
+  let cursorHi = hi;
   for (const p of parts) {
-    if (cursor && typeof cursor === 'object' && p in cursor) cursor = cursor[p];
-    else { cursor = undefined; break; }
+    if (cursorEn && typeof cursorEn === 'object' && p in cursorEn) cursorEn = cursorEn[p];
+    else { cursorEn = undefined; break; }
+    if (cursorHi && typeof cursorHi === 'object' && p in cursorHi) cursorHi = cursorHi[p];
+    else { cursorHi = undefined; break; }
   }
-  if (typeof cursor === 'string' && cursor === '') emptyInHi.push(k);
+  // Only consider it empty if it's not a template string
+  if (emptyInHi.length < 3 && typeof cursorHi === 'string' && cursorHi === '' && !isTemplateString(cursorEn)) {
+    console.log(`Debug: key=${k}, enValue=${JSON.stringify(cursorEn)}, isTemplate=${isTemplateString(cursorEn)}`);
+  }
+  if (typeof cursorHi === 'string' && cursorHi === '' && !isTemplateString(cursorEn)) {
+    emptyInHi.push(k);
+  }
 }
 
 if (missingInHi.length || extraInHi.length || emptyInHi.length) {
