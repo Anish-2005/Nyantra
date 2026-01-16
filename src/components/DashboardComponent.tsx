@@ -16,7 +16,9 @@ import DashboardDataFetcher from './dashboard/DashboardDataFetcher';
 import RealTimeMonitoringHeader from './dashboard/RealTimeMonitoringHeader';
 import LiveApplicationTracking from './dashboard/LiveApplicationTracking';
 import AnalyticsHeader from './dashboard/AnalyticsHeader';
+import DisbursementsPreview from './dashboard/DisbursementsPreview';
 import AnalyticsFiltersAndChart from './dashboard/AnalyticsFiltersAndChart';
+import BeneficiariesPreview from './dashboard/BeneficiariesPreview';
 import { PlatformLogos, PlatformLogoWrapper, getPlatformLogo } from './dashboard/PlatformLogos';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
@@ -784,250 +786,22 @@ useEffect(() => {
                         </div>
                       </motion.div>
 
-                      {/* Beneficiaries Preview */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
-                      >
-                        {/* Background Pattern */}
-                        <div className="absolute inset-0 opacity-5">
-                          <div className="absolute inset-0" style={{
-                            backgroundImage: 'radial-gradient(circle, rgba(59, 130, 246, 0.8) 1px, transparent 1px)',
-                            backgroundSize: '20px 20px'
-                          }} />
-                        </div>
-
-                        <div className="relative z-10">
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                              <motion.div 
-                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                              >
-                                <Users className="w-7 h-7 text-white" />
-                              </motion.div>
-                              <div>
-                                <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.beneficiaries.verifiedBeneficiaries')}</h3>
-                                <p className="text-sm theme-text-muted">{t('dashboard.beneficiaries.activeProfilesWithFullVerification')}</p>
-                              </div>
-                            </div>
-                            <motion.button
-                              onClick={() => router.push('/dashboard/beneficiaries')}
-                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
-                              whileHover={{ scale: 1.05, x: 5 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <span>{t('dashboard.common.viewFull')}</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </motion.button>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                            {beneficiaries.map((beneficiary: any, idx: number) => {
-                              const StatusIcon = beneficiary.status === 'verified' ? CheckCircle : Clock;
-                              const VerificationIcon = beneficiary.verificationStatus === 'verified' ? CheckCircle : Clock;
-
-                              return (
-                                <motion.div
-                                  key={beneficiary.id}
-                                  initial={{ opacity: 0, y: 8 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: idx * 0.03 }}
-                                  whileTap={{ scale: 0.995 }}
-                                  className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
-                                >
-                                  {/* Header Row */}
-                                  <div className="flex items-start justify-between gap-3 mb-3">
-                                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                                        {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
-                                        <p className="text-xs theme-text-muted truncate">{beneficiary.beneficiaryId}</p>
-                                      </div>
-                                    </div>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${
-                                      beneficiary.category === 'SC' ? 'text-purple-700 bg-purple-100 border-purple-300 dark:text-purple-300 dark:bg-purple-900/30 dark:border-purple-700' :
-                                      beneficiary.category === 'ST' ? 'text-blue-700 bg-blue-100 border-blue-300 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-700' :
-                                      'text-gray-700 bg-gray-100 border-gray-300 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600'
-                                    }`}>
-                                      {beneficiary.category}
-                                    </span>
-                                  </div>
-
-                                  {/* Info Grid */}
-                                  <div className="space-y-2 mb-3">
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <Fingerprint className="w-3.5 h-3.5" />
-                                        Aadhaar
-                                      </span>
-                                      <span className="theme-text-primary font-mono text-[10px]">{beneficiary.aadhaarNumber || '—'}</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <MapPin className="w-3.5 h-3.5" />
-                                        Location
-                                      </span>
-                                      <span className="theme-text-primary font-medium">{beneficiary.district}, {beneficiary.state}</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <Scale className="w-3.5 h-3.5" />
-                                        Act Type
-                                      </span>
-                                      <span className="theme-text-primary font-medium">{formatActType(beneficiary.actType)}</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <DollarSign className="w-3.5 h-3.5" />
-                                        Relief Amount
-                                      </span>
-                                      <span className="theme-text-primary font-bold">{formatCurrency(beneficiary.reliefAmount)}</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <Banknote className="w-3.5 h-3.5" />
-                                        Disbursed
-                                      </span>
-                                      <span className="theme-text-primary font-medium">{formatCurrency(beneficiary.disbursedAmount)}</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="theme-text-muted flex items-center gap-1.5">
-                                        <User className="w-3.5 h-3.5" />
-                                        Assigned Officer
-                                      </span>
-                                      <span className="theme-text-primary font-medium truncate max-w-[150px]">{beneficiary.assignedOfficer || '—'}</span>
-                                    </div>
-                                  </div>
-
-                                  {/* Status Badges */}
-                                  <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b theme-border-glass">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
-                                      <StatusIcon className="w-3 h-3" />
-                                      <span className="capitalize">{beneficiary.status.replace('-', ' ')}</span>
-                                    </span>
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                                      <VerificationIcon className="w-3 h-3" />
-                                      <span className="capitalize">{beneficiary.verificationStatus.replace('-', ' ')}</span>
-                                    </span>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Decorative orb */}
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
-                      </motion.div>
+                      <BeneficiariesPreview
+                        t={t}
+                        beneficiaries={beneficiaries}
+                        loading={loading}
+                        formatActType={formatActType}
+                        formatCurrency={formatCurrency}
+                        getStatusColor={getStatusColor}
+                        getVerificationColor={getVerificationColor}
+                        getStatusIcon={getStatusIcon}
+                      />
 
                       {/* Disbursements Preview */}
-                      <motion.div
-                        variants={itemVariants}
-                        className="theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl shadow-sm group relative overflow-hidden"
-                      >
-                        {/* Background Pattern */}
-                        <div className="absolute inset-0 opacity-5">
-                          <div className="absolute inset-0" style={{
-                            backgroundImage: 'linear-gradient(45deg, rgba(168, 85, 247, 0.5) 25%, transparent 25%, transparent 75%, rgba(168, 85, 247, 0.5) 75%, rgba(168, 85, 247, 0.5)), linear-gradient(45deg, rgba(168, 85, 247, 0.5) 25%, transparent 25%, transparent 75%, rgba(168, 85, 247, 0.5) 75%, rgba(168, 85, 247, 0.5))',
-                            backgroundSize: '20px 20px',
-                            backgroundPosition: '0 0, 10px 10px'
-                          }} />
-                        </div>
-
-                        <div className="relative z-10">
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                              <motion.div 
-                                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
-                                whileHover={{ scale: 1.1, rotate: -5 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                              >
-                                <Wallet className="w-7 h-7 text-white" />
-                              </motion.div>
-                              <div>
-                                <h3 className="text-xl font-bold theme-text-primary">{t('dashboard.disbursements.recentDisbursements')}</h3>
-                                <p className="text-sm theme-text-muted">{t('dashboard.disbursements.latestPaymentTransactions')}</p>
-                              </div>
-                            </div>
-                            <motion.button
-                              onClick={() => router.push('/dashboard/disbursements')}
-                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
-                              whileHover={{ scale: 1.05, x: 5 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <span>{t('dashboard.common.viewFull')}</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </motion.button>
-                          </div>
-
-                          <div className="space-y-3">
-                            {loading ? (
-                              Array.from({ length: 3 }).map((_, idx) => (
-                                <motion.div
-                                  key={idx}
-                                  className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4 animate-pulse"
-                                />
-                              ))
-                            ) : recentDisbursements.length === 0 ? (
-                              <div className="p-4 text-center theme-text-muted">{t('dashboard.disbursements.noRecords') || 'No disbursements found.'}</div>
-                            ) : (
-                              recentDisbursements.map((disbursement: any, idx: number) => {
-                                const did = disbursement.id || disbursement.code || disbursement.disbursementId || '';
-                                const name = disbursement.beneficiary || disbursement.beneficiaryName || disbursement.name || 'Unknown';
-                                const amount = disbursement.amount !== undefined ? (typeof disbursement.amount === 'number' ? '₹' + disbursement.amount.toLocaleString() : disbursement.amount) : '—';
-                                const status = disbursement.status || 'processing';
-                                const date = disbursement.date || (disbursement.disbursementDate ? new Date(disbursement.disbursementDate.toDate()).toLocaleDateString() : 'N/A');
-                                const color = disbursement.color || (status === 'completed' ? 'bg-green-500' : 'bg-blue-500');
-                                return (
-                                  <motion.div
-                                    key={did + idx}
-                                    className="relative p-4 rounded-xl theme-bg-glass border theme-border-glass flex items-center gap-4"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    whileHover={{ scale: 1.02, x: 5 }}
-                                  >
-                                    <div className={`w-2 h-16 rounded-full ${color} absolute left-0`} />
-                                    <div className="flex-1 pl-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <div>
-                                          <p className="font-semibold theme-text-primary text-sm">{name}</p>
-                                          <p className="text-xs theme-text-muted">{did}</p>
-                                        </div>
-                                        <span className="font-bold text-lg theme-text-primary">{amount}</span>
-                                      </div>
-                                      <div className="flex items-center justify-between">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                          status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
-                                        }`}>
-                                          <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
-                                          {getStatusText(status)}
-                                        </span>
-                                        <span className="text-xs theme-text-muted flex items-center gap-1">
-                                          <Clock className="w-3 h-3" />
-                                          {date}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Decorative orb */}
-                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
-                      </motion.div>
+                      <DisbursementsPreview
+                        t={t}
+                        recentDisbursements={recentDisbursements} 
+                        />
 
                       {/* Analytics Preview */}
                       <motion.div
