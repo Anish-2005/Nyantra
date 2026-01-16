@@ -11,9 +11,12 @@ import BackgroundAnimation from '../components/BackgroundAnimation';
 import ScrollToTopButton from '../components/landing/ScrollToTopButton';
 import ProgressBar from '../components/landing/ProgressBar';
 import Footer from '../components/landing/Footer';
+import FAQ from '../components/landing/FAQ';
+import Integrations from '../components/landing/Integrations';
+import Benefits from '../components/landing/Benefits';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Star, Database, Lock, TrendingUp } from 'lucide-react';
 
 const NyantraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -188,25 +191,6 @@ const NyantraLanding = () => {
     lightColor: colors[i].light
   }));
 
-  const benefitIcons = [Clock, Target, Shield, Globe, Smartphone, Eye];
-  const benefitColors = [
-    { dark: "text-blue-500", light: "text-blue-600" },
-    { dark: "text-amber-500", light: "text-amber-600" },
-    { dark: "text-green-500", light: "text-green-600" },
-    { dark: "text-indigo-500", light: "text-indigo-600" },
-    { dark: "text-purple-500", light: "text-purple-600" },
-    { dark: "text-pink-500", light: "text-pink-600" }
-  ];
-
-  const benefits = JSON.parse(t('benefits.items')).map((item: any, i: number) => ({
-    ...item,
-    icon: benefitIcons[i],
-    darkColor: benefitColors[i].dark,
-    lightColor: benefitColors[i].light
-  }));
-
- 
-  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -237,52 +221,6 @@ const NyantraLanding = () => {
       y: 0,
       transition: { duration: 0.6, ease: "easeOut" as const }
     }
-  };
-
-  // FAQ accordion item component
-  const FAQItem: React.FC<{ question: string; answer: string; index: number }> = ({ question, answer, index }) => {
-    const [open, setOpen] = useState(false);
-    return (
-      <div className="group">
-        <button
-          onClick={() => setOpen((s) => !s)}
-          aria-expanded={open}
-          aria-controls={`faq-${index}`}
-          className="w-full flex items-center justify-between p-6 rounded-2xl theme-bg-glass theme-border-glass border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-primary hover:theme-bg-card group-hover:shadow-lg"
-        >
-          <div className="text-left">
-            <p className="font-semibold theme-text-primary text-lg group-hover:text-accent-gradient transition-colors">{question}</p>
-          </div>
-          <motion.div
-            animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex-shrink-0"
-          >
-            <div className="w-8 h-8 accent-gradient rounded-full flex items-center justify-center">
-              <ChevronRight className="w-4 h-4 text-white" />
-            </div>
-          </motion.div>
-        </button>
-
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              id={`faq-${index}`}
-              key={`faq-content-${index}`}
-              initial={{ opacity: 0, height: 0, y: -10 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="mt-4 overflow-hidden"
-            >
-              <div className="p-6 rounded-2xl theme-bg-card theme-border-card border shadow-lg">
-                <p className="text-base leading-relaxed theme-text-secondary">{answer}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
   };
 
   return (
@@ -1157,247 +1095,15 @@ const NyantraLanding = () => {
 
         </section>
 
-        <section
-          id="benefits"
-          className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden transition-colors duration-500"
-        >
-          {/* Background Layer */}
-          <div
-            className={`
-      absolute inset-0 transition-colors duration-700
-      ${theme === 'dark'
-                ? 'bg-gradient-to-b from-[#0A0F28] via-[#0A1432]/80 to-black'
-                : 'bg-gradient-to-b from-[#F9FBFF] via-[#F4F7FA] to-white'}
-    `}
-          />
-
-          {/* Ambient Glow */}
-          <div
-            className={`
-      absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[40%] blur-3xl pointer-events-none
-      ${theme === 'dark'
-                ? 'bg-[radial-gradient(ellipse_at_center,rgba(0,120,255,0.15),transparent_70%)]'
-                : 'bg-[radial-gradient(ellipse_at_center,rgba(255,200,100,0.15),transparent_70%)]'}
-    `}
-          />
-
-        
-
-          <div className="relative max-w-7xl mx-auto">
-            {/* Header */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              className="text-center mb-20"
-            >
-              <motion.span
-                className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4 backdrop-blur-md shadow-sm"
-                whileHover={{ scale: 1.08 }}
-              >
-                <Target className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                {t('benefits.badge')}
-              </motion.span>
-
-              <h2 className="mt-4 text-4xl md:text-5xl font-bold mb-4 tracking-tight theme-text-primary overflow-visible px-4">
-                {t('benefits.title')} <span className="py-4 text-accent-gradient whitespace-nowrap">{t('benefits.titleHighlight')}</span>
-              </h2>
-
-              <p className="text-lg md:text-xl theme-text-secondary max-w-2xl mx-auto leading-relaxed">
-                {t('benefits.description')}
-              </p>
-            </motion.div>
-
-            {/* Benefits Grid */}
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-              {benefits.map((benefit: any, i: number) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  whileHover={{
-                    y: -8,
-                    rotate: 1,
-                    transition: { type: 'spring', stiffness: 200 },
-                  }}
-                  className="group relative"
-                >
-                  {/* Benefit Card */}
-                  <div
-                    className={`
-    rounded-2xl p-6 flex flex-col items-center justify-center text-center h-full 
-    backdrop-blur-xl border transition-all duration-300 shadow-md hover:shadow-xl
-    ${theme === 'dark'
-                        ? 'bg-white/5 border-white/10 hover:border-accent-secondary/40'
-                        : 'bg-white/60 border-gray-200 hover:border-amber-300/60'}
-  `}
-                  >
-                    {/* Icon */}
-                    <div
-                      className={`
-      relative w-16 h-16 mb-5 flex items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110
-      ${theme === 'dark'
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-300'
-                          : 'bg-gradient-to-br from-amber-400 to-orange-500'}
-    `}
-                    >
-                      <benefit.icon
-                        className="w-8 h-8 text-white drop-shadow-md"
-                      />
-                      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg md:text-xl font-bold theme-text-primary group-hover:text-accent-gradient transition-colors duration-300">
-                      {benefit.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm theme-text-muted mt-2 leading-snug max-w-[85%] mx-auto">
-                      {benefit.desc}
-                    </p>
-
-                    {/* Accent underline */}
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-accent-gradient group-hover:w-1/2 transition-all duration-500 rounded-full"></span>
-                  </div>
-
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-   
+        {/* Benefits Section */}
+        <Benefits />
 
         {/* Integrations Section */}
-        <section id="integrations" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-visible">
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-1/3 left-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-primary, rgba(59,130,246,0.12)), transparent)' }} />
-            <div className="absolute bottom-1/4 right-1/6 w-64 h-64 blur-[80px] rounded-full" style={{ background: 'linear-gradient(135deg, var(--accent-secondary, rgba(245,158,11,0.08)), transparent)' }} />
-          </div>
+        <Integrations />
 
-          <div className="max-w-7xl mx-auto">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12 overflow-visible">
-              <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
-                <Database className="inline w-4 h-4 mr-2 text-accent-gradient" />
-                {t('integrations.badge')}
-              </motion.span>
+        {/* FAQ Section */}
+        <FAQ />
 
-              <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary overflow-visible py-4" style={{ lineHeight: '1.4' }}>
-                {t('integrations.title')}
-              </h2>
-              <p className="mt-2 text-sm sm:text-base theme-text-muted max-w-2xl mx-auto overflow-visible py-2">
-                {t('integrations.description')}
-              </p>
-            </motion.div>
-
-            {/* Integrations Grid */}
-            <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
-              {[
-                {
-                  name: 'PFMS',
-                  desc: 'भुगतान और DBT',
-                  logo: 'https://www.gconnect.in/gc22/wp-content/uploads/2023/03/PFMS.png', // Placeholder, replace with actual URL
-                  accent: 'from-amber-400 to-amber-500',
-                  link: 'https://pfms.nic.in/' // Add your custom link here
-                },
-                {
-                  name: 'Aadhaar',
-                  desc: 'पहचान सत्यापन',
-                  logo: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Aadhaar_Logo.jpg',
-                  accent: 'from-blue-400 to-indigo-500',
-                  link: 'https://uidai.gov.in/' // Add your custom link here
-                },
-                {
-                  name: 'CCTNS',
-                  desc: 'पुलिस रिकॉर्ड',
-                  logo: 'https://static.mygov.in/static/s3fs-public/mygov_144074499810881641.jpg', // Placeholder
-                  accent: 'from-indigo-400 to-purple-500',
-                  link: 'https://ncrb.gov.in/' // Add your custom link here
-                },
-                {
-                  name: 'eCourts',
-                  desc: 'मामला प्राप्ति',
-                  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2E9X9SHoKmNE6d4ud4Efc7iX2o4m7V73DsQ&s',
-                  accent: 'from-green-400 to-teal-500',
-                  link: 'https://ecourts.gov.in/' // Add your custom link here
-                },
-                {
-                  name: 'DigiLocker',
-                  desc: 'दस्तावेज़ भंडारण',
-                  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXdc7MqagTAT_T2SEYZpsFVBOqsXEm7YGXng&s',
-                  accent: 'from-pink-400 to-rose-500',
-                  link: 'https://digilocker.gov.in/' // Add your custom link here
-                },
-                {
-                  name: 'SMS Gateways',
-                  desc: 'सूचनाएं',
-                  logo: 'https://png.pngtree.com/png-vector/20231115/ourmid/pngtree-sms-icon-sign-png-image_10603188.png', // Placeholder for SMS Gateways
-                  accent: 'from-yellow-400 to-amber-500',
-                  link: '#' // Add your custom link here
-                }
-              ].map((integration, idx) => (
-                <motion.div key={integration.name.toLowerCase().replace(/\s+/g, '')} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
-                  <div className="w-full h-48 theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center justify-between hover:shadow-xl transition-all duration-300">
-                    <div className="flex flex-col items-center space-y-3">
-                      <Image src={integration.logo} alt={`${integration.name} logo`} width={80} height={80} className="object-contain rounded-lg" />
-                      <div>
-                        <p className="font-semibold theme-text-primary">{integration.name}</p>
-                        <p className="text-xs theme-text-muted">{integration.desc}</p>
-                      </div>
-                    </div>
-                    <a href={integration.link} aria-label={`Learn more about ${integration.name}`} className="inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">
-                      {t('integrations.learnMore')}
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </a>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* CTA */}
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 text-center overflow-visible">
-              <p className="theme-text-secondary mb-4 overflow-visible py-2">
-                {t('integrations.ctaDescription')}
-              </p>
-              <motion.a href="#" className="inline-flex items-center px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg" whileHover={{ scale: 1.05 }} aria-label={t('integrations.ctaButton')}>
-                {t('integrations.ctaButton')}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </motion.a>
-            </motion.div>
-          </div>
-        </section>
-
-{/* FAQ Section (placed between Benefits and Integrations) */}
-        <section id="faq" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-visible">
-          <div className="max-w-4xl mx-auto text-center mb-12 overflow-visible">
-            <motion.span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-5" whileHover={{ scale: 1.05 }}>
-              <HelpCircle className="inline w-4 h-4 mr-2 text-accent-gradient" />
-              {t('faq.badge')}
-            </motion.span>
-
-            <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary overflow-visible py-4" style={{ lineHeight: '1.4' }}>
-              {t('faq.title')} <span className="block">{t('faq.titleHighlight')}</span>
-            </h2>
-            <p className="mt-2 text-sm sm:text-base theme-text-muted overflow-visible py-2">
-              {t('faq.description')}
-            </p>
-          </div>
-
-          <div className="max-w-5xl mx-auto overflow-visible">
-            {(JSON.parse(t('faq.items')) as Array<{ question: string; answer: string }>).map((item: any, i: number) => (
-              <motion.div key={i} className="mb-4 rounded-2xl theme-bg-card theme-border-card p-4 overflow-visible" initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <FAQItem question={item.question} answer={item.answer} index={i} />
-              </motion.div>
-            ))}
-          </div>
-        </section>
         {/* Footer with enhanced theme */}
         <Footer />
 
