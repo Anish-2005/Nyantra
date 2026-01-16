@@ -242,18 +242,24 @@ const NyantraLanding = () => {
   const FAQItem: React.FC<{ question: string; answer: string; index: number }> = ({ question, answer, index }) => {
     const [open, setOpen] = useState(false);
     return (
-      <div>
+      <div className="group">
         <button
           onClick={() => setOpen((s) => !s)}
           aria-expanded={open}
           aria-controls={`faq-${index}`}
-          className="w-full flex items-center justify-between p-4 rounded-xl theme-bg-glass theme-border-glass border transition-all focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          className="w-full flex items-center justify-between p-6 rounded-2xl theme-bg-glass theme-border-glass border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-primary hover:theme-bg-card group-hover:shadow-lg"
         >
           <div className="text-left">
-            <p className="font-semibold theme-text-primary">{question}</p>
+            <p className="font-semibold theme-text-primary text-lg group-hover:text-accent-gradient transition-colors">{question}</p>
           </div>
-          <motion.div animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.25 }}>
-            <ChevronRight className="w-5 h-5 theme-text-secondary" />
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex-shrink-0"
+          >
+            <div className="w-8 h-8 accent-gradient rounded-full flex items-center justify-center">
+              <ChevronRight className="w-4 h-4 text-white" />
+            </div>
           </motion.div>
         </button>
 
@@ -262,14 +268,14 @@ const NyantraLanding = () => {
             <motion.div
               id={`faq-${index}`}
               key={`faq-content-${index}`}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.28 }}
-              className="mt-3 overflow-hidden"
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="mt-4 overflow-hidden"
             >
-              <div className="p-4 rounded-lg theme-bg-card theme-border-card theme-text-secondary">
-                <p className="text-sm leading-relaxed">{answer}</p>
+              <div className="p-6 rounded-2xl theme-bg-card theme-border-card border shadow-lg">
+                <p className="text-base leading-relaxed theme-text-secondary">{answer}</p>
               </div>
             </motion.div>
           )}
@@ -286,34 +292,38 @@ const NyantraLanding = () => {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
+          --card-bg: rgba(15, 23, 42, 0.8);
+          --card-border: rgba(255, 255, 255, 0.12);
           --nav-bg: rgba(15, 23, 42, 0.95);
           --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
+          --text-secondary: #cbd5e1;
           --text-muted: #64748b;
-          /* New dark accent: teal -> violet */
-          --accent-primary: #06b6d4; /* teal-400 */
+          /* Enhanced dark accent: teal -> violet with better contrast */
+          --accent-primary: #14b8a6; /* emerald-400 for better contrast */
           --accent-secondary: #8b5cf6; /* violet-500 */
-          --glass-bg: rgba(15, 23, 42, 0.6);
-          --glass-border: rgba(255, 255, 255, 0.1);
+          --glass-bg: rgba(15, 23, 42, 0.7);
+          --glass-border: rgba(255, 255, 255, 0.15);
+          --hover-bg: rgba(255, 255, 255, 0.05);
+          --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
         [data-theme="light"] {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
                          linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
+          --card-bg: rgba(255, 255, 255, 0.9);
+          --card-border: rgba(0, 0, 0, 0.08);
           --nav-bg: rgba(255, 255, 255, 0.95);
           --text-primary: #0f172a;
           --text-secondary: #475569;
           --text-muted: #64748b;
-          /* New light accent: rose -> orange */
-          --accent-primary: #fb7185; /* rose-400 */
+          /* Enhanced light accent: rose -> orange with better contrast */
+          --accent-primary: #f43f5e; /* rose-500 for better contrast */
           --accent-secondary: #fb923c; /* orange-400 */
-          --glass-bg: rgba(255, 255, 255, 0.6);
-          --glass-border: rgba(0, 0, 0, 0.08);
+          --glass-bg: rgba(255, 255, 255, 0.8);
+          --glass-border: rgba(0, 0, 0, 0.1);
+          --hover-bg: rgba(0, 0, 0, 0.02);
+          --shadow-color: rgba(0, 0, 0, 0.1);
         }
 
         .theme-text-primary { color: var(--text-primary) !important; }
@@ -387,7 +397,7 @@ const NyantraLanding = () => {
       <div className="relative z-10 theme-text-primary">
         {/* Enhanced Navigation */}
         <motion.nav
-          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg border-b theme-border-glass ${isScrolled ? 'theme-bg-nav shadow-xl' : 'bg-transparent'
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-xl border-b theme-border-glass ${isScrolled ? 'theme-bg-nav shadow-2xl' : 'bg-transparent'
             }`}
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -396,11 +406,12 @@ const NyantraLanding = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <motion.div
-                className="flex items-center space-x-3"
+                className="flex items-center space-x-3 cursor-pointer"
                 whileHover={{ scale: 1.05 }}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
-                <div className="w-10 h-10 flex items-center justify-center overflow-hidden bg-transparent">
-                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={40} height={40} className="object-contain" />
+                <div className="w-12 h-12 flex items-center justify-center overflow-hidden bg-transparent rounded-xl theme-bg-glass theme-border-glass border">
+                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={44} height={44} className="object-contain" />
                 </div>
                 <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
                   {t('nav.brandName')}
@@ -408,7 +419,7 @@ const NyantraLanding = () => {
               </motion.div>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-8">
+              <div className="hidden md:flex items-center space-x-1">
                 {[
                   { label: t('nav.features'), id: 'features' },
                   { label: t('nav.process'), id: 'process' },
@@ -419,51 +430,71 @@ const NyantraLanding = () => {
                   <motion.a
                     key={item.id}
                     href={`#${item.id}`}
-                    className="theme-text-secondary hover:text-accent-gradient transition-all font-medium px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                    className="relative px-4 py-2.5 theme-text-secondary hover:text-accent-gradient transition-all font-medium rounded-xl hover:theme-bg-glass group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {item.label}
+                    <span className="relative z-10">{item.label}</span>
+                    <div className="absolute inset-0 bg-accent-gradient opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300" />
                   </motion.a>
                 ))}
+                <div className="w-px h-6 bg-theme-border-glass mx-2" />
                 <motion.button
                   onClick={() => navigateByRole()}
                   aria-label={t('extracted.get_started_continue')}
-                  className="px-6 py-2.5 accent-gradient rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+                  className="px-6 py-2.5 accent-gradient rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {t('nav.getStarted')}
+                  <span className="relative z-10">{t('nav.getStarted')}</span>
+                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </motion.button>
 
                 {/* Language selector (toggle) */}
-                <div>
+                <div className="ml-2">
                   <LanguageToggle />
                 </div>
 
                 {/* Enhanced Theme Toggle */}
                 <motion.button
                   onClick={toggleTheme}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass"
+                  className="ml-2 w-11 h-11 rounded-xl flex items-center justify-center theme-border-glass border theme-bg-glass hover:theme-bg-card transition-all relative group"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   aria-label={t('extracted.toggle_theme')}
                 >
-                  {theme === 'dark' ? (
-                    <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} />
-                  ) : (
-                    <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-                  )}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={theme}
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {theme === 'dark' ? (
+                        <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} />
+                      ) : (
+                        <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                  <div className="absolute inset-0 bg-accent-gradient opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300" />
                 </motion.button>
               </div>
 
               {/* Mobile Menu Button */}
               <motion.button
-                className="md:hidden theme-text-primary"
+                className="md:hidden theme-text-primary p-2 rounded-xl theme-bg-glass theme-border-glass border"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 whileTap={{ scale: 0.9 }}
+                aria-label="Toggle mobile menu"
               >
-                {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                <motion.div
+                  animate={{ rotate: isMobileMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </motion.div>
               </motion.button>
             </div>
           </div>
@@ -472,49 +503,66 @@ const NyantraLanding = () => {
           <AnimatePresence>
             {isMobileMenuOpen && (
               <motion.div
-                className="md:hidden theme-bg-nav backdrop-blur-lg border-t theme-border-glass"
+                className="md:hidden theme-bg-nav backdrop-blur-xl border-t theme-border-glass shadow-2xl"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="px-4 py-6 space-y-3">
+                <div className="px-4 py-6 space-y-4">
+                  <div className="grid grid-cols-1 gap-2">
                     {[
                       { label: t('nav.features'), id: 'features' },
                       { label: t('nav.process'), id: 'process' },
                       { label: t('nav.benefits'), id: 'benefits' },
                       { label: t('nav.integrations'), id: 'integrations' },
                       { label: t('nav.faq'), id: 'faq' }
-                    ].map((item) => (
-                    <motion.a
-                      key={item.id}
-                      href={`#${item.id}`}
-                      className="block theme-text-secondary hover:text-accent-gradient transition-all font-medium px-4 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
-                      whileHover={{ x: 10 }}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </motion.a>
-                  ))}
-                  <div className="pt-4 space-y-3">
+                    ].map((item, index) => (
+                      <motion.a
+                        key={item.id}
+                        href={`#${item.id}`}
+                        className="flex items-center justify-between theme-text-secondary hover:text-accent-gradient transition-all font-medium px-4 py-3 rounded-xl hover:theme-bg-glass group"
+                        whileHover={{ x: 8 }}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <span>{item.label}</span>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </motion.a>
+                    ))}
+                  </div>
+
+                  <div className="border-t theme-border-glass pt-4 space-y-4">
                     <motion.button
                       onClick={() => { navigateByRole(); setIsMobileMenuOpen(false); }}
                       aria-label={t('extracted.get_started_continue')}
-                      className="w-full px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg"
+                      className="w-full px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg relative overflow-hidden group"
                       whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
                     >
-                      {t('nav.getStarted')}
+                      <span className="relative z-10">{t('nav.getStarted')}</span>
+                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </motion.button>
-                    <div className="pt-2">
-                      <LanguageToggle />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <LanguageToggle />
+                      </div>
+                      <motion.button
+                        onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
+                        className="w-full px-4 py-3 rounded-xl theme-border-glass border theme-bg-glass flex items-center justify-center space-x-2 theme-text-primary hover:theme-bg-card transition-all group"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        {theme === 'dark' ? <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} /> : <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />}
+                        <span className="font-medium text-sm">Theme</span>
+                      </motion.button>
                     </div>
-                    <button
-                      onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
-                      className="w-full px-6 py-3 rounded-xl theme-border-glass border theme-bg-glass flex items-center justify-center space-x-2 theme-text-primary"
-                    >
-                      {theme === 'dark' ? <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} /> : <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />}
-                      <span className="font-medium">Toggle Theme</span>
-                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -523,95 +571,99 @@ const NyantraLanding = () => {
         </motion.nav>
 
         {/* Enhanced Hero Section */}
-        <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
+        <section className="relative pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
           <div className="max-w-7xl mx-auto w-full">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-left space-y-8 overflow-visible"
+                className="text-left space-y-6 sm:space-y-10"
               >
                 <motion.div variants={itemVariants}>
                   <motion.span
-                    className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4"
+                    className="inline-flex items-center px-4 py-2 sm:px-5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold border theme-border-glass theme-bg-glass theme-text-secondary mb-4 sm:mb-6 shadow-lg backdrop-blur-lg"
                     animate={{
                       boxShadow: theme === 'dark'
-                        ? ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 10px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
-                        : ['0 0 0 0 rgba(30, 64, 175, 0.4)', '0 0 0 10px rgba(30, 64, 175, 0)', '0 0 0 0 rgba(30, 64, 175, 0)']
+                        ? ['0 0 0 0 rgba(20, 184, 166, 0.4)', '0 0 0 12px rgba(20, 184, 166, 0)', '0 0 0 0 rgba(20, 184, 166, 0)']
+                        : ['0 0 0 0 rgba(244, 63, 94, 0.4)', '0 0 0 12px rgba(244, 63, 94, 0)', '0 0 0 0 rgba(244, 63, 94, 0)']
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <Rocket className="inline w-4 h-4 mr-2 text-accent-gradient" />
+                    <Rocket className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-accent-gradient" />
                     {t('hero.badge')}
                   </motion.span>
                 </motion.div>
 
                 <motion.h1
                   variants={itemVariants}
-                  className="text-5xl md:text-7xl font-bold theme-text-primary overflow-visible whitespace-normal py-4"
-                  style={{ lineHeight: '1.4' }}
+                  className="text-3xl sm:text-5xl md:text-7xl font-bold theme-text-primary overflow-visible leading-tight"
+                  style={{ lineHeight: '1.1' }}
                 >
                   {t('hero.titleLine1')}{' '}
-                  <span className="py-4 text-accent-gradient">
+                  <span className="py-1 sm:py-2 text-accent-gradient block md:inline">
                     {t('hero.titleLine2').split('\n')[0]}
                   </span>
-                  <br />
-                  <span className="block mt-1">
+                  <br className="hidden md:block" />
+                  <span className="block mt-1 sm:mt-2 md:mt-0">
                     {t('hero.titleLine2').split('\n')[1] || ''}
                   </span>
                 </motion.h1>
 
                 <motion.p
                   variants={itemVariants}
-                  className="text-xl theme-text-secondary leading-relaxed"
+                  className="text-lg sm:text-xl md:text-2xl theme-text-secondary leading-relaxed max-w-2xl"
                 >
                   {t('hero.description')}
                 </motion.p>
 
                 <motion.div
                   variants={itemVariants}
-                  className="flex flex-col sm:flex-row gap-4"
+                  className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4"
                 >
                   <motion.button
                     onClick={() => navigateByRole()}
                     aria-label={t('extracted.apply_now_continue')}
-                    className="px-8 py-4 accent-gradient rounded-xl font-semibold text-lg text-white flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all"
-                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="px-6 sm:px-10 py-4 sm:py-5 accent-gradient rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg text-white flex items-center justify-center space-x-2 sm:space-x-3 shadow-2xl hover:shadow-3xl transition-all relative overflow-hidden group"
+                    whileHover={{ scale: 1.05, y: -3 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span>{t('hero.applyNow')}</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <span className="relative z-10">{t('hero.applyNow')}</span>
+                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </motion.button>
 
                   <motion.button
-                    className="px-8 py-4 theme-bg-glass theme-border-glass border rounded-xl font-semibold text-lg flex items-center justify-center space-x-2 theme-text-primary hover:shadow-lg transition-all"
-                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="px-6 sm:px-10 py-4 sm:py-5 theme-bg-glass theme-border-glass border-2 rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg flex items-center justify-center space-x-2 sm:space-x-3 theme-text-primary hover:shadow-2xl transition-all group"
+                    whileHover={{ scale: 1.05, y: -3 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span>{t('hero.watchDemo')}</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
                 </motion.div>
 
                 <motion.div
                   variants={itemVariants}
-                  className="flex items-center space-x-8 pt-4"
+                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 pt-6 sm:pt-8"
                 >
-                  <div className="flex -space-x-3">
-                    {[1, 2, 3, 4].map((i) => (
+                  <div className="flex -space-x-3 sm:-space-x-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-12 h-12 rounded-full accent-gradient border-2 theme-bg-card flex items-center justify-center text-sm font-bold text-white"
-                        whileHover={{ scale: 1.2, zIndex: 10 }}
+                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-full accent-gradient border-2 sm:border-4 theme-bg-card flex items-center justify-center text-xs sm:text-sm font-bold text-white shadow-xl"
+                        whileHover={{ scale: 1.3, zIndex: 10 }}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.1 }}
                       >
                         {i}K+
                       </motion.div>
                     ))}
                   </div>
                   <div>
-                    <p className="text-sm theme-text-muted">{t('extracted.trusted_by')} </p>
-                    <p className="text-lg font-semibold text-accent-gradient">{t('extracted.45000_beneficiaries')} </p>
+                    <p className="text-xs sm:text-sm theme-text-muted font-medium">{t('extracted.trusted_by')} </p>
+                    <p className="text-lg sm:text-2xl font-bold text-accent-gradient">{t('extracted.45000_beneficiaries')} </p>
                   </div>
                 </motion.div>
               </motion.div>
@@ -620,35 +672,39 @@ const NyantraLanding = () => {
                 initial={{ opacity: 0, scale: 0.8, rotateY: -30 }}
                 animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="relative"
+                className="relative mt-8 lg:mt-0"
               >
-                <div className="relative theme-bg-card backdrop-blur-xl rounded-3xl p-8 theme-border-card shadow-2xl">
-                  {/* Dashboard Preview */}
-                  <div className="space-y-4">
+                <div className="relative theme-bg-card backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 theme-border-card shadow-3xl border-2">
+                  {/* Dashboard Header */}
+                  <div className="space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-transparent">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden bg-transparent theme-border-glass border-2">
                           <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('extracted.nyantara_logo')} width={40} height={40} className="object-contain" />
                         </div>
                         <div>
-                          <p className="font-semibold theme-text-primary">{t('extracted.application_status')} </p>
-                          <p className="text-xs theme-text-muted">{t('extracted.realtime_tracking')} </p>
+                          <p className="font-bold theme-text-primary text-base sm:text-lg">{t('extracted.application_status')} </p>
+                          <p className="text-xs sm:text-sm theme-text-muted">{t('extracted.realtime_tracking')} </p>
                         </div>
                       </div>
-                      <CheckCircle className="w-8 h-8 text-green-400" />
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full animate-pulse" />
+                        <span className="text-xs sm:text-sm font-medium text-green-400">Live</span>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Status Cards Grid */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                       {[
-                        { label: t('extracted.verified'), value: '100%', icon: BadgeCheck, color: 'from-green-500 to-emerald-500' },
-                        { label: t('extracted.processing'), value: '2 hrs', icon: Clock, color: 'from-blue-500 to-cyan-500' },
-                        { label: t('extracted.amount'), value: '₹40K', icon: Wallet, color: 'from-amber-500 to-orange-500' },
-                        { label: t('extracted.status'), value: t('extracted.active'), icon: Activity, color: 'from-purple-500 to-pink-500' }
+                        { label: t('extracted.verified'), value: '100%', icon: BadgeCheck, color: 'from-green-500 to-emerald-500', status: 'success' },
+                        { label: t('extracted.processing'), value: '2 hrs', icon: Clock, color: 'from-blue-500 to-cyan-500', status: 'active' },
+                        { label: t('extracted.amount'), value: '₹40K', icon: Wallet, color: 'from-amber-500 to-orange-500', status: 'pending' },
+                        { label: t('extracted.status'), value: t('extracted.active'), icon: Activity, color: 'from-purple-500 to-pink-500', status: 'active' }
                       ].map((item, i) => (
                         <motion.div
                           key={i}
-                          className={`bg-gradient-to-br ${item.color} p-4 rounded-xl text-white shadow-lg`}
-                          whileHover={{ scale: 1.05, y: -2 }}
+                          className={`bg-gradient-to-br ${item.color} p-3 sm:p-5 rounded-xl sm:rounded-2xl text-white shadow-xl relative overflow-hidden group`}
+                          whileHover={{ scale: 1.05, y: -3 }}
                           animate={{
                             boxShadow: theme === 'dark'
                               ? ['0 0 20px rgba(59, 130, 246, 0.3)', '0 0 30px rgba(59, 130, 246, 0.5)', '0 0 20px rgba(59, 130, 246, 0.3)']
@@ -656,30 +712,46 @@ const NyantraLanding = () => {
                           }}
                           transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                         >
-                          <item.icon className="w-6 h-6 mb-2 text-white" />
-                          <p className="text-2xl font-bold text-white">{item.value}</p>
-                          <p className="text-xs text-white/80">{item.label}</p>
+                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <item.icon className="w-5 h-5 sm:w-7 sm:h-7 mb-2 sm:mb-3 text-white drop-shadow-lg" />
+                          <p className="text-xl sm:text-3xl font-bold text-white mb-1">{item.value}</p>
+                          <p className="text-xs sm:text-sm text-white/90">{item.label}</p>
+                          <div className={`absolute top-2 sm:top-3 right-2 sm:right-3 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                            item.status === 'success' ? 'bg-green-300' :
+                            item.status === 'active' ? 'bg-blue-300' : 'bg-amber-300'
+                          }`} />
                         </motion.div>
                       ))}
                     </div>
 
-                    <div className="theme-bg-glass rounded-xl p-4 space-y-3 theme-border-glass">
-                      <p className="text-sm font-semibold theme-text-secondary">{t('extracted.recent_activities')} </p>
+                    {/* Activity Feed */}
+                    <div className="theme-bg-glass rounded-xl sm:rounded-2xl p-3 sm:p-5 space-y-3 sm:space-y-4 theme-border-glass border">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs sm:text-sm font-semibold theme-text-secondary">{t('extracted.recent_activities')} </p>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse" />
+                          <span className="text-xs theme-text-muted">Live updates</span>
+                        </div>
+                      </div>
                       {[
-                        { text: t('extracted.application_submitted'), time: t('extracted.two_mins_ago'), status: 'success' },
-                        { text: t('extracted.document_verified'), time: t('extracted.one_hour_ago'), status: 'success' },
-                        { text: t('extracted.approval_pending'), time: t('extracted.three_hours_ago'), status: 'pending' }
+                        { text: t('extracted.application_submitted'), time: t('extracted.two_mins_ago'), status: 'success', icon: CheckCircle },
+                        { text: t('extracted.document_verified'), time: t('extracted.one_hour_ago'), status: 'success', icon: CheckCircle },
+                        { text: t('extracted.approval_pending'), time: t('extracted.three_hours_ago'), status: 'pending', icon: Clock }
                       ].map((activity, i) => (
                         <motion.div
                           key={i}
-                          className="flex items-center justify-between text-sm"
+                          className="flex items-center justify-between text-xs sm:text-sm p-2 sm:p-3 rounded-lg sm:rounded-xl theme-bg-card theme-border-card border"
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: 1 + i * 0.1 }}
                         >
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-2 h-2 rounded-full ${activity.status === 'success' ? 'bg-green-400' : 'bg-amber-400'}`} />
-                            <span className="theme-text-primary">{activity.text}</span>
+                          <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${
+                              activity.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              <activity.icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </div>
+                            <span className="theme-text-primary font-medium text-xs sm:text-sm">{activity.text}</span>
                           </div>
                           <span className="theme-text-muted text-xs">{activity.time}</span>
                         </motion.div>
@@ -689,25 +761,36 @@ const NyantraLanding = () => {
 
                   {/* Floating Icons */}
                   <motion.div
-                    className="absolute -top-6 -right-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
+                    className="absolute -top-4 sm:-top-6 -right-4 sm:-right-6 w-12 h-12 sm:w-16 sm:h-16 accent-gradient rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg"
                     animate={{
                       y: [0, -10, 0],
                       rotate: [0, 5, 0]
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    <Shield className="w-8 h-8 text-white" />
+                    <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </motion.div>
 
                   <motion.div
-                    className="absolute -bottom-6 -left-6 w-16 h-16 accent-gradient rounded-2xl flex items-center justify-center shadow-lg"
+                    className="absolute -bottom-4 sm:-bottom-6 -left-4 sm:-left-6 w-12 h-12 sm:w-16 sm:h-16 accent-gradient rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg"
                     animate={{
                       y: [0, 10, 0],
                       rotate: [0, -5, 0]
                     }}
                     transition={{ duration: 2.5, repeat: Infinity }}
                   >
-                    <Zap className="w-8 h-8 text-white" />
+                    <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  </motion.div>
+
+                  {/* Notification Badge */}
+                  <motion.div
+                    className="absolute -top-2 sm:-top-3 -left-2 sm:-left-3 w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="text-white text-xs font-bold">3</span>
                   </motion.div>
                 </div>
               </motion.div>
@@ -716,14 +799,14 @@ const NyantraLanding = () => {
 
           {/* Scroll Indicator */}
           <motion.div
-            className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
+            className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <div className="w-6 h-10 border-2 theme-border-glass rounded-full flex justify-center pt-2">
+            <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 theme-border-glass rounded-full flex justify-center pt-1.5 sm:pt-2">
               <motion.div
-                className="w-1 h-2 rounded-full accent-gradient"
-                animate={{ y: [0, 12, 0] }}
+                className="w-0.5 h-1.5 sm:w-1 sm:h-2 rounded-full accent-gradient"
+                animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
             </div>
@@ -1215,37 +1298,60 @@ const NyantraLanding = () => {
 
             {/* Integrations Grid */}
             <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
-              {(() => {
-                const integrationItems = JSON.parse(t('integrations.items')) as Array<{ name: string; desc: string }>;
-                const logos = ['/next.svg', '/window.svg', '/vercel.svg', '/globe.svg', '/file.svg', '/next.svg'];
-                const accents = [
-                  'from-amber-400 to-amber-500',
-                  'from-blue-400 to-indigo-500',
-                  'from-indigo-400 to-purple-500',
-                  'from-green-400 to-teal-500',
-                  'from-pink-400 to-rose-500',
-                  'from-yellow-400 to-amber-500'
-                ];
-                
-                return integrationItems.map((integration, idx) => ({
-                  key: integration.name.toLowerCase().replace(/\s+/g, ''),
-                  name: integration.name,
-                  logo: logos[idx],
-                  desc: integration.desc,
-                  accent: accents[idx]
-                }));
-              })().map((integration: any) => (
-                <motion.div key={integration.key} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
-                  <div className="w-full theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center space-y-3 hover:shadow-xl transition-all duration-300">
-                    <div className={`w-20 h-20 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br ${integration.accent}`}>
-                      {/* Use Image for logo if available, fallback to name */}
-                      <Image src={integration.logo} alt={`${integration.name} logo`} width={48} height={48} className="object-contain" />
+              {[
+                {
+                  name: 'PFMS',
+                  desc: 'भुगतान और DBT',
+                  logo: 'https://www.gconnect.in/gc22/wp-content/uploads/2023/03/PFMS.png', // Placeholder, replace with actual URL
+                  accent: 'from-amber-400 to-amber-500',
+                  link: 'https://pfms.nic.in/' // Add your custom link here
+                },
+                {
+                  name: 'Aadhaar',
+                  desc: 'पहचान सत्यापन',
+                  logo: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Aadhaar_Logo.jpg',
+                  accent: 'from-blue-400 to-indigo-500',
+                  link: 'https://uidai.gov.in/' // Add your custom link here
+                },
+                {
+                  name: 'CCTNS',
+                  desc: 'पुलिस रिकॉर्ड',
+                  logo: 'https://static.mygov.in/static/s3fs-public/mygov_144074499810881641.jpg', // Placeholder
+                  accent: 'from-indigo-400 to-purple-500',
+                  link: 'https://ncrb.gov.in/' // Add your custom link here
+                },
+                {
+                  name: 'eCourts',
+                  desc: 'मामला प्राप्ति',
+                  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2E9X9SHoKmNE6d4ud4Efc7iX2o4m7V73DsQ&s',
+                  accent: 'from-green-400 to-teal-500',
+                  link: 'https://ecourts.gov.in/' // Add your custom link here
+                },
+                {
+                  name: 'DigiLocker',
+                  desc: 'दस्तावेज़ भंडारण',
+                  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXdc7MqagTAT_T2SEYZpsFVBOqsXEm7YGXng&s',
+                  accent: 'from-pink-400 to-rose-500',
+                  link: 'https://digilocker.gov.in/' // Add your custom link here
+                },
+                {
+                  name: 'SMS Gateways',
+                  desc: 'सूचनाएं',
+                  logo: 'https://png.pngtree.com/png-vector/20231115/ourmid/pngtree-sms-icon-sign-png-image_10603188.png', // Placeholder for SMS Gateways
+                  accent: 'from-yellow-400 to-amber-500',
+                  link: '#' // Add your custom link here
+                }
+              ].map((integration, idx) => (
+                <motion.div key={integration.name.toLowerCase().replace(/\s+/g, '')} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
+                  <div className="w-full h-48 theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center justify-between hover:shadow-xl transition-all duration-300">
+                    <div className="flex flex-col items-center space-y-3">
+                      <Image src={integration.logo} alt={`${integration.name} logo`} width={80} height={80} className="object-contain rounded-lg" />
+                      <div>
+                        <p className="font-semibold theme-text-primary">{integration.name}</p>
+                        <p className="text-xs theme-text-muted">{integration.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold theme-text-primary">{integration.name}</p>
-                      <p className="text-xs theme-text-muted">{integration.desc}</p>
-                    </div>
-                    <a href={`#`} aria-label={`Learn more about ${integration.name}`} className="mt-2 inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">
+                    <a href={integration.link} aria-label={`Learn more about ${integration.name}`} className="inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">
                       {t('integrations.learnMore')}
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </a>
@@ -1297,18 +1403,18 @@ const NyantraLanding = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
               {/* Company Info */}
               <div>
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 flex items-center justify-center overflow-hidden bg-transparent">
-                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={40} height={40} className="object-contain" />
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 flex items-center justify-center overflow-hidden bg-transparent theme-border-glass border-2 rounded-2xl">
+                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={44} height={44} className="object-contain" />
                   </div>
                   <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
                     {t('nav.brandName')}
                   </span>
                 </div>
-                <p className="theme-text-secondary mb-6 leading-relaxed overflow-visible py-2">
+                <p className="theme-text-secondary mb-6 leading-relaxed overflow-visible py-2 text-base">
                   {t('footer.companyDesc')}
                 </p>
-                <div className="flex space-x-4">
+                <div className="flex space-x-3">
                   {[
                     { icon: Globe, label: t('footer.social.website') },
                     { icon: Mail, label: t('footer.social.email') },
@@ -1317,12 +1423,12 @@ const NyantraLanding = () => {
                   ].map((social, i) => (
                     <motion.button
                       key={i}
-                      className="w-10 h-10 theme-bg-glass theme-border-glass border rounded-lg flex items-center justify-center hover:shadow-lg transition-all"
+                      className="w-12 h-12 theme-bg-glass theme-border-glass border rounded-xl flex items-center justify-center hover:shadow-lg transition-all group"
                       whileHover={{ scale: 1.1, backgroundColor: 'var(--accent-primary)' }}
                       whileTap={{ scale: 0.9 }}
                       aria-label={social.label}
                     >
-                      <social.icon className="w-5 h-5 theme-text-primary" />
+                      <social.icon className="w-5 h-5 theme-text-primary group-hover:text-white transition-colors" />
                     </motion.button>
                   ))}
                 </div>
@@ -1439,24 +1545,33 @@ const NyantraLanding = () => {
         <AnimatePresence>
           {isScrolled && (
             <motion.button
-              className="fixed bottom-8 right-8 w-14 h-14 accent-gradient rounded-full flex items-center justify-center shadow-2xl z-50"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              whileHover={{ scale: 1.1, rotate: 360 }}
-              whileTap={{ scale: 0.9 }}
+              className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 w-12 h-12 sm:w-14 sm:h-14 accent-gradient rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg sm:shadow-2xl z-50 group relative overflow-hidden"
+              initial={{ opacity: 0, scale: 0, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0, y: 20 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               aria-label={t('extracted.scroll_to_top')}
             >
-              <ChevronRight className="w-6 h-6 text-white transform -rotate-90" />
+              <motion.div
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10" style={{ transform: 'rotate(-90deg)' }} />
+              </motion.div>
             </motion.button>
           )}
         </AnimatePresence>
 
         {/* Enhanced Progress Bar */}
         <motion.div
-          className={`fixed top-0 left-0 right-0 h-1 transform origin-left z-50`}
-          style={{ scaleX: scaleProgress, background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))` }}
+          className={`fixed top-0 left-0 right-0 h-1.5 transform origin-left z-50 shadow-sm`}
+          style={{
+            scaleX: scaleProgress,
+            background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))`,
+            boxShadow: '0 0 20px var(--accent-primary)'
+          }}
         />
       </div>
     </div>

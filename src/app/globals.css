@@ -43,6 +43,44 @@ body {
       animation: gradientMove 6s ease-in-out infinite;
     }
 
+    @keyframes moveGradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    .animate-glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 20px var(--accent-primary);
+      }
+      to {
+        box-shadow: 0 0 30px var(--accent-primary), 0 0 40px var(--accent-secondary);
+      }
+    }
+
     /* Light theme */
 [data-theme="light"] {
   --text-primary: #1e40af; /* deep blue */
