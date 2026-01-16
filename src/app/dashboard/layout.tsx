@@ -1,383 +1,106 @@
 "use client";
-import React, { useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle, Users, Wallet, Bell, User, ChevronDown, Settings, Sun, Moon, HelpCircle, ChevronRight, Link } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
-import { useLocale } from '@/context/LocaleContext';
-import { useAuth } from '@/context/AuthContext';
-import { useEffect } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
-import BackgroundAnimation from '@/components/BackgroundAnimation';
+import React, { Suspense, lazy } from 'react';
+import Head from 'next/head';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { theme, toggleTheme } = useTheme();
-    // Slightly stronger dropdown backgrounds for better contrast
-    const dropdownSolidBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.99)' : 'rgba(255, 255, 255, 0.99)';
-    const { t } = useLocale();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [activeTab, setActiveTab] = useState('overview');
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
-    const [notificationOpen, setNotificationOpen] = useState(false);
-    const [isProgrammaticNavigation, setIsProgrammaticNavigation] = useState(false);
-    
-    const navigationItems = [
-        { id: 'overview', label: t('extracted.dashboard'), icon: Home },
-        { id: 'applications', label: t('extracted.applications'), icon: FileText },
-        { id: 'beneficiaries', label: t('extracted.beneficiaries'), icon: Users },
-        { id: 'disbursements', label: t('extracted.disbursements'), icon: Wallet },
-        { id: 'analytics', label: t('extracted.analytics_reports'), icon: BarChart3 },
-        { id: 'grievance', label: t('extracted.grievance_hub') || t('extracted.grievance'), icon: MessageCircle },
-        { id: 'integrations', label: t('nav.integrations'), icon: Database },
-        { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud },
-        { id: 'blockchain', label: t('blockchain.blockchainNav'), icon: Link }
-    ];
-    
-    const router = useRouter();
-    const pathname = usePathname();
-    const { user, loading, profile } = useAuth();
+// Lazy load the dashboard layout for better performance
+const DashboardLayout = lazy(() => import('@/components/dashboard/DashboardLayout').then(module => ({ default: module.default })));
 
-    // Compute a friendly display name from Firebase user
-    const displayName = user?.displayName ?? (user?.email ? user.email.split('@')[0] : 'Guest');
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
-    useEffect(() => {
-        // If auth finished loading and there is no user, redirect to login
-        if (!loading && !user) router.push('/login');
-        // If user is loaded but profile is loaded and doesn't have officer role, redirect appropriately
-        if (!loading && user && profile !== undefined && profile?.role !== 'officer') {
-            if (profile?.role === 'user') {
-                router.push('/user-dashboard');
-            } else {
-                router.push('/choose-role');
-            }
-        }
-    }, [user, loading, profile, router]);
+// Preload critical images
+const preloadImages = () => {
+  return new Promise<void>((resolve) => {
+    const images = ['/Logo-Dark.png', '/Logo-Light.png'];
+    let loadedCount = 0;
 
-    // Update active tab based on pathname changes (but not during programmatic navigation)
-    useEffect(() => {
-        if (!isProgrammaticNavigation) {
-            if (pathname === '/dashboard') {
-                setActiveTab('overview');
-            } else if (pathname.startsWith('/dashboard/')) {
-                const pathSegment = pathname.split('/dashboard/')[1]?.split('/')[0];
-                if (pathSegment && navigationItems.some(item => item.id === pathSegment)) {
-                    setActiveTab(pathSegment);
-                }
-            }
-        }
-    }, [pathname, navigationItems, isProgrammaticNavigation]);
-    
-    const handleSidebarChange = (id: string) => {
-        setIsProgrammaticNavigation(true);
-        setActiveTab(id);
-        if (id === 'overview') router.push('/dashboard');
-        else router.push(`/dashboard/${id}`);
-        setSidebarOpen(false);
-        // Reset the flag after navigation completes
-        setTimeout(() => setIsProgrammaticNavigation(false), 100);
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount === images.length) {
+        resolve();
+      }
     };
 
-    const toggleSidebarCollapse = () => {
-        setSidebarCollapsed(!sidebarCollapsed);
-    };
+    images.forEach(src => {
+      const img = new window.Image();
+      img.onload = checkAllLoaded;
+      img.onerror = checkAllLoaded;
+      img.src = src;
+    });
+  });
+};
 
-    return (
-        <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-all duration-300" style={{ background: 'var(--bg-gradient)' }}>
-            {/* Enhanced Theme Variables */}
-            <style jsx global>{`
-                [data-theme="dark"] {
-                    --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
-                                   radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                                   linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-                    --card-bg: rgba(15, 23, 42, 0.7);
-                    --card-border: rgba(255, 255, 255, 0.08);
-                    --nav-bg: rgba(15, 23, 42, 0.95);
-                    --text-primary: #f1f5f9;
-                    --text-secondary: #94a3b8;
-                    --text-muted: #64748b;
-                    --accent-primary: #06b6d4;
-                    --accent-secondary: #8b5cf6;
-                    --glass-bg: rgba(15, 23, 42, 0.6);
-                    --glass-border: rgba(255, 255, 255, 0.1);
-                    --bg-hover: rgba(255, 255, 255, 0.05);
-                    --bg-body: var(--bg-gradient);
-                }
+export default function Layout({ children }: { children: React.ReactNode }) {
+  // Preload images on mount
+  React.useEffect(() => {
+    preloadImages();
+  }, []);
 
-                [data-theme="light"] {
-                    --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
-                                   radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                                   linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-                    --card-bg: rgba(255, 255, 255, 0.8);
-                    --card-border: rgba(0, 0, 0, 0.06);
-                    --nav-bg: rgba(255, 255, 255, 0.95);
-                    --text-primary: #0f172a;
-                    --text-secondary: #475569;
-                    --text-muted: #64748b;
-                    --accent-primary: #fb7185;
-                    --accent-secondary: #fb923c;
-                    --glass-bg: rgba(255, 255, 255, 0.6);
-                    --glass-border: rgba(0, 0, 0, 0.08);
-                    --bg-hover: rgba(0, 0, 0, 0.03);
-                    --bg-body: var(--bg-gradient);
-                }
+  return (
+    <>
+      <Head>
+        <title>Nyantra Dashboard - Direct Benefit Transfer Management</title>
+        <meta name="description" content="Comprehensive dashboard for managing Direct Benefit Transfer operations under PCR & PoA Acts. Monitor applications, beneficiaries, disbursements, and analytics in real-time." />
+        <meta name="keywords" content="DBT, Direct Benefit Transfer, PCR Act, PoA Act, social justice, government dashboard, beneficiary management" />
+        <meta name="robots" content="noindex, nofollow" /> {/* Dashboard pages should not be indexed */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-                .theme-text-primary { color: var(--text-primary) !important; }
-                .theme-text-secondary { color: var(--text-secondary) !important; }
-                .theme-text-muted { color: var(--text-muted) !important; }
-                .theme-bg-card { background: var(--card-bg) !important; }
-                .theme-border-card { border-color: var(--card-border) !important; }
-                .theme-bg-glass { background: var(--glass-bg) !important; }
-                .theme-border-glass { border-color: var(--glass-border) !important; }
-                .theme-bg-nav { background: var(--nav-bg) !important; }
-                .theme-bg-hover { background: var(--bg-hover) !important; }
-                .theme-bg-body { background: var(--bg-body) !important; }
-                
-                .accent-gradient {
-                    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-                }
-                
-                .text-accent-gradient {
-                    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-            `}</style>
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Nyantra Dashboard - Direct Benefit Transfer Management" />
+        <meta property="og:description" content="Comprehensive dashboard for managing Direct Benefit Transfer operations under PCR & PoA Acts." />
+        <meta property="og:image" content="/og-dashboard.png" />
 
-            {/* Three.js Background Animation */}
-            <BackgroundAnimation />
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content="Nyantra Dashboard - Direct Benefit Transfer Management" />
+        <meta property="twitter:description" content="Comprehensive dashboard for managing Direct Benefit Transfer operations under PCR & PoA Acts." />
+        <meta property="twitter:image" content="/og-dashboard.png" />
 
-            {/* Enhanced Gradient Orbs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-                <motion.div
-                    className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-15' : 'opacity-20'}`}
-                    animate={{
-                        x: [0, 100, 0],
-                        y: [0, 50, 0],
-                    }}
-                    transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-                <motion.div
-                    className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-15' : 'opacity-20'}`}
-                    animate={{
-                        x: [0, -100, 0],
-                        y: [0, -50, 0],
-                    }}
-                    transition={{
-                        duration: 15,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-            </div>
+        {/* Security headers */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
 
-            <div className="flex min-h-screen relative z-10">
-                {/* Sidebar */}
-                <Sidebar
-                    items={navigationItems}
-                    activeId={activeTab}
-                    onChange={handleSidebarChange}
-                    open={sidebarOpen}
-                    setOpen={setSidebarOpen}
-                    collapsed={sidebarCollapsed}
-                />
+        {/* Preload critical resources */}
+        <link rel="preload" href="/Logo-Dark.png" as="image" />
+        <link rel="preload" href="/Logo-Light.png" as="image" />
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
 
-                {/* Main Content */}
-                <div className={`flex flex-col flex-1 transition-all duration-300 ${
-                    sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-                }`}>
-                    {/* Enhanced Header */}
-                    <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm">
-                        <div className="flex items-center justify-between px-4 py-3 lg:px-6">
-                            {/* Left Section - Mobile Menu & Branding */}
-                            <div className="flex items-center gap-4 flex-1">
-                                {/* Desktop sidebar toggle */}
-                                <motion.button
-                                    onClick={toggleSidebarCollapse}
-                                    className="hidden lg:flex p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                                >
-                                    <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${
-                                        sidebarCollapsed ? '' : 'rotate-180'
-                                    }`} />
-                                </motion.button>
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "Nyantra Dashboard",
+              "description": "Comprehensive dashboard for managing Direct Benefit Transfer operations under PCR & PoA Acts",
+              "applicationCategory": "GovernmentApplication",
+              "operatingSystem": "Web Browser",
+              "offers": {
+                "@type": "Offer",
+                "category": "Government Services"
+              },
+              "creator": {
+                "@type": "Organization",
+                "name": "Nyantra"
+              }
+            })
+          }}
+        />
+      </Head>
 
-                                {/* Mobile menu toggle */}
-                                <button
-                                    onClick={() => setSidebarOpen(true)}
-                                    className="lg:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                                    aria-label={t('extracted.open_sidebar')}
-                                >
-                                    <Menu className="w-5 h-5 theme-text-primary" />
-                                </button>
-
-                                {/* Nyantra Dashboard Branding */}
-                                <div className="flex items-center gap-3">
-                                    <div className="hidden sm:block">
-                                        <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                            {t('extracted.nyantra_dashboard')}
-                                        </h1>
-                                        <p className="text-sm theme-text-muted">
-                                            {t('extracted.direct_benefit_transfer_management')}
-                                        </p>
-                                    </div>
-                                    <div className="sm:hidden">
-                                        <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                            {t('extracted.nyantra')}
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Section - Theme Toggle, Notifications & User Menu */}
-                            <div className="flex items-center gap-3">
-                               
-
-                                {/* Notifications */}
-                                <div className="relative">
-                                    <motion.button
-                                        onClick={() => setNotificationOpen(!notificationOpen)}
-                                        className="relative p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors group"
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <Bell className="w-5 h-5 theme-text-primary group-hover:scale-110 transition-transform" />
-                                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 theme-border-glass"></span>
-                                    </motion.button>
-
-                                    {/* Notification Dropdown */}
-                                    <AnimatePresence>
-                                        {notificationOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="absolute right-0 top-full mt-2 w-80 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
-                                                style={{ background: dropdownSolidBg }}
-                                            >
-                                                <div className="p-3 border-b theme-border-glass">
-                                                    <h3 className="font-semibold theme-text-primary">{t('extracted.notifications_1')} </h3>
-                                                </div>
-                                                <div className="max-h-96 overflow-y-auto">
-                                                    {[1, 2, 3].map((item) => (
-                                                        <div key={item} className="p-3 border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors">
-                                                            <p className="text-sm theme-text-primary">{t('extracted.new_application_requires_review')} </p>
-                                                            <p className="text-xs theme-text-muted mt-1">{t('extracted.2_hours_ago')} </p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                {/* User Menu */}
-                                <div className="relative">
-                                    <motion.button
-                                        onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-2 h-[41px] px-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                                            <User className="w-3.5 h-3.5 text-white" />
-                                        </div>
-                                        <div className="hidden sm:block text-left">
-                                            <p className="text-sm font-medium theme-text-primary leading-tight">{displayName}</p>
-                                            <p className="text-xs theme-text-muted leading-tight">{t('extracted.administrator')} </p>
-                                        </div>
-                                        <ChevronDown className={`w-4 h-4 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-                                    </motion.button>
-
-                                    {/* User Dropdown Menu */}
-                                    <AnimatePresence>
-                                        {userMenuOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="absolute right-0 top-full mt-2 w-48 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-1 z-50"
-                                                style={{ background: dropdownSolidBg }}
-                                            >
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
-                                                    <User className="w-4 h-4" />
-                                                    Profile
-                                                </button>
-                                                 <div className="border-t theme-border-glass my-1"></div>
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
-                                                    <Settings className="w-4 h-4" />
-                                                    Settings
-                                                </button>
-                                                 <div className="border-t theme-border-glass my-1"></div>
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
-                                                    <HelpCircle className="w-4 h-4" />
-                                                    Help & Support
-                                                </button>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Breadcrumb Section */}
-                        <div className="border-t theme-border-glass px-4 lg:px-6 py-2">
-                            <div className="flex items-center gap-2 text-sm theme-text-muted">
-                                <span>{t('extracted.dashboard')} </span>
-                                <ChevronDown className="w-3 h-3 rotate-270" />
-                                <span className="theme-text-primary capitalize">{(
-                                    // try common keys first
-                                    activeTab === 'overview' ? t('extracted.dashboard') :
-                                    activeTab === 'analytics' ? t('extracted.analytics_reports') :
-                                    activeTab === 'applications' ? t('extracted.applications') :
-                                    activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
-                                    activeTab === 'disbursements' ? t('extracted.disbursements') :
-                                    activeTab === 'grievance' ? (t('extracted.grievance_hub') || t('extracted.grievance')) :
-                                    activeTab === 'integrations' ? t('extracted.integrations') :
-                                    activeTab === 'reports' ? (t('extracted.recent_reports') || 'Reports') :
-                                    // fallback: humanize id
-                                    activeTab.replace('-', ' ')
-                                )}</span>
-                            </div>
-                        </div>
-                    </header>
-
-                    {/* Page Content */}
-                    <motion.main
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="p-4 sm:p-6 lg:p-8 relative z-10"
-                    >
-                        {children || (
-                            <div className="text-center py-20 text-lg theme-text-muted">
-                                Select a section from the sidebar.
-                            </div>
-                        )}
-                    </motion.main>
-                </div>
-            </div>
-
-            {/* Close dropdowns when clicking outside */}
-            {(userMenuOpen || notificationOpen) && (
-                <div 
-                    className="fixed inset-0 z-30" 
-                    onClick={() => {
-                        setUserMenuOpen(false);
-                        setNotificationOpen(false);
-                    }}
-                />
-            )}
-        </div>
-    );
+      <Suspense fallback={<LoadingFallback />}>
+        <DashboardLayout>
+          {children}
+        </DashboardLayout>
+      </Suspense>
+    </>
+  );
 }
