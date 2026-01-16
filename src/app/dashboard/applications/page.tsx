@@ -4,8 +4,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import GradientOrbs from '@/components/dashboard/GradientOrbs';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
 import jsPDF from 'jspdf';
+import PrintHeader from '@/components/dashboard/PrintHeader';
+import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timestamp, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
@@ -1602,133 +1605,11 @@ return (
     <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 flex-1">
 
     {/* Enhanced Gradient Orbs - Subtle Background Animation */}
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-      <motion.div
-        className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-5' : 'opacity-8'}`}
-        animate={{
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className={`absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-4' : 'opacity-6'}`}
-        animate={{
-          x: [0, -25, 0],
-          y: [0, 15, 0],
-          scale: [1, 0.9, 1],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className={`absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-3' : 'opacity-5'}`}
-        animate={{
-          x: [0, -15, 0],
-          y: [0, 25, 0],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 30,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-    </div>
+    <GradientOrbs theme={theme} />
 
-    {/* Enhanced Theme Variables */}
-    <style jsx global>{`
-      [data-theme="dark"] {
-        --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%),
-                       radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%),
-                       linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-        --card-bg: rgba(15, 23, 42, 0.7);
-        --card-border: rgba(255, 255, 255, 0.08);
-        --nav-bg: rgba(15, 23, 42, 0.95);
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
-        --accent-primary: #06b6d4;
-        --accent-secondary: #8b5cf6;
-        --glass-bg: rgba(15, 23, 42, 0.6);
-        --glass-border: rgba(255, 255, 255, 0.1);
-      }
-
-      [data-theme="light"] {
-        --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%),
-                       radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%),
-                       linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-        --card-bg: rgba(255, 255, 255, 0.8);
-        --card-border: rgba(0, 0, 0, 0.06);
-        --nav-bg: rgba(255, 255, 255, 0.95);
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --text-muted: #64748b;
-        --accent-primary: #fb7185;
-        --accent-secondary: #fb923c;
-        --glass-bg: rgba(255, 255, 255, 0.6);
-        --glass-border: rgba(0, 0, 0, 0.08);
-      }
-
-      .theme-text-primary { color: var(--text-primary) !important; }
-      .theme-text-secondary { color: var(--text-secondary) !important; }
-      .theme-text-muted { color: var(--text-muted) !important; }
-      .theme-bg-card { background: var(--card-bg) !important; }
-      .theme-border-card { border-color: var(--card-border) !important; }
-      .theme-bg-glass { background: var(--glass-bg) !important; }
-      .theme-border-glass { border-color: var(--glass-border) !important; }
-      .theme-bg-nav { background: var(--nav-bg) !important; }
-
-      .accent-gradient {
-        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-      }
-
-      .text-accent-gradient {
-        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-    `}</style>
 
     {/* Print Header - Only visible when printing */}
-    <div className="print-only hidden">
-      <div
-        style={{
-          textAlign: "center",
-          marginBottom: "30px",
-          paddingBottom: "20px",
-          borderBottom: "2px solid #3b82f6",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            color: "#0f172a",
-            marginBottom: "8px",
-          }}
-        >
-          {t("applications.title")}
-        </h1>
-        <p style={{ fontSize: "14px", color: "#64748b" }}>
-          Generated on{" "}
-          {new Date().toLocaleDateString("en-GB", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
-      </div>
-    </div>
+    <PrintHeader theme={theme} />
 
     {/* Header */}
     <motion.div
@@ -1814,50 +1695,14 @@ return (
     </div>
 
     {/* Confirm delete modal */}
-    <AnimatePresence>
-      {confirmModal.open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
-        >
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={cancelConfirmDelete}
-          />
-          <motion.div
-            initial={{ scale: 0.98, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.98, opacity: 0 }}
-            className="relative w-full max-w-md p-6 rounded-xl theme-border-glass border shadow-lg theme-bg-card"
-          >
-            <h3 className="text-lg font-semibold theme-text-primary mb-3">
-              {t("applications.confirmDeleteTitle")}
-            </h3>
-            <p className="text-sm theme-text-muted mb-6">
-              {confirmModal.message}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={cancelConfirmDelete}
-                className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteApplication}
-                className={`px-4 py-2 rounded-lg text-white ${
-                  theme === "light" ? "bg-red-600" : "bg-red-500"
-                }`}
-              >
-                Delete
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <ConfirmDeleteModal
+      open={confirmModal.open}
+      message={confirmModal.message}
+      onCancel={cancelConfirmDelete}
+      onConfirm={confirmDeleteApplication}
+      theme={theme}
+      t={t}
+    />
 
     {/* Export Modal */}
     <AnimatePresence>
