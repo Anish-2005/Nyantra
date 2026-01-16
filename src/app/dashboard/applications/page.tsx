@@ -7,8 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import GradientOrbs from '@/components/dashboard/GradientOrbs';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
 import jsPDF from 'jspdf';
+import ApplicationDetail from '@/components/dashboard/ApplicationDetail';
+import FiltersSearch from '@/components/dashboard/FiltersSearch';
 import PrintHeader from '@/components/dashboard/PrintHeader';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import ExportModal from '@/components/dashboard/ExportModal';
+import StatisticsCards from '@/components/dashboard/StatisticsCards';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy, onSnapshot, addDoc, setDoc, Timestamp, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
@@ -1705,168 +1709,20 @@ return (
     />
 
     {/* Export Modal */}
-    <AnimatePresence>
-      {showExportModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
-        >
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setShowExportModal(false)}
-          />
-          <motion.div
-            initial={{ scale: 0.98, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.98, opacity: 0 }}
-            className="relative w-full max-w-md mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
-            style={{
-              background:
-                theme === "light"
-                  ? "rgba(255,255,255,0.98)"
-                  : "rgba(6,8,20,0.98)",
-            }}
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
-                  <Download className="w-5 h-5 text-accent-gradient" />
-                  {t("applications.exportTitle") || "Export Applications"}
-                </h3>
-                <p className="text-sm theme-text-muted mt-1">
-                  {t("applications.exportSubtitle") || "Choose export format for applications data"}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowExportModal(false)}
-                aria-label="Close export modal"
-                className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors"
-              >
-                <X className="w-5 h-5 theme-text-primary" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Export All Section */}
-              <div className="p-4 rounded-lg border theme-border-glass">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-medium theme-text-primary">{t("applications.exportAllTitle") || "All Applications"}</h4>
-                    <p className="text-sm theme-text-muted">{applications.length} {t("applications.records", { count: applications.length })}</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      exportApplicationsData(applications);
-                      setShowExportModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary transition-colors"
-                  >
-                    {t("applications.exportCsv") || "Export CSV"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      exportApplicationsPDF(applications);
-                      setShowExportModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md transition-shadow"
-                  >
-                    {t("applications.exportPdf") || "Export PDF"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Export Filtered Section */}
-              <div className="p-4 rounded-lg border theme-border-glass">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-medium theme-text-primary">{t("applications.exportFilteredTitle") || "Filtered Results"}</h4>
-                    <p className="text-sm theme-text-muted">{filteredApplications.length} {t("applications.records", { count: filteredApplications.length })}</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    disabled={filteredApplications.length === 0}
-                    onClick={() => {
-                      exportApplicationsData(filteredApplications);
-                      setShowExportModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {t("applications.exportCsv") || "Export CSV"}
-                  </button>
-                  <button
-                    disabled={filteredApplications.length === 0}
-                    onClick={() => {
-                      exportApplicationsPDF(filteredApplications);
-                      setShowExportModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow"
-                  >
-                    {t("applications.exportPdf") || "Export PDF"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Email Export Section */}
-              <div className="p-4 rounded-lg border theme-border-glass">
-                <div className="mb-3">
-                  <h4 className="font-medium theme-text-primary mb-2">{t("applications.emailExport")}</h4>
-                  <input
-                    type="email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder={t("applications.enterEmailAddress") || "Enter email address"}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex gap-3">
-                    <button
-                      disabled={!emailAddress.trim() || sendingEmail}
-                      onClick={() => sendApplicationsEmail(applications, 'csv')}
-                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                      {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                      {t("applications.sendCsv")}
-                    </button>
-                    <button
-                      disabled={!emailAddress.trim() || sendingEmail}
-                      onClick={() => sendApplicationsEmail(applications, 'pdf')}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                    >
-                      {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                      {t("applications.sendPdf")}
-                    </button>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
-                      onClick={() => sendApplicationsEmail(filteredApplications, 'csv')}
-                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                      {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                      {t("applications.sendFilteredCsv")}
-                    </button>
-                    <button
-                      disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
-                      onClick={() => sendApplicationsEmail(filteredApplications, 'pdf')}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                    >
-                      {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                      {t("applications.sendFilteredPdf")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <ExportModal
+      open={showExportModal}
+      onClose={() => setShowExportModal(false)}
+      theme={theme}
+      t={t}
+      applications={applications}
+      filteredApplications={filteredApplications}
+      exportApplicationsData={exportApplicationsData}
+      exportApplicationsPDF={exportApplicationsPDF}
+      emailAddress={emailAddress}
+      setEmailAddress={setEmailAddress}
+      sendingEmail={sendingEmail}
+      sendApplicationsEmail={sendApplicationsEmail}
+    />
 
     {/* Main Content */}
     {showNewApplicationForm ? (
@@ -1913,286 +1769,30 @@ return (
     ) : (
       <>
       {/* Statistics Cards */}
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-  {/* Total Applications */}
-  <div className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between mb-2">
-      <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white">
-        <User className="w-5 h-5" />
-      </div>
-      <span className="text-lg font-bold theme-text-primary">
-        {stats.total}
-      </span>
-    </div>
-    <p className="text-sm font-medium theme-text-muted">
-      {t("applications.stats.total")}
-    </p>
-  </div>
-
-  {(() => {
-    const list = [
-      {
-        status: "pending",
-        label: t("applications.stats.pending"),
-        count: stats.pending,
-        Icon: Clock,
-      },
-      {
-        status: "in-review",
-        label: t("applications.stats.inReview"),
-        count: stats.inReview,
-        Icon: Eye,
-      },
-      {
-        status: "approved",
-        label: t("applications.stats.approved"),
-        count: stats.approved,
-        Icon: Check,
-      },
-      {
-        status: "rejected",
-        label: t("applications.stats.rejected"),
-        count: stats.rejected,
-        Icon: X,
-      },
-      {
-        status: "documents-required",
-        label:
-          t("applications.stats.docsRequired") ||
-          t("applications.stats.documentsrequired"),
-        count: stats.documentsRequired,
-        Icon: AlertCircle,
-      },
-    ] as const;
-
-    return list.map((s) => (
-      <div
-        key={s.status}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${
-              theme === "light"
-                ? s.status === "approved"
-                  ? "bg-green-500"
-                  : s.status === "pending"
-                  ? "bg-amber-400"
-                  : s.status === "in-review"
-                  ? "bg-blue-400"
-                  : s.status === "rejected"
-                  ? "bg-red-400"
-                  : "bg-purple-400"
-                : s.status === "approved"
-                ? "bg-green-700"
-                : s.status === "pending"
-                ? "bg-amber-600"
-                : s.status === "in-review"
-                ? "bg-blue-700"
-                : s.status === "rejected"
-                ? "bg-red-700"
-                : "bg-purple-700"
-            }`}
-          >
-            <s.Icon className="w-5 h-5" />
-          </div>
-          <span className="text-lg font-bold theme-text-primary">
-            {s.count}
-          </span>
-        </div>
-        <p className="text-sm font-medium theme-text-muted">
-          {s.label}
-        </p>
-      </div>
-    ));
-  })()}
-</div>
+      <StatisticsCards stats={stats} theme={theme} t={t} />
 
 
         {/* Filters and Search */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm"
-        >
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 theme-text-muted" />
-              <input
-                type="text"
-                placeholder={t("applications.search")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              />
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
-              <button
-                onClick={() => setViewMode("table")}
-                className={`px-4 py-2 rounded ${
-                  viewMode === "table"
-                    ? "accent-gradient text-white"
-                    : "theme-text-muted hover:theme-text-primary"
-                } transition-colors`}
-              >
-                {t("applications.viewMode.table")}
-              </button>
-              <button
-                onClick={() => setViewMode("cards")}
-                className={`px-4 py-2 rounded ${
-                  viewMode === "cards"
-                    ? "accent-gradient text-white"
-                    : "theme-text-muted hover:theme-text-primary"
-                } transition-colors`}
-              >
-                {t("applications.viewMode.cards")}
-              </button>
-            </div>
-
-            {/* Filter Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${
-                showFilters
-                  ? "accent-gradient text-white"
-                  : "theme-bg-glass theme-text-primary"
-              } transition-colors`}
-            >
-              <Filter className="w-4 h-4" />
-              <span>{t("applications.filters")}</span>
-              {(statusFilter !== "all" ||
-                actTypeFilter !== "all" ||
-                priorityFilter !== "all" ||
-                sortBy !== "status" ||
-                sortOrder !== "asc") && (
-                <span className="w-2 h-2 bg-red-500 rounded-full" />
-              )}
-            </motion.button>
-          </div>
-
-          {/* Expanded Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                  <div>
-                    <label className="block text-sm font-medium theme-text-muted mb-2">
-                      {t("applications.filterLabels.status")}
-                    </label>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                      <option value="all">
-                        {t("applications.filterLabels.allStatuses")}
-                      </option>
-                      <option value="pending">
-                        {t("applications.stats.pending")}
-                      </option>
-                      <option value="in-review">
-                        {t("applications.stats.inReview")}
-                      </option>
-                      <option value="approved">
-                        {t("applications.stats.approved")}
-                      </option>
-                      <option value="rejected">
-                        {t("applications.stats.rejected")}
-                      </option>
-                      <option value="documents-required">
-                        {t("applications.stats.docsRequired")}
-                      </option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium theme-text-muted mb-2">
-                      {t("applications.filterLabels.actType")}
-                    </label>
-                    <select
-                      value={actTypeFilter}
-                      onChange={(e) => setActTypeFilter(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                      <option value="all">
-                        {t("applications.filterLabels.allActs")}
-                      </option>
-                      <option value="PCR Act">{t("extracted.pcr_act")}</option>
-                      <option value="PoA Act">{t("extracted.poa_act")}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium theme-text-muted mb-2">
-                      {t("applications.filterLabels.priority")}
-                    </label>
-                    <select
-                      value={priorityFilter}
-                      onChange={(e) => setPriorityFilter(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                      <option value="all">
-                        {t("applications.filterLabels.allPriorities")}
-                      </option>
-                      <option value="high">{t("extracted.high")}</option>
-                      <option value="medium">{t("extracted.medium")}</option>
-                      <option value="low">{t("extracted.low")}</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Sorting Controls */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t theme-border-glass">
-                  <div>
-                    <label className="block text-sm font-medium theme-text-muted mb-2">
-                      {t("applications.sortBy") || "Sort By"}
-                    </label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                      <option value="applicationDate">{t("applications.sortOptions.applicationDate") || "Application Date"}</option>
-                      <option value="amount">{t("applications.sortOptions.amount") || "Amount"}</option>
-                      <option value="status">{t("applications.sortOptions.status") || "Status"}</option>
-                      <option value="priority">{t("applications.sortOptions.priority") || "Priority"}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium theme-text-muted mb-2">
-                      {t("applications.sortOrder") || "Sort Order"}
-                    </label>
-                    <select
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                      <option value="desc">
-                        {sortBy === 'amount' ? (t("applications.sortOrderOptions.highToLow") || 'High to Low') : 
-                         sortBy === 'status' ? (t("applications.sortOrderOptions.approvedToPending") || 'Approved to Pending') : 
-                         sortBy === 'priority' ? (t("applications.sortOrderOptions.highToLow") || 'High to Low') : (t("applications.sortOrderOptions.newestFirst") || 'Newest First')}
-                      </option>
-                      <option value="asc">
-                        {sortBy === 'amount' ? (t("applications.sortOrderOptions.lowToHigh") || 'Low to High') : 
-                         sortBy === 'status' ? (t("applications.sortOrderOptions.pendingToApproved") || 'Pending to Approved') : 
-                         sortBy === 'priority' ? (t("applications.sortOrderOptions.lowToHigh") || 'Low to High') : (t("applications.sortOrderOptions.oldestFirst") || 'Oldest First')}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        <FiltersSearch
+          theme={theme}
+          t={t}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          actTypeFilter={actTypeFilter}
+          setActTypeFilter={setActTypeFilter}
+          priorityFilter={priorityFilter}
+          setPriorityFilter={setPriorityFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+        />
 
         {/* Applications List */}
         <motion.div
@@ -2533,298 +2133,23 @@ return (
     )}
 
     {/* Application Detail Inline Section */}
-    {selectedApplication && (
-      <div
-        className="theme-bg-card theme-border-glass border rounded-2xl w-full mt-6 overflow-hidden"
-        aria-live="polite"
-      >
-        <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b theme-border-glass">
-          <div>
-            <h2 className="text-2xl font-bold theme-text-primary">
-              {selectedApplication.applicantName}
-            </h2>
-            <p className="theme-text-muted">
-              {selectedApplication.id} • {selectedApplication.actType}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setSelectedApplication(null);
-              }}
-              className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/10 theme-text-primary transition-colors"
-              aria-label={t("extracted.close_sidebar") || "Close"}
-            >
-              <X className="w-5 h-5 theme-text-primary" />
-            </button>
-            <button
-              onClick={() => {
-                setShowNewApplicationForm(true);
-              }}
-              className="px-3 py-2 rounded-lg accent-gradient text-white"
-            >
-              <Edit className="w-4 h-4 inline-block mr-2" />{" "}
-              {t("applications.edit") || "Edit"}
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">
-              {t("applications.details") || "Application Details"}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.applicant")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.applicantName}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.aadhaar_number")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.aadhaar}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.phone_number")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.phone}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.location")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.district}, {selectedApplication.state}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.act_type")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.actType}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.incident_date")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {formatDate(selectedApplication.incidentDate)}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.application_date")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {formatDate(selectedApplication.applicationDate)}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.amount_1") || "Amount"}
-                </p>
-                <p className="font-semibold theme-text-primary">
-                  {formatCurrency(selectedApplication.amount)}
-                </p>
-              </div>
-
-              {/* POA Offence Information */}
-              {selectedApplication.actType === 'PoA Act' && (selectedApplication.offenceCategory || selectedApplication.offenceType) && (
-                <div className="md:col-span-2 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
-                  <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-600" />
-                    {t('applications.poa_act_offence_details')}
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {selectedApplication.offenceCategory && (
-                      <div>
-                        <p className="text-xs theme-text-muted mb-1">{t('applications.offence_category')}</p>
-                        <p className="font-medium theme-text-primary">{selectedApplication.offenceCategory}</p>
-                      </div>
-                    )}
-                    {selectedApplication.offenceType && (
-                      <div>
-                        <p className="text-xs theme-text-muted mb-1">{t('applications.specific_offence')}</p>
-                        <p className="font-medium theme-text-primary">{selectedApplication.offenceType}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Expected Amount Adjustment */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium theme-text-primary">Expected Relief Amount</label>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                          ₹{expectedAmount.toLocaleString('en-IN')}
-                        </div>
-                        <div className="text-xs theme-text-muted">Adjustable by officer</div>
-                      </div>
-                    </div>
-
-                    {/* Slider */}
-                    <div className="space-y-2">
-                      <input
-                        type="range"
-                        min="0"
-                        max="2000000"
-                        step="10000"
-                        value={expectedAmount}
-                        onChange={(e) => setExpectedAmount(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
-                      />
-                      <div className="flex justify-between text-xs theme-text-muted">
-                        <span>₹0</span>
-                        <span>₹20,00,000</span>
-                      </div>
-                    </div>
-
-                    {/* Text Input */}
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={expectedAmount}
-                        onChange={(e) => setExpectedAmount(Number(e.target.value) || 0)}
-                        className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-sm"
-                        placeholder="Enter amount"
-                      />
-                      <button
-                        onClick={() => {
-                          if (selectedApplication) {
-                            updateApplicationAmount(selectedApplication.id, expectedAmount);
-                          }
-                        }}
-                        disabled={!selectedApplication || expectedAmount === selectedApplication.amount}
-                        className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${
-                          theme === "light" ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"
-                        } disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
-                      >
-                        Update Amount
-                      </button>
-                    </div>
-
-                    {/* Guideline Amount Display */}
-                    {selectedApplication.offenceCategory && selectedApplication.offenceType && (
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-medium text-green-800 dark:text-green-200">PoA Guideline Amount</span>
-                        </div>
-                        <div className="text-lg font-bold text-green-700 dark:text-green-300">
-                          {(() => {
-                            const category = POA_OFFENCES[selectedApplication.offenceCategory as keyof typeof POA_OFFENCES];
-                            const compensation = category && selectedApplication.offenceType in category
-                              ? category[selectedApplication.offenceType as keyof typeof category] as string | number
-                              : null;
-                            if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-                              return `₹${compensation.replace("-", " - ₹")}`;
-                            }
-                            return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
-                          })()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.status")}
-                </p>
-                <div className="flex items-center gap-3">
-                  <select
-                    value={detailStatus}
-                    onChange={(e) => setDetailStatus(e.target.value)}
-                    className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in-review">In Review</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="documents-required">
-                      Documents Required
-                    </option>
-                  </select>
-                  <button
-                    onClick={() => {
-                      if (selectedApplication) {
-                        updateApplicationStatus(
-                          selectedApplication.id,
-                          detailStatus
-                        );
-                      }
-                    }}
-                    disabled={
-                      !selectedApplication ||
-                      detailStatus === selectedApplication.status
-                    }
-                    className={`px-3 py-2 rounded-lg text-white ${
-                      theme === "light" ? "bg-blue-600" : "bg-blue-500"
-                    }`}
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.priority")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.priority}
-                </p>
-              </div>
-
-              <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">
-                  {t("extracted.assigned_officer")}
-                </p>
-                <p className="font-medium theme-text-primary">
-                  {selectedApplication.assignedOfficer || "—"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setShowExportModal(true);
-              }}
-              className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-glass theme-text-primary"
-            >
-              {t("extracted.export")}
-            </button>
-            <button
-              onClick={() => {
-                setSelectedApplication(null);
-              }}
-              className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass theme-text-primary"
-            >
-              {t("extracted.close")}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <ApplicationDetail
+      selectedApplication={selectedApplication}
+      setSelectedApplication={setSelectedApplication}
+      setShowNewApplicationForm={setShowNewApplicationForm}
+      t={t}
+      theme={theme}
+      expectedAmount={expectedAmount}
+      setExpectedAmount={setExpectedAmount}
+      updateApplicationAmount={updateApplicationAmount}
+      detailStatus={detailStatus}
+      setDetailStatus={setDetailStatus}
+      updateApplicationStatus={updateApplicationStatus}
+      formatDate={formatDate}
+      formatCurrency={formatCurrency}
+      POA_OFFENCES={POA_OFFENCES}
+      setShowExportModal={setShowExportModal}
+    />
     </div>
   </div>
 );
