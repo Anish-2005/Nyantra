@@ -1574,7 +1574,7 @@
     "google_signin": "{/* Google Sign-in */}",
     "continue_with_google": "Continue with Google",
     "footer_links": "{/* Footer Links */}",
-    "isregister_have_an_account_sign_in_dont_have_an_account_sign": "{isRegister ? 'Have an account? Sign in' : 'Don\\'t have an account? Sign up'}",
+    "isregister_have_an_account_sign_in_dont_have_an_account_sign": "Have an account? Sign in' : 'Don't have an account? Sign up",
     "isregister_1": "{!isRegister && (",
     "forgot_password": "Forgot password?",
     "your_data_is_securely_encrypted_and_protected": "Your data is securely encrypted and protected",

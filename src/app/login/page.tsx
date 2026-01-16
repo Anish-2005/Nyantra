@@ -11,6 +11,7 @@ import Head from 'next/head';
 const ThreeJsBackground = lazy(() => import('@/components/login/ThreeJsBackground').then(module => ({ default: module.ThreeJsBackground })));
 const GradientOrbs = lazy(() => import('@/components/login/GradientOrbs').then(module => ({ default: module.GradientOrbs })));
 const ThemeToggle = lazy(() => import('@/components/login/ThemeToggle').then(module => ({ default: module.ThemeToggle })));
+const LanguageToggle = lazy(() => import('@/components/LanguageToggle').then(module => ({ default: module.default })));
 const LoginCard = lazy(() => import('@/components/login/LoginCard').then(module => ({ default: module.LoginCard })));
 
 // Loading fallback component
@@ -317,10 +318,15 @@ export default function LoginPage() {
           animate="visible"
           className="w-full max-w-md"
         >
-          {/* Theme Toggle */}
-          <Suspense fallback={null}>
-            <ThemeToggle className="absolute top-4 right-4" />
-          </Suspense>
+          {/* Theme & Language Toggles */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <Suspense fallback={null}>
+              <LanguageToggle compact />
+            </Suspense>
+            <Suspense fallback={null}>
+              <ThemeToggle />
+            </Suspense>
+          </div>
 
           {/* Login Card */}
           <Suspense fallback={<LoadingFallback />}>

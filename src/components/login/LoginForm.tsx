@@ -14,6 +14,7 @@ interface LoginFormProps {
   isLoading: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onGoogleSignIn: () => void;
+  t: (key: string) => string;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export const LoginForm = ({
   isLoading,
   onSubmit,
   onGoogleSignIn,
+  t,
   className = ''
 }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +53,7 @@ export const LoginForm = ({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email address"
+          placeholder={t('extracted.email_address')}
           className="w-full px-4 py-3 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-accent-primary transition-all"
           disabled={isLoading}
         />
@@ -63,7 +65,7 @@ export const LoginForm = ({
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder={t('extracted.password')}
           className="w-full px-4 py-3 pr-10 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-accent-primary transition-all"
           disabled={isLoading}
         />
@@ -92,12 +94,12 @@ export const LoginForm = ({
             {isRegister ? (
               <>
                 <UserCheck className="w-5 h-5" />
-                Create account
+                {t('extracted.create_account')}
               </>
             ) : (
               <>
                 <ArrowRight className="w-5 h-5" />
-                Sign in
+                {t('extracted.sign_in')}
               </>
             )}
           </>

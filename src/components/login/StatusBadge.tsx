@@ -4,9 +4,10 @@ import { useTheme } from '@/context/ThemeContext';
 
 interface StatusBadgeProps {
   className?: string;
+  t: (key: string) => string;
 }
 
-export const StatusBadge = ({ className = '' }: StatusBadgeProps) => {
+export const StatusBadge = ({ className = '', t }: StatusBadgeProps) => {
   const { theme } = useTheme();
 
   return (
@@ -20,7 +21,7 @@ export const StatusBadge = ({ className = '' }: StatusBadgeProps) => {
       transition={{ duration: 2, repeat: Infinity }}
     >
       <Rocket className="inline w-3 h-3 mr-2 text-accent-gradient" />
-      Smart DBT Platform
+      {t('extracted.smart_dbt_platform')}
     </motion.div>
   );
 };

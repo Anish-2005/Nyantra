@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useTheme } from '@/context/ThemeContext';
 
 interface LoginHeaderProps {
   isRegister: boolean;
@@ -8,6 +9,8 @@ interface LoginHeaderProps {
 }
 
 export const LoginHeader = ({ isRegister, t, className = '' }: LoginHeaderProps) => {
+  const { theme } = useTheme();
+
   return (
     <div className={`flex items-center gap-3 mb-6 ${className}`}>
       <motion.div
@@ -15,7 +18,7 @@ export const LoginHeader = ({ isRegister, t, className = '' }: LoginHeaderProps)
         whileHover={{ scale: 1.05, rotate: 5 }}
       >
         <Image
-          src="/Logo-Dark.png"
+          src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'}
           alt={t('extracted.nyantra')}
           width={48}
           height={48}
@@ -29,7 +32,7 @@ export const LoginHeader = ({ isRegister, t, className = '' }: LoginHeaderProps)
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {isRegister ? 'Create your account' : 'Welcome back'}
+          {isRegister ? t('extracted.create_account') : t('extracted.welcome_back')}
         </motion.h2>
         <motion.p
           className="text-sm theme-text-muted"
