@@ -8,16 +8,17 @@ import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../context/LocaleContext';
 import LanguageToggle from '../components/LanguageToggle';
 import BackgroundAnimation from '../components/BackgroundAnimation';
-import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import ScrollToTopButton from '../components/landing/ScrollToTopButton';
+import ProgressBar from '../components/landing/ProgressBar';
+import Footer from '../components/landing/Footer';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, Mail, Phone, MapPinned, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Send, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight, Rocket, Sun, Moon, Sparkles, Globe, BadgeCheck, Target, Activity, CheckSquare, UserCheck, Wallet, Clock, Upload, Star, Database, Lock, TrendingUp, Smartphone, Eye, HelpCircle } from 'lucide-react';
 
 const NyantraLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mousePositionRef = useRef({ x: 0, y: 0 });
-  const { scrollYProgress } = useScroll();
-  const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   const [stats, setStats] = useState({
     beneficiaries: 0,
@@ -40,7 +41,7 @@ const NyantraLanding = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Scroll detection
+  // Scroll detection for navigation
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -1398,181 +1399,13 @@ const NyantraLanding = () => {
           </div>
         </section>
         {/* Footer with enhanced theme */}
-        <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t theme-border-glass">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-              {/* Company Info */}
-              <div>
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-12 h-12 flex items-center justify-center overflow-hidden bg-transparent theme-border-glass border-2 rounded-2xl">
-                    <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={44} height={44} className="object-contain" />
-                  </div>
-                  <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
-                    {t('nav.brandName')}
-                  </span>
-                </div>
-                <p className="theme-text-secondary mb-6 leading-relaxed overflow-visible py-2 text-base">
-                  {t('footer.companyDesc')}
-                </p>
-                <div className="flex space-x-3">
-                  {[
-                    { icon: Globe, label: t('footer.social.website') },
-                    { icon: Mail, label: t('footer.social.email') },
-                    { icon: Phone, label: t('footer.social.phone') },
-                    { icon: MapPinned, label: t('footer.social.location') }
-                  ].map((social, i) => (
-                    <motion.button
-                      key={i}
-                      className="w-12 h-12 theme-bg-glass theme-border-glass border rounded-xl flex items-center justify-center hover:shadow-lg transition-all group"
-                      whileHover={{ scale: 1.1, backgroundColor: 'var(--accent-primary)' }}
-                      whileTap={{ scale: 0.9 }}
-                      aria-label={social.label}
-                    >
-                      <social.icon className="w-5 h-5 theme-text-primary group-hover:text-white transition-colors" />
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
+        <Footer />
 
-              {/* Quick Links */}
-              <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.quickLinks')}</h3>
-                <ul className="space-y-3">
-                  {[
-                    t('footer.links.about'),
-                    t('footer.links.howItWorks'),
-                    t('footer.links.successStories'),
-                    t('footer.links.newsUpdates'),
-                    t('footer.links.careers'),
-                    t('footer.links.contact')
-                  ].map((link, i) => (
-                    <motion.li key={i} whileHover={{ x: 5 }}>
-                      <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2 overflow-visible">
-                        <ChevronRight className="w-4 h-4" />
-                        <span>{link}</span>
-                      </a>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Enhanced Contact Info */}
-              <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.contact.title')}</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-5 h-5 text-accent-gradient" />
-                    </div>
-                    <div className="overflow-visible">
-                      <p className="text-sm theme-text-muted mb-1">{t('footer.contact.helpline')}</p>
-                      <p className="theme-text-primary font-semibold">{t('footer.contact.helplineNumber')}</p>
-                      <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.available247')}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-5 h-5 text-accent-gradient" />
-                    </div>
-                    <div className="overflow-visible">
-                      <p className="text-sm theme-text-muted mb-1">{t('footer.contact.email')}</p>
-                      <p className="theme-text-primary font-semibold">{t('footer.contact.emailAddress')}</p>
-                      <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.responseTime')}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Newsletter */}
-              <div>
-                <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.newsletter.title')}</h3>
-                <div className="space-y-4">
-                  <p className="theme-text-secondary text-sm overflow-visible">{t('footer.newsletter.description')}</p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="email"
-                      placeholder={t('footer.newsletter.placeholder')}
-                      className="flex-1 px-4 py-3 theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
-                    />
-                    <motion.button
-                      className="px-4 sm:px-6 py-3 accent-gradient rounded-lg font-semibold flex items-center justify-center space-x-2 text-white shadow-lg whitespace-nowrap"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <span className="hidden sm:inline">{t('footer.newsletter.subscribe')}</span>
-                      <span className="sm:hidden">{t('footer.newsletter.subscribe')}</span>
-                      <Send className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Bar */}
-            <div className="border-t theme-border-glass pt-8">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="theme-text-secondary text-sm text-center md:text-left overflow-visible">
-                  <p className="overflow-visible">{t('footer.copyright')}</p>
-                  <p className="text-xs mt-1 overflow-visible py-1" style={{ lineHeight: '1.4' }}>
-                    {t('footer.developedBy')}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-6 text-sm">
-                  {[
-                    t('footer.links.privacyPolicy'),
-                    t('footer.links.termsOfService'),
-                    t('footer.links.cookiePolicy'),
-                    t('footer.links.accessibility')
-                  ].map((link, i) => (
-                    <motion.a
-                      key={i}
-                      href="#"
-                      className="theme-text-secondary hover:text-accent-gradient transition-colors overflow-visible"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      {link}
-                    </motion.a>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
-
-        {/* Enhanced Scroll to Top Button */}
-        <AnimatePresence>
-          {isScrolled && (
-            <motion.button
-              className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 w-12 h-12 sm:w-14 sm:h-14 accent-gradient rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg sm:shadow-2xl z-50 group relative overflow-hidden"
-              initial={{ opacity: 0, scale: 0, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0, y: 20 }}
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              aria-label={t('extracted.scroll_to_top')}
-            >
-              <motion.div
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10" style={{ transform: 'rotate(-90deg)' }} />
-              </motion.div>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* Floating Scroll to Top Button */}
+        <ScrollToTopButton />
 
         {/* Enhanced Progress Bar */}
-        <motion.div
-          className={`fixed top-0 left-0 right-0 h-1.5 transform origin-left z-50 shadow-sm`}
-          style={{
-            scaleX: scaleProgress,
-            background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))`,
-            boxShadow: '0 0 20px var(--accent-primary)'
-          }}
-        />
+        <ProgressBar />
       </div>
     </div>
   );
