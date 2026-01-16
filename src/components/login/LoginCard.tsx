@@ -56,7 +56,7 @@ export const LoginCard = ({
 
       <div className="relative z-10">
         <LoginHeader isRegister={isRegister} t={t} />
-        <StatusBadge t={t} />
+        <StatusBadge />
 
         <LoginForm
           email={email}
@@ -68,7 +68,6 @@ export const LoginCard = ({
           isLoading={isLoading}
           onSubmit={onSubmit}
           onGoogleSignIn={onGoogleSignIn}
-          t={t}
         />
 
         <div className="mt-4">
@@ -83,7 +82,6 @@ export const LoginCard = ({
           isRegister={isRegister}
           onToggleMode={() => setIsRegister(!isRegister)}
           isLoading={isLoading}
-          t={t}
         />
       </div>
     </motion.div>

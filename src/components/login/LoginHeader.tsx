@@ -32,7 +32,7 @@ export const LoginHeader = ({ isRegister, t, className = '' }: LoginHeaderProps)
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {isRegister ? t('extracted.create_account') : t('extracted.welcome_back')}
+          {isRegister ? 'Create your account' : 'Welcome back'}
         </motion.h2>
         <motion.p
           className="text-sm theme-text-muted"
