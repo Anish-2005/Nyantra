@@ -14,6 +14,9 @@ import GradientOrbs from './dashboard/GradientOrbs';
 import LiveTrackingStats from './dashboard/LiveTrackingStats';
 import DashboardDataFetcher from './dashboard/DashboardDataFetcher';
 import RealTimeMonitoringHeader from './dashboard/RealTimeMonitoringHeader';
+import LiveApplicationTracking from './dashboard/LiveApplicationTracking';
+import AnalyticsHeader from './dashboard/AnalyticsHeader';
+import AnalyticsFiltersAndChart from './dashboard/AnalyticsFiltersAndChart';
 import { PlatformLogos, PlatformLogoWrapper, getPlatformLogo } from './dashboard/PlatformLogos';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
@@ -609,100 +612,12 @@ useEffect(() => {
                       </svg>
                     </div>
 
-                    <div className="relative z-10">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <motion.div
-                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
-                          >
-                            <Activity className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
-                            <motion.div
-                              className="absolute inset-0 rounded-xl sm:rounded-2xl border-2 border-blue-400"
-                              animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
-                            />
-                            <motion.div
-                              className="absolute inset-0 rounded-xl sm:rounded-2xl border-2 border-cyan-400"
-                              animate={{ scale: [1, 1.4, 1.4], opacity: [0.5, 0, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, delay: 1, repeatDelay: 0.5 }}
-                            />
-                          </motion.div>
-                          <div>
-                            <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.liveTracking.liveApplicationTracking')}</h3>
-                            <p className="text-sm theme-text-muted">{t('dashboard.liveTracking.trackRealTime')}</p>
-                          </div>
-                        </div>
-                        <motion.button
-                          onClick={() => router.push('/dashboard/applications')}
-                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow"
-                          whileHover={{ scale: 1.05, x: 5 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <span>{t('dashboard.common.viewAllTracking')}</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-
-                      {/* Live Tracking Stats */}
-                      <LiveTrackingStats loading={loading} liveTrackingStats={liveTrackingStats} />
-                      {/* Live Activity Feed */}
-                      <div className="mt-4 sm:mt-6">
-                        <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
-                          <motion.div
-                            className="w-2 h-2 rounded-full bg-green-500"
-                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          {t('dashboard.recentActivity.liveUpdates')}
-                        </h4>
-                        <div className="space-y-2">
-                          {loading ? (
-                            // Loading skeleton for recent activity
-                            Array.from({ length: 4 }).map((_, idx) => (
-                              <motion.div
-                                key={idx}
-                                className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass animate-pulse"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
-                                <div className="flex-1">
-                                  <div className="h-3 bg-gray-300 rounded w-32 mb-1"></div>
-                                  <div className="h-2 bg-gray-300 rounded w-24"></div>
-                                </div>
-                                <div className="h-4 bg-gray-300 rounded w-16"></div>
-                              </motion.div>
-                            ))
-                          ) : (
-                            recentActivity.map((activity, idx) => (
-                              <motion.div
-                                key={idx}
-                                className="flex items-center gap-3 p-3 rounded-xl theme-bg-glass border theme-border-glass"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                whileHover={{ scale: 1.02, x: 5 }}
-                              >
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                  activity.type === 'application' ? 'bg-blue-500' :
-                                  activity.type === 'grievance' ? 'bg-amber-500' : 'bg-green-500'
-                                }`}>
-                                  {activity.type === 'application' ? <FileText className="w-4 h-4 text-white" /> :
-                                   activity.type === 'grievance' ? <AlertCircle className="w-4 h-4 text-white" /> :
-                                   <CheckCircle className="w-4 h-4 text-white" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold theme-text-primary">{activity.action}</p>
-                                  <p className="text-xs theme-text-muted">by {activity.user}</p>
-                                </div>
-                                <span className="text-xs theme-text-muted whitespace-nowrap">{activity.time}</span>
-                              </motion.div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <LiveApplicationTracking
+                      t={t}
+                      loading={loading}
+                      liveTrackingStats={liveTrackingStats}
+                      recentActivity={recentActivity}
+                    />
 
                     {/* Decorative Elements */}
                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
@@ -725,179 +640,25 @@ useEffect(() => {
                           }} />
                         </div>
 
-                        {/* Header Section with Live Indicator */}
-                        <div className="relative z-10 flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-4">
-                            <motion.div 
-                              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
-                            >
-                              <Activity className="w-6 h-6 text-white" />
-                            </motion.div>
-                            <div>
-                              <h3 className="text-lg sm:text-xl font-bold theme-text-primary">{t('dashboard.analytics.performanceAnalytics')}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <motion.div
-                                  className="w-2 h-2 bg-green-500 rounded-full"
-                                  animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                />
-                                <span className="text-xs theme-text-muted">{t('dashboard.analytics.liveDataStream')}</span>
-                              </div>
-                            </div>
-                          </div>
+                        <AnalyticsHeader t={t} onExport={exportCSV} />
 
-                          {/* Quick Actions */}
-                          <div className="flex items-center gap-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={exportCSV}
-                              className="px-3 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 text-sm font-medium theme-text-primary"
-                            >
-                              <Download className="w-4 h-4" />
-                              <span className="hidden sm:inline">{t('dashboard.analytics.export')}</span>
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center gap-2 text-sm font-medium shadow-lg"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                              <span className="hidden sm:inline">{t('dashboard.analytics.refresh')}</span>
-                            </motion.button>
-                          </div>
-                        </div>
-
-                        {/* Modern Filter Chips */}
-                        <div className="relative z-10 mb-6 space-y-4">
-                          <div className="flex flex-wrap gap-3">
-                            {/* Time Range Chips */}
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">Period:</span>
-                              {[
-                                { value: 7, label: '7D' },
-                                { value: 30, label: '30D' },
-                                { value: 90, label: '90D' }
-                              ].map((range) => (
-                                <motion.button
-                                  key={range.value}
-                                  onClick={() => setChartRange(range.value)}
-                                  className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                                    chartRange === range.value
-                                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                                      : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
-                                  }`}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  {range.label}
-                                </motion.button>
-                              ))}
-                            </div>
-
-                            {/* Chart Type Selector */}
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold theme-text-muted uppercase tracking-wider">{t('dashboard.common.view')}</span>
-                              {[
-                                { value: 'line', icon: TrendingUp, label: t('dashboard.chartLabels.line') },
-                                { value: 'area', icon: BarChart, label: t('dashboard.chartLabels.area') },
-                                { value: 'bar', icon: BarChart3, label: t('dashboard.chartLabels.bar') }
-                              ].map((type) => (
-                                <motion.button
-                                  key={type.value}
-                                  onClick={() => setChartType(type.value as 'line' | 'area' | 'bar' | 'stacked')}
-                                  className={`p-2 rounded-xl transition-all ${
-                                    chartType === type.value
-                                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                                      : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
-                                  }`}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  title={type.label}
-                                >
-                                  <type.icon className="w-4 h-4" />
-                                </motion.button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Dataset Toggle Chips */}
-                          <div className="flex flex-wrap gap-2">
-                            {[
-                              { id: "ds-app", label: t('dashboard.chartLabels.applications'), value: showApplications, setter: setShowApplications, color: "from-blue-500 to-cyan-500" },
-                              { id: "ds-approved", label: t('dashboard.chartLabels.approved'), value: showApproved, setter: setShowApproved, color: "from-green-500 to-emerald-500" },
-                              { id: "ds-pending", label: t('dashboard.chartLabels.pending'), value: showPending, setter: setShowPending, color: "from-amber-500 to-orange-500" }
-                            ].map(ds => (
-                              <motion.button
-                                key={ds.id}
-                                onClick={() => ds.setter(v => !v)}
-                                className={`px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${
-                                  ds.value
-                                    ? `bg-gradient-to-r ${ds.color} text-white border-transparent shadow-lg`
-                                    : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-blue-500/30'
-                                }`}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <motion.div
-                                  className={`w-2 h-2 rounded-full ${ds.value ? 'bg-white' : 'bg-gray-400'}`}
-                                  animate={ds.value ? { scale: [1, 1.3, 1] } : {}}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                />
-                                {ds.label}
-                              </motion.button>
-                            ))}
-                            
-                            {/* Smoothing Toggle */}
-                            <motion.button
-                              onClick={() => setSmoothing(v => !v)}
-                              className={`px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${
-                                smoothing
-                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
-                                  : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-purple-500/30'
-                              }`}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Zap className={`w-3 h-3 ${smoothing ? 'text-white' : 'text-gray-400'}`} />
-                              {t('extracted.smoothing')}
-                            </motion.button>
-                          </div>
-                        </div>
-
-                        {/* Chart Area with Enhanced Styling */}
-                        <div className="relative z-10">
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                            {[
-                              { label: t('dashboard.analytics.peakValue'), value: analyticsMetrics.peakValue.toLocaleString(), color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
-                              { label: t('dashboard.analytics.average'), value: analyticsMetrics.average.toLocaleString(), color: 'from-purple-500 to-pink-500', icon: Activity },
-                              { label: t('dashboard.analytics.growthRate'), value: `${analyticsMetrics.growthRate >= 0 ? '+' : ''}${analyticsMetrics.growthRate}%`, color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
-                            ].map((stat, idx) => (
-                              <motion.div
-                                key={stat.label}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="theme-bg-glass rounded-2xl p-3 sm:p-4 border theme-border-glass"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                                    <stat.icon className="w-5 h-5 text-white" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs sm:text-sm theme-text-muted">{stat.label}</p>
-                                    <p className="text-lg sm:text-xl font-bold theme-text-primary">{stat.value}</p>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-
-                          {/* Main Chart */}
-                          <div className="relative rounded-2xl theme-bg-glass p-4 border theme-border-glass">
-                            <AnalyticsChart dataSets={dataSets} chartType={chartType} />
-                          </div>
-                        </div>
+                        <AnalyticsFiltersAndChart
+                          t={t}
+                          chartRange={chartRange}
+                          setChartRange={setChartRange}
+                          chartType={chartType}
+                          setChartType={setChartType}
+                          showApplications={showApplications}
+                          setShowApplications={setShowApplications}
+                          showApproved={showApproved}
+                          setShowApproved={setShowApproved}
+                          showPending={showPending}
+                          setShowPending={setShowPending}
+                          smoothing={smoothing}
+                          setSmoothing={setSmoothing}
+                          analyticsMetrics={analyticsMetrics}
+                          dataSets={dataSets}
+                        />
 
                         {/* Decorative Elements */}
                         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500" />
