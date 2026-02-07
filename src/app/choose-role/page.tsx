@@ -12,6 +12,7 @@ import { Sun, Moon } from 'lucide-react';
 const ChooseRoleBackground = lazy(() => import('@/components/choose-role/ChooseRoleBackground').then(module => ({ default: module.ChooseRoleBackground })));
 const LanguageToggle = lazy(() => import('@/components/LanguageToggle').then(module => ({ default: module.default })));
 const ChooseRoleMainCard = lazy(() => import('@/components/choose-role/ChooseRoleMainCard').then(module => ({ default: module.ChooseRoleMainCard })));
+const BackgroundAnimation = lazy(() => import('@/components/BackgroundAnimation'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -82,7 +83,7 @@ export default function ChooseRolePage() {
       else router.push('/verify');
     } catch (err: unknown) {
       // Surface firebase permission errors clearly without using `any`
-      try { console.error('[choose-role] failed to update profile', err); } catch {}
+      try { console.error('[choose-role] failed to update profile', err); } catch { }
       const code = typeof err === 'object' && err !== null && 'code' in err ? (err as Record<string, unknown>).code : undefined;
       if (code === 'permission-denied') {
         alert('Permission denied: your Firestore rules prevent updating your profile. Check security rules or sign-in state.');
@@ -156,6 +157,7 @@ export default function ChooseRolePage() {
       <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
         {/* Enhanced Gradient Orbs */}
         <Suspense fallback={null}>
+          <BackgroundAnimation />
           <ChooseRoleBackground />
         </Suspense>
 

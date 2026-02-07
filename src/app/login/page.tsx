@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import Head from 'next/head';
 
 // Lazy load components for better performance
-const ThreeJsBackground = lazy(() => import('@/components/login/ThreeJsBackground').then(module => ({ default: module.ThreeJsBackground })));
+const BackgroundAnimation = lazy(() => import('@/components/BackgroundAnimation'));
 const GradientOrbs = lazy(() => import('@/components/login/GradientOrbs').then(module => ({ default: module.GradientOrbs })));
 const ThemeToggle = lazy(() => import('@/components/login/ThemeToggle').then(module => ({ default: module.ThemeToggle })));
 const LanguageToggle = lazy(() => import('@/components/LanguageToggle').then(module => ({ default: module.default })));
@@ -96,7 +96,7 @@ export default function LoginPage() {
           else router.push('/verify');
         } else router.push('/choose-role');
       } catch (e) {
-        try { console.error('[login] post-signin profile read failed, routing to /choose-role', e); } catch {}
+        try { console.error('[login] post-signin profile read failed, routing to /choose-role', e); } catch { }
         router.push('/choose-role');
       }
     } catch (err: unknown) {
@@ -125,7 +125,7 @@ export default function LoginPage() {
         // treat null profile as "choose role" — same behavior as email/password sign-in
         if (p === null) {
           // small console trace for local debugging
-          try { console.debug('[login] google sign-in: no profile, routing to /choose-role'); } catch {};
+          try { console.debug('[login] google sign-in: no profile, routing to /choose-role'); } catch { };
           router.push('/choose-role');
         } else if (p?.role === 'officer') router.push('/dashboard');
         else if (p?.role === 'user') {
@@ -134,7 +134,7 @@ export default function LoginPage() {
         } else router.push('/choose-role');
       } catch (e) {
         // fallback to choose-role rather than forcing dashboard
-        try { console.error('[login] google sign-in: error reading profile, falling back to /choose-role', e); } catch {};
+        try { console.error('[login] google sign-in: error reading profile, falling back to /choose-role', e); } catch { };
         router.push('/choose-role');
       }
     } catch (err: unknown) {
@@ -167,7 +167,7 @@ export default function LoginPage() {
       router.push('/choose-role');
     } else {
       // fallback: if profile shape is unexpected, send to choose-role so user can self-correct
-      try { console.warn('[login] unexpected profile shape, routing to /choose-role', profile); } catch {}
+      try { console.warn('[login] unexpected profile shape, routing to /choose-role', profile); } catch { }
       router.push('/choose-role');
     }
   }, [user, profile, loading, router]);
@@ -245,8 +245,8 @@ export default function LoginPage() {
       </Head>
 
       <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ background: 'var(--bg-gradient)' }}>
-      {/* Theme Variables */}
-      <style jsx global>{`
+        {/* Theme Variables */}
+        <style jsx global>{`
         [data-theme="dark"] {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%),
                          radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%),
@@ -300,53 +300,53 @@ export default function LoginPage() {
         }
       `}</style>
 
-      {/* Three.js Canvas Background */}
-      <Suspense fallback={null}>
-        <ThreeJsBackground />
-      </Suspense>
+        {/* Three.js Canvas Background */}
+        <Suspense fallback={null}>
+          <BackgroundAnimation />
+        </Suspense>
 
-      {/* Enhanced Gradient Orbs */}
-      <Suspense fallback={null}>
-        <GradientOrbs />
-      </Suspense>
+        {/* Enhanced Gradient Orbs */}
+        <Suspense fallback={null}>
+          <GradientOrbs />
+        </Suspense>
 
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="w-full max-w-md"
-        >
-          {/* Theme & Language Toggles */}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            <Suspense fallback={null}>
-              <LanguageToggle compact />
+        {/* Main Content */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="w-full max-w-md"
+          >
+            {/* Theme & Language Toggles */}
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <Suspense fallback={null}>
+                <LanguageToggle compact />
+              </Suspense>
+              <Suspense fallback={null}>
+                <ThemeToggle />
+              </Suspense>
+            </div>
+
+            {/* Login Card */}
+            <Suspense fallback={<LoadingFallback />}>
+              <LoginCard
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                isRegister={isRegister}
+                setIsRegister={setIsRegister}
+                error={error}
+                isLoading={isLoading}
+                onSubmit={handleSubmit}
+                onGoogleSignIn={handleGoogleSignIn}
+                t={t}
+              />
             </Suspense>
-            <Suspense fallback={null}>
-              <ThemeToggle />
-            </Suspense>
-          </div>
-
-          {/* Login Card */}
-          <Suspense fallback={<LoadingFallback />}>
-            <LoginCard
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              isRegister={isRegister}
-              setIsRegister={setIsRegister}
-              error={error}
-              isLoading={isLoading}
-              onSubmit={handleSubmit}
-              onGoogleSignIn={handleGoogleSignIn}
-              t={t}
-            />
-          </Suspense>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
     </>
   );
 }

@@ -99,7 +99,11 @@ const BackgroundAnimation: React.FC<BackgroundAnimationProps> = ({
         particlesMesh.rotation.y += 0.0003;
         particlesMesh.rotation.x += 0.0001;
         linesMesh.rotation.y -= 0.0002;
-        renderer.render(scene, camera);
+        try {
+          renderer.render(scene, camera);
+        } catch (e) {
+          // suppress WebGL uniform/program-related errors which can occur on context loss
+        }
       };
 
       animate();
