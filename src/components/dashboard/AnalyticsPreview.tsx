@@ -13,9 +13,10 @@ interface AnalyticsPreviewProps {
         growthRate: number;
     };
     loading: boolean;
+    applications?: any[];
 }
 
-export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewProps) {
+export default function AnalyticsPreview({ metrics, loading, applications = [] }: AnalyticsPreviewProps) {
     const { t } = useLocale();
 
     // Chart filters state
@@ -26,17 +27,58 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
     const [smoothing, setSmoothing] = useState(false);
     const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
 
-    // Generate mock data (moved from DashboardComponent)
+    // Generate data from real applications
     type DataPoint = { x: number; y: number };
     type DataSet = { id: string; label: string; color?: string; points: DataPoint[] };
 
     const dataSets = useMemo<DataSet[]>(() => {
-        const generateSeries = (days: number): DataPoint[] => {
-            const base = Date.now();
-            return Array.from({ length: days }).map((_, i) => ({
-                x: base - (days - 1 - i) * 24 * 60 * 60 * 1000,
-                y: Math.max(0, Math.round(50 + Math.sin(i / 4) * 25 + (Math.random() - 0.5) * 18))
-            }));
+        const generateFromApplications = (days: number): { apps: DataPoint[], approved: DataPoint[], pending: DataPoint[] } => {
+            const now = Date.now();
+            const dayMs = 24 * 60 * 60 * 1000;
+
+            // Initialize buckets for each day
+            const buckets: { [key: number]: { total: number, approved: number, pending: number } } = {};
+            for (let i = 0; i < days; i++) {
+                const dayStart = now - (days - 1 - i) * dayMs;
+                buckets[dayStart] = { total: 0, approved: 0, pending: 0 };
+            }
+
+            // Count applications by day
+            applications.forEach(app => {
+                const appDate = app.applicationDate?.toDate ? app.applicationDate.toDate().getTime() : 0;
+                if (!appDate) return;
+
+                // Find which bucket this belongs to
+                const dayKeys = Object.keys(buckets).map(Number).sort((a, b) => a - b);
+                for (let i = 0; i < dayKeys.length; i++) {
+                    const bucketStart = dayKeys[i];
+                    const bucketEnd = i < dayKeys.length - 1 ? dayKeys[i + 1] : now + dayMs;
+
+                    if (appDate >= bucketStart && appDate < bucketEnd) {
+                        buckets[bucketStart].total++;
+                        if (app.status === 'approved' || app.status === 'completed' || app.status === 'disbursed') {
+                            buckets[bucketStart].approved++;
+                        } else if (app.status === 'pending' || app.status === 'review' || app.status === 'processing') {
+                            buckets[bucketStart].pending++;
+                        }
+                        break;
+                    }
+                }
+            });
+
+            // Convert to data points
+            const apps: DataPoint[] = [];
+            const approved: DataPoint[] = [];
+            const pending: DataPoint[] = [];
+
+            Object.keys(buckets).sort((a, b) => Number(a) - Number(b)).forEach(key => {
+                const x = Number(key);
+                apps.push({ x, y: buckets[x].total });
+                approved.push({ x, y: buckets[x].approved });
+                pending.push({ x, y: buckets[x].pending });
+            });
+
+            return { apps, approved, pending };
         };
 
         const smooth = (arr: DataPoint[]) => {
@@ -49,17 +91,14 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
             });
         };
 
-        const days = chartRange;
-        const apps = generateSeries(days);
-        const approved = apps.map(p => ({ x: p.x, y: Math.round(p.y * (0.6 + Math.random() * 0.2)) }));
-        const pending = apps.map((p, i) => ({ x: p.x, y: Math.max(0, Math.round(p.y - approved[i].y)) }));
+        const { apps, approved, pending } = generateFromApplications(chartRange);
 
         const sets: DataSet[] = [];
         if (showApplications) sets.push({ id: 'applications', label: t('dashboard.chartLabels.applications'), points: smoothing ? smooth(apps) : apps });
         if (showApproved) sets.push({ id: 'approved', label: t('dashboard.chartLabels.approved'), color: undefined, points: smoothing ? smooth(approved) : approved });
         if (showPending) sets.push({ id: 'pending', label: t('dashboard.chartLabels.pending'), color: undefined, points: smoothing ? smooth(pending) : pending });
         return sets;
-    }, [chartRange, showApplications, showApproved, showPending, smoothing, t]);
+    }, [chartRange, showApplications, showApproved, showPending, smoothing, t, applications]);
 
     // CSV export
     const exportCSV = useCallback(() => {
@@ -158,8 +197,8 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
                                 key={range.value}
                                 onClick={() => setChartRange(range.value)}
                                 className={`px-3 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all ${chartRange === range.value
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                                        : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                                    : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
                                     }`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -181,8 +220,8 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
                                 key={type.value}
                                 onClick={() => setChartType(type.value as 'line' | 'area' | 'bar' | 'stacked')}
                                 className={`p-2 rounded-xl transition-all ${chartType === type.value
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                                        : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                                    : 'theme-bg-glass theme-border-glass border theme-text-muted hover:border-blue-500/50'
                                     }`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -205,8 +244,8 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
                             key={ds.id}
                             onClick={() => ds.setter(v => !v)}
                             className={`px-3 sm:px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${ds.value
-                                    ? `bg-gradient-to-r ${ds.color} text-white border-transparent shadow-lg`
-                                    : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-blue-500/30'
+                                ? `bg-gradient-to-r ${ds.color} text-white border-transparent shadow-lg`
+                                : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-blue-500/30'
                                 }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -224,8 +263,8 @@ export default function AnalyticsPreview({ metrics, loading }: AnalyticsPreviewP
                     <motion.button
                         onClick={() => setSmoothing(v => !v)}
                         className={`px-3 sm:px-4 py-2 rounded-full font-medium text-xs flex items-center gap-2 transition-all border-2 ${smoothing
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
-                                : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-purple-500/30'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
+                            : 'theme-bg-glass theme-border-glass theme-text-muted hover:border-purple-500/30'
                             }`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

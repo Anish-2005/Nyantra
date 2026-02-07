@@ -83,7 +83,7 @@ export default function DisbursementsPreview({ disbursements, loading }: Disburs
                     ) : disbursements.length === 0 ? (
                         <div className="p-4 text-center theme-text-muted">{t('dashboard.disbursements.noRecords') || 'No disbursements found.'}</div>
                     ) : (
-                        disbursements.map((disbursement, idx) => {
+                        disbursements.slice(0, 2).map((disbursement, idx) => {
                             const amount = disbursement.amount !== undefined ? (typeof disbursement.amount === 'number' ? '₹' + disbursement.amount.toLocaleString() : disbursement.amount) : '—';
                             const color = disbursement.color || (disbursement.status === 'completed' ? 'bg-green-500' : 'bg-blue-500');
 

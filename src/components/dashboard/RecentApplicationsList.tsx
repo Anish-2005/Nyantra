@@ -90,7 +90,7 @@ export default function RecentApplicationsList({ applications, loading }: Recent
                         </motion.div>
                     ))
                 ) : (
-                    applications.map((app, idx) => (
+                    applications.slice(0, 2).map((app, idx) => (
                         <motion.div
                             key={app.id}
                             className="relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl theme-bg-glass group hover:theme-border-glass border border-transparent transition-all gap-3 overflow-hidden cursor-pointer"

@@ -280,7 +280,8 @@
       "systemIntegrations": "सिस्टम इंटीग्रेशन",
       "grievanceStatus": "शिकायत स्थिति",
       "quickActions": "त्वरित क्रियाएँ",
-      "recentInfo": "हाल की जानकारी"
+      "recentInfo": "हाल की जानकारी",
+      "liveApplicationTracking": "लाइव आवेदन ट्रैकिंग"
     },
     "grievance": {
       "subject1": "आवेदन प्रसंस्करण में देरी",

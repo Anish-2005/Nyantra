@@ -70,6 +70,7 @@ const Dashboard = () => {
     average: 0,
     growthRate: 0
   });
+  const [allApplications, setAllApplications] = useState<any[]>([]);
 
   // Fetch Dashboard Data
   useEffect(() => {
@@ -96,6 +97,7 @@ const Dashboard = () => {
 
         // --- Process Applications Data ---
         const apps = appsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        setAllApplications(apps); // Store all apps for analytics
 
         // Calculate Stats from the sample (approximate for performance)
         const totalApps = appsSnap.size; // In a real large app we'd use a counter doc
@@ -305,6 +307,7 @@ const Dashboard = () => {
             <AnalyticsPreview
               metrics={analyticsMetrics}
               loading={loading}
+              applications={allApplications}
             />
 
             <RecentApplicationsList

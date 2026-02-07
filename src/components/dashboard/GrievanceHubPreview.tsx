@@ -26,10 +26,10 @@ export default function GrievanceHubPreview({ grievanceData, loading }: Grievanc
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
-            case 'high': return 'text-red-500 bg-red-100 border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
-            case 'medium': return 'text-amber-500 bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300';
-            case 'low': return 'text-blue-500 bg-blue-100 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300';
-            default: return 'text-gray-500 bg-gray-100 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300';
+            case 'high': return 'text-red-800 bg-red-200 border-red-400 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
+            case 'medium': return 'text-amber-800 bg-amber-200 border-amber-400 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300';
+            case 'low': return 'text-blue-800 bg-blue-200 border-blue-400 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300';
+            default: return 'text-gray-800 bg-gray-200 border-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300';
         }
     };
 
@@ -101,7 +101,7 @@ export default function GrievanceHubPreview({ grievanceData, loading }: Grievanc
                             </motion.div>
                         ))
                     ) : (
-                        grievanceData.map((grievance, index) => {
+                        grievanceData.slice(0, 2).map((grievance, index) => {
                             const priorityConfig = {
                                 high: {
                                     bg: 'from-red-500 to-rose-500',
@@ -174,8 +174,8 @@ export default function GrievanceHubPreview({ grievanceData, loading }: Grievanc
                                             {/* Priority Badge */}
                                             <motion.div
                                                 className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getPriorityColor(grievance.priority)} shadow-sm flex-shrink-0`}
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
+                                                initial={{ scale: 0.8 }}
+                                                animate={{ scale: 1 }}
                                                 transition={{ delay: 0.4 + index * 0.1 }}
                                                 whileHover={{ scale: 1.1 }}
                                             >
@@ -226,24 +226,24 @@ export default function GrievanceHubPreview({ grievanceData, loading }: Grievanc
                     <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1.5">
-                                <AlertCircle className="w-3 h-3 text-red-500" />
+                                <AlertCircle className="w-3 h-3 text-red-700 dark:text-red-500" />
                                 <span className="theme-text-muted font-medium">
                                     {grievanceData.filter(g => g.priority === 'high').length} High
                                 </span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-amber-500" />
+                                <Clock className="w-3 h-3 text-amber-700 dark:text-amber-500" />
                                 <span className="theme-text-muted font-medium">
                                     {grievanceData.filter(g => g.priority === 'medium').length} Medium
                                 </span>
                             </div>
                         </div>
                         <motion.div
-                            className="flex items-center gap-1 text-red-500 font-semibold"
+                            className="flex items-center gap-1 text-red-700 dark:text-red-500 font-semibold"
                             animate={{ opacity: [0.5, 1, 0.5] }}
                             transition={{ duration: 2, repeat: Infinity }}
                         >
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-700 dark:bg-red-500" />
                             <span>Active</span>
                         </motion.div>
                     </div>

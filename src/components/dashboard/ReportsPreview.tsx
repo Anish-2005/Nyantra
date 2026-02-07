@@ -87,7 +87,7 @@ export default function ReportsPreview({ reports, loading }: ReportsPreviewProps
                 </div>
 
                 <div className="space-y-4">
-                    {displayReports.map((report: any, idx: number) => {
+                    {displayReports.slice(0, 2).map((report: any, idx: number) => {
                         const IconComp = report.icon || FileText;
                         const color = report.color || 'from-gray-500 to-gray-600';
                         const status = report.status || 'completed';
@@ -160,8 +160,8 @@ export default function ReportsPreview({ reports, loading }: ReportsPreviewProps
                                                 </motion.p>
                                                 <div className="flex items-center gap-3 text-xs theme-text-muted">
                                                     <span className={`px-2.5 py-1 rounded-full font-semibold ${report.type === t('dashboard.reports.financial') || report.type === 'Financial' ? 'bg-green-500/10 text-green-500' :
-                                                            report.type === t('dashboard.reports.operational') || report.type === 'Operational' ? 'bg-blue-500/10 text-blue-500' :
-                                                                'bg-purple-500/10 text-purple-500'
+                                                        report.type === t('dashboard.reports.operational') || report.type === 'Operational' ? 'bg-blue-500/10 text-blue-500' :
+                                                            'bg-purple-500/10 text-purple-500'
                                                         }`}>
                                                         {report.type}
                                                     </span>

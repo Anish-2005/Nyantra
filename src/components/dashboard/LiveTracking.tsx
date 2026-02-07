@@ -111,7 +111,7 @@ export default function LiveTracking({ stats, recentActivity, loading }: LiveTra
 
                     <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                         <AnimatePresence>
-                            {recentActivity.map((activity, idx) => {
+                            {recentActivity.slice(0, 2).map((activity, idx) => {
                                 const Icon = getActivityIcon(activity.type);
                                 const colorClass = getActivityColor(activity.type);
 

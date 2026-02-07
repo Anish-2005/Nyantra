@@ -280,7 +280,8 @@
       "systemIntegrations": "System Integrations",
       "grievanceStatus": "Grievance Status",
       "quickActions": "Quick Actions",
-      "recentInfo": "Recent Info"
+      "recentInfo": "Recent Info",
+      "liveApplicationTracking": "Live Application Tracking"
     },
     "grievance": {
       "subject1": "Delay in Application Processing",

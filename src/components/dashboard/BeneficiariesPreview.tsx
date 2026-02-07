@@ -45,11 +45,11 @@ export default function BeneficiariesPreview({ beneficiaries }: BeneficiariesPre
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'verified': return 'text-green-700 bg-green-100 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300';
-            case 'pending': return 'text-amber-700 bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300';
-            case 'rejected': return 'text-red-700 bg-red-100 border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
-            case 'documents-required': return 'text-purple-700 bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-300';
-            default: return 'text-gray-700 bg-gray-100 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300';
+            case 'verified': return 'text-green-800 bg-green-200 border-green-400 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300';
+            case 'pending': return 'text-amber-800 bg-amber-200 border-amber-400 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300';
+            case 'rejected': return 'text-red-800 bg-red-200 border-red-400 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
+            case 'documents-required': return 'text-purple-800 bg-purple-200 border-purple-400 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-300';
+            default: return 'text-gray-800 bg-gray-200 border-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300';
         }
     };
 
@@ -94,8 +94,8 @@ export default function BeneficiariesPreview({ beneficiaries }: BeneficiariesPre
                     </motion.button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    {beneficiaries.map((beneficiary, idx) => {
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {beneficiaries.slice(0, 2).map((beneficiary, idx) => {
                         const StatusIcon = beneficiary.status === 'verified' ? CheckCircle : Clock;
                         const VerificationIcon = beneficiary.verificationStatus === 'verified' ? CheckCircle : Clock;
 
@@ -120,9 +120,9 @@ export default function BeneficiariesPreview({ beneficiaries }: BeneficiariesPre
                                             <p className="text-xs theme-text-muted truncate">{beneficiary.beneficiaryId}</p>
                                         </div>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${beneficiary.category === 'SC' ? 'text-purple-700 bg-purple-100 border-purple-300 dark:text-purple-300 dark:bg-purple-900/30 dark:border-purple-700' :
-                                        beneficiary.category === 'ST' ? 'text-blue-700 bg-blue-100 border-blue-300 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-700' :
-                                            'text-gray-700 bg-gray-100 border-gray-300 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600'
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${beneficiary.category === 'SC' ? 'text-purple-900 bg-purple-200 border-purple-400 dark:text-purple-300 dark:bg-purple-900/30 dark:border-purple-700' :
+                                        beneficiary.category === 'ST' ? 'text-blue-900 bg-blue-200 border-blue-400 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-700' :
+                                            'text-gray-900 bg-gray-200 border-gray-400 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600'
                                         }`}>
                                         {beneficiary.category}
                                     </span>
