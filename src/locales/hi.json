@@ -259,9 +259,15 @@
       "officer": "अधिकारी",
       "description": "आज आपके DBT आवेदनों के साथ यह हो रहा है।"
     },
+    "greetings": {
+      "goodMorning": "सुप्रभात",
+      "goodAfternoon": "शुभ दोपहर",
+      "goodEvening": "शुभ संध्या"
+    },
     "quickStats": {
       "todaysApplications": "आज के आवेदन",
       "pendingReview": "समीक्षा लंबित",
+      "pendingApprovals": "लंबित अनुमोदन",
       "weekDisbursed": "इस सप्ताह वितरित",
       "satisfactionRate": "संतुष्टि दर",
       "totalApplications": "कुल आवेदन",
@@ -273,7 +279,8 @@
       "viewAll": "सभी देखें",
       "systemIntegrations": "सिस्टम इंटीग्रेशन",
       "grievanceStatus": "शिकायत स्थिति",
-      "quickActions": "त्वरित क्रियाएँ"
+      "quickActions": "त्वरित क्रियाएँ",
+      "recentInfo": "हाल की जानकारी"
     },
     "grievance": {
       "subject1": "आवेदन प्रसंस्करण में देरी",
@@ -376,7 +383,17 @@
       "tabManagementDescription": "{{tab}} प्रबंधन इंटरफेस जिसमें विस्तृत तालिकाएं, फॉर्म और विश्लेषण हैं।",
       "viewAllTracking": "सभी ट्रैकिंग देखें",
       "view": "देखें:",
-      "vsLastPeriod": "बनाम पिछला अवधि"
+      "vsLastPeriod": "बनाम पिछला अवधि",
+      "welcomeMessage": "आज आपके DBT आवेदनों के साथ यह हो रहा है।",
+      "refreshData": "डेटा ताज़ा करें",
+      "newApplication": "नया आवेदन",
+      "realtimeSystemUpdates": "रीयल-टाइम सिस्टम अपडेट",
+      "user": "उपयोगकर्ता",
+      "searchPlaceholder": "खोजें...",
+      "notifications": "सूचनाएं",
+      "new": "नया",
+      "markAllRead": "सभी को पढ़ा हुआ चिह्नित करें",
+      "errorLoading": "डैशबोर्ड डेटा लोड करने में त्रुटि"
     },
     "liveTracking": {
       "liveApplicationTracking": "लाइव आवेदन ट्रैकिंग",
@@ -384,7 +401,11 @@
       "applicationsInProgress": "प्रगति में आवेदन",
       "completedToday": "आज पूर्ण",
       "pendingReview": "समीक्षा लंबित",
-      "avgProcessingTime": "औसत प्रसंस्करण समय"
+      "avgProcessingTime": "औसत प्रसंस्करण समय",
+      "inProgress": "प्रगति में",
+      "completed": "पूर्ण",
+      "issues": "मुद्दे",
+      "avgTime": "औसत समय"
     },
     "status": {
       "approved": "स्वीकृत",

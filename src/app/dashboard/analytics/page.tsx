@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import AnalyticsChart from '@/components/AnalyticsChart';
 
 const AnalyticsPage = () => {
   const { theme } = useTheme();
@@ -536,6 +537,31 @@ const AnalyticsPage = () => {
     if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2';
     return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4';
   }, [viewMode]);
+
+  // Prepare data for AnalyticsChart
+  const chartDataSets = useMemo(() => {
+    const labels = analyticsData.monthlyTrends.labels;
+    const apps = analyticsData.monthlyTrends.applications;
+    const disbs = analyticsData.monthlyTrends.disbursements;
+
+    // Ensure labels is an array of strings
+    const safeLabels = Array.isArray(labels) ? labels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return [
+      {
+        id: 'applications',
+        label: t('extracted.applications') || 'Applications',
+        color: theme === 'dark' ? 'rgba(59, 130, 246, 1)' : 'rgba(37, 99, 235, 1)',
+        points: apps.map((val: number, i: number) => ({ x: safeLabels[i], y: val }))
+      },
+      {
+        id: 'disbursements',
+        label: t('extracted.disbursements') || 'Disbursements',
+        color: theme === 'dark' ? 'rgba(16, 185, 129, 1)' : 'rgba(5, 150, 105, 1)',
+        points: disbs.map((val: number, i: number) => ({ x: safeLabels[i], y: val }))
+      }
+    ];
+  }, [analyticsData, theme, t]);
 
   // Export functions
   const exportToPDF = () => {
@@ -1291,8 +1317,8 @@ const AnalyticsPage = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowFilters(!showFilters)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${showFilters
-                  ? 'accent-gradient text-white'
-                  : 'theme-bg-glass theme-text-muted border theme-border-glass'
+                ? 'accent-gradient text-white'
+                : 'theme-bg-glass theme-text-muted border theme-border-glass'
                 }`}
             >
               <Filter className="w-3 h-3" />
@@ -1304,8 +1330,8 @@ const AnalyticsPage = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setAutoRefresh(!autoRefresh)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${autoRefresh
-                  ? 'accent-gradient text-white'
-                  : 'theme-bg-glass theme-text-muted border theme-border-glass'
+                ? 'accent-gradient text-white'
+                : 'theme-bg-glass theme-text-muted border theme-border-glass'
                 }`}
             >
               <RefreshCw className={`w-3 h-3 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -1364,8 +1390,8 @@ const AnalyticsPage = () => {
                           );
                         }}
                         className={`px-2 py-1 rounded text-xs font-medium ${selectedStates.includes(state.state)
-                            ? 'accent-gradient text-white'
-                            : 'theme-bg-glass theme-text-muted border theme-border-glass'
+                          ? 'accent-gradient text-white'
+                          : 'theme-bg-glass theme-text-muted border theme-border-glass'
                           }`}
                       >
                         {state.state}
@@ -1391,8 +1417,8 @@ const AnalyticsPage = () => {
                           );
                         }}
                         className={`px-2 py-1 rounded text-xs font-medium ${selectedActs.includes(act)
-                            ? 'accent-gradient text-white'
-                            : 'theme-bg-glass theme-text-muted border theme-border-glass'
+                          ? 'accent-gradient text-white'
+                          : 'theme-bg-glass theme-text-muted border theme-border-glass'
                           }`}
                       >
                         {act}
@@ -1511,197 +1537,31 @@ const AnalyticsPage = () => {
               <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.monthly_trends')} </h3>
               <p className="text-sm theme-text-muted">{t('extracted.applications_vs_disbursements')} </p>
             </div>
+            {/* Custom Legend for AnalyticsChart */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-xs theme-text-muted">{t('extracted.applications')} </span>
+                <div className={`w-3 h-3 rounded-full ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'}`}></div>
+                <span className="text-xs theme-text-muted">{t('extracted.applications')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-xs theme-text-muted">{t('extracted.disbursements')} </span>
+                <div className={`w-3 h-3 rounded-full ${theme === 'dark' ? 'bg-emerald-500' : 'bg-emerald-600'}`}></div>
+                <span className="text-xs theme-text-muted">{t('extracted.disbursements')}</span>
               </div>
             </div>
           </div>
-          <div className="h-48 sm:h-64 overflow-x-auto">
-            {chartType === 'bar' && (
-              <div className="flex items-end gap-1 h-full">
-                {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => {
-                  const appHeight =
-                    analyticsData.monthlyTrends.applications[index] > 0
-                      ? (analyticsData.monthlyTrends.applications[index] /
-                        Math.max(
-                          ...analyticsData.monthlyTrends.applications.filter(
-                            (v: number) => v > 0
-                          )
-                        )) *
-                      100
-                      : 0;
-                  const disbHeight =
-                    analyticsData.monthlyTrends.disbursements[index] > 0
-                      ? (analyticsData.monthlyTrends.disbursements[index] /
-                        Math.max(
-                          ...analyticsData.monthlyTrends.disbursements.filter(
-                            (v: number) => v > 0
-                          )
-                        )) *
-                      100
-                      : 0;
 
-                  return (
-                    <div
-                      key={month}
-                      className="flex flex-col items-center min-w-[64px] sm:flex-1 sm:min-w-0 flex-shrink-0"
-                    >
-                      <div className="flex items-end justify-center w-full h-24 sm:h-48 gap-1 mb-2">
-                        <motion.div
-                          className="w-1/2 bg-blue-500 rounded-t transition-all duration-500 hover:bg-blue-600"
-                          style={{ height: `${appHeight}%` }}
-                          whileHover={{ scale: 1.05 }}
-                          title={`${t('extracted.applications')}: ${analyticsData.monthlyTrends.applications[index]
-                            }`}
-                        ></motion.div>
-                        <motion.div
-                          className="w-1/2 bg-green-500 rounded-t transition-all duration-500 hover:bg-green-600"
-                          style={{ height: `${disbHeight}%` }}
-                          whileHover={{ scale: 1.05 }}
-                          title={`${t('extracted.disbursements')}: ${analyticsData.monthlyTrends.disbursements[index]
-                            }`}
-                        ></motion.div>
-                      </div>
-                      <span className="text-xs theme-text-muted">{month}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {chartType === 'line' && (
-              <div className="relative h-full">
-                <svg className="w-full h-full" viewBox="0 0 400 200">
-                  {/* Grid lines */}
-                  <defs>
-                    <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                      <path d="M 40 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.1" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
-
-                  {/* Applications line */}
-                  <polyline
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="3"
-                    points={Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
-                      const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
-                      const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
-                      const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
-                      return `${x},${y}`;
-                    }).join(' ') : ''}
-                  />
-
-                  {/* Disbursements line */}
-                  <polyline
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="3"
-                    points={Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
-                      const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
-                      const maxDisb = Math.max(...analyticsData.monthlyTrends.disbursements);
-                      const y = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
-                      return `${x},${y}`;
-                    }).join(' ') : ''}
-                  />
-
-                  {/* Month labels */}
-                  {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
-                    <text
-                      key={month}
-                      x={(index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20}
-                      y="195"
-                      textAnchor="middle"
-                      className="text-xs fill-current theme-text-muted"
-                    >
-                      {month}
-                    </text>
-                  ))}
-                </svg>
-              </div>
-            )}
-
-            {chartType === 'area' && (
-              <div className="relative h-full">
-                <svg className="w-full h-full" viewBox="0 0 400 200">
-                  {/* Applications area */}
-                  <defs>
-                    <linearGradient id="appGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
-                    </linearGradient>
-                    <linearGradient id="disbGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Applications area */}
-                  <polygon
-                    fill="url(#appGradient)"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    points={`20,180 ${Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: any, index: number) => {
-                      const x = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
-                      const maxApp = Math.max(...analyticsData.monthlyTrends.applications);
-                      const y = maxApp > 0 ? 180 - (analyticsData.monthlyTrends.applications[index] / maxApp) * 140 : 180;
-                      return `${x},${y}`;
-                    }).join(' ') : ''} 380,180`}
-                  />
-
-                  {/* Disbursements area */}
-                  <polygon
-                    fill="url(#disbGradient)"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    points={`20,180 ${Array.isArray(analyticsData.monthlyTrends.labels) ? analyticsData.monthlyTrends.labels.map((_: string, index: number) => {
-                      const x: number = (index / (analyticsData.monthlyTrends.labels.length - 1)) * 360 + 20;
-                      const maxDisb: number = Math.max(...analyticsData.monthlyTrends.disbursements);
-                      const y: number = maxDisb > 0 ? 180 - (analyticsData.monthlyTrends.disbursements[index] / maxDisb) * 140 : 180;
-                      return `${x},${y}`;
-                    }).join(' ') : ''} 380,180`}
-                  />
-
-                  {/* Month labels */}
-                  {Array.isArray(analyticsData.monthlyTrends.labels) && analyticsData.monthlyTrends.labels.map((month: string, index: number) => (
-                    <text
-                      key={month}
-                      x={
-                        (index /
-                          (analyticsData.monthlyTrends.labels.length - 1)) *
-                        360 +
-                        20
-                      }
-                      y="195"
-                      textAnchor="middle"
-                      className="text-xs fill-current theme-text-muted"
-                    >
-                      {month}
-                    </text>
-                  ))}
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-lg font-bold theme-text-primary">
-                      {analyticsData.monthlyTrends.applications.reduce((a, b) => a + b, 0) + analyticsData.monthlyTrends.disbursements.reduce((a, b) => a + b, 0)}
-                    </div>
-                    <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="h-64 sm:h-80 w-full">
+            <AnalyticsChart
+              dataSets={chartDataSets}
+              chartType={chartType === 'pie' ? 'bar' : chartType as any}
+              xScaleType="category"
+            />
           </div>
         </motion.div>
 
+
         {/* Act-wise Breakdown */}
-        <motion.div
+        < motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
@@ -1742,13 +1602,13 @@ const AnalyticsPage = () => {
               <p className="text-sm font-medium text-green-500">{analyticsData.actWiseBreakdown.poa.successRate.toFixed(1)}% {t('extracted.success')}</p>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </motion.div >
+      </div >
 
       {/* State-wise Performance and Category Breakdown */}
-      <div className={stateCategoryGridClass}>
+      < div className={stateCategoryGridClass} >
         {/* State-wise Performance */}
-        <motion.div
+        < motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
@@ -1780,10 +1640,10 @@ const AnalyticsPage = () => {
               </div>
             ))}
           </div>
-        </motion.div>
+        </motion.div >
 
         {/* Category-wise Distribution */}
-        <motion.div
+        < motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -1821,11 +1681,11 @@ const AnalyticsPage = () => {
               );
             })}
           </div>
-        </motion.div>
-      </div>
+        </motion.div >
+      </div >
 
       {/* Performance Metrics */}
-      <motion.div
+      < motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45 }}
@@ -1878,10 +1738,10 @@ const AnalyticsPage = () => {
             </div>
           ))}
         </div>
-      </motion.div>
+      </motion.div >
 
       {/* Top Districts */}
-      <motion.div
+      < motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -1988,16 +1848,16 @@ const AnalyticsPage = () => {
                   <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">{district.disbursements}</td>
                   <td className="hidden lg:table-cell px-4 py-3">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${district.successRate >= 80
+                      ? theme === 'dark'
+                        ? 'bg-green-900/30 text-green-300 border border-green-700/50'
+                        : 'bg-green-100 text-green-800'
+                      : district.successRate >= 60
                         ? theme === 'dark'
-                          ? 'bg-green-900/30 text-green-300 border border-green-700/50'
-                          : 'bg-green-100 text-green-800'
-                        : district.successRate >= 60
-                          ? theme === 'dark'
-                            ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
-                            : 'bg-yellow-100 text-yellow-800'
-                          : theme === 'dark'
-                            ? 'bg-red-900/30 text-red-300 border border-red-700/50'
-                            : 'bg-red-100 text-red-800'
+                          ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
+                          : 'bg-yellow-100 text-yellow-800'
+                        : theme === 'dark'
+                          ? 'bg-red-900/30 text-red-300 border border-red-700/50'
+                          : 'bg-red-100 text-red-800'
                       }`}>
                       {district.successRate.toFixed(1)}%
                     </span>
@@ -2029,54 +1889,56 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t theme-border-glass flex items-center justify-between">
-            <div className="text-sm theme-text-muted">
-              {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, sortedDistricts.length)} {t('extracted.of')} {sortedDistricts.length} {t('extracted.entries')}
-            </div>
-            <div className="flex gap-1">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t('extracted.previous')}
-              </motion.button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                return (
-                  <motion.button
-                    key={pageNum}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1 rounded text-sm border ${currentPage === pageNum
+        {
+          totalPages > 1 && (
+            <div className="px-6 py-4 border-t theme-border-glass flex items-center justify-between">
+              <div className="text-sm theme-text-muted">
+                {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, sortedDistricts.length)} {t('extracted.of')} {sortedDistricts.length} {t('extracted.entries')}
+              </div>
+              <div className="flex gap-1">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('extracted.previous')}
+                </motion.button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  return (
+                    <motion.button
+                      key={pageNum}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1 rounded text-sm border ${currentPage === pageNum
                         ? 'accent-gradient text-white'
                         : 'theme-bg-glass theme-text-primary theme-border-glass'
-                      }`}
-                  >
-                    {pageNum}
-                  </motion.button>
-                );
-              })}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t('extracted.next')}
-              </motion.button>
+                        }`}
+                    >
+                      {pageNum}
+                    </motion.button>
+                  );
+                })}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('extracted.next')}
+                </motion.button>
+              </div>
             </div>
-          </div>
-        )}
-      </motion.div>
+          )
+        }
+      </motion.div >
 
       {/* Report Generation Section */}
-      <motion.div
+      < motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.55 }}
@@ -2211,126 +2073,128 @@ const AnalyticsPage = () => {
             </div>
           </motion.div>
         </div>
-      </motion.div>
+      </motion.div >
 
       {/* Export Modal */}
       <AnimatePresence>
-        {showExportModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+        {
+          showExportModal && (
             <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
-              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center"
             >
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
-                    <Download className="w-5 h-5 text-accent-gradient" />
-                    {t('extracted.export') || 'Export Data'}
-                  </h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export analytics data as CSV or PDF report.'}</p>
-                </div>
-                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                  <X className="w-5 h-5 theme-text-primary" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full analytics dataset in the chosen format.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                      <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                          <Download className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                      <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Export Section */}
-              <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                <div className="mb-4">
-                  <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    {t('extracted.emailExport') || 'Email Export'}
-                  </h4>
-                  <input
-                    type="email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  />
-                </div>
-                <div className="space-y-3">
+              <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
+              <motion.div
+                initial={{ scale: 0.98, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.98, opacity: 0 }}
+                className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
+                style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
+              >
+                <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allAnalytics') || 'All Analytics'}</h5>
-                    <div className="flex gap-3">
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendAnalyticsEmail('csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendCsv') || 'Send CSV'}
-                      </button>
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendAnalyticsEmail('pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendPdf') || 'Send PDF'}
-                      </button>
+                    <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                      <Download className="w-5 h-5 text-accent-gradient" />
+                      {t('extracted.export') || 'Export Data'}
+                    </h3>
+                    <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export analytics data as CSV or PDF report.'}</p>
+                  </div>
+                  <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
+                    <X className="w-5 h-5 theme-text-primary" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
+                  <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
+                            <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full analytics dataset in the chosen format.'}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                            <Download className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
+                            <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Email Export Section */}
+                <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
+                  <div className="mb-4">
+                    <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      {t('extracted.emailExport') || 'Email Export'}
+                    </h4>
+                    <input
+                      type="email"
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
+                      placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
+                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allAnalytics') || 'All Analytics'}</h5>
+                      <div className="flex gap-3">
+                        <button
+                          disabled={!emailAddress.trim() || sendingEmail}
+                          onClick={() => sendAnalyticsEmail('csv')}
+                          className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        >
+                          {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
+                          {t('extracted.sendCsv') || 'Send CSV'}
+                        </button>
+                        <button
+                          disabled={!emailAddress.trim() || sendingEmail}
+                          onClick={() => sendAnalyticsEmail('pdf')}
+                          className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        >
+                          {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                          {t('extracted.sendPdf') || 'Send PDF'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )
+        }
+      </AnimatePresence >
+    </div >
   );
 };
 

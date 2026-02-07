@@ -259,9 +259,15 @@
       "officer": "Officer",
       "description": "Here's what's happening with your DBT applications today."
     },
+    "greetings": {
+      "goodMorning": "Good Morning",
+      "goodAfternoon": "Good Afternoon",
+      "goodEvening": "Good Evening"
+    },
     "quickStats": {
       "todaysApplications": "Today's Applications",
       "pendingReview": "Pending Review",
+      "pendingApprovals": "Pending Approvals",
       "weekDisbursed": "This Week Disbursed",
       "satisfactionRate": "Satisfaction Rate",
       "totalApplications": "Total Applications",
@@ -273,7 +279,8 @@
       "viewAll": "View All",
       "systemIntegrations": "System Integrations",
       "grievanceStatus": "Grievance Status",
-      "quickActions": "Quick Actions"
+      "quickActions": "Quick Actions",
+      "recentInfo": "Recent Info"
     },
     "grievance": {
       "subject1": "Delay in Application Processing",
@@ -376,7 +383,17 @@
       "tabManagementDescription": "{{tab}} management interface with detailed tables, forms, and analytics.",
       "viewAllTracking": "View All Tracking",
       "view": "View:",
-      "vsLastPeriod": "vs last period"
+      "vsLastPeriod": "vs last period",
+      "welcomeMessage": "Here's what's happening with your DBT applications today.",
+      "refreshData": "Refresh Data",
+      "newApplication": "New Application",
+      "realtimeSystemUpdates": "Real-time system updates",
+      "user": "User",
+      "searchPlaceholder": "Search...",
+      "notifications": "Notifications",
+      "new": "New",
+      "markAllRead": "Mark all as read",
+      "errorLoading": "Error loading dashboard data"
     },
     "liveTracking": {
       "liveApplicationTracking": "Live Application Tracking",
@@ -384,7 +401,11 @@
       "applicationsInProgress": "Applications in Progress",
       "completedToday": "Completed Today",
       "pendingReview": "Pending Review",
-      "avgProcessingTime": "Avg. Processing Time"
+      "avgProcessingTime": "Avg. Processing Time",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "issues": "Issues",
+      "avgTime": "Avg Time"
     },
     "status": {
       "approved": "Approved",
@@ -591,8 +612,8 @@
   },
   "extracted": {
     "enterBeneficiaryName": "Enter beneficiary name",
-    "create_beneficiary" : "Create Beneficiary",
-    "add_your_beneficiary_details_to_get_started" : "Add your beneficiary details to get started",
+    "create_beneficiary": "Create Beneficiary",
+    "add_your_beneficiary_details_to_get_started": "Add your beneficiary details to get started",
     "grievance": "Grievance",
     "contact": "Contact",
     "act": "Act",
@@ -1728,7 +1749,6 @@
     "itemslength": "{items.length}",
     "total": "Total",
     "no_applications_yet": "No applications yet",
-
     "recentcount": "{recentCount}",
     "total_amount_requested": "Total Amount Requested",
     "totalamounttolocalestring": "₹{totalAmount.toLocaleString()}",
@@ -1774,7 +1794,7 @@
     "allAnalytics": "All Analytics",
     "sendCsv": "Send CSV",
     "manage": "Manage",
-    "management":"Management",
+    "management": "Management",
     "Tracking": "Tracking",
     "support": "Support",
     "center": "Center",

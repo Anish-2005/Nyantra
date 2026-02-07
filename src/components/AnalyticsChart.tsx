@@ -12,9 +12,11 @@ type DataPoint = { x: string | number | Date; y: number };
 export default function AnalyticsChart({
   dataSets,
   chartType = "line",
+  xScaleType = "time",
 }: {
   dataSets?: { id: string; label: string; color?: string; points: DataPoint[] }[];
   chartType?: "line" | "area" | "bar" | "stacked";
+  xScaleType?: "time" | "category";
 }) {
   const chartRef = useRef<any>(null);
   const { theme } = useTheme();
@@ -127,8 +129,8 @@ export default function AnalyticsChart({
   const sets = dataSets && dataSets.length
     ? dataSets
     : realData.length > 0
-    ? realData
-    : [{ id: "applications", label: "Applications", points: mock }];
+      ? realData
+      : [{ id: "applications", label: "Applications", points: mock }];
 
   // Set mobile state on client side
   useEffect(() => {
@@ -267,8 +269,8 @@ export default function AnalyticsChart({
     },
     scales: {
       x: {
-        type: "time",
-        time: { unit: "day", tooltipFormat: "PP" },
+        type: xScaleType,
+        ...(xScaleType === 'time' ? { time: { unit: "day", tooltipFormat: "PP" } } : {}),
         ticks: {
           color: theme === "dark" ? "#94a3b8" : "#475569",
           font: {

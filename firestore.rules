@@ -67,6 +67,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null || true; // Allow unauthenticated access for development
     }
 
+    // System Integrations: allow authenticated users to read/write system integration documents.
+    match /system_integrations/{integrationId} {
+      allow read, write: if request.auth != null || true; // Allow unauthenticated access for development
+    }
+
     // Beneficiaries: allow authenticated users to read/create/update (no deletes from client)
     match /beneficiaries/{beneficiaryId} {
       // Allow access in development mode or with authentication
