@@ -73,7 +73,7 @@ export default function WelcomeHeader({ user }: WelcomeHeaderProps) {
                 </motion.button>
 
                 <motion.button
-                    onClick={() => router.push('/applications/new')}
+                    onClick={() => router.push('/dashboard/applications')}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex items-center gap-2 px-5 py-3 rounded-xl accent-gradient text-white font-semibold shadow-lg hover:shadow-blue-500/25 transition-shadow"

@@ -3,10 +3,19 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Plus, FileText, BarChart3, Settings } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
+import { useRouter } from 'next/navigation';
 import { itemVariants } from './animations';
 
 export default function QuickActions() {
     const { t } = useLocale();
+    const router = useRouter();
+
+    const actions = [
+        { labelKey: 'dashboard.quickActionLabels.newApp', icon: Plus, color: 'from-blue-500 to-cyan-500', path: '/dashboard/applications' },
+        { labelKey: 'dashboard.quickActionLabels.reports', icon: FileText, color: 'from-green-500 to-emerald-500', path: '/dashboard/reports' },
+        { labelKey: 'dashboard.quickActionLabels.analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500', path: '/dashboard/analytics' },
+        { labelKey: 'dashboard.quickActionLabels.settings', icon: Settings, color: 'from-amber-500 to-orange-500', path: '/dashboard/settings' }
+    ];
 
     return (
         <motion.div
@@ -28,14 +37,10 @@ export default function QuickActions() {
                     {t('dashboard.sections.quickActions')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                    {[
-                        { labelKey: 'dashboard.quickActionLabels.newApp', icon: Plus, color: 'from-blue-500 to-cyan-500' },
-                        { labelKey: 'dashboard.quickActionLabels.reports', icon: FileText, color: 'from-green-500 to-emerald-500' },
-                        { labelKey: 'dashboard.quickActionLabels.analytics', icon: BarChart3, color: 'from-purple-500 to-pink-500' },
-                        { labelKey: 'dashboard.quickActionLabels.settings', icon: Settings, color: 'from-amber-500 to-orange-500' }
-                    ].map((action, index) => (
+                    {actions.map((action, index) => (
                         <motion.button
                             key={action.labelKey}
+                            onClick={() => router.push(action.path)}
                             className={`p-4 rounded-xl bg-gradient-to-br ${action.color} text-white flex flex-col items-center justify-center space-y-2 shadow-lg relative overflow-hidden`}
                             whileHover={{ scale: 1.05, y: -2 }}
                             whileTap={{ scale: 0.95 }}

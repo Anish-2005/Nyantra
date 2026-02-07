@@ -154,7 +154,7 @@ export default function UserSidebar({
 
       {/* -------------------- DESKTOP SIDEBAR -------------------- */}
       <aside
-        className={`hidden lg:flex flex-col fixed top-0 left-0 h-full theme-bg-nav backdrop-blur-2xl border-r theme-border-glass shadow-2xl z-30 transition-all duration-300 ease-in-out ${collapsed ? 'w-[80px]' : 'w-[280px]'
+        className={`hidden lg:flex flex-col fixed top-0 left-0 h-full theme-bg-nav backdrop-blur-2xl border-r theme-border-glass shadow-2xl z-30 transition-all duration-300 ease-in-out overflow-x-hidden ${collapsed ? 'w-[80px]' : 'w-[280px]'
           }`}
       >
         {/* Desktop Header */}
@@ -184,7 +184,7 @@ export default function UserSidebar({
         </div>
 
         {/* Desktop Nav */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 space-y-1 custom-scrollbar">
           {items.map((item) => {
             const isActive = activeId === item.id;
             const Icon = item.icon || (() => <span className="w-6 h-6" />);
@@ -194,9 +194,9 @@ export default function UserSidebar({
                 <button
                   type="button"
                   onClick={() => onChange(item.id)}
-                  className={`relative w-full flex items-center transition-all duration-200 group overflow-hidden ${collapsed
-                    ? 'justify-center py-3 px-0 rounded-2xl mx-auto h-[3.5rem] w-[3.5rem]'
-                    : 'py-3.5 px-4 rounded-xl space-x-3 mb-1'
+                  className={`relative flex items-center transition-all duration-200 group overflow-hidden ${collapsed
+                    ? 'justify-center py-3 px-0 rounded-2xl h-12 w-12'
+                    : 'w-full py-3.5 px-4 rounded-xl space-x-3 mb-1'
                     } ${isActive
                       ? 'bg-transparent'
                       : 'hover:theme-bg-glass'
@@ -257,8 +257,8 @@ export default function UserSidebar({
         </nav>
 
         {/* Desktop Footer */}
-        <div className="p-4 border-t theme-border-glass bg-gradient-to-t from-black/5 to-transparent">
-          <div className={`flex flex-col gap-4 ${collapsed ? 'items-center' : ''}`}>
+        <div className={`${collapsed ? 'p-2' : 'p-4'} border-t theme-border-glass bg-gradient-to-t from-black/5 to-transparent`}>
+          <div className={`flex flex-col gap-4 ${collapsed ? 'items-center overflow-x-visible' : ''}`}>
 
             <motion.div
               layout

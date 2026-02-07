@@ -5,8 +5,25 @@ import { TrendingUp, Rocket, Award, Clock } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import { itemVariants } from './animations';
 
-export default function PerformanceMetrics() {
+interface PerformanceMetricsProps {
+    metrics: {
+        today: number;
+        todayChange: number;
+        thisWeek: number;
+        thisWeekChange: number;
+        successRate: number;
+        successChange: number;
+        pending: number;
+        pendingChange: number;
+    };
+}
+
+export default function PerformanceMetrics({ metrics }: PerformanceMetricsProps) {
     const { t } = useLocale();
+
+    const formatRate = (rate: number) => {
+        return rate % 1 === 0 ? rate : rate.toFixed(1);
+    };
 
     return (
         <motion.div
@@ -35,10 +52,10 @@ export default function PerformanceMetrics() {
 
                 <div className="grid grid-cols-2 gap-3">
                     {[
-                        { label: t('dashboard.performance.today'), value: '156', change: '+12%', icon: Rocket, color: 'from-blue-500 to-cyan-500' },
-                        { label: t('dashboard.performance.thisWeek'), value: '892', change: '+8%', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-                        { label: t('dashboard.performance.success'), value: '87.5%', change: '+3%', icon: Award, color: 'from-purple-500 to-pink-500' },
-                        { label: t('dashboard.performance.pending'), value: '45', change: '-5%', icon: Clock, color: 'from-amber-500 to-orange-500' }
+                        { label: t('dashboard.performance.today'), value: metrics.today.toString(), change: `${metrics.todayChange >= 0 ? '+' : ''}${metrics.todayChange}%`, icon: Rocket, color: 'from-blue-500 to-cyan-500' },
+                        { label: t('dashboard.performance.thisWeek'), value: metrics.thisWeek.toLocaleString(), change: `${metrics.thisWeekChange >= 0 ? '+' : ''}${metrics.thisWeekChange}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+                        { label: t('dashboard.performance.success'), value: `${formatRate(metrics.successRate)}%`, change: `${metrics.successChange >= 0 ? '+' : ''}${metrics.successChange}%`, icon: Award, color: 'from-purple-500 to-pink-500' },
+                        { label: t('dashboard.performance.pending'), value: metrics.pending.toString(), change: `${metrics.pendingChange >= 0 ? '+' : ''}${metrics.pendingChange}%`, icon: Clock, color: 'from-amber-500 to-orange-500' }
                     ].map((metric, idx) => (
                         <motion.div
                             key={metric.label}

@@ -280,7 +280,7 @@ export default function AnalyticsPreview({ metrics, loading, applications = [] }
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                     {[
                         { label: t('dashboard.analytics.peakValue'), value: metrics.peakValue.toLocaleString(), color: 'from-blue-500 to-cyan-500', icon: TrendingUp },
-                        { label: t('dashboard.analytics.average'), value: metrics.average.toLocaleString(), color: 'from-purple-500 to-pink-500', icon: Activity },
+                        { label: t('dashboard.analytics.average'), value: `₹${metrics.average.toLocaleString()}`, color: 'from-purple-500 to-pink-500', icon: Activity },
                         { label: t('dashboard.analytics.growthRate'), value: `${metrics.growthRate >= 0 ? '+' : ''}${metrics.growthRate}%`, color: 'from-green-500 to-emerald-500', icon: ArrowUpRight }
                     ].map((stat, idx) => (
                         <motion.div
