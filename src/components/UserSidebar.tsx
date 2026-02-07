@@ -1,14 +1,14 @@
 "use client";
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { ChevronLeft } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useLocale } from '@/context/LocaleContext';
+import React, { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, LogOut } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import { useLocale } from "../context/LocaleContext";
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type NavItem = {
   id: string;
@@ -41,214 +41,257 @@ export default function UserSidebar({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [setOpen]);
 
   const logoSrc = theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png';
 
   return (
     <>
-      {/* Mobile Sidebar */}
-      <motion.div
-        initial={{ x: '-100%' }}
-        animate={{ x: open ? '0%' : '-100%' }}
-        transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-        className="fixed z-50 top-0 left-0 h-full w-[min(92vw,16rem)] max-w-[16rem] theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-xl lg:hidden flex flex-col overflow-hidden pointer-events-auto"
-      >
-        <div className="p-4 border-b theme-border-glass flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt={t('extracted.nyantra')} fill className="object-contain" />
-            </div>
-            <div>
-              <div className="text-xl font-bold theme-text-primary">
-                {t('extracted.nyantra')}
-              </div>
-              <div className="text-xs theme-text-muted">
-                {t('extracted.applicant_portal')}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="p-2 rounded-md theme-border-glass border theme-bg-glass"
-            aria-label={t('extracted.close_sidebar')}
-          >
-            <ChevronLeft className="w-4 h-4 theme-text-primary" />
-          </button>
-        </div>
-
-        <nav className="flex-1 p-3 overflow-auto min-w-0" role="navigation" aria-label={t('extracted.user_navigation')}>
-          <ul className="space-y-2">
-            {items.map(item => (
-              <li key={item.id}>
+      {/* -------------------- MOBILE SIDEBAR -------------------- */}
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+              onClick={() => setOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: "0%" }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed z-50 top-0 left-0 h-full w-[85vw] max-w-[20rem] theme-bg-nav backdrop-blur-2xl border-r theme-border-glass shadow-2xl lg:hidden flex flex-col overflow-hidden"
+            >
+              {/* Mobile Header */}
+              <div className="p-6 border-b theme-border-glass flex items-center justify-between bg-gradient-to-b from-white/5 to-transparent">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border theme-border-glass">
+                    <Image src={logoSrc} alt="Nyantra" width={32} height={32} className="object-contain" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                      {t('extracted.nyantra')}
+                    </h2>
+                    <p className="text-xs theme-text-muted font-medium tracking-wide uppercase">{t('extracted.applicant_portal')}</p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    onChange(item.id);
-                    setOpen(false);
-                  }}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all min-w-0 ${
-                    activeId === item.id
-                      ? 'accent-gradient text-white shadow-lg'
-                      : 'theme-text-primary hover:theme-bg-glass theme-border-glass border border-transparent hover:border'
-                  }`}
+                  onClick={() => setOpen(false)}
+                  className="p-2 rounded-xl theme-bg-glass hover:bg-red-500/10 hover:text-red-500 transition-colors border theme-border-glass"
                 >
-                  {item.icon ? <item.icon className="w-5 h-5 flex-shrink-0" /> : <span className="w-5 h-5" />}
-                  <span className="font-medium truncate flex-1">{item.label}</span>
-                  {item.notificationCount && item.notificationCount > 0 && (
-                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse flex-shrink-0">
-                      {item.notificationCount > 99 ? '99+' : item.notificationCount}
-                    </span>
-                  )}
+                  <ChevronLeft className="w-5 h-5 theme-text-muted" />
                 </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+              </div>
 
-        {/* Footer: Language + Logout (Mobile) */}
-        <div className="p-4 border-t theme-border-glass flex flex-col gap-3">
-          <div className="flex items-center justify-center gap-2">
-            <ThemeToggle compact />
-            <LanguageToggle compact />
-          </div>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await signOutUser();
-                router.push('/login');
-              } catch {
-                // ignore
-              }
-            }}
-            className="w-full flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass transition"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-            </svg>
-            <span className="truncate text-center flex-1">{t('extracted.sign_out')}</span>
-          </button>
-        </div>
-      </motion.div>
+              {/* Mobile Nav */}
+              <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                {items.map((item) => {
+                  const isActive = activeId === item.id;
+                  const Icon = item.icon || (() => <span className="w-6 h-6" />);
 
-      {/* Desktop Sidebar */}
-      <motion.aside
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className={`hidden lg:flex lg:flex-col fixed top-0 left-0 h-full theme-bg-nav backdrop-blur-xl border-r theme-border-glass shadow-md z-30 ${
-          collapsed ? 'w-20' : 'w-64'
-        }`}
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => {
+                        onChange(item.id);
+                        setOpen(false);
+                      }}
+                      className={`group relative w-full flex items-center p-4 rounded-xl transition-all duration-300 ${isActive
+                        ? 'accent-gradient text-white shadow-lg shadow-blue-500/20'
+                        : 'hover:theme-bg-glass hover:theme-text-primary theme-text-secondary'
+                        }`}
+                    >
+                      <Icon className={`w-6 h-6 flex-shrink-0 mr-4 ${isActive ? 'text-white' : 'theme-text-muted group-hover:theme-text-primary'}`} />
+                      <span className="font-semibold text-base">{item.label}</span>
+
+                      {item.notificationCount && item.notificationCount > 0 && (
+                        <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white dark:ring-black">
+                          {item.notificationCount > 9 ? '9+' : item.notificationCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Mobile Footer */}
+              <div className="p-6 border-t theme-border-glass space-y-6 bg-gradient-to-t from-black/5 to-transparent">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 bg-white/5 rounded-xl p-1">
+                    <ThemeToggle compact className="w-full justify-center" />
+                  </div>
+                  <div className="flex-1 bg-white/5 rounded-xl p-1">
+                    <LanguageToggle compact className="w-full justify-center" />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await signOutUser();
+                      router.push('/login');
+                    } catch { }
+                  }}
+                  className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 group font-semibold shadow-sm hover:shadow-red-500/20"
+                >
+                  <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                  <span>{t('extracted.sign_out')}</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* -------------------- DESKTOP SIDEBAR -------------------- */}
+      <aside
+        className={`hidden lg:flex flex-col fixed top-0 left-0 h-full theme-bg-nav backdrop-blur-2xl border-r theme-border-glass shadow-2xl z-30 transition-all duration-300 ease-in-out ${collapsed ? 'w-[80px]' : 'w-[280px]'
+          }`}
       >
-        <div className={`p-4 border-b theme-border-glass flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          {!collapsed ? (
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-                <Image src={logoSrc} alt={t('extracted.nyantra')} width={30} height={30} className="object-contain" />
-              </div>
-              <div>
-                <div className="text-xl font-bold theme-text-primary">
-                  {t('extracted.nyantra')}
-                </div>
-                <div className="text-xs theme-text-muted">
-                  {t('extracted.applicant_portal')}
-                </div>
-              </div>
+        {/* Desktop Header */}
+        <div className={`flex items-center border-b theme-border-glass transition-all duration-300 ${collapsed ? 'h-20 justify-center px-1' : 'h-24 justify-start px-6'}`}>
+          <div className={`flex items-center transition-all duration-300 ${collapsed ? 'justify-center w-auto' : 'gap-4 w-full'}`}>
+            <div className={`rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center border theme-border-glass flex-shrink-0 shadow-sm relative overflow-hidden group transition-all duration-300 ${collapsed ? 'w-10 h-10' : 'w-12 h-12'}`}>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Image src={logoSrc} alt="Nyantra" width={collapsed ? 24 : 32} height={collapsed ? 24 : 32} className="object-contain relative z-10" />
             </div>
-          ) : (
-            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center relative">
-              <Image src={logoSrc} alt={t('extracted.nyantra')} width={24} height={24} className="object-contain" />
-            </div>
-          )}
 
-          
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="flex flex-col min-w-0 flex-1"
+              >
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent truncate pt-1">
+                  {t('extracted.nyantra')}
+                </span>
+                <span className="text-xs theme-text-muted font-medium tracking-wider uppercase truncate">
+                  {t('extracted.applicant_portal')}
+                </span>
+              </motion.div>
+            )}
+          </div>
         </div>
 
-        <nav className="flex-1 p-3 overflow-auto min-w-0">
-          <ul className="space-y-2">
-            {items.map(item => (
-              <li key={item.id}>
+        {/* Desktop Nav */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 custom-scrollbar">
+          {items.map((item) => {
+            const isActive = activeId === item.id;
+            const Icon = item.icon || (() => <span className="w-6 h-6" />);
+
+            return (
+              <div key={item.id} className="relative group/tooltip">
                 <button
                   type="button"
                   onClick={() => onChange(item.id)}
-                  className={`w-full flex items-center rounded-lg transition-all min-w-0 ${
-                    collapsed ? 'justify-center p-3' : 'space-x-3 p-3'
-                  } ${
-                    activeId === item.id
-                      ? 'accent-gradient text-white shadow-lg'
-                      : 'theme-text-primary hover:theme-bg-glass theme-border-glass border border-transparent hover:border'
-                  }`}
+                  className={`relative w-full flex items-center transition-all duration-200 group overflow-hidden ${collapsed
+                    ? 'justify-center py-3 px-0 rounded-2xl mx-auto h-[3.5rem] w-[3.5rem]'
+                    : 'py-3.5 px-4 rounded-xl space-x-3 mb-1'
+                    } ${isActive
+                      ? 'bg-transparent'
+                      : 'hover:theme-bg-glass'
+                    }`}
                   title={collapsed ? item.label : undefined}
                 >
-                  {item.icon ? <item.icon className="w-5 h-5 flex-shrink-0" /> : <span className="w-5 h-5" />}
+                  {/* Active Background Pill */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabSidebarUser"
+                      className={`absolute inset-0 accent-gradient -z-10 shadow-lg shadow-blue-500/20 ${collapsed ? 'rounded-2xl' : 'rounded-xl'}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    />
+                  )}
+
+                  <div className={`relative z-10 flex items-center justify-center transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                    <Icon className={`w-6 h-6 flex-shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'theme-text-secondary group-hover:theme-text-primary'}`} />
+
+                    {/* Collapsed Warning Dot */}
+                    {collapsed && item.notificationCount && item.notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 ring-2 ring-white dark:ring-black animate-pulse" />
+                    )}
+                  </div>
+
                   {!collapsed && (
                     <>
-                      <span className="font-medium truncate flex-1">{item.label}</span>
+                      <span className={`font-semibold text-base truncate flex-1 text-left transition-colors duration-200 ${isActive ? 'text-white' : 'theme-text-secondary group-hover:theme-text-primary'}`}>
+                        {item.label}
+                      </span>
+
                       {item.notificationCount && item.notificationCount > 0 && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse flex-shrink-0">
+                        <span className="flex h-5 min-w-[1.25rem] px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
                           {item.notificationCount > 99 ? '99+' : item.notificationCount}
                         </span>
                       )}
                     </>
                   )}
-                  {collapsed && item.notificationCount && item.notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
-                      {item.notificationCount > 9 ? '9+' : item.notificationCount}
-                    </span>
-                  )}
                 </button>
-              </li>
-            ))}
-          </ul>
+
+                {/* Fancy Tooltip for Collapsed State */}
+                {collapsed && (
+                  <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-2 rounded-lg theme-bg-card border theme-border-glass shadow-xl opacity-0 translate-x-2 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-x-0 pointer-events-none transition-all duration-200 z-50 whitespace-nowrap backdrop-blur-md">
+                    <span className="text-sm font-semibold theme-text-primary">{item.label}</span>
+                    {item.notificationCount && item.notificationCount > 0 && (
+                      <span className="ml-2 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {item.notificationCount}
+                      </span>
+                    )}
+                    {/* Triangle pointer */}
+                    <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 border-y-[6px] border-y-transparent border-r-[6px] border-r-[var(--card-border)]" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
-        {/* Footer: Language + Logout (Desktop) */}
-        <div className={`p-4 border-t theme-border-glass flex flex-col gap-3 ${collapsed ? 'items-center' : ''}`}>
-            {/* Language & Theme toggle container */}
-          <div className={`flex ${collapsed ? 'flex-col gap-2' : 'flex-row gap-2'} items-center justify-center`}>
-            <ThemeToggle compact className="flex items-center justify-center" />
-            <LanguageToggle compact vertical={collapsed} />
-          </div>
+        {/* Desktop Footer */}
+        <div className="p-4 border-t theme-border-glass bg-gradient-to-t from-black/5 to-transparent">
+          <div className={`flex flex-col gap-4 ${collapsed ? 'items-center' : ''}`}>
 
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await signOutUser();
-                router.push('/login');
-              } catch {
-                // ignore
-              }
-            }}
-            className={`flex items-center justify-center space-x-3 p-2 rounded-lg text-sm text-red-600 border border-red-500 hover:border-red-600 hover:theme-bg-glass transition ${
-              collapsed ? 'w-10 h-10' : 'w-full'
-            }`}
-            title={collapsed ? t('extracted.sign_out') : undefined}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
+            <motion.div
+              layout
+              className={`flex items-center theme-bg-glass rounded-xl p-1 border theme-border-glass ${collapsed ? 'flex-col gap-2' : 'gap-1'}`}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-            </svg>
-            {!collapsed && <span className="truncate text-center flex-1">{t('extracted.sign_out')}</span>}
-          </button>
+              <div className={collapsed ? '' : 'flex-1'}>
+                <ThemeToggle compact className="w-full justify-center hover:bg-transparent" />
+              </div>
+              {!collapsed && <div className="w-[1px] h-5 bg-gray-200 dark:bg-gray-700" />}
+              {collapsed && <div className="h-[1px] w-5 bg-gray-200 dark:bg-gray-700" />}
+              <div className={collapsed ? '' : 'flex-1'}>
+                <LanguageToggle compact vertical={collapsed} className="w-full justify-center hover:bg-transparent" />
+              </div>
+            </motion.div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await signOutUser();
+                  router.push('/login');
+                } catch { }
+              }}
+              className={`group flex items-center justify-center gap-3 p-3 rounded-xl border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm transition-all duration-300 relative overflow-hidden ${collapsed ? 'w-12 h-12' : 'w-full'}`}
+              title={collapsed ? t('extracted.sign_out') : undefined}
+            >
+              <div className="absolute inset-0 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform z-10 relative" />
+              {!collapsed && <span className="font-semibold z-10 relative">{t('extracted.sign_out')}</span>}
+            </button>
+          </div>
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
 }

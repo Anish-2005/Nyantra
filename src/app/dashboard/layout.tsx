@@ -190,11 +190,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 />
 
                 {/* Main Content */}
-                <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+                <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'
                     }`}>
                     {/* Enhanced Header */}
-                    <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm">
-                        <div className="flex items-center justify-between px-4 py-3 lg:px-6">
+                    <header className={`sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'h-20' : 'h-24'}`}>
+                        <div className="flex items-center justify-between px-4 h-full lg:px-6">
                             {/* Left Section - Mobile Menu & Branding */}
                             <div className="flex items-center gap-4 flex-1">
                                 {/* Desktop sidebar toggle */}

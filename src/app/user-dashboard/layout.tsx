@@ -54,11 +54,11 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
       else setSidebarOpen(true);
     };
     handler(mq);
-  if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-  else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
+    if ('addEventListener' in mq) mq.addEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+    else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
     return () => {
-  if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-  else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
+      if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+      else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
     };
   }, []);
 
@@ -314,10 +314,10 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
           collapsed={sidebarCollapsed}
         />
 
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}`}>
           {/* Enhanced Header (copied from /dashboard for visual parity) */}
-          <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm">
-            <div className="flex items-center justify-between px-4 py-3 lg:px-6">
+          <header className={`sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'h-20' : 'h-24'}`}>
+            <div className="flex items-center justify-between px-4 h-full lg:px-6">
               <div className="flex items-center gap-4 flex-1">
                 <motion.button
                   onClick={() => setSidebarCollapsed(s => !s)}
@@ -346,7 +346,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
 
               {/* Right Section - Theme Toggle, Notifications & User Menu */}
               <div className="flex items-center gap-3">
-               
+
 
                 <div className="relative">
                   <motion.button
@@ -397,9 +397,8 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                                 key={notification.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`p-4 border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors cursor-pointer ${
-                                  !notification.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                                }`}
+                                className={`p-4 border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                                  }`}
                                 onClick={() => !notification.read && markNotificationAsRead(notification.id)}
                               >
                                 <div className="flex items-start gap-3">
@@ -488,7 +487,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors"
                         >
-                          <User className="w-4 h-4"/>
+                          <User className="w-4 h-4" />
                           <span>{t('extracted.profile')}</span>
                         </button>
 
@@ -499,7 +498,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors"
                         >
-                          <Settings className="w-4 h-4"/>
+                          <Settings className="w-4 h-4" />
                           <span>{t('extracted.settings')}</span>
                         </button>
 
@@ -512,7 +511,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors"
                         >
-                          <HelpCircle className="w-4 h-4"/>
+                          <HelpCircle className="w-4 h-4" />
                           <span>{t('extracted.help_support')}</span>
                         </button>
 
@@ -561,7 +560,7 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
-                          <LogOut className="w-4 h-4"/>
+                          <LogOut className="w-4 h-4" />
                           <span>{t('extracted.sign_out')}</span>
                         </button>
                       </motion.div>
@@ -577,12 +576,12 @@ export default function UserDashboardLayout({ children }: { children: React.Reac
                 <ChevronDown className="w-3 h-3 rotate-270" />
                 <span className="theme-text-primary capitalize">{(
                   activeTab === 'overview' ? t('extracted.dashboard') :
-                  activeTab === 'applications' ? t('extracted.my_applications') :
-                  activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
-                  activeTab === 'disbursements' ? t('extracted.payments') :
-                  activeTab === 'grievance' ? t('extracted.grievances') :
-                  activeTab === 'feedback' ? t('extracted.feedback') :
-                  activeTab.replace('-', ' ')
+                    activeTab === 'applications' ? t('extracted.my_applications') :
+                      activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
+                        activeTab === 'disbursements' ? t('extracted.payments') :
+                          activeTab === 'grievance' ? t('extracted.grievances') :
+                            activeTab === 'feedback' ? t('extracted.feedback') :
+                              activeTab.replace('-', ' ')
                 )}</span>
               </div>
             </div>
