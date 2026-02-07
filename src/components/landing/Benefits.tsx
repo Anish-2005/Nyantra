@@ -68,8 +68,8 @@ const Benefits: React.FC = () => {
         className={`
       absolute inset-0 transition-colors duration-700
       ${theme === 'dark'
-                ? 'bg-gradient-to-b from-[#0A0F28] via-[#0A1432]/80 to-black'
-                : 'bg-gradient-to-b from-[#F9FBFF] via-[#F4F7FA] to-white'}
+            ? 'bg-gradient-to-b from-[#0A0F28] via-[#0A1432]/80 to-black'
+            : 'bg-gradient-to-b from-[#F9FBFF] via-[#F4F7FA] to-white'}
     `}
       />
 
@@ -78,8 +78,8 @@ const Benefits: React.FC = () => {
         className={`
       absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[40%] blur-3xl pointer-events-none
       ${theme === 'dark'
-                ? 'bg-[radial-gradient(ellipse_at_center,rgba(0,120,255,0.15),transparent_70%)]'
-                : 'bg-[radial-gradient(ellipse_at_center,rgba(255,200,100,0.15),transparent_70%)]'}
+            ? 'bg-[radial-gradient(ellipse_at_center,rgba(0,120,255,0.15),transparent_70%)]'
+            : 'bg-[radial-gradient(ellipse_at_center,rgba(255,200,100,0.15),transparent_70%)]'}
     `}
       />
 
@@ -111,10 +111,10 @@ const Benefits: React.FC = () => {
 
         {/* Benefits Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={containerVariants}
         >
           {benefits.map((benefit: any, i: number) => (
@@ -131,11 +131,11 @@ const Benefits: React.FC = () => {
               {/* Benefit Card */}
               <div
                 className={`
-    rounded-2xl p-6 flex flex-col items-center justify-center text-center h-full
-    backdrop-blur-xl border transition-all duration-300 shadow-md hover:shadow-xl
+    rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center h-full
+    backdrop-blur-xl border transition-all duration-300 shadow-sm hover:shadow-xl active:scale-[0.98]
     ${theme === 'dark'
-                        ? 'bg-white/5 border-white/10 hover:border-accent-secondary/40'
-                        : 'bg-white/60 border-gray-200 hover:border-amber-300/60'}
+                    ? 'bg-white/5 border-white/10 hover:border-accent-secondary/40 hover:bg-white/10'
+                    : 'bg-white/60 border-gray-200 hover:border-amber-300/60 hover:bg-white/90'}
   `}
               >
                 {/* Icon */}
@@ -143,8 +143,8 @@ const Benefits: React.FC = () => {
                   className={`
       relative w-16 h-16 mb-5 flex items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110
       ${theme === 'dark'
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-300'
-                          : 'bg-gradient-to-br from-amber-400 to-orange-500'}
+                      ? 'bg-gradient-to-br from-blue-500 to-blue-300'
+                      : 'bg-gradient-to-br from-amber-400 to-orange-500'}
     `}
                 >
                   <benefit.icon

@@ -13,28 +13,37 @@ const Hero = () => {
   const { user, profile, loading } = useAuth();
   const { t } = useLocale();
 
+  // Keep track of auth loading state
+  const loadingRef = React.useRef(loading);
+  React.useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
+  const [isNavigating, setIsNavigating] = React.useState(false);
+
   // Navigation helper: navigate according to authenticated user's role
   const navigateByRole = async () => {
+    setIsNavigating(true);
+
     // wait briefly for auth loading to settle (max ~3s)
     const waitFor = (ms: number) => new Promise((res) => setTimeout(res, ms));
     const start = Date.now();
-    while (loading && Date.now() - start < 3000) {
-      // poll every 100ms while auth initializes
-      // eslint-disable-next-line no-await-in-loop
+
+    // Use ref to check current loading state
+    while (loadingRef.current && Date.now() - start < 3000) {
       await waitFor(100);
     }
 
     if (!user) {
       router.push('/login');
+      setIsNavigating(false);
       return;
     }
 
     const role = profile?.role;
-    if (role === 'officer') return router.push('/dashboard');
-    if (role === 'user') return router.push('/user-dashboard');
-
-    // logged in but no role selected yet
-    return router.push('/choose-role');
+    if (role === 'officer') router.push('/dashboard');
+    else if (role === 'user') router.push('/user-dashboard');
+    else router.push('/choose-role');
   };
 
   const containerVariants = {
@@ -113,13 +122,25 @@ const Hero = () => {
             >
               <motion.button
                 onClick={() => navigateByRole()}
+                disabled={isNavigating}
                 aria-label={t('extracted.apply_now_continue')}
-                className="px-6 sm:px-10 py-4 sm:py-5 accent-gradient rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg text-white flex items-center justify-center space-x-2 sm:space-x-3 shadow-2xl hover:shadow-3xl transition-all relative overflow-hidden group"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
+                className={`px-6 sm:px-10 py-4 sm:py-5 accent-gradient rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg text-white flex items-center justify-center space-x-2 sm:space-x-3 shadow-2xl hover:shadow-3xl transition-all relative overflow-hidden group ${isNavigating ? 'opacity-80 cursor-wait' : ''}`}
+                whileHover={{ scale: isNavigating ? 1 : 1.05, y: isNavigating ? 0 : -3 }}
+                whileTap={{ scale: isNavigating ? 1 : 0.95 }}
               >
-                <span className="relative z-10">{t('hero.applyNow')}</span>
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                <span className="relative z-10 flex items-center space-x-2">
+                  {isNavigating ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('hero.applyNow')}</span>
+                      <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </span>
                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
 
@@ -206,10 +227,9 @@ const Hero = () => {
                       <item.icon className="w-5 h-5 sm:w-7 sm:h-7 mb-2 sm:mb-3 text-white drop-shadow-lg" />
                       <p className="text-xl sm:text-3xl font-bold text-white mb-1">{item.value}</p>
                       <p className="text-xs sm:text-sm text-white/90">{item.label}</p>
-                      <div className={`absolute top-2 sm:top-3 right-2 sm:right-3 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                        item.status === 'success' ? 'bg-green-300' :
+                      <div className={`absolute top-2 sm:top-3 right-2 sm:right-3 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${item.status === 'success' ? 'bg-green-300' :
                         item.status === 'active' ? 'bg-blue-300' : 'bg-amber-300'
-                      }`} />
+                        }`} />
                     </motion.div>
                   ))}
                 </div>
@@ -236,9 +256,8 @@ const Hero = () => {
                       transition={{ delay: 1 + i * 0.1 }}
                     >
                       <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${
-                          activity.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'
-                        }`}>
+                        <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${activity.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'
+                          }`}>
                           <activity.icon className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
                         <span className="theme-text-primary font-medium text-xs sm:text-sm">{activity.text}</span>
@@ -288,19 +307,26 @@ const Hero = () => {
       </div>
 
       {/* Scroll Indicator */}
-      <motion.div
-        className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2"
+      <motion.button
+        className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
+        onClick={() => {
+          const featuresSection = document.getElementById('features');
+          if (featuresSection) {
+            featuresSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
+        aria-label="Scroll to features"
       >
-        <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 theme-border-glass rounded-full flex justify-center pt-1.5 sm:pt-2">
+        <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 theme-border-glass rounded-full flex justify-center pt-1.5 sm:pt-2 hover:border-accent-primary transition-colors">
           <motion.div
             className="w-0.5 h-1.5 sm:w-1 sm:h-2 rounded-full accent-gradient"
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
         </div>
-      </motion.div>
+      </motion.button>
     </section>
   );
 };

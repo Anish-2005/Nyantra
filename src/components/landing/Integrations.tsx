@@ -63,7 +63,13 @@ const Integrations: React.FC = () => {
         </motion.div>
 
         {/* Integrations Grid */}
-        <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 items-stretch"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
           {[
             {
               name: 'PFMS',
@@ -108,13 +114,20 @@ const Integrations: React.FC = () => {
               link: '#' // Add your custom link here
             }
           ].map((integration, idx) => (
-            <motion.div key={integration.name.toLowerCase().replace(/\s+/g, '')} variants={itemVariants} whileHover={{ y: -6 }} className="flex items-center justify-center p-4">
-              <div className="w-full h-48 theme-bg-card theme-border-card rounded-2xl p-4 flex flex-col items-center text-center justify-between hover:shadow-xl transition-all duration-300">
-                <div className="flex flex-col items-center space-y-3">
-                  <Image src={integration.logo} alt={`${integration.name} logo`} width={80} height={80} className="object-contain rounded-lg" />
-                  <div>
-                    <p className="font-semibold theme-text-primary">{integration.name}</p>
-                    <p className="text-xs theme-text-muted">{integration.desc}</p>
+            <motion.div
+              key={integration.name.toLowerCase().replace(/\s+/g, '')}
+              variants={itemVariants}
+              whileHover={{ y: -6 }}
+              className="flex items-center justify-center p-2 w-full"
+            >
+              <div className="w-full h-full min-h-[220px] theme-bg-card theme-border-card border rounded-2xl p-6 flex flex-col items-center text-center justify-between hover:shadow-xl hover:border-accent-primary/30 transition-all duration-300 group">
+                <div className="flex flex-col items-center space-y-4 w-full flex-grow">
+                  <div className="w-20 h-20 relative p-3 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-sm border theme-border-glass flex items-center justify-center">
+                    <Image src={integration.logo} alt={`${integration.name} logo`} width={64} height={64} className="object-contain max-w-full max-h-full" />
+                  </div>
+                  <div className="w-full">
+                    <p className="font-bold text-lg theme-text-primary mb-1">{integration.name}</p>
+                    <p className="text-sm theme-text-muted line-clamp-2">{integration.desc}</p>
                   </div>
                 </div>
                 <a href={integration.link} aria-label={`Learn more about ${integration.name}`} className="inline-flex items-center text-sm font-medium theme-text-secondary hover:text-accent-gradient transition-colors">

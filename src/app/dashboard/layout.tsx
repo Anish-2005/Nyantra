@@ -5,6 +5,7 @@ import { BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle
 import { useTheme } from "@/context/ThemeContext";
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
+import { LogOut } from 'lucide-react';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
@@ -22,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [isProgrammaticNavigation, setIsProgrammaticNavigation] = useState(false);
-    
+
     const navigationItems = [
         { id: 'overview', label: t('extracted.dashboard'), icon: Home },
         { id: 'applications', label: t('extracted.applications'), icon: FileText },
@@ -34,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { id: 'reports', label: t('extracted.recent_reports') || 'Reports', icon: DownloadCloud },
         { id: 'blockchain', label: t('blockchain.blockchainNav'), icon: Link }
     ];
-    
+
     const router = useRouter();
     const pathname = usePathname();
     const { user, loading, profile } = useAuth();
@@ -68,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             }
         }
     }, [pathname, navigationItems, isProgrammaticNavigation]);
-    
+
     const handleSidebarChange = (id: string) => {
         setIsProgrammaticNavigation(true);
         setActiveTab(id);
@@ -189,9 +190,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 />
 
                 {/* Main Content */}
-                <div className={`flex flex-col flex-1 transition-all duration-300 ${
-                    sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-                }`}>
+                <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+                    }`}>
                     {/* Enhanced Header */}
                     <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm">
                         <div className="flex items-center justify-between px-4 py-3 lg:px-6">
@@ -205,9 +205,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     whileTap={{ scale: 0.95 }}
                                     aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                                 >
-                                    <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${
-                                        sidebarCollapsed ? '' : 'rotate-180'
-                                    }`} />
+                                    <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${sidebarCollapsed ? '' : 'rotate-180'
+                                        }`} />
                                 </motion.button>
 
                                 {/* Mobile menu toggle */}
@@ -239,7 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                             {/* Right Section - Theme Toggle, Notifications & User Menu */}
                             <div className="flex items-center gap-3">
-                               
+
 
                                 {/* Notifications */}
                                 <div className="relative">
@@ -306,22 +305,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 transition={{ duration: 0.2 }}
-                                                className="absolute right-0 top-full mt-2 w-48 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-1 z-50"
+                                                className="absolute right-0 top-full mt-2 w-64 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
                                                 style={{ background: dropdownSolidBg }}
                                             >
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
+                                                {/* User Info Section */}
+                                                <div className="px-4 py-3 border-b theme-border-glass">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                                                            <User className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium theme-text-primary truncate">{displayName}</p>
+                                                            <p className="text-sm theme-text-muted truncate">{user?.email}</p>
+                                                            <p className="text-xs theme-text-muted capitalize">{profile?.role || 'Officer'}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <User className="w-4 h-4" />
-                                                    Profile
+                                                    <span>Profile</span>
                                                 </button>
-                                                 <div className="border-t theme-border-glass my-1"></div>
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
+
+                                                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <Settings className="w-4 h-4" />
-                                                    Settings
+                                                    <span>Settings</span>
                                                 </button>
-                                                 <div className="border-t theme-border-glass my-1"></div>
-                                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
+
+                                                <div className="border-t theme-border-glass my-1"></div>
+
+                                                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm theme-text-primary hover:theme-bg-hover transition-colors">
                                                     <HelpCircle className="w-4 h-4" />
-                                                    Help & Support
+                                                    <span>Help & Support</span>
+                                                </button>
+
+                                                <div className="border-t theme-border-glass my-1"></div>
+
+                                                <button
+                                                    onClick={async () => {
+                                                        const { getAuth, signOut } = await import('firebase/auth');
+                                                        const auth = getAuth();
+                                                        await signOut(auth);
+                                                        router.push('/login');
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                >
+                                                    <LogOut className="w-4 h-4" />
+                                                    <span>Sign out</span>
                                                 </button>
                                             </motion.div>
                                         )}
@@ -338,15 +368,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <span className="theme-text-primary capitalize">{(
                                     // try common keys first
                                     activeTab === 'overview' ? t('extracted.dashboard') :
-                                    activeTab === 'analytics' ? t('extracted.analytics_reports') :
-                                    activeTab === 'applications' ? t('extracted.applications') :
-                                    activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
-                                    activeTab === 'disbursements' ? t('extracted.disbursements') :
-                                    activeTab === 'grievance' ? (t('extracted.grievance_hub') || t('extracted.grievance')) :
-                                    activeTab === 'integrations' ? t('extracted.integrations') :
-                                    activeTab === 'reports' ? (t('extracted.recent_reports') || 'Reports') :
-                                    // fallback: humanize id
-                                    activeTab.replace('-', ' ')
+                                        activeTab === 'analytics' ? t('extracted.analytics_reports') :
+                                            activeTab === 'applications' ? t('extracted.applications') :
+                                                activeTab === 'beneficiaries' ? t('extracted.beneficiaries') :
+                                                    activeTab === 'disbursements' ? t('extracted.disbursements') :
+                                                        activeTab === 'grievance' ? (t('extracted.grievance_hub') || t('extracted.grievance')) :
+                                                            activeTab === 'integrations' ? t('extracted.integrations') :
+                                                                activeTab === 'reports' ? (t('extracted.recent_reports') || 'Reports') :
+                                                                    // fallback: humanize id
+                                                                    activeTab.replace('-', ' ')
                                 )}</span>
                             </div>
                         </div>
@@ -370,8 +400,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Close dropdowns when clicking outside */}
             {(userMenuOpen || notificationOpen) && (
-                <div 
-                    className="fixed inset-0 z-30" 
+                <div
+                    className="fixed inset-0 z-30"
                     onClick={() => {
                         setUserMenuOpen(false);
                         setNotificationOpen(false);

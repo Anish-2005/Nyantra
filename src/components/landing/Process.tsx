@@ -137,9 +137,12 @@ const Process = () => {
                       <div className="text-4xl font-bold theme-text-muted mb-1">
                         {step.step}
                       </div>
-                      <div className="h-[3px] w-10 bg-accent-gradient rounded-full"></div>
+                      <div className="h-[3px] w-10 bg-accent-gradient rounded-full hidden md:block"></div>
                     </div>
                   </div>
+
+                  {/* Mobile connector line */}
+                  <div className="absolute left-[3rem] top-[6rem] bottom-[-2rem] w-0.5 bg-gradient-to-b from-accent-primary to-transparent opacity-20 md:hidden pointer-events-none" />
 
                   {/* Step Title + Desc */}
                   <h3 className="text-xl font-semibold mb-3 theme-text-primary">

@@ -17,13 +17,11 @@ const Stats = () => {
   useEffect(() => {
     const animateStats = () => {
       const duration = 2500;
-      const steps = 80;
-      const interval = duration / steps;
+      const startTimestamp = performance.now();
 
-      let step = 0;
-      const timer = setInterval(() => {
-        step++;
-        const progress = step / steps;
+      const performAnimation = (currentTime: number) => {
+        const elapsed = currentTime - startTimestamp;
+        const progress = Math.min(elapsed / duration, 1);
         const easeOut = 1 - Math.pow(1 - progress, 3);
 
         setStats({
@@ -33,8 +31,12 @@ const Stats = () => {
           satisfaction: Math.floor(94 * easeOut)
         });
 
-        if (step >= steps) clearInterval(timer);
-      }, interval);
+        if (progress < 1) {
+          requestAnimationFrame(performAnimation);
+        }
+      };
+
+      requestAnimationFrame(performAnimation);
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -84,7 +86,7 @@ const Stats = () => {
       </div>
 
       {/* Header */}
-        <div className="max-w-7xl mx-auto text-center mb-16">
+      <div className="max-w-7xl mx-auto text-center mb-16">
         <h2 className="text-3xl sm:text-4xl font-bold theme-text-primary">
           {t('stats.impactTitle')}
         </h2>

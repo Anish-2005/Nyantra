@@ -1,30 +1,29 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, HelpCircle } from 'lucide-react';
+import { ChevronRight, HelpCircle, Plus, Minus } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useLocale } from '../../context/LocaleContext';
 
 const FAQItem: React.FC<{ question: string; answer: string; index: number }> = ({ question, answer, index }) => {
   const [open, setOpen] = useState(false);
+
   return (
-    <div className="group">
+    <div className={`mb-4 rounded-2xl border transition-all duration-300 overflow-hidden ${open ? 'theme-bg-card theme-border-glass shadow-lg' : 'theme-bg-glass/50 theme-border-glass hover:theme-bg-glass'}`}>
       <button
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
-        aria-controls={`faq-${index}`}
-        className="w-full flex items-center justify-between p-6 rounded-2xl theme-bg-glass theme-border-glass border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-primary hover:theme-bg-card group-hover:shadow-lg"
+        aria-controls={`faq-content-${index}`}
+        className="w-full flex items-center justify-between p-6 focus:outline-none group-hover:text-accent-primary transition-colors text-left"
       >
-        <div className="text-left">
-          <p className="font-semibold theme-text-primary text-lg group-hover:text-accent-gradient transition-colors">{question}</p>
-        </div>
+        <span className="font-bold theme-text-primary text-lg pr-8">{question}</span>
         <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.3 }}
           className="flex-shrink-0"
         >
-          <div className="w-8 h-8 accent-gradient rounded-full flex items-center justify-center">
-            <ChevronRight className="w-4 h-4 text-white" />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${open ? 'accent-gradient text-white' : 'theme-bg-glass theme-border-glass border theme-text-muted'}`}>
+            <Plus className="w-5 h-5" />
           </div>
         </motion.div>
       </button>
@@ -34,14 +33,14 @@ const FAQItem: React.FC<{ question: string; answer: string; index: number }> = (
           <motion.div
             id={`faq-content-${index}`}
             key={`faq-content-${index}`}
-            initial={{ opacity: 0, height: 0, y: -10 }}
-            animate={{ opacity: 1, height: 'auto', y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -10 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="mt-4 overflow-hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
           >
-            <div className="p-6 rounded-2xl theme-bg-card theme-border-card border shadow-lg">
-              <p className="text-base leading-relaxed theme-text-secondary">{answer}</p>
+            <div className="p-6 pt-0 text-base leading-relaxed theme-text-secondary">
+              {answer}
             </div>
           </motion.div>
         )}
@@ -69,9 +68,9 @@ const FAQ: React.FC = () => {
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto overflow-visible">
+      <div className="max-w-3xl mx-auto overflow-visible px-4">
         {(JSON.parse(t('faq.items')) as Array<{ question: string; answer: string }>).map((item: any, i: number) => (
-          <motion.div key={i} className="mb-4 rounded-2xl theme-bg-card theme-border-card p-4 overflow-visible" initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 + 0.2 }}>
             <FAQItem question={item.question} answer={item.answer} index={i} />
           </motion.div>
         ))}

@@ -59,7 +59,7 @@ const Footer = () => {
                 t('footer.links.contact')
               ].map((link, i) => (
                 <motion.li key={i} whileHover={{ x: 5 }}>
-                  <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2 overflow-visible">
+                  <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2 overflow-visible py-1">
                     <ChevronRight className="w-4 h-4" />
                     <span>{link}</span>
                   </a>
@@ -124,7 +124,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t theme-border-glass pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="theme-text-secondary text-sm text-center md:text-left overflow-visible">
+            <div className="theme-text-secondary text-sm text-center md:text-left overflow-visible">
               <p className="overflow-visible">{t('footer.copyright')}</p>
               <p className="text-xs mt-1 overflow-visible py-1" style={{ lineHeight: '1.4' }}>
                 {t('footer.developedBy')}

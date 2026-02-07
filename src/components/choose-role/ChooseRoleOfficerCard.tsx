@@ -21,11 +21,11 @@ export const ChooseRoleOfficerCard = ({ onClick, t, className = '' }: ChooseRole
   };
 
   return (
-    <motion.div
+    <motion.button
       variants={itemVariants}
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className={`p-4 rounded-xl accent-gradient text-white cursor-pointer transition-all hover:shadow-lg ${className}`}
+      className={`w-full text-left p-4 rounded-xl accent-gradient text-white cursor-pointer transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${className}`}
       onClick={onClick}
     >
       <div className="flex items-center gap-4">
@@ -40,6 +40,6 @@ export const ChooseRoleOfficerCard = ({ onClick, t, className = '' }: ChooseRole
         </div>
         <ArrowRight className="w-5 h-5 text-white" />
       </div>
-    </motion.div>
+    </motion.button>
   );
 };
