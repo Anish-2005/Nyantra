@@ -14,7 +14,7 @@ interface ExportModalProps {
   emailAddress: string;
   setEmailAddress: (email: string) => void;
   sendingEmail: boolean;
-  sendApplicationsEmail: (apps: any[], format: string) => void;
+  sendApplicationsEmail: (apps: any[], format: 'csv' | 'pdf') => void | Promise<void>;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({

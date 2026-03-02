@@ -7,8 +7,8 @@ interface FiltersSearchProps {
   t: (key: string, options?: any) => string;
   searchQuery: string;
   setSearchQuery: (v: string) => void;
-  viewMode: string;
-  setViewMode: (v: string) => void;
+  viewMode: 'table' | 'cards';
+  setViewMode: (v: 'table' | 'cards') => void;
   showFilters: boolean;
   setShowFilters: (v: boolean) => void;
   statusFilter: string;
@@ -19,8 +19,8 @@ interface FiltersSearchProps {
   setPriorityFilter: (v: string) => void;
   sortBy: string;
   setSortBy: (v: string) => void;
-  sortOrder: string;
-  setSortOrder: (v: string) => void;
+  sortOrder: 'desc' | 'asc';
+  setSortOrder: (v: 'desc' | 'asc') => void;
 }
 
 const FiltersSearch: React.FC<FiltersSearchProps> = ({

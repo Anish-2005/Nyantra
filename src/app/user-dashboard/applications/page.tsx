@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -757,10 +757,12 @@ export default function ApplicationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
+  const toastIdCounterRef = useRef(0);
 
   // Toast helper
   const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    toastIdCounterRef.current += 1;
+    const id = `toast-${toastIdCounterRef.current}`;
     setToasts(prev => [...prev, { id, type, message }]);
     window.setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
   };

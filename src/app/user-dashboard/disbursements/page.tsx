@@ -520,14 +520,14 @@ const getStatusColor = (status: string) => {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const formatCurrency = (amount: number) => {
+  function formatCurrency(amount: number) {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
-  };
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {

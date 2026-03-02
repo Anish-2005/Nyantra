@@ -1555,7 +1555,7 @@ return (
 
 
     {/* Print Header - Only visible when printing */}
-    <PrintHeader theme={theme} />
+    <PrintHeader title={`${t("extracted.application")} ${t("extracted.monitoring_center")}`} />
 
     {/* Header */}
     <motion.div
@@ -1643,7 +1643,7 @@ return (
     {/* Confirm delete modal */}
     <ConfirmDeleteModal
       open={confirmModal.open}
-      message={confirmModal.message}
+      message={confirmModal.message ?? ''}
       onCancel={cancelConfirmDelete}
       onConfirm={confirmDeleteApplication}
       theme={theme}

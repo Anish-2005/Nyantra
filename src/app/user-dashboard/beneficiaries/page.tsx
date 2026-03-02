@@ -436,8 +436,6 @@ export default function BeneficiariesPage() {
   // Subscribe to user's beneficiaries
   useEffect(() => {
     if (!user) {
-      setBeneficiaries([]);
-      setLoading(false);
       return;
     }
 
