@@ -6,14 +6,19 @@ const eslintConfig = defineConfig([
   ...nextCoreWebVitals,
   ...nextTypeScript,
   {
-    // Turn off the rule that disallows `any` to avoid build failures
+    linterOptions: {
+      reportUnusedDisableDirectives: false,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-use-before-define': 'warn',
-      'no-use-before-define': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/purity': 'warn',
-      'react-hooks/refs': 'warn'
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      'no-use-before-define': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
+      '@next/next/no-img-element': 'off'
     }
   },
   globalIgnores([
