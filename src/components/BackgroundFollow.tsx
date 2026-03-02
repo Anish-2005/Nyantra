@@ -5,24 +5,6 @@ export default function BackgroundFollow() {
   const starsContainer = useRef<HTMLDivElement | null>(null);
   const lastSpawn = useRef(0);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouch) return;
-
-    const onMove = (e: PointerEvent) => {
-      const now = performance.now();
-      if (now - lastSpawn.current > 60) {
-        lastSpawn.current = now;
-        spawnStar(e.clientX, e.clientY);
-      }
-    };
-
-    window.addEventListener('pointermove', onMove);
-    return () => window.removeEventListener('pointermove', onMove);
-  }, []);
-
-  // spawn star into starsContainer
   function spawnStar(x: number, y: number) {
     const container = starsContainer.current;
     if (!container) return;
@@ -44,7 +26,6 @@ export default function BackgroundFollow() {
 
     container.appendChild(star);
 
-    // animate out
     requestAnimationFrame(() => {
       const tx = (Math.random() - 0.5) * 40;
       const ty = -10 - Math.random() * 30;
@@ -52,11 +33,27 @@ export default function BackgroundFollow() {
       star.style.opacity = '0';
     });
 
-    // cleanup
     setTimeout(() => {
-      try { container.removeChild(star); } catch { /* ignore */ }
+      try { container.removeChild(star); } catch { }
     }, 700);
   }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouch) return;
+
+    const onMove = (e: PointerEvent) => {
+      const now = performance.now();
+      if (now - lastSpawn.current > 60) {
+        lastSpawn.current = now;
+        spawnStar(e.clientX, e.clientY);
+      }
+    };
+
+    window.addEventListener('pointermove', onMove);
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
 
   return (
     <div ref={starsContainer} aria-hidden style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 2 }} />

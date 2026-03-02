@@ -74,6 +74,101 @@ export default function DisbursementsPage() {
   const [emailedAlerts, setEmailedAlerts] = useState<Set<string>>(new Set());
   const [emailedEvents, setEmailedEvents] = useState<Set<string>>(new Set()); // Track specific disbursement events
 
+  function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  async function sendDisbursementNotificationEmail(alert: any, beneficiaryEmail: string) {
+    if (!beneficiaryEmail) return;
+
+    try {
+      const subject = alert.type === 'new_disbursement'
+        ? 'New Disbursement Initiated - Nyantra'
+        : alert.type === 'installment_completed'
+        ? 'Installment Payment Received - Nyantra'
+        : 'Payment Completed - Nyantra';
+
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: beneficiaryEmail,
+          subject: subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">Nyantra</h1>
+                <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Direct Benefit Transfer System</p>
+              </div>
+
+              <div style="background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 4px solid #3b82f6;">
+                <h2 style="color: #1e40af; margin-top: 0;">
+                  ${alert.type === 'new_disbursement' ? 'New Disbursement Initiated' :
+                    alert.type === 'installment_completed' ? 'Installment Payment Received' :
+                    'Payment Completed'}
+                </h2>
+
+                <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+                  ${alert.message}
+                </p>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                  <h3 style="margin-top: 0; color: #1e40af;">Disbursement Details:</h3>
+                  <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 5px 0;"><strong>Transaction ID:</strong> ${alert.disbursement.transactionId}</li>
+                    <li style="padding: 5px 0;"><strong>Amount:</strong> ₹${alert.disbursement.reliefAmount?.toLocaleString('en-IN')}</li>
+                    <li style="padding: 5px 0;"><strong>Status:</strong> ${alert.disbursement.status}</li>
+                    <li style="padding: 5px 0;"><strong>Date:</strong> ${new Date(alert.timestamp).toLocaleDateString('en-IN')}</li>
+                    ${alert.disbursement.actType ? `<li style="padding: 5px 0;"><strong>Act Type:</strong> ${alert.disbursement.actType}</li>` : ''}
+                  </ul>
+                </div>
+
+                ${alert.type === 'installment_completed' ? `
+                  <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
+                    <p style="margin: 0; color: #065f46; font-weight: 500;">
+                      ✅ Installment ${alert.disbursement.completedInstallments} of ${alert.disbursement.totalInstallments} has been successfully disbursed to your account.
+                    </p>
+                  </div>
+                ` : ''}
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://nyantra.vercel.app'}/user-dashboard/disbursements"
+                     style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">
+                    View Details
+                  </a>
+                </div>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p>This is an automated notification from the Nyantra Direct Benefit Transfer System.</p>
+                <p>If you have any questions, please contact your assigned officer or use the grievance system.</p>
+                <p style="margin-top: 10px;">
+                  <a href="${window.location.origin}/user-dashboard/grievance" style="color: #3b82f6; text-decoration: none;">Submit a Grievance</a> |
+                  <a href="${window.location.origin}/user-dashboard" style="color: #3b82f6; text-decoration: none;">Dashboard</a>
+                </p>
+              </div>
+            </div>
+          `
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send disbursement notification email');
+      } else {
+        console.log('Disbursement notification email sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending disbursement notification email:', error);
+    }
+  }
+
   // Fetch user's beneficiary first
   useEffect(() => {
     if (!user) {
@@ -349,94 +444,6 @@ export default function DisbursementsPage() {
     }
   };
 
-  // Function to send disbursement notification email
-  // Automatically sends beautiful HTML emails to beneficiaries when they receive disbursements or installments
-  const sendDisbursementNotificationEmail = async (alert: any, beneficiaryEmail: string) => {
-    if (!beneficiaryEmail) return;
-
-    try {
-      const subject = alert.type === 'new_disbursement' 
-        ? 'New Disbursement Initiated - Nyantra'
-        : alert.type === 'installment_completed'
-        ? 'Installment Payment Received - Nyantra'
-        : 'Payment Completed - Nyantra';
-
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: beneficiaryEmail,
-          subject: subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">Nyantra</h1>
-                <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Direct Benefit Transfer System</p>
-              </div>
-              
-              <div style="background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 4px solid #3b82f6;">
-                <h2 style="color: #1e40af; margin-top: 0;">
-                  ${alert.type === 'new_disbursement' ? 'New Disbursement Initiated' : 
-                    alert.type === 'installment_completed' ? 'Installment Payment Received' : 
-                    'Payment Completed'}
-                </h2>
-                
-                <p style="font-size: 16px; line-height: 1.6; color: #374151;">
-                  ${alert.message}
-                </p>
-                
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-                  <h3 style="margin-top: 0; color: #1e40af;">Disbursement Details:</h3>
-                  <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 5px 0;"><strong>Transaction ID:</strong> ${alert.disbursement.transactionId}</li>
-                    <li style="padding: 5px 0;"><strong>Amount:</strong> ₹${alert.disbursement.reliefAmount?.toLocaleString('en-IN')}</li>
-                    <li style="padding: 5px 0;"><strong>Status:</strong> ${alert.disbursement.status}</li>
-                    <li style="padding: 5px 0;"><strong>Date:</strong> ${new Date(alert.timestamp).toLocaleDateString('en-IN')}</li>
-                    ${alert.disbursement.actType ? `<li style="padding: 5px 0;"><strong>Act Type:</strong> ${alert.disbursement.actType}</li>` : ''}
-                  </ul>
-                </div>
-                
-                ${alert.type === 'installment_completed' ? `
-                  <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
-                    <p style="margin: 0; color: #065f46; font-weight: 500;">
-                      ✅ Installment ${alert.disbursement.completedInstallments} of ${alert.disbursement.totalInstallments} has been successfully disbursed to your account.
-                    </p>
-                  </div>
-                ` : ''}
-                
-                <div style="text-align: center; margin-top: 30px;">
-                  <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://nyantra.vercel.app'}/user-dashboard/disbursements" 
-                     style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">
-                    View Details
-                  </a>
-                </div>
-              </div>
-              
-              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
-                <p>This is an automated notification from the Nyantra Direct Benefit Transfer System.</p>
-                <p>If you have any questions, please contact your assigned officer or use the grievance system.</p>
-                <p style="margin-top: 10px;">
-                  <a href="${window.location.origin}/user-dashboard/grievance" style="color: #3b82f6; text-decoration: none;">Submit a Grievance</a> | 
-                  <a href="${window.location.origin}/user-dashboard" style="color: #3b82f6; text-decoration: none;">Dashboard</a>
-                </p>
-              </div>
-            </div>
-          `
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to send disbursement notification email');
-      } else {
-        console.log('Disbursement notification email sent successfully');
-      }
-    } catch (error) {
-      console.error('Error sending disbursement notification email:', error);
-    }
-  };
-
   // Filter disbursements
   const filteredDisbursements = disbursements.filter(disbursement => {
     if (filter !== 'all' && disbursement.status !== filter) return false;
@@ -519,15 +526,6 @@ const getStatusColor = (status: string) => {
     };
     return icons[status as keyof typeof icons] || Clock;
   };
-
-  function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {

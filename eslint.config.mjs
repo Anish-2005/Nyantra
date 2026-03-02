@@ -9,12 +9,15 @@ const eslintConfig = defineConfig([
     // Turn off the rule that disallows `any` to avoid build failures
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-use-before-define': 'warn',
+      'no-use-before-define': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/purity': 'warn',
       'react-hooks/refs': 'warn'
     }
   },
   globalIgnores([
+    "scripts/**",
     "node_modules/**",
     ".next/**",
     "out/**",
