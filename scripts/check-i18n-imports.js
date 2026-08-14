@@ -31,7 +31,12 @@ for (const f of files) {
 
   // allow if file defines const { t } = useLocale or imports useLocale
   const hasUseLocaleImport = /useLocale\s*\}|useLocale\s*from\s+['\"]/m.test(src) || /from\s+['\"]@\/context\/LocaleContext['\"]/.test(src);
-  const hasTDeclared = /const\s*\{\s*t\s*\}/.test(src) || /function\s+t\(/.test(src) || /const\s+t\s*=/.test(src);
+  // allow if t is declared locally or destructured from a component's props
+  const hasTDeclared =
+    /const\s*\{\s*t\s*\}/.test(src) ||
+    /function\s+t\(/.test(src) ||
+    /const\s+t\s*=/.test(src) ||
+    /\(\s*\{[\s\S]*?\bt\b[\s\S]*?\}(?:\s*:\s*[\w<>.]+)?\s*\)/m.test(src);
   if (!hasUseLocaleImport && !hasTDeclared) {
     violations.push(f);
   }
