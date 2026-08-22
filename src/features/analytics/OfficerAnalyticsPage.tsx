@@ -1,20 +1,247 @@
 "use client";
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import {
-  Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText, Users,
-  DollarSign, PieChart, Activity, CheckCircle, XCircle, AlertCircle, Award as AwardIcon,
-  Clock as ClockIcon, Map as MapIcon, Calendar as CalendarIcon, BarChart3, Target,
-  Percent, Scale, UserCheck, AlertTriangle, Zap, Globe, Layers, Filter, ChevronDown, Mail, X
+  Download, Eye, RefreshCw, TrendingUp, TrendingDown, FileText,
+  BarChart3, Filter, ChevronDown, X
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import AnalyticsChart from '@/components/AnalyticsChart';
+
+const selectCls = "h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm focus:outline-none focus:border-[var(--accent-primary)]";
+
+const btnGhost =
+  "flex-1 h-8 rounded-md border theme-border-glass theme-bg-glass theme-text-secondary text-xs font-medium hover:theme-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5";
+const btnPrimary =
+  "flex-1 h-8 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5";
+
+const Spinner = ({ invert }: { invert?: boolean }) => (
+  <span className={`w-3 h-3 rounded-full border-2 border-t-transparent animate-spin ${invert ? 'border-white' : 'border-current'}`} />
+);
+
+const Item = ({ label, children }: { label: React.ReactNode; children: React.ReactNode }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{label}</dt>
+    <dd className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums truncate">{children}</dd>
+  </div>
+);
+
+const MetricCell = ({
+  label,
+  value,
+  dotClass,
+  delta,
+}: {
+  label: React.ReactNode;
+  value: string;
+  dotClass?: string;
+  delta?: React.ReactNode;
+}) => (
+  <div className="theme-bg-card p-3.5">
+    <div className="flex items-center gap-1.5 min-w-0">
+      {dotClass && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotClass}`} />}
+      <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</span>
+    </div>
+    <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">{value}</p>
+    {delta}
+  </div>
+);
+
+const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    className={`h-7 px-2 rounded-md text-xs font-medium transition-colors ${active
+      ? 'accent-gradient text-white'
+      : 'border theme-border-glass theme-bg-input theme-text-secondary hover:theme-text-primary'
+      }`}
+  >
+    {children}
+  </button>
+);
+
+interface AnalyticsExportDrawerProps {
+  onClose: () => void;
+  allCount: number;
+  filteredCount: number;
+  emailAddress: string;
+  setEmailAddress: (value: string) => void;
+  sendingEmail: boolean;
+  onCsv: () => void;
+  onPdf: () => void;
+  onSendEmail: (format: 'csv' | 'pdf') => void | Promise<void>;
+}
+
+const AnalyticsExportDrawer = ({
+  onClose,
+  allCount,
+  filteredCount,
+  emailAddress,
+  setEmailAddress,
+  sendingEmail,
+  onCsv,
+  onPdf,
+  onSendEmail,
+}: AnalyticsExportDrawerProps) => {
+  const { t } = useLocale();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  if (!mounted) return null;
+
+  const groups = [
+    {
+      title: t('extracted.exportAll') || 'All Analytics',
+      description: t('extracted.exportAllDescription') || '',
+      count: allCount,
+    },
+    {
+      title: t('extracted.exportFiltered') || 'Filtered',
+      description: t('extracted.exportFilteredDescription') || '',
+      count: filteredCount,
+    },
+  ];
+
+  return createPortal(
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/50 z-[60]"
+      />
+
+      <motion.aside
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
+              {t('extracted.export') || 'Export'}
+            </h2>
+            <p className="text-[11px] theme-text-muted truncate">
+              {t('extracted.exportDescription') || 'Export analytics data as CSV or PDF report.'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {groups.map((group, gi) => (
+            <section key={gi} className={gi === 1 ? 'pt-4 border-t theme-border-glass' : ''}>
+              <div className="flex items-baseline justify-between mb-2 gap-2">
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary truncate">{group.title}</h3>
+                <span className="text-[11px] tabular-nums theme-text-muted shrink-0">{group.count}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  disabled={group.count === 0}
+                  onClick={() => { onCsv(); onClose(); }}
+                  className={btnGhost}
+                >
+                  CSV
+                </button>
+                <button
+                  disabled={group.count === 0}
+                  onClick={() => { onPdf(); onClose(); }}
+                  className={btnPrimary}
+                >
+                  PDF
+                </button>
+              </div>
+              {group.description && (
+                <p className="text-[11px] theme-text-muted mt-2 leading-relaxed">{group.description}</p>
+              )}
+            </section>
+          ))}
+
+          <section className="pt-4 border-t theme-border-glass">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2">
+              {t('extracted.emailExport') || 'Email Export'}
+            </h3>
+            <input
+              type="email"
+              value={emailAddress}
+              onChange={(e) => setEmailAddress(e.target.value)}
+              placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
+              className={`w-full ${selectCls}`}
+            />
+            <div className="flex gap-2 mt-2">
+              <button
+                disabled={!emailAddress.trim() || sendingEmail}
+                onClick={() => onSendEmail('csv')}
+                className={btnGhost}
+              >
+                {sendingEmail ? <Spinner /> : null}
+                {t('extracted.sendCsv') || 'Send CSV'}
+              </button>
+              <button
+                disabled={!emailAddress.trim() || sendingEmail}
+                onClick={() => onSendEmail('pdf')}
+                className={btnPrimary}
+              >
+                {sendingEmail ? <Spinner invert /> : null}
+                {t('extracted.sendPdf') || 'Send PDF'}
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
+          >
+            {t('extracted.cancel') || 'Cancel'}
+          </button>
+          <button
+            onClick={() => { onPdf(); onClose(); }}
+            className="flex-1 h-9 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {t('extracted.export_pdf') || 'PDF'}
+          </button>
+        </div>
+      </motion.aside>
+    </>,
+    document.body
+  );
+};
 
 const AnalyticsPage = () => {
   const { theme } = useTheme();
@@ -28,8 +255,6 @@ const AnalyticsPage = () => {
   const [manualDisbursements, setManualDisbursements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-
-  // New UI customization states
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area' | 'pie'>('bar');
   const [showFilters, setShowFilters] = useState(false);
@@ -429,25 +654,19 @@ const AnalyticsPage = () => {
         labelKey: 'extracted.application_success_rate',
         value: `${analyticsData.overview.successRate.toFixed(1)}%`,
         change: '+2.3%',
-        trend: 'up',
-        icon: TrendingUp,
-        color: 'from-green-500 to-emerald-500'
+        trend: 'up'
       },
       {
         labelKey: 'extracted.disbursement_rate',
         value: `${disbursementRate.toFixed(1)}%`,
         change: '+4.1%',
-        trend: 'up',
-        icon: TrendingUp,
-        color: 'from-purple-500 to-pink-500'
+        trend: 'up'
       },
       {
         labelKey: 'extracted.amount_disbursed',
         value: `₹${(analyticsData.overview.totalAmount / 10000000).toFixed(1)}Cr`,
         change: '+12.5%',
-        trend: 'up',
-        icon: TrendingUp,
-        color: 'from-amber-500 to-orange-500'
+        trend: 'up'
       }
     ];
   }, [analyticsData, filteredApplications, filteredDisbursements]);
@@ -468,11 +687,9 @@ const AnalyticsPage = () => {
 
     return () => {
       if ('removeEventListener' in mq) mq.removeEventListener('change', handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
-      else (mq as unknown as { removeListener?: (h: (e: MediaQueryListEvent) => void) => void }).removeListener?.(handler as (e: MediaQueryListEvent) => void);
+      else (mq as unknown as { addListener?: (h: (e: MediaQueryListEvent) => void) => void }).addListener?.(handler as (e: MediaQueryListEvent) => void);
     };
   }, []);
-
-
 
   const formatCurrency = (amount: number) => {
     if (amount >= 10000000) {
@@ -489,7 +706,7 @@ const AnalyticsPage = () => {
   };
 
   const getTrendColor = (trend: string) => {
-    return trend === 'up' ? 'text-green-500' : 'text-red-500';
+    return trend === 'up' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
   };
 
   const getTrendIcon = (trend: string) => {
@@ -497,45 +714,16 @@ const AnalyticsPage = () => {
   };
 
   // View mode layout helpers
-  const containerClass = useMemo(() => {
-    switch (viewMode) {
-      case 'list':
-        return 'p-2 lg:p-4 space-y-4';
-      case 'compact':
-        return 'p-2 lg:p-3 space-y-3 text-sm';
-      default:
-        return 'p-4 lg:p-5 space-y-5';
-    }
-  }, [viewMode]);
-
-  const kpiGridClass = useMemo(() => {
-    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
-    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-3 gap-2';
-    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4';
-  }, [viewMode]);
-
-  const overviewClass = useMemo(() => {
-    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
-    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-4 gap-2';
-    return 'grid grid-cols-2 md:grid-cols-4 gap-4';
-  }, [viewMode]);
-
   const chartsGridClass = useMemo(() => {
     if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
     if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
-    return 'grid grid-cols-1 lg:grid-cols-2 gap-5';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-4';
   }, [viewMode]);
 
   const stateCategoryGridClass = useMemo(() => {
     if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
     if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
-    return 'grid grid-cols-1 lg:grid-cols-2 gap-5';
-  }, [viewMode]);
-
-  const performanceMetricsGridClass = useMemo(() => {
-    if (viewMode === 'list') return 'grid grid-cols-1 gap-2';
-    if (viewMode === 'compact') return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2';
-    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-4';
   }, [viewMode]);
 
   // Prepare data for AnalyticsChart
@@ -621,7 +809,6 @@ const AnalyticsPage = () => {
       headStyles: { fillColor: [59, 130, 246] }
     });
 
-
     doc.save('analytics-report.pdf');
   };
 
@@ -679,7 +866,7 @@ const AnalyticsPage = () => {
     exportToCSV('analytics-report.xlsx');
   };
 
-  const [exportFormat, setExportFormat] = React.useState<'pdf' | 'csv' | 'excel'>('pdf');
+  const [exportFormat, setExportFormat] = useState<'pdf' | 'csv' | 'excel'>('pdf');
 
   const exportByFormat = (format: string) => {
     switch (format) {
@@ -880,7 +1067,7 @@ const AnalyticsPage = () => {
         throw new Error('Failed to send email');
       }
 
-      const result = await response.json();
+      await response.json();
       alert(t('extracted.email_sent_successfully') || 'Email sent successfully!');
       setEmailAddress('');
       setShowExportModal(false);
@@ -931,7 +1118,7 @@ const AnalyticsPage = () => {
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    performanceIndicators.forEach((indicator, index) => {
+    performanceIndicators.forEach((indicator) => {
       const displayLabel = indicator.labelKey.replace('extracted.', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       doc.text(`${displayLabel}: ${indicator.value}`, 20, yPos);
       yPos += 8;
@@ -1037,7 +1224,7 @@ const AnalyticsPage = () => {
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const insights = [];
+    const insights: string[] = [];
 
     const pcrRate = analyticsData.actWiseBreakdown.pcr.successRate;
     const poaRate = analyticsData.actWiseBreakdown.poa.successRate;
@@ -1071,296 +1258,214 @@ const AnalyticsPage = () => {
     doc.save('performance-analytics-report.pdf');
   };
 
+  const reportCards = [
+    {
+      id: 'monthly',
+      icon: FileText,
+      badge: 'A4 Ready',
+      title: t('extracted.monthly_report'),
+      description: 'Comprehensive monthly overview with application trends, disbursement statistics, and performance metrics formatted for A4 printing.',
+      features: ['Application Summary', 'Monthly Trends & Charts', 'State-wise Performance'],
+      onClick: generateMonthlyReport
+    },
+    {
+      id: 'performance',
+      icon: BarChart3,
+      badge: 'Analytics',
+      title: t('extracted.performance_report'),
+      description: 'Detailed performance analysis with KPIs, success rates, and actionable insights optimized for A4 document format.',
+      features: ['Key Performance Indicators', 'Success Rate Analysis', 'Trend Analysis & Insights'],
+      onClick: generatePerformanceReport
+    },
+    {
+      id: 'export-all',
+      icon: Download,
+      badge: 'Complete',
+      title: t('extracted.export_all_data'),
+      description: 'Complete dataset export including all applications, disbursements, and beneficiary data in structured CSV format.',
+      features: ['All Applications Data', 'Disbursement Records', 'Beneficiary Information'],
+      onClick: () => exportToCSV()
+    }
+  ];
+
+  const operationalMetrics = [
+    {
+      labelKey: 'extracted.total_pending',
+      value: formatNumber(analyticsData.overview.pendingApplications),
+      dotClass: 'bg-amber-500'
+    },
+    {
+      labelKey: 'extracted.total_rejected',
+      value: formatNumber(analyticsData.overview.rejectedApplications),
+      dotClass: 'bg-red-500'
+    },
+    {
+      labelKey: 'extracted.pcr_ratio',
+      value: `${analyticsData.overview.totalApplications > 0 ? ((analyticsData.actWiseBreakdown.pcr.applications / analyticsData.overview.totalApplications) * 100).toFixed(1) : 0}%`,
+      dotClass: 'bg-blue-500'
+    },
+    {
+      labelKey: 'extracted.poa_ratio',
+      value: `${analyticsData.overview.totalApplications > 0 ? ((analyticsData.actWiseBreakdown.poa.applications / analyticsData.overview.totalApplications) * 100).toFixed(1) : 0}%`,
+      dotClass: 'bg-violet-500'
+    },
+    {
+      labelKey: 'extracted.success_rate',
+      value: `${analyticsData.overview.successRate.toFixed(1)}%`,
+      dotClass: 'bg-emerald-500'
+    }
+  ];
+
+  const actBlocks = [
+    {
+      key: 'pcr' as const,
+      label: t('extracted.pcr_act'),
+      data: analyticsData.actWiseBreakdown.pcr
+    },
+    {
+      key: 'poa' as const,
+      label: t('extracted.poa_act'),
+      data: analyticsData.actWiseBreakdown.poa
+    }
+  ];
+
   return (
-    <div data-theme={theme} data-view={viewMode} className={containerClass}>
+    <div className="space-y-4 max-w-[1400px]">
 
-      <style jsx global>{`
-        [data-theme="dark"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
-          --nav-bg: rgba(15, 23, 42, 0.95);
-          --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
-          --text-muted: #64748b;
-          --accent-primary: #06b6d4;
-          --accent-secondary: #8b5cf6;
-          --glass-bg: rgba(15, 23, 42, 0.6);
-          --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="light"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
-          --nav-bg: rgba(255, 255, 255, 0.95);
-          --text-primary: #0f172a;
-          --text-secondary: #475569;
-          --text-muted: #64748b;
-          --accent-primary: #fb7185;
-          --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.6);
-          --glass-border: rgba(0, 0, 0, 0.08);
-        }
-
-        .theme-text-primary { color: var(--text-primary) !important; }
-        .theme-text-secondary { color: var(--text-secondary) !important; }
-        .theme-text-muted { color: var(--text-muted) !important; }
-        .theme-bg-card { background: var(--card-bg) !important; }
-        .theme-border-card { border-color: var(--card-border) !important; }
-        .theme-bg-glass { background: var(--glass-bg) !important; }
-        .theme-border-glass { border-color: var(--glass-border) !important; }
-        .theme-bg-nav { background: var(--nav-bg) !important; }
-        
-        .accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-        }
-        
-        .text-accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        /* View mode specific compact adjustments */
-        [data-view="compact"] .compact-card { padding: 0.5rem !important; }
-        [data-view="compact"] .compact-card .text-2xl { font-size: 1.125rem !important; }
-        [data-view="compact"] h3 { font-size: 1rem !important; }
-        [data-view="compact"] .hide-compact { display: none !important; }
-      `}</style>
-
-      {/* Header Section - Real-time Monitoring */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-      >
-        {/* Animated gradient background */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"
-        />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <motion.div
-              className="w-3 h-3 rounded-full bg-blue-500"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <span className="text-sm font-medium theme-text-secondary leading-tight inline-flex items-center gap-1">
-              {t('extracted.live_tracking')} • {t('extracted.analytics')}
-              <span className="text-accent-gradient inline-block leading-none">
-                {t('extracted.monitoring_center')}
-              </span>
-            </span>
-
-          </div>
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2 gap-2">
-            <span>{t("extracted.analytics")}</span>
-            <span className="text-accent-gradient inline-block leading-normal ml-2">
-              {t("extracted.monitoring_center")}
-            </span>
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+            {t("extracted.analytics")} <span className="text-accent-gradient">{t("extracted.monitoring_center")}</span>
           </h1>
-
-          <p className="theme-text-secondary max-w-2xl">{t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')}</p>
+          <p className="text-xs theme-text-muted mt-0.5 truncate">
+            {t('extracted.comprehensive_insights_and_performance_metrics_for_dbt_under')}
+          </p>
         </div>
 
-        <div className="relative z-10 flex items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-sm transition-shadow"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-            onClick={() => window.print()}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('extracted.export_data')}</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-sm"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>{t('extracted.refresh_data')}</span>
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Time Range Filters */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 theme-text-muted" />
-            <span className="text-sm font-medium theme-text-primary">{t('extracted.time_period')} </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[160px] appearance-none"
-                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-              >
-                <option value="week">{t('extracted.last_week')}</option>
-                <option value="month">{t('extracted.last_month')}</option>
-                <option value="quarter">{t('extracted.last_quarter')}</option>
-                <option value="year">{t('extracted.last_year')}</option>
-                <option value="custom">{t('extracted.custom_range')}</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
-            </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="relative">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className={`${selectCls} pr-8 appearance-none min-w-[140px]`}
+            >
+              <option value="week">{t('extracted.last_week')}</option>
+              <option value="month">{t('extracted.last_month')}</option>
+              <option value="quarter">{t('extracted.last_quarter')}</option>
+              <option value="year">{t('extracted.last_year')}</option>
+              <option value="custom">{t('extracted.custom_range')}</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
           </div>
           {timeRange === 'custom' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex flex-col sm:flex-row gap-3 mt-2"
-            >
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium theme-text-muted">{t('extracted.start_date')}</label>
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium theme-text-muted">{t('extracted.end_date')}</label>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </motion.div>
+            <>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                title={t('extracted.start_date')}
+                aria-label={t('extracted.start_date')}
+                className={selectCls}
+              />
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                title={t('extracted.end_date')}
+                aria-label={t('extracted.end_date')}
+                className={selectCls}
+              />
+            </>
           )}
+          <button
+            onClick={() => window.print()}
+            className="h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{t('extracted.export_data')}</span>
+          </button>
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={`h-9 px-3 rounded-md inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${autoRefresh
+              ? 'accent-gradient text-white'
+              : 'border theme-border-glass theme-text-secondary hover:theme-bg-glass hover:theme-text-primary'
+              }`}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${autoRefresh ? 'animate-spin' : ''}`} />
+            <span>{t('extracted.refresh_data')}</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Enhanced Analytics Toolbar */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl"
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          {/* View Mode & Chart Type */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 theme-text-muted" />
-              <span className="text-sm font-medium theme-text-primary">{t('extracted.view_mode')}</span>
-            </div>
-            <div className="relative">
-              <select
-                value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as any)}
-                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[120px] appearance-none"
-                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-              >
-                <option value="grid">{t('extracted.grid')}</option>
-                <option value="list">{t('extracted.list')}</option>
-                <option value="compact">{t('extracted.compact')}</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Chart Type Selection */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 theme-text-muted" />
-              <span className="text-sm font-medium theme-text-primary">{t('extracted.chart_type')}</span>
-            </div>
-            <div className="relative">
-              <select
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value as any)}
-                className="px-4 py-2 pr-10 rounded-lg text-sm font-medium theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow min-w-[120px] appearance-none"
-                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-              >
-                <option value="bar">{t('extracted.bar')}</option>
-                <option value="line">{t('extracted.line')}</option>
-                <option value="area">{t('extracted.area')}</option>
-                <option value="pie">{t('extracted.pie')}</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Advanced Controls */}
-          <div className="flex flex-wrap items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${showFilters
-                ? 'accent-gradient text-white'
-                : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                }`}
+      {/* Controls Bar */}
+      <div className="theme-bg-card theme-border-glass border rounded-xl px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.view_mode')}</span>
+          <div className="relative">
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value as any)}
+              className={`${selectCls} pr-8 appearance-none`}
             >
-              <Filter className="w-3 h-3" />
-              {t('extracted.filters')}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${autoRefresh
-                ? 'accent-gradient text-white'
-                : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                }`}
-            >
-              <RefreshCw className={`w-3 h-3 ${autoRefresh ? 'animate-spin' : ''}`} />
-              {t('extracted.auto_refresh')}
-            </motion.button>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="p-2 rounded theme-bg-glass hover:accent-gradient hover:text-white transition-colors"
-                title={t('extracted.export')}
-              >
-                <Download className="w-4 h-4 theme-text-muted" />
-              </button>
-              <select
-                value={exportFormat}
-                onChange={(e) => {
-                  const v = e.target.value as any;
-                  setExportFormat(v);
-                  exportByFormat(v);
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="pdf">{t('extracted.export_pdf')}</option>
-                <option value="csv">{t('extracted.export_csv')}</option>
-                <option value="excel">{t('extracted.export_excel')}</option>
-              </select>
-            </div>
+              <option value="grid">{t('extracted.grid')}</option>
+              <option value="list">{t('extracted.list')}</option>
+              <option value="compact">{t('extracted.compact')}</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.chart_type')}</span>
+          <div className="relative">
+            <select
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value as any)}
+              className={`${selectCls} pr-8 appearance-none`}
+            >
+              <option value="bar">{t('extracted.bar')}</option>
+              <option value="line">{t('extracted.line')}</option>
+              <option value="area">{t('extracted.area')}</option>
+              <option value="pie">{t('extracted.pie')}</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`h-9 px-2.5 rounded-md inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${showFilters
+              ? 'accent-gradient text-white'
+              : 'border theme-border-glass theme-bg-input theme-text-secondary hover:theme-text-primary'
+              }`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            {t('extracted.filters')}
+          </button>
+
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-secondary hover:theme-text-primary transition-colors inline-flex items-center gap-1.5 text-xs font-semibold"
+            title={t('extracted.export')}
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
+
+          <select
+            value={exportFormat}
+            onChange={(e) => {
+              const v = e.target.value as any;
+              setExportFormat(v);
+              exportByFormat(v);
+            }}
+            className={`${selectCls} min-w-[110px]`}
+          >
+            <option value="pdf">{t('extracted.export_pdf')}</option>
+            <option value="csv">{t('extracted.export_csv')}</option>
+            <option value="excel">{t('extracted.export_excel')}</option>
+          </select>
         </div>
 
         {/* Advanced Filters Panel */}
@@ -1370,18 +1475,16 @@ const AnalyticsPage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 pt-4 border-t theme-border-glass"
+              className="w-full overflow-hidden"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* State Filter */}
+              <div className="pt-3 mt-1 border-t theme-border-glass grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs font-medium theme-text-muted mb-2 block">{t('extracted.filter_by_state')}</label>
+                  <label className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5 block">{t('extracted.filter_by_state')}</label>
                   <div className="flex flex-wrap gap-1">
                     {analyticsData.stateWiseData.slice(0, 5).map((state: any) => (
-                      <motion.button
+                      <Chip
                         key={state.state}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        active={selectedStates.includes(state.state)}
                         onClick={() => {
                           setSelectedStates(prev =>
                             prev.includes(state.state)
@@ -1389,26 +1492,20 @@ const AnalyticsPage = () => {
                               : [...prev, state.state]
                           );
                         }}
-                        className={`px-2 py-1 rounded text-xs font-medium ${selectedStates.includes(state.state)
-                          ? 'accent-gradient text-white'
-                          : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                          }`}
                       >
                         {state.state}
-                      </motion.button>
+                      </Chip>
                     ))}
                   </div>
                 </div>
 
-                {/* Act Type Filter */}
                 <div>
-                  <label className="text-xs font-medium theme-text-muted mb-2 block">{t('extracted.filter_by_act')}</label>
+                  <label className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5 block">{t('extracted.filter_by_act')}</label>
                   <div className="flex gap-1">
                     {['PCR Act', 'PoA Act'].map((act) => (
-                      <motion.button
+                      <Chip
                         key={act}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        active={selectedActs.includes(act)}
                         onClick={() => {
                           setSelectedActs(prev =>
                             prev.includes(act)
@@ -1416,785 +1513,421 @@ const AnalyticsPage = () => {
                               : [...prev, act]
                           );
                         }}
-                        className={`px-2 py-1 rounded text-xs font-medium ${selectedActs.includes(act)
-                          ? 'accent-gradient text-white'
-                          : 'theme-bg-glass theme-text-muted border theme-border-glass'
-                          }`}
                       >
                         {act}
-                      </motion.button>
+                      </Chip>
                     ))}
                   </div>
                 </div>
 
-                {/* Sort Options */}
                 <div>
-                  <label className="text-xs font-medium theme-text-muted mb-2 block">{t('extracted.sort_by')}</label>
+                  <label className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5 block">{t('extracted.sort_by')}</label>
                   <div className="flex gap-1">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="px-2 py-1 rounded text-xs theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-7 px-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-xs focus:outline-none focus:border-[var(--accent-primary)]"
                     >
                       <option value="applications">{t('extracted.applications')}</option>
                       <option value="disbursements">{t('extracted.disbursements')}</option>
                       <option value="successRate">{t('extracted.success_rate')}</option>
                     </select>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className="px-2 py-1 rounded text-xs theme-bg-glass theme-text-muted border theme-border-glass"
+                      className="h-7 px-2 rounded-md border theme-border-glass theme-bg-input theme-text-secondary text-xs font-medium hover:theme-text-primary transition-colors"
+                      aria-label="Toggle sort order"
                     >
                       {sortOrder === 'asc' ? '↑' : '↓'}
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
-      {/* Key Performance Indicators */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className={kpiGridClass}
-      >
+      {/* Overview Stats Band */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
+        <MetricCell
+          label={t('extracted.total_applications')}
+          value={formatNumber(analyticsData.overview.totalApplications)}
+          dotClass="bg-blue-500"
+        />
+        <MetricCell
+          label={t('extracted.beneficiaries')}
+          value={formatNumber(analyticsData.overview.totalBeneficiaries)}
+          dotClass="bg-emerald-500"
+        />
+        <MetricCell
+          label={t('extracted.disbursements')}
+          value={formatNumber(analyticsData.overview.totalDisbursements)}
+          dotClass="bg-violet-500"
+        />
+        <MetricCell
+          label={t('extracted.amount_disbursed')}
+          value={formatCurrency(analyticsData.overview.totalAmount)}
+          dotClass="bg-amber-500"
+        />
+      </div>
+
+      {/* Performance Indicators Band */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
         {performanceIndicators.map((indicator, idx) => {
           const TrendIcon = getTrendIcon(indicator.trend);
           return (
-            <motion.div
+            <MetricCell
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + idx * 0.1 }}
-              whileHover={{ y: -4 }}
-              className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-              style={{
-                background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-              }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${indicator.color} flex items-center justify-center`}>
-                  <indicator.icon className="w-6 h-6 text-white" />
-                </div>
-                <div className={`flex items-center gap-1 ${getTrendColor(indicator.trend)}`}>
-                  <TrendIcon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{indicator.change}</span>
-                </div>
-              </div>
-              <p className="text-lg font-semibold tracking-tight theme-text-primary mb-1">{indicator.value}</p>
-              <p className="text-sm theme-text-muted">{t(indicator.labelKey)}</p>
-            </motion.div>
+              label={t(indicator.labelKey)}
+              value={indicator.value}
+              delta={
+                <p className={`inline-flex items-center gap-1 text-[11px] font-medium mt-0.5 ${getTrendColor(indicator.trend)}`}>
+                  <TrendIcon className="w-3 h-3" />
+                  {indicator.change}
+                </p>
+              }
+            />
           );
         })}
-      </motion.div>
+      </div>
 
-      {/* Overview Stats */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className={overviewClass}
-      >
-        {[
-          { labelKey: 'extracted.total_applications', value: formatNumber(analyticsData.overview.totalApplications), icon: FileText, color: 'from-blue-500 to-cyan-500' },
-          { labelKey: 'extracted.beneficiaries', value: formatNumber(analyticsData.overview.totalBeneficiaries), icon: Users, color: 'from-green-500 to-emerald-500' },
-          { labelKey: 'extracted.disbursements', value: formatNumber(analyticsData.overview.totalDisbursements), icon: DollarSign, color: 'from-purple-500 to-pink-500' },
-          { labelKey: 'extracted.amount_disbursed', value: formatCurrency(analyticsData.overview.totalAmount), icon: DollarSign, color: 'from-amber-500 to-orange-500' }
-        ].map((stat, idx) => (
-          <motion.div
+      {/* Operational Metrics Band */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
+        {operationalMetrics.map((metric, idx) => (
+          <MetricCell
             key={idx}
-            whileHover={{ y: -2 }}
-            className={`theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-xl text-center ${viewMode === 'compact' ? 'compact-card text-sm' : ''}`}
-            style={{
-              background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-            }}
-          >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 mx-auto`}>
-              <stat.icon className="w-5 h-5 text-white" />
-            </div>
-            <p className="text-lg font-semibold tracking-tight theme-text-primary">{stat.value}</p>
-            <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
-          </motion.div>
+            label={t(metric.labelKey)}
+            value={metric.value}
+            dotClass={metric.dotClass}
+          />
         ))}
-      </motion.div>
+      </div>
 
       {/* Charts and Visualizations */}
       <div className={chartsGridClass}>
         {/* Monthly Trends Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.25 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.monthly_trends')} </h3>
-              <p className="text-sm theme-text-muted">{t('extracted.applications_vs_disbursements')} </p>
+        <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.monthly_trends')}</h3>
+              <p className="text-[11px] theme-text-muted mt-0.5 truncate">{t('extracted.applications_vs_disbursements')}</p>
             </div>
-            {/* Custom Legend for AnalyticsChart */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'}`}></div>
-                <span className="text-xs theme-text-muted">{t('extracted.applications')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${theme === 'dark' ? 'bg-emerald-500' : 'bg-emerald-600'}`}></div>
-                <span className="text-xs theme-text-muted">{t('extracted.disbursements')}</span>
-              </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0">
+              <span className="inline-flex items-center gap-1.5 text-[11px] theme-text-muted">
+                <span className={`w-1.5 h-1.5 rounded-full ${theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'}`} />
+                {t('extracted.applications')}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] theme-text-muted">
+                <span className={`w-1.5 h-1.5 rounded-full ${theme === 'dark' ? 'bg-emerald-400' : 'bg-emerald-600'}`} />
+                {t('extracted.disbursements')}
+              </span>
             </div>
           </div>
-
-          <div className="h-64 sm:h-80 w-full">
-            <AnalyticsChart
-              dataSets={chartDataSets}
-              chartType={chartType === 'pie' ? 'bar' : chartType as any}
-              xScaleType="category"
-            />
+          <div className="p-4">
+            <div className="h-64 sm:h-80 w-full">
+              <AnalyticsChart
+                dataSets={chartDataSets}
+                chartType={chartType === 'pie' ? 'bar' : chartType as any}
+                xScaleType="category"
+              />
+            </div>
           </div>
-        </motion.div>
-
+        </section>
 
         {/* Act-wise Breakdown */}
-        < motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.actwise_performance')} </h3>
-              <p className="text-sm theme-text-muted">{t('extracted.pcr_act_vs_poa_act')} </p>
+        <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.actwise_performance')}</h3>
+              <p className="text-[11px] theme-text-muted mt-0.5 truncate">{t('extracted.pcr_act_vs_poa_act')}</p>
             </div>
-            <PieChart className="w-5 h-5 theme-text-muted" />
           </div>
-          <div className="grid grid-cols-2 gap-5">
-            <div className="text-center">
-              <div className="relative inline-block mb-4">
-                <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <span className="text-white text-sm sm:text-lg font-bold">
-                    {analyticsData.overview.totalApplications > 0 ? Math.round((analyticsData.actWiseBreakdown.pcr.applications / analyticsData.overview.totalApplications) * 100) : 0}%
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {actBlocks.map(({ key, label, data }) => (
+              <div key={key}>
+                <div className="flex items-baseline justify-between gap-2 mb-3">
+                  <h4 className="text-sm font-semibold theme-text-primary truncate">{label}</h4>
+                  <span className="text-lg font-semibold tracking-tight theme-text-primary tabular-nums">
+                    {analyticsData.overview.totalApplications > 0 ? Math.round((data.applications / analyticsData.overview.totalApplications) * 100) : 0}%
                   </span>
                 </div>
-              </div>
-              <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.pcr_act')} </h4>
-              <p className="text-sm theme-text-muted">{formatNumber(analyticsData.actWiseBreakdown.pcr.applications)} {t('extracted.applications')}</p>
-              <p className="text-sm theme-text-muted">{formatNumber(analyticsData.actWiseBreakdown.pcr.disbursements)} {t('extracted.disbursed')}</p>
-              <p className="text-sm font-medium text-green-500">{analyticsData.actWiseBreakdown.pcr.successRate.toFixed(1)}% {t('extracted.success')}</p>
-            </div>
-            <div className="text-center">
-              <div className="relative inline-block mb-4">
-                <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <span className="text-white text-sm sm:text-lg font-bold">
-                    {analyticsData.overview.totalApplications > 0 ? Math.round((analyticsData.actWiseBreakdown.poa.applications / analyticsData.overview.totalApplications) * 100) : 0}%
-                  </span>
-                </div>
-              </div>
-              <h4 className="font-semibold theme-text-primary mb-1">{t('extracted.poa_act')} </h4>
-              <p className="text-sm theme-text-muted">{formatNumber(analyticsData.actWiseBreakdown.poa.applications)} {t('extracted.applications')}</p>
-              <p className="text-sm theme-text-muted">{formatNumber(analyticsData.actWiseBreakdown.poa.disbursements)} {t('extracted.disbursed')}</p>
-              <p className="text-sm font-medium text-green-500">{analyticsData.actWiseBreakdown.poa.successRate.toFixed(1)}% {t('extracted.success')}</p>
-            </div>
-          </div>
-        </motion.div >
-      </div >
-
-      {/* State-wise Performance and Category Breakdown */}
-      < div className={stateCategoryGridClass} >
-        {/* State-wise Performance */}
-        < motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.statewise_performance_1')} </h3>
-              <p className="text-sm theme-text-muted">{t('extracted.top_performing_states')} </p>
-            </div>
-            <MapIcon className="w-5 h-5 theme-text-muted" />
-          </div>
-          <div className="space-y-4">
-            {analyticsData.stateWiseData.map((state, index) => (
-              <div key={state.state} className="flex items-center justify-between p-3 rounded-lg theme-bg-glass">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className="font-medium theme-text-primary">{state.state}</p>
-                    <p className="text-xs theme-text-muted">{state.applications} {t('extracted.applications_lowercase')}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold theme-text-primary">{state.disbursements} {t('extracted.disbursements_lowercase')}</p>
-                  <p className="text-xs theme-text-muted">{state.successRate.toFixed(2)}% {t('extracted.success_lowercase')}</p>
+                <dl className="grid grid-cols-3 gap-x-3 gap-y-2.5">
+                  <Item label={t('extracted.applications_lowercase')}>{formatNumber(data.applications)}</Item>
+                  <Item label={t('extracted.disbursed')}>{formatNumber(data.disbursements)}</Item>
+                  <Item label={t('extracted.success_lowercase')}>{data.successRate.toFixed(1)}%</Item>
+                </dl>
+                <div className="h-1.5 rounded-full theme-bg-glass mt-3 overflow-hidden">
+                  <div className="h-full rounded-full accent-gradient" style={{ width: `${Math.min(100, data.successRate)}%` }} />
                 </div>
               </div>
             ))}
           </div>
-        </motion.div >
+        </section>
+      </div>
 
-        {/* Category-wise Distribution */}
-        < motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.categorywise_distribution_1')} </h3>
-              <p className="text-sm theme-text-muted">{t('extracted.beneficiary_categories')} </p>
+      {/* State-wise Performance and Category Breakdown */}
+      <div className={stateCategoryGridClass}>
+        {/* State-wise Performance */}
+        <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.statewise_performance_1')}</h3>
+              <p className="text-[11px] theme-text-muted mt-0.5 truncate">{t('extracted.top_performing_states')}</p>
             </div>
-            <Users className="w-5 h-5 theme-text-muted" />
           </div>
-          <div className="space-y-4">
-            {Object.entries(analyticsData.categoryWiseData).map(([category, count]) => {
-              const percentage = analyticsData.overview.totalBeneficiaries > 0 ? (count / analyticsData.overview.totalBeneficiaries) * 100 : 0;
-              return (
-                <div key={category} className="p-3 rounded-lg theme-bg-glass">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium theme-text-primary">{category}</span>
-                    <span className="text-sm theme-text-muted">
-                      {percentage.toFixed(1)}%
+          <div className="p-4">
+            {analyticsData.stateWiseData.map((state: any, index: number) => (
+              <div key={state.state} className="py-2.5 border-b theme-border-glass last:border-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 shrink-0 text-[11px] font-semibold tabular-nums theme-text-muted">{index + 1}</span>
+                    <span className="text-[13px] theme-text-primary truncate">{state.state}</span>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-[13px] font-semibold tabular-nums theme-text-primary">{state.disbursements}</span>
+                    <span className="text-[11px] theme-text-muted ml-2">
+                      {state.applications} {t('extracted.applications_lowercase')} · {state.successRate.toFixed(2)}% {t('extracted.success_lowercase')}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full accent-gradient"
-                      style={{ width: `${percentage}%` }}
-                    ></div>
+                </div>
+                <div className="h-1.5 rounded-full theme-bg-glass mt-1.5 overflow-hidden">
+                  <div className="h-full rounded-full accent-gradient" style={{ width: `${Math.min(100, state.successRate)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Category-wise Distribution */}
+        <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.categorywise_distribution_1')}</h3>
+              <p className="text-[11px] theme-text-muted mt-0.5 truncate">{t('extracted.beneficiary_categories')}</p>
+            </div>
+          </div>
+          <div className="p-4">
+            {Object.entries(analyticsData.categoryWiseData).map(([category, count]) => {
+              const percentage = analyticsData.overview.totalBeneficiaries > 0 ? ((count as number) / analyticsData.overview.totalBeneficiaries) * 100 : 0;
+              return (
+                <div key={category} className="py-2.5 border-b theme-border-glass last:border-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] font-medium theme-text-primary">{category}</span>
+                    <span className="text-[13px] font-semibold tabular-nums theme-text-primary">{percentage.toFixed(1)}%</span>
                   </div>
-                  <div className="flex justify-between text-xs theme-text-muted mt-2">
-                    <span>{formatNumber(count)} {t('extracted.beneficiaries_lowercase')}</span>
+                  <div className="h-1.5 rounded-full theme-bg-glass mt-1.5 overflow-hidden">
+                    <div className="h-full rounded-full accent-gradient" style={{ width: `${percentage}%` }} />
+                  </div>
+                  <div className="flex justify-between text-[11px] theme-text-muted mt-1">
+                    <span>{formatNumber(count as number)} {t('extracted.beneficiaries_lowercase')}</span>
                     <span>{category} Category</span>
                   </div>
                 </div>
               );
             })}
           </div>
-        </motion.div >
-      </div >
-
-      {/* Performance Metrics */}
-      < motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45 }}
-        className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.performance_metrics_1')} </h3>
-            <p className="text-sm theme-text-muted">{t('extracted.key_operational_indicators')} </p>
-          </div>
-          <Activity className="w-5 h-5 theme-text-muted" />
-        </div>
-        <div className={performanceMetricsGridClass}>
-          {[
-            {
-              labelKey: 'extracted.total_pending',
-              value: formatNumber(analyticsData.overview.pendingApplications),
-              icon: ClockIcon,
-              color: 'text-amber-500'
-            },
-            {
-              labelKey: 'extracted.total_rejected',
-              value: formatNumber(analyticsData.overview.rejectedApplications),
-              icon: XCircle,
-              color: 'text-red-500'
-            },
-            {
-              labelKey: 'extracted.pcr_ratio',
-              value: `${analyticsData.overview.totalApplications > 0 ? ((analyticsData.actWiseBreakdown.pcr.applications / analyticsData.overview.totalApplications) * 100).toFixed(1) : 0}%`,
-              icon: Scale,
-              color: 'text-blue-500'
-            },
-            {
-              labelKey: 'extracted.poa_ratio',
-              value: `${analyticsData.overview.totalApplications > 0 ? ((analyticsData.actWiseBreakdown.poa.applications / analyticsData.overview.totalApplications) * 100).toFixed(1) : 0}%`,
-              icon: Users,
-              color: 'text-purple-500'
-            },
-            {
-              labelKey: 'extracted.success_rate',
-              value: `${analyticsData.overview.successRate.toFixed(1)}%`,
-              icon: CheckCircle,
-              color: 'text-green-500'
-            }
-          ].map((metric, idx) => (
-            <div key={idx} className="text-center p-4 rounded-lg theme-bg-glass">
-              <metric.icon className={`w-8 h-8 mx-auto mb-2 ${metric.color}`} />
-              <p className="text-lg font-bold theme-text-primary mb-1">{metric.value}</p>
-              <p className="text-xs theme-text-muted">{t(metric.labelKey)}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div >
+        </section>
+      </div>
 
       {/* Top Districts */}
-      < motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className={`theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        style={{
-          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-        }}
-      >
-        <div className="p-5 border-b theme-border-glass">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.top_performing_districts')} </h3>
-              <p className="text-sm theme-text-muted">{t('extracted.districts_with_highest_disbursement_rates')} </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={exportToPDF}
-                className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:bg-blue-500/10"
-              >
-                <Download className="w-4 h-4 theme-text-primary" />
-                <span className="text-sm">{t('extracted.export')}</span>
-              </motion.button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm theme-text-muted">{t('extracted.show')}</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-2 py-1 rounded text-xs theme-bg-glass theme-text-primary border theme-border-glass focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-sm theme-text-muted">{t('extracted.per_page')}</span>
-              </div>
-            </div>
+      <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b theme-border-glass flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.top_performing_districts')}</h3>
+            <p className="text-[11px] theme-text-muted mt-0.5 truncate">{t('extracted.districts_with_highest_disbursement_rates')}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={exportToPDF}
+              className="h-9 px-2.5 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{t('extracted.export')}</span>
+            </button>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className={`${selectCls} h-8 px-2 text-xs`}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="theme-bg-glass border-b theme-border-glass">
+            <thead className="border-b theme-border-glass">
               <tr>
-                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.rank')} </th>
-                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.rank')}</th>
+                <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted cursor-pointer select-none hover:theme-text-secondary transition-colors" onClick={() => {
                   setSortBy('district');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
-                  <div className="flex items-center gap-1">
-                    {t('extracted.district')}
-                    {sortBy === 'district' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </div>
+                  {t('extracted.district')}{sortBy === 'district' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                 </th>
-                <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.state')} </th>
-                <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.state')}</th>
+                <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted cursor-pointer select-none hover:theme-text-secondary transition-colors" onClick={() => {
                   setSortBy('applications');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
-                  <div className="flex items-center gap-1">
-                    {t('extracted.applications')}
-                    {sortBy === 'applications' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </div>
+                  {t('extracted.applications')}{sortBy === 'applications' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                 </th>
-                <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted cursor-pointer select-none hover:theme-text-secondary transition-colors" onClick={() => {
                   setSortBy('disbursements');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
-                  <div className="flex items-center gap-1">
-                    {t('extracted.disbursements')}
-                    {sortBy === 'disbursements' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </div>
+                  {t('extracted.disbursements')}{sortBy === 'disbursements' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                 </th>
-                <th className="hidden lg:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted cursor-pointer select-none hover:theme-text-secondary transition-colors" onClick={() => {
                   setSortBy('successRate');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
-                  <div className="flex items-center gap-1">
-                    {t('extracted.success_rate')}
-                    {sortBy === 'successRate' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </div>
+                  {t('extracted.success_rate')}{sortBy === 'successRate' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                 </th>
-                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.actions')}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y theme-border-glass">
               {sortedDistricts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((district, idx) => (
-                <motion.tr
+                <tr
                   key={`${district.district}-${district.state}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
+                  className="hover:theme-bg-hover transition-colors"
                 >
-                  <td className="px-3 py-2.5">
-                    <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </div>
+                  <td className="py-2.5 px-3 text-[13px] font-semibold tabular-nums theme-text-muted">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-3 py-2.5 text-sm font-medium theme-text-primary">{district.district}</td>
-                  <td className="hidden sm:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.state}</td>
-                  <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.applications}</td>
-                  <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.disbursements}</td>
-                  <td className="hidden lg:table-cell px-3 py-2.5">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${district.successRate >= 80
-                      ? theme === 'dark'
-                        ? 'bg-green-900/30 text-green-300 border border-green-700/50'
-                        : 'bg-green-100 text-green-800'
+                  <td className="py-2.5 px-3 text-[13px] font-medium theme-text-primary">{district.district}</td>
+                  <td className="hidden sm:table-cell py-2.5 px-3 text-[13px] theme-text-secondary">{district.state}</td>
+                  <td className="hidden md:table-cell py-2.5 px-3 text-[13px] tabular-nums theme-text-secondary">{district.applications}</td>
+                  <td className="hidden md:table-cell py-2.5 px-3 text-[13px] tabular-nums theme-text-secondary">{district.disbursements}</td>
+                  <td className="hidden lg:table-cell py-2.5 px-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${district.successRate >= 80
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       : district.successRate >= 60
-                        ? theme === 'dark'
-                          ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
-                          : 'bg-yellow-100 text-yellow-800'
-                        : theme === 'dark'
-                          ? 'bg-red-900/30 text-red-300 border border-red-700/50'
-                          : 'bg-red-100 text-red-800'
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}>
                       {district.successRate.toFixed(1)}%
                     </span>
                   </td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex gap-1">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors border theme-border-glass"
+                  <td className="py-2.5 px-3">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        className="p-1.5 rounded-md border theme-border-glass theme-text-muted hover:theme-text-primary hover:theme-bg-glass transition-colors"
                         title={t('extracted.view_details')}
                       >
-                        <Eye className="w-4 h-4 theme-text-primary" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-1.5 rounded-lg theme-bg-glass hover:bg-blue-500 hover:text-white transition-colors border theme-border-glass"
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-md border theme-border-glass theme-text-muted hover:theme-text-primary hover:theme-bg-glass transition-colors"
                         title={t('extracted.export_data')}
                       >
-                        <Download className="w-4 h-4 theme-text-primary" />
-                      </motion.button>
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        {
-          totalPages > 1 && (
-            <div className="px-4 py-2.5 border-t theme-border-glass flex items-center justify-between">
-              <div className="text-sm theme-text-muted">
-                {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, sortedDistricts.length)} {t('extracted.of')} {sortedDistricts.length} {t('extracted.entries')}
-              </div>
-              <div className="flex gap-1">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('extracted.previous')}
-                </motion.button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  return (
-                    <motion.button
-                      key={pageNum}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1 rounded text-sm border ${currentPage === pageNum
-                        ? 'accent-gradient text-white'
-                        : 'theme-bg-glass theme-text-primary theme-border-glass'
-                        }`}
-                    >
-                      {pageNum}
-                    </motion.button>
-                  );
-                })}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded text-sm theme-bg-glass theme-text-primary border theme-border-glass disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('extracted.next')}
-                </motion.button>
-              </div>
+        {totalPages > 1 && (
+          <div className="px-4 py-2.5 border-t theme-border-glass flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs theme-text-muted">
+              {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, sortedDistricts.length)} {t('extracted.of')} {sortedDistricts.length} {t('extracted.entries')}
             </div>
-          )
-        }
-      </motion.div >
+            <div className="flex gap-1">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="h-8 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-secondary text-xs font-medium hover:theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {t('extracted.previous')}
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`h-8 min-w-[2rem] px-2 rounded-md text-xs font-medium transition-colors ${currentPage === pageNum
+                      ? 'accent-gradient text-white'
+                      : 'border theme-border-glass theme-bg-input theme-text-secondary hover:theme-text-primary'
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-secondary text-xs font-medium hover:theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {t('extracted.next')}
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Report Generation Section */}
-      < motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.55 }}
-        className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
-        style={{
-          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
-        }}
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.generate_custom_reports')} </h3>
-            <p className="text-sm theme-text-muted">{t('extracted.create_detailed_reports_for_analysis_and_compliance')} </p>
-          </div>
+      <section className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b theme-border-glass">
+          <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.generate_custom_reports')}</h3>
+          <p className="text-[11px] theme-text-muted mt-0.5">{t('extracted.create_detailed_reports_for_analysis_and_compliance')}</p>
         </div>
-
-        {/* Professional Export Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
-          {/* Monthly Report Card */}
-          <motion.div
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
-            onClick={generateMonthlyReport}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors duration-300">
-                  <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-blue-900/10 dark:bg-blue-900/30 text-blue-600 dark:text-blue-900">
-                  A4 Ready
-                </div>
-              </div>
-              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.monthly_report')}</h4>
-              <p className="text-sm theme-text-muted mb-4">
-                Comprehensive monthly overview with application trends, disbursement statistics, and performance metrics formatted for A4 printing.
-              </p>
-              <div className="space-y-2 text-xs theme-text-muted">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>Application Summary</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>Monthly Trends & Charts</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>State-wise Performance</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Performance Report Card */}
-          <motion.div
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
-            onClick={generatePerformanceReport}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors duration-300">
-                  <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-green-500/10 dark:bg-green-900/30 text-green-600 dark:text-green-900">
-                  Analytics
-                </div>
-              </div>
-              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.performance_report')}</h4>
-              <p className="text-sm theme-text-muted mb-4">
-                Detailed performance analysis with KPIs, success rates, and actionable insights optimized for A4 document format.
-              </p>
-              <div className="space-y-2 text-xs theme-text-muted">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>Key Performance Indicators</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>Success Rate Analysis</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>Trend Analysis & Insights</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Export All Data Card */}
-          <motion.div
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
-            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
-            onClick={() => exportToCSV()}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors duration-300">
-                  <Download className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-purple-500/10 dark:bg-purple-900/30 text-purple-600 dark:text-purple-900">
-                  Complete
-                </div>
-              </div>
-              <h4 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.export_all_data')}</h4>
-              <p className="text-sm theme-text-muted mb-4">
-                Complete dataset export including all applications, disbursements, and beneficiary data in structured CSV format.
-              </p>
-              <div className="space-y-2 text-xs theme-text-muted">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span>All Applications Data</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span>Disbursement Records</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span>Beneficiary Information</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div >
-
-      {/* Export Modal */}
-      <AnimatePresence>
-        {
-          showExportModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center"
+        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {reportCards.map((card) => (
+            <button
+              key={card.id}
+              onClick={card.onClick}
+              className="text-left rounded-xl border theme-border-glass p-4 hover:theme-bg-hover transition-colors"
             >
-              <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
-              <motion.div
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.98, opacity: 0 }}
-                className="relative w-full max-w-3xl mx-4 p-4 lg:p-5 rounded-xl theme-border-glass border shadow-sm"
-                style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
-                      <Download className="w-5 h-5 text-accent-gradient" />
-                      {t('extracted.export') || 'Export Data'}
-                    </h3>
-                    <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export analytics data as CSV or PDF report.'}</p>
-                  </div>
-                  <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                    <X className="w-5 h-5 theme-text-primary" />
-                  </button>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="w-9 h-9 rounded-md theme-bg-glass flex items-center justify-center shrink-0">
+                  <card.icon className="w-4 h-4 theme-text-secondary" />
                 </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full theme-bg-glass theme-text-muted">
+                  {card.badge}
+                </span>
+              </div>
+              <h4 className="text-sm font-semibold theme-text-primary truncate">{card.title}</h4>
+              <p className="text-xs theme-text-muted mt-1 leading-relaxed">{card.description}</p>
+              <ul className="mt-3 space-y-1.5">
+                {card.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-[11px] theme-text-muted">
+                    <span className="w-1 h-1 rounded-full bg-[var(--accent-primary)] shrink-0" />
+                    <span className="truncate">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </button>
+          ))}
+        </div>
+      </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
-                  <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
-                            <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full analytics dataset in the chosen format.'}</p>
-                          </div>
-                        </div>
-                        <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                            <Download className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
-                            <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                          </div>
-                        </div>
-                        <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Export Section */}
-                <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="mb-4">
-                    <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      {t('extracted.emailExport') || 'Email Export'}
-                    </h4>
-                    <input
-                      type="email"
-                      value={emailAddress}
-                      onChange={(e) => setEmailAddress(e.target.value)}
-                      placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allAnalytics') || 'All Analytics'}</h5>
-                      <div className="flex gap-3">
-                        <button
-                          disabled={!emailAddress.trim() || sendingEmail}
-                          onClick={() => sendAnalyticsEmail('csv')}
-                          className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                        >
-                          {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                          {t('extracted.sendCsv') || 'Send CSV'}
-                        </button>
-                        <button
-                          disabled={!emailAddress.trim() || sendingEmail}
-                          onClick={() => sendAnalyticsEmail('pdf')}
-                          className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                        >
-                          {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                          {t('extracted.sendPdf') || 'Send PDF'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )
-        }
-      </AnimatePresence >
-    </div >
+      {/* Export Drawer */}
+      <AnimatePresence>
+        {showExportModal && (
+          <AnalyticsExportDrawer
+            onClose={() => setShowExportModal(false)}
+            allCount={analyticsData.overview.totalApplications}
+            filteredCount={analyticsData.overview.totalApplications}
+            emailAddress={emailAddress}
+            setEmailAddress={setEmailAddress}
+            sendingEmail={sendingEmail}
+            onCsv={() => exportToCSV()}
+            onPdf={() => exportToPDF()}
+            onSendEmail={sendAnalyticsEmail}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

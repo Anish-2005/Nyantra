@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import BackgroundAnimation from '@/components/BackgroundAnimation';
-import type * as THREE from 'three';
+import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import ExportModal from '@/components/dashboard/ExportModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
@@ -20,17 +21,27 @@ declare module 'jspdf' {
 }
 import {
   Search, Filter, Download, Plus, Eye, Edit,
-  ChevronLeft, ChevronRight, X, Check,
-  Trash,
-  Clock, AlertCircle, FileText, User, Phone, MapPin,
-  Calendar, DollarSign, MessageSquare, MoreVertical,
-  Shield, Award, Heart, Scale, BadgeCheck,
-  Banknote, Fingerprint, Sparkles, Zap, TrendingUp,
-  Target, Globe, Layers, Star,
-  CheckCircle, Tag, Upload, File, ArrowUpDown
+  ChevronLeft, ChevronRight, X,
+  Trash, FileText,
+  Upload, File, Loader2,
+  Clock, AlertCircle, Shield, BadgeCheck, Banknote
 } from 'lucide-react';
 
 // All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
+
+const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
+const inlineInputCls = "h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
+
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
+);
+
+const Pair = ({ label, value, mono }: { label: string; value: string | number; mono?: boolean }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] uppercase tracking-wider theme-text-muted truncate">{label}</dt>
+    <dd className={`text-[13px] font-medium theme-text-primary mt-0.5 truncate ${mono ? 'font-mono' : ''}`}>{value}</dd>
+  </div>
+);
 
 // New Beneficiary Form Component (client-side)
 const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: { 
@@ -39,7 +50,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
   onSaved?: ((saved?: any) => void) | undefined,
   showToast: (type: 'success' | 'error' | 'info', message: string, ttl?: number) => void
 }) => {
-  const { theme } = useTheme();
   const { t } = useLocale();
   const [formData, setFormData] = useState({
     name: '',
@@ -65,6 +75,18 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onCancel]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -232,10 +254,38 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
     }
   }, [initialData]);
 
-  return (
-    <form onSubmit={handleSubmit} className="p-5 space-y-5">
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.add_beneficiary')}</h3>
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/50"
+        onClick={onCancel}
+      />
+      <motion.aside
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="absolute inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+      >
+        <div className="h-12 px-4 flex items-center justify-between border-b theme-border-glass flex-shrink-0">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight theme-text-primary">{initialData ? t('extracted.edit_beneficiary') : t('extracted.create_new_beneficiary')}</h3>
+            <p className="text-[11px] theme-text-muted">{initialData ? t('extracted.edit_beneficiary_description') : t('extracted.create_new_beneficiary_description')}</p>
+          </div>
+          <button type="button" onClick={onCancel} className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors" aria-label="Close">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form id="new-beneficiary-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <section>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.add_beneficiary')}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
@@ -288,10 +338,10 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
             <input value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.verification_details')}</h3>
+      <section>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.verification_details')}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
@@ -404,10 +454,10 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.personal_details')}</h3>
+      <section>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.personal_details')}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.age')}</label>
@@ -456,42 +506,35 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex justify-end gap-4 pt-6 border-t theme-border-glass">
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onCancel}
-          className="px-6 py-2.5 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-red-500/10 transition-colors"
-          disabled={isSubmitting || isUploading}
-        >
-          {t('extracted.cancel')}
-        </motion.button>
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting || isUploading}
-        >
-          {isSubmitting ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : initialData ? (
-            <>
-              <Edit className="w-4 h-4" />
-              {t('extracted.save')}
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4" />
-              {t('extracted.create')}
-            </>
-          )}
-        </motion.button>
-      </div>
+      </section>
     </form>
+
+    <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 flex-shrink-0">
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={isSubmitting || isUploading}
+        className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary hover:theme-bg-hover hover:theme-text-primary transition-colors text-sm font-medium disabled:opacity-50"
+      >
+        {t('extracted.cancel')}
+      </button>
+      <button
+        type="submit"
+        form="new-beneficiary-form"
+        disabled={isSubmitting || isUploading}
+        className="flex-1 h-9 rounded-md accent-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+      >
+        {isSubmitting ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          initialData ? t('extracted.save') : t('extracted.create')
+        )}
+      </button>
+    </div>
+      </motion.aside>
+    </div>,
+    document.body
   );
 };
 
@@ -1569,6 +1612,15 @@ const BeneficiariesPage = () => {
     } catch { return String(s); }
   };
 
+  const hasActiveFilters = statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc';
+  const detailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedBeneficiary?.id) {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedBeneficiary?.id]);
+
   // Pagination helpers
   const totalItems = filteredBeneficiaries.length;
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
@@ -1576,121 +1628,45 @@ const BeneficiariesPage = () => {
   const noPages = totalPages === 0;
 
   if (authLoading) return (
-    <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+    <div className="space-y-4 max-w-[1400px]">
       <div className="theme-bg-card theme-border-glass border rounded-xl p-5">Loading...</div>
     </div>
   );
 
   return (
-    <div data-theme={theme} className="relative z-10 theme-text-primary flex ">
-      <div className="p-4 lg:p-5 space-y-5 flex-1">
-      <style jsx global>{`
-        [data-theme="dark"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.7);
-          --card-border: rgba(255, 255, 255, 0.08);
-          --nav-bg: rgba(15, 23, 42, 0.95);
-          --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
-          --text-muted: #64748b;
-          --accent-primary: #06b6d4;
-          --accent-secondary: #8b5cf6;
-          --glass-bg: rgba(15, 23, 42, 0.6);
-          --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="light"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.8);
-          --card-border: rgba(0, 0, 0, 0.06);
-          --nav-bg: rgba(255, 255, 255, 0.95);
-          --text-primary: #0f172a;
-          --text-secondary: #475569;
-          --text-muted: #64748b;
-          --accent-primary: #fb7185;
-          --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.6);
-          --glass-border: rgba(0, 0, 0, 0.08);
-        }
-
-        .theme-text-primary { color: var(--text-primary) !important; }
-        .theme-text-secondary { color: var(--text-secondary) !important; }
-        .theme-text-muted { color: var(--text-muted) !important; }
-        .theme-bg-card { background: var(--card-bg) !important; }
-        .theme-border-card { border-color: var(--card-border) !important; }
-        .theme-bg-glass { background: var(--glass-bg) !important; }
-        .theme-border-glass { border-color: var(--glass-border) !important; }
-        .theme-bg-nav { background: var(--nav-bg) !important; }
-        
-        .accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-        }
-        
-        .text-accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        /* Icon improvements: ensure lucide SVGs inherit text color and use stroke=currentColor */
-        svg {
-          vertical-align: middle;
-          stroke: currentColor;
-          fill: none;
-        }
-
-        /* Small icon helper sizes (use with class 'icon-sm' etc if needed) */
-        .icon-sm { width: 0.875rem; height: 0.875rem; }
-        .icon-md { width: 1rem; height: 1rem; }
-        .icon-lg { width: 1.25rem; height: 1.25rem; }
-      `}</style>
-      
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-sm shadow-sm"
-            >
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                       <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2 inline-block leading-tight pt-4">
-                        {t("beneficiary.beneficiary")}{" "}
-                        <span className="text-accent-gradient inline-block leading-normal">
-                          {t("beneficiary.management")}
-                        </span>
-                      </h1>
-
-                        <p className="theme-text-secondary text-base">
-                            {t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
-                        </p>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setShowExportModal(true)}
-                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-sm transition-shadow"
-                        >
-                          <Download className="w-4 h-4" />
-                          <span>{t('extracted.export_data')}</span>
-                        </motion.button>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setShowNewBeneficiaryForm(true)}
-                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>{t('extracted.add_beneficiary')}</span>
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.div>
+    <div className="space-y-4 max-w-[1400px]">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between gap-3"
+      >
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary">
+            {t("beneficiary.beneficiary")}{' '}
+            <span className="text-accent-gradient">{t("beneficiary.management")}</span>
+          </h1>
+          <p className="text-xs theme-text-muted mt-0.5">
+            {t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="h-9 px-3.5 rounded-md border theme-border-glass theme-text-secondary hover:theme-bg-hover hover:theme-text-primary transition-colors inline-flex items-center gap-1.5 text-xs font-medium"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{t('extracted.export_data')}</span>
+          </button>
+          <button
+            onClick={() => setShowNewBeneficiaryForm(true)}
+            className="h-9 px-3.5 rounded-md accent-gradient text-white inline-flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{t('extracted.add_beneficiary')}</span>
+          </button>
+        </div>
+      </motion.div>
 
       {/* New Beneficiary Form (moved below stats) - will render under statistics/cards when opened */}
 
@@ -1715,663 +1691,271 @@ const BeneficiariesPage = () => {
       </div>
 
       {/* Export Modal */}
-      <AnimatePresence>
-        {showExportModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-md mx-4 p-5 rounded-xl theme-border-glass border shadow-sm"
-              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-            >
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
-                    <Download className="w-5 h-5 text-accent-gradient" />
-                    {t("beneficiary.exportTitle") || "Export Beneficiaries"}
-                  </h3>
-                  <p className="text-sm theme-text-muted mt-1">
-                    {t("beneficiary.exportSubtitle") || "Choose export format for beneficiaries data"}
-                  </p>
-                </div>
-                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                  <X className="w-5 h-5 theme-text-primary" />
-                </button>
-              </div>
+      <ExportModal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        items={beneficiaries}
+        filteredItems={filteredBeneficiaries}
+        onExportCsv={exportBeneficiariesData}
+        onExportPdf={exportBeneficiariesPDF}
+        emailAddress={emailAddress}
+        setEmailAddress={setEmailAddress}
+        sendingEmail={sendingEmail}
+        onSendEmail={sendBeneficiariesEmail}
+        title={t("beneficiary.exportTitle") || "Export Beneficiaries"}
+        subtitle={t("beneficiary.exportSubtitle") || "Choose export format for beneficiaries data"}
+        allTitle={t("beneficiary.exportAllTitle") || "All Beneficiaries"}
+        filteredTitle={t("beneficiary.exportFilteredTitle") || "Filtered Results"}
+      />
 
-              <div className="space-y-4">
-                {/* Export All Section */}
-                <div className="p-4 rounded-lg border theme-border-glass">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium theme-text-primary">{t("beneficiary.exportAllTitle") || "All Beneficiaries"}</h4>
-                      <p className="text-sm theme-text-muted">{beneficiaries.length} {t("beneficiary.records", { count: beneficiaries.length })}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => { exportBeneficiariesData(beneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
-                    <button onClick={() => { exportBeneficiariesPDF(beneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
-                  </div>
-                </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        open={showDeleteModal && !!deleteTargetId}
+        message={t('confirm_delete_beneficiary') || 'Are you sure you want to delete this beneficiary? This action cannot be undone.'}
+        title={t('confirm_delete_beneficiary_title') || t('confirm_delete_beneficiary')}
+        confirmLabel={t('extracted.delete')}
+        onCancel={() => { setShowDeleteModal(false); setDeleteTargetId(null); }}
+        onConfirm={() => performDelete(deleteTargetId)}
+      />
 
-                {/* Export Filtered Section */}
-                <div className="p-4 rounded-lg border theme-border-glass">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium theme-text-primary">{t("beneficiary.exportFilteredTitle") || "Filtered Results"}</h4>
-                      <p className="text-sm theme-text-muted">{filteredBeneficiaries.length} {t("beneficiary.records", { count: filteredBeneficiaries.length })}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesData(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
-                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesPDF(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
-                  </div>
-                </div>
-
-                {/* Email Export Section */}
-                <div className="p-4 rounded-lg border theme-border-glass">
-                  <div className="mb-3">
-                    <h4 className="font-medium theme-text-primary mb-2">{t("beneficiary.emailExport")}</h4>
-                    <input
-                      type="email"
-                      value={emailAddress}
-                      onChange={(e) => setEmailAddress(e.target.value)}
-                      placeholder={t("beneficiary.enterEmailAddress")}
-                      className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex gap-3">
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendBeneficiariesEmail(beneficiaries, 'csv')}
-                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        {t("beneficiary.sendCsv")}
-                      </button>
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendBeneficiariesEmail(beneficiaries, 'pdf')}
-                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        {t("beneficiary.sendPdf")}
-                      </button>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        disabled={!emailAddress.trim() || filteredBeneficiaries.length === 0 || sendingEmail}
-                        onClick={() => sendBeneficiariesEmail(filteredBeneficiaries, 'csv')}
-                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        {t("beneficiary.sendFilteredCsv")}
-                      </button>
-                      <button
-                        disabled={!emailAddress.trim() || filteredBeneficiaries.length === 0 || sendingEmail}
-                        onClick={() => sendBeneficiariesEmail(filteredBeneficiaries, 'pdf')}
-                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        {t("beneficiary.sendFilteredPdf")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Delete Confirmation Modal (UI based, theme-aware, i18n) */}
-      <AnimatePresence>
-        {showDeleteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-black/60" onClick={() => { if (!deletingId) { setShowDeleteModal(false); setDeleteTargetId(null); } }} />
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-lg mx-4 p-5 rounded-xl theme-border-glass border shadow-sm"
-              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold theme-text-primary">{t('confirm_delete_beneficiary_title') || t('confirm_delete_beneficiary')}</h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('confirm_delete_beneficiary') || 'Are you sure you want to delete this beneficiary? This action cannot be undone.'}</p>
-                </div>
-                <button onClick={() => { if (!deletingId) { setShowDeleteModal(false); setDeleteTargetId(null); } }} aria-label="Close" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                  <X className="w-5 h-5 theme-text-primary" />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => { setShowDeleteModal(false); setDeleteTargetId(null); }} className="px-3.5 py-2 rounded-md theme-bg-glass theme-border-glass border theme-text-primary">{t('extracted.cancel')}</button>
-                <button disabled={!deleteTargetId || deletingId === deleteTargetId} onClick={() => performDelete(deleteTargetId)} className="px-3.5 py-2 rounded-md bg-red-600 text-white flex items-center gap-2">
-                  {deletingId === deleteTargetId ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash className="w-4 h-4" />}
-                  <span>{t('extracted.delete')}</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Statistics Cards */}
+      {/* Statistics band */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden"
       >
         {[
-          { labelKey: 'extracted.total', value: stats.total, color: 'from-blue-500 to-cyan-500', icon: User },
-          { labelKey: 'extracted.verified', value: stats.verified, color: 'from-green-500 to-emerald-500', icon: BadgeCheck },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification, color: 'from-amber-500 to-orange-500', icon: Clock },
-          { labelKey: 'extracted.rejected', value: stats.rejected, color: 'from-red-500 to-rose-500', icon: X },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired, color: 'from-purple-500 to-pink-500', icon: AlertCircle },
-          { labelKey: 'SC', value: categoryStats.SC, color: 'from-indigo-500 to-blue-500', icon: Shield },
-          { labelKey: 'ST', value: categoryStats.ST, color: 'from-green-500 to-lime-500', icon: Award }
+          { labelKey: 'extracted.total', value: stats.total },
+          { labelKey: 'extracted.verified', value: stats.verified },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification },
+          { labelKey: 'extracted.rejected', value: stats.rejected },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired },
+          { labelKey: 'SC', value: categoryStats.SC },
+          { labelKey: 'ST', value: categoryStats.ST }
         ].map((stat, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-sm transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                <stat.icon className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold theme-text-primary">{stat.value}</span>
-            </div>
-            <p className="text-sm font-medium theme-text-muted">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
-          </motion.div>
+          <div key={idx} className="theme-bg-card p-3.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
+            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{stat.value}</p>
+          </div>
         ))}
       </motion.div>
 
-      {/* Financial Overview Cards */}
+      {/* Financial band */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden"
       >
-        {[
-          {
-            labelKey: 'extracted.total_disbursed_amount',
-            value: formatCurrency(stats.disbursedAmount),
-            color: 'from-green-500 to-emerald-500',
-            icon: DollarSign,
-            subtitle: `Disbursed ${stats.percentageChange > 0 ? '+' : ''}${stats.percentageChange.toFixed(1)}% this month`
-          },
-        ].map((card, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + idx * 0.1 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-sm transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${card.color} flex items-center justify-center`}>
-                <card.icon className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold theme-text-primary">{card.value}</span>
-            </div>
-            <p className="text-sm font-medium theme-text-muted mb-1">{t(card.labelKey)}</p>
-            <p className="text-xs theme-text-secondary">{card.subtitle}</p>
-          </motion.div>
-        ))}
+        <div className="theme-bg-card p-3.5 md:col-span-2">
+          <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.total_disbursed_amount')}</p>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-xl font-semibold tabular-nums theme-text-primary">{formatCurrency(stats.disbursedAmount)}</span>
+            <span className={`text-[11px] font-medium ${stats.percentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {stats.percentageChange > 0 ? '+' : ''}{stats.percentageChange.toFixed(1)}% this month
+            </span>
+          </div>
+        </div>
+        <div className="theme-bg-card p-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">% Change This Month</p>
+          <p className={`text-xl font-semibold tabular-nums mt-1 ${stats.percentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {stats.percentageChange > 0 ? '+' : ''}{stats.percentageChange.toFixed(1)}%
+          </p>
+        </div>
       </motion.div>
 
 
 
-      {/* Enhanced Filters and Search Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-5 backdrop-blur-xl overflow-hidden group"
-      >
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden rounded-3xl">
-          {/* Floating search icons */}
-          <motion.div
-            className="absolute top-4 right-8 w-8 h-8 opacity-10"
-            animate={{
-              y: [0, -10, 0],
-              rotate: [0, 180, 360]
-            }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Search className="w-full h-full text-blue-500" />
-          </motion.div>
-          <motion.div
-            className="absolute bottom-6 left-12 w-6 h-6 opacity-10"
-            animate={{
-              y: [0, 8, 0],
-              x: [0, 5, 0]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          >
-            <Filter className="w-full h-full text-purple-500" />
-          </motion.div>
-
-          {/* Gradient waves */}
-          <motion.div
-            className="absolute inset-0 opacity-5"
-            animate={{
-              backgroundPosition: ['0% 0%', '100% 100%'],
-            }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
-            style={{
-              background: 'linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent, rgba(147, 197, 253, 0.1), transparent)',
-              backgroundSize: '400% 400%'
-            }}
-          />
-        </div>
-
-        <div className="relative z-10 space-y-5">
-          {/* Enhanced Search Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <motion.div
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-sm"
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <Search className="w-5 h-5 text-white" />
-              </motion.div>
-              <div>
-                <h3 className="text-lg font-bold theme-text-primary">{t('beneficiary.advanced_search')}</h3>
-                <p className="text-sm theme-text-muted">{t('beneficiary.find_beneficiaries_by_name_id_or_location')}</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <motion.input
-                type="text"
-                placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-lg font-medium shadow-sm"
-                style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                whileFocus={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              />
-              <motion.div
-                className="absolute left-4 top-1/2 -translate-y-1/2"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Search className="w-6 h-6 theme-text-muted" />
-              </motion.div>
-
-              {/* Search suggestions indicator */}
-              {searchQuery && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2"
-                >
-                  <span className="text-sm theme-text-muted font-medium">
-                    {filteredBeneficiaries.length} results
-                  </span>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="w-4 h-4 text-blue-500" />
-                  </motion.div>
-                </motion.div>
-              )}
-            </div>
+      {/* Filters and Search Toolbar */}
+      <div className="theme-bg-card theme-border-glass border rounded-xl">
+        {/* Header row: search + view mode + filter toggle */}
+        <div className="px-4 py-3 border-b theme-border-glass flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
+            <input
+              type="text"
+              placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-8 pr-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+            />
           </div>
-
-          {/* Enhanced Controls Row */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-semibold theme-text-muted uppercase tracking-wide">{t('extracted.view_mode')}</span>
-              <div className="flex items-center gap-2 theme-bg-glass rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`px-4 py-2 rounded ${viewMode === 'table' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
-                >
-                  {t('extracted.table')}
-                </button>
-                <button
-                  onClick={() => setViewMode('cards')}
-                  className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'accent-gradient text-white' : 'theme-text-muted hover:theme-text-primary'} transition-colors`}
-                >
-                  {t('extracted.cards')}
-                </button>
-              </div>
-            </div>
-
-                            {/* Filter Toggle */}
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`px-3 py-2 rounded-md theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
-                            >
-                                <Filter className="w-4 h-4" />
-                                <span>{t('extracted.filters')}</span>
-                                {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
-                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                )}
-                            </motion.button>
-          </div>
-
-          {/* Enhanced Expandable Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center rounded-md border theme-border-glass p-0.5">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`h-7 px-2.5 rounded text-xs font-medium transition-colors ${viewMode === 'table' ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-text-primary'}`}
               >
-                <div className="relative pt-6 border-t-2 theme-border-glass">
-                  {/* Filter background decoration */}
-                  <div className="absolute inset-0 opacity-5">
-                    <motion.div
-                      animate={{
-                        backgroundPosition: ['0% 0%', '100% 100%'],
-                      }}
-                      transition={{ duration: 15, repeat: Infinity, repeatType: "reverse" }}
-                      style={{
-                        background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1), rgba(196, 181, 253, 0.1), rgba(251, 207, 232, 0.1))',
-                        backgroundSize: '400% 400%',
-                        borderRadius: '16px'
-                      }}
-                      className="absolute inset-0 rounded-xl"
-                    />
-                  </div>
-
-                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                    {/* Status Filter */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        </div>
-                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.status')}</label>
-                      </div>
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-sm font-medium shadow-sm"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <option value="all">{t('extracted.all_statuses')}</option>
-                        <option value="verified">{t('extracted.verified')}</option>
-                        <option value="pending-verification">{t('extracted.pending_verification')}</option>
-                        <option value="rejected">{t('extracted.rejected')}</option>
-                        <option value="documents-required">{t('extracted.documents_required')}</option>
-                      </select>
-                    </motion.div>
-
-                    {/* Category Filter */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                          <Shield className="w-4 h-4 text-white" />
-                        </div>
-                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.category_1')}</label>
-                      </div>
-                      <select
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-sm font-medium shadow-sm"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <option value="all">{t('extracted.all_categories')}</option>
-                        <option value="SC">SC</option>
-                        <option value="ST">ST</option>
-                        <option value="OBC">OBC</option>
-                      </select>
-                    </motion.div>
-
-                    {/* Verification Filter */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                          <Shield className="w-4 h-4 text-white" />
-                        </div>
-                        <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t('extracted.verification')}</label>
-                      </div>
-                      <select
-                        value={verificationFilter}
-                        onChange={(e) => setVerificationFilter(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm font-medium shadow-sm"
-                        style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                      >
-                        <option value="all">{t('extracted.all_verification')}</option>
-                        <option value="verified">{t('extracted.verified')}</option>
-                        <option value="pending">{t('extracted.pending')}</option>
-                        <option value="rejected">{t('extracted.rejected')}</option>
-                        <option value="documents-required">{t('extracted.documents_required')}</option>
-                      </select>
-                    </motion.div>
-                  </div>
-
-                  {/* Sorting Controls */}
-                  <div className="mt-6 pt-4 border-t theme-border-glass relative z-20">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {/* Sort By */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="space-y-3 relative z-30"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                            <ArrowUpDown className="w-4 h-4 text-white" />
-                          </div>
-                          <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t("beneficiary.sortBy") || "Sort By"}</label>
-                        </div>
-                        <select
-                          value={sortBy}
-                          onChange={(e) => setSortBy(e.target.value)}
-                          className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-sm relative z-40"
-                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                        >
-                          <option value="registrationDate">{t("beneficiary.sortOptions.registrationDate") || "Registration Date"}</option>
-                          <option value="status">{t("beneficiary.sortOptions.status") || "Status"}</option>
-                          <option value="verification">{t("beneficiary.sortOptions.verification") || "Verification"}</option>
-                        </select>
-                      </motion.div>
-
-                      {/* Sort Order */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="space-y-3 relative z-30"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
-                            <ArrowUpDown className="w-4 h-4 text-white" />
-                          </div>
-                          <label className="text-sm font-bold theme-text-primary uppercase tracking-wide">{t("beneficiary.sortOrder") || "Sort Order"}</label>
-                        </div>
-                        <select
-                          value={sortOrder}
-                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                          className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-sm font-medium shadow-sm relative z-40"
-                          style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                        >
-                          <option value="desc">
-                            {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') : 
-                             sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') : (t("beneficiary.sortOrderOptions.newestFirst") || 'Newest First')}
-                          </option>
-                          <option value="asc">
-                            {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') : 
-                             sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') : (t("beneficiary.sortOrderOptions.oldestFirst") || 'Oldest First')}
-                          </option>
-                        </select>
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Display */}
-                  {(statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-6 pt-4 border-t theme-border-glass"
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <Tag className="w-4 h-4 theme-text-muted" />
-                        <span className="text-sm font-semibold theme-text-primary">Active Filters</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {statusFilter !== 'all' && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-700 dark:text-green-400 rounded-full text-xs font-medium border border-green-500/30"
-                          >
-                            Status: {statusFilter.replace('-', ' ')}
-                            <button
-                              onClick={() => setStatusFilter('all')}
-                              className="hover:bg-green-500/30 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        )}
-                        {categoryFilter !== 'all' && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium border border-purple-500/30"
-                          >
-                            Category: {categoryFilter}
-                            <button
-                              onClick={() => setCategoryFilter('all')}
-                              className="hover:bg-purple-500/30 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        )}
-                        {verificationFilter !== 'all' && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium border border-amber-500/30"
-                          >
-                            Verification: {verificationFilter.replace('-', ' ')}
-                            <button
-                              onClick={() => setVerificationFilter('all')}
-                              className="hover:bg-amber-500/30 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        )}
-                        {(sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium border border-blue-500/30"
-                          >
-                            Sort: {sortBy === 'status' ? 'Status' : sortBy === 'verificationStatus' || sortBy === 'verification' ? 'Verification' : 'Registration Date'} ({sortOrder === 'desc' ? 'Desc' : 'Asc'})
-                            <button
-                              onClick={() => {
-                                setSortBy('registrationDate');
-                                setSortOrder('desc');
-                              }}
-                              className="hover:bg-blue-500/30 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        )}
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => {
-                            setStatusFilter('all');
-                            setCategoryFilter('all');
-                            setVerificationFilter('all');
-                            setSortBy('registrationDate');
-                            setSortOrder('desc');
-                          }}
-                          className="px-3 py-1.5 bg-gray-500/20 text-gray-700 dark:text-gray-400 rounded-full text-xs font-medium border border-gray-500/30 hover:bg-gray-500/30"
-                        >
-                          Clear All
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Bottom accent gradient */}
-        <motion.div
-          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-b-3xl"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-        />
-      </motion.div>
-
-      {/* Inline New Beneficiary Form (under stats) */}
-      {showNewBeneficiaryForm && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4 backdrop-blur-sm shadow-sm overflow-hidden"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">{selectedBeneficiary ? t('extracted.edit_beneficiary') : t('extracted.create_new_beneficiary')}</h3>
-              <p className="text-sm theme-text-muted">{selectedBeneficiary ? t('extracted.edit_beneficiary_description') : t('extracted.create_new_beneficiary_description')}</p>
+                {t('extracted.table')}
+              </button>
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`h-7 px-2.5 rounded text-xs font-medium transition-colors ${viewMode === 'cards' ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-text-primary'}`}
+              >
+                {t('extracted.cards')}
+              </button>
             </div>
-            <button onClick={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }} className="p-2 rounded-lg theme-bg-card theme-border-glass border hover:bg-red-500/20 theme-text-primary">
-              <X className="w-5 h-5" />
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${showFilters ? 'accent-gradient text-white' : 'theme-text-secondary hover:theme-bg-glass hover:theme-text-primary'}`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>{t('extracted.filters')}</span>
+              {hasActiveFilters && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
             </button>
           </div>
+        </div>
+
+        {/* Expandable filters */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <Label>{t('extracted.status')}</Label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_statuses')}</option>
+                    <option value="verified">{t('extracted.verified')}</option>
+                    <option value="pending-verification">{t('extracted.pending_verification')}</option>
+                    <option value="rejected">{t('extracted.rejected')}</option>
+                    <option value="documents-required">{t('extracted.documents_required')}</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>{t('extracted.category_1')}</Label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_categories')}</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="OBC">OBC</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>{t('extracted.verification')}</Label>
+                  <select
+                    value={verificationFilter}
+                    onChange={(e) => setVerificationFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_verification')}</option>
+                    <option value="verified">{t('extracted.verified')}</option>
+                    <option value="pending">{t('extracted.pending')}</option>
+                    <option value="rejected">{t('extracted.rejected')}</option>
+                    <option value="documents-required">{t('extracted.documents_required')}</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>{t("beneficiary.sortBy") || "Sort By"}</Label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="registrationDate">{t("beneficiary.sortOptions.registrationDate") || "Registration Date"}</option>
+                    <option value="status">{t("beneficiary.sortOptions.status") || "Status"}</option>
+                    <option value="verification">{t("beneficiary.sortOptions.verification") || "Verification"}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="px-4 pb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <Label>{t("beneficiary.sortOrder") || "Sort Order"}</Label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    className={inputCls}
+                  >
+                    <option value="desc">
+                      {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') :
+                        sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') : (t("beneficiary.sortOrderOptions.newestFirst") || 'Newest First')}
+                    </option>
+                    <option value="asc">
+                      {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') :
+                        sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') : (t("beneficiary.sortOrderOptions.oldestFirst") || 'Oldest First')}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Active Filters Display */}
+              {hasActiveFilters && (
+                <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
+                  {statusFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Status: {statusFilter.replace('-', ' ')}
+                      <button onClick={() => setStatusFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear status filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {categoryFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Category: {categoryFilter}
+                      <button onClick={() => setCategoryFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear category filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {verificationFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Verification: {verificationFilter.replace('-', ' ')}
+                      <button onClick={() => setVerificationFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear verification filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {(sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Sort: {sortBy === 'status' ? 'Status' : sortBy === 'verificationStatus' || sortBy === 'verification' ? 'Verification' : 'Registration Date'} ({sortOrder === 'desc' ? 'Desc' : 'Asc'})
+                      <button
+                        onClick={() => {
+                          setSortBy('registrationDate');
+                          setSortOrder('desc');
+                        }}
+                        className="rounded-full p-0.5 hover:theme-text-primary transition-colors"
+                        aria-label="Reset sorting"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setCategoryFilter('all');
+                      setVerificationFilter('all');
+                      setSortBy('registrationDate');
+                      setSortOrder('desc');
+                    }}
+                    className="px-2 py-1 rounded-md theme-bg-glass theme-text-muted text-xs font-medium hover:theme-text-primary transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* New/Edit Beneficiary Drawer */}
+      <AnimatePresence>
+        {showNewBeneficiaryForm && (
           <NewBeneficiaryForm
             onCancel={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }}
             initialData={selectedBeneficiary}
@@ -2398,374 +1982,263 @@ const BeneficiariesPage = () => {
               setShowNewBeneficiaryForm(false);
             }}
           />
-        </motion.div>
-      )}
-
-      {/* Inline detail moved below the list (see below) */}
-
+        )}
+      </AnimatePresence>
       {/* Beneficiaries List */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-xl overflow-hidden"
+        className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
         key={refreshKey}
       >
         {viewMode === 'table' ? (
-          isMobile ? (
-            <div className="p-3 space-y-3">
-              {paginatedBeneficiaries.map((beneficiary, idx) => {
-                const StatusIcon = getStatusIcon(beneficiary.status);
-                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-                
-                return (
-                  <motion.div
-                    key={beneficiary.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    whileTap={{ scale: 0.995 }}
-                    className="theme-bg-glass theme-border-glass border rounded-xl p-4 active:bg-opacity-80"
-                    onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                  >
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm">
-                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
-                          <p className="text-xs theme-text-muted truncate">{beneficiary.id}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getCategoryColor(beneficiary.category)}`}>
-                        {beneficiary.category}
-                      </span>
-                    </div>
-
-                    {/* Info Grid */}
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <Fingerprint className="w-3.5 h-3.5" />
-                          {t('extracted.aadhaar')}
-                        </span>
-                        <span className="theme-text-primary font-mono text-[10px]">{beneficiary.aadhaarNumber}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {t('extracted.location')}
-                        </span>
-                        <span className="theme-text-primary font-medium">{beneficiary.district}, {beneficiary.state}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <Scale className="w-3.5 h-3.5" />
-                          {t('extracted.act_type')}
-                        </span>
-                        <span className="theme-text-primary font-medium">{formatActType(beneficiary.actType)}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5" />
-                          {t('extracted.sc_st_certificate')}
-                        </span>
-                        {beneficiary.scStCertificate ? (
-                          <a
-                            href={beneficiary.scStCertificate}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="theme-text-primary font-medium underline hover:text-blue-500"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            View File
-                          </a>
-                        ) : (
-                          <span className="theme-text-primary font-medium">Not provided</span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <Banknote className="w-3.5 h-3.5" />
-                          {t('extracted.disbursed')}
-                        </span>
-                        <span className="theme-text-primary font-medium">{formatCurrency(beneficiary.disbursedAmount)}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="theme-text-muted flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5" />
-                          {t('extracted.assigned_officer')}
-                        </span>
-                        <span className="theme-text-primary font-medium truncate max-w-[150px]">{beneficiary.assignedOfficer}</span>
-                      </div>
-                    </div>
-
-                    {/* Status Badges */}
-                    <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b theme-border-glass">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        <span className="capitalize">{beneficiary.status.replace('-', ' ')}</span>
-                      </span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                        <VerificationIcon className="w-3 h-3" />
-                        <span className="capitalize">{beneficiary.verificationStatus.replace('-', ' ')}</span>
-                      </span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>{t('extracted.view')} </span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-blue-500/10 active:scale-95 transition-all"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                        <span>{t('extracted.edit')} </span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
-                        disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
-                        className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-red-500/10 hover:text-red-500 active:scale-95 transition-all disabled:opacity-50"
-                      >
-                        {deletingId === beneficiary.id ? (
-                          <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash className="w-3.5 h-3.5 text-red-600" />
-                        )}
-                        <span>{t('extracted.delete') || 'Delete'}</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="theme-bg-glass border-b theme-border-glass">
+                <thead className="border-b theme-border-glass">
                   <tr>
-                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary_id')} </th>
-                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
-                    <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.aadhaar')} </th>
-                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.phone')} </th>
-                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.email')} </th>
-                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
-                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
-                    <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.verification')} </th>
-                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary_id')}</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary')}</th>
+                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.aadhaar')}</th>
+                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.phone')}</th>
+                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.email')}</th>
+                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.district')}</th>
+                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.act_type')}</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.status')}</th>
+                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.verification')}</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedBeneficiaries.map((beneficiary, idx) => (
-                    <motion.tr
-                      key={beneficiary.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
-                    >
-                      <td className="px-3 py-2.5 text-sm font-medium theme-text-primary">{beneficiary.id}</td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                            {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
+                  {paginatedBeneficiaries.map((beneficiary) => {
+                    const StatusIcon = getStatusIcon(beneficiary.status);
+                    const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
+
+                    return (
+                      <tr key={beneficiary.id} className="border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors">
+                        <td className="px-3 py-2.5 text-xs font-mono theme-text-primary whitespace-nowrap">{beneficiary.id}</td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
+                              {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-medium theme-text-primary truncate">{beneficiary.name}</p>
+                              <p className="text-[11px] theme-text-muted truncate">{beneficiary.category}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium theme-text-primary">{beneficiary.name}</p>
-                            <p className="text-xs theme-text-muted">{beneficiary.category}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-3 py-2.5 text-sm theme-text-primary">
-                        {beneficiary.aadhaarNumber}
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">
-                        {beneficiary.phone}
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">
-                        {beneficiary.email || '—'}
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2.5">
-                        <div>
-                          <p className="text-sm theme-text-primary">{beneficiary.district}</p>
-                          <p className="text-xs theme-text-muted">{beneficiary.state}</p>
-                        </div>
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2.5">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
-                          {formatActType(beneficiary.actType)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
-                          {(() => {
-                            const Icon = getStatusIcon(beneficiary.status);
-                            return <Icon className="w-3 h-3" />;
-                          })()}
-                          {beneficiary.status.replace('-', ' ')}
-                        </span>
-                      </td>
-                      <td className="hidden sm:table-cell px-3 py-2.5">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                          {(() => {
-                            const Icon = getVerificationIcon(beneficiary.verificationStatus);
-                            return <Icon className="w-3 h-3" />;
-                          })()}
-                          {beneficiary.verificationStatus.replace('-', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </motion.button>
-                          {beneficiary.scStCertificate && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => window.open(beneficiary.scStCertificate, '_blank')}
-                              className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
-                              style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                              title="View Certificate"
+                        </td>
+                        <td className="hidden lg:table-cell px-3 py-2.5 text-xs font-mono theme-text-primary">{beneficiary.aadhaarNumber}</td>
+                        <td className="hidden lg:table-cell px-3 py-2.5 text-[13px] theme-text-primary whitespace-nowrap">{beneficiary.phone}</td>
+                        <td className="hidden xl:table-cell px-3 py-2.5 text-[13px] theme-text-primary"><span className="block max-w-[160px] truncate">{beneficiary.email || '—'}</span></td>
+                        <td className="hidden lg:table-cell px-3 py-2.5">
+                          <p className="text-[13px] theme-text-primary">{beneficiary.district}</p>
+                          <p className="text-[11px] theme-text-muted">{beneficiary.state}</p>
+                        </td>
+                        <td className="hidden xl:table-cell px-3 py-2.5">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass theme-bg-glass theme-text-secondary whitespace-nowrap">
+                            {formatActType(beneficiary.actType)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {beneficiary.status.replace('-', ' ')}
+                          </span>
+                        </td>
+                        <td className="hidden xl:table-cell px-3 py-2.5">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                            <VerificationIcon className="w-3 h-3" />
+                            {beneficiary.verificationStatus.replace('-', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
+                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                              title={t('extracted.view')}
                             >
-                              <FileText className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/20 hover:text-red-400 transition-colors theme-text-primary"
-                            style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                          onClick={() => confirmDelete(beneficiary.id)}
-                          disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                          title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
-                          >
-                            {deletingId === beneficiary.id ? (
-                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <Trash className="w-4 h-4 text-red-600" />
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {beneficiary.scStCertificate && (
+                              <button
+                                onClick={() => window.open(beneficiary.scStCertificate, '_blank')}
+                                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
+                                title="View Certificate"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </button>
                             )}
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                            <button
+                              onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
+                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                              title={t('extracted.edit')}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => confirmDelete(beneficiary.id)}
+                              disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
+                              title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
+                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === beneficiary.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-          )
+
+            {/* Mobile flat list */}
+            <div className="md:hidden">
+              {paginatedBeneficiaries.map((beneficiary) => {
+                const StatusIcon = getStatusIcon(beneficiary.status);
+                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
+
+                return (
+                  <div
+                    key={beneficiary.id}
+                    className="p-4 border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors"
+                    onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
+                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
+                          <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
+                        </div>
+                      </div>
+                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        {beneficiary.status.replace('-', ' ')}
+                      </span>
+                    </div>
+
+                    <dl className="mt-2.5 space-y-1.5">
+                      <Pair label={t('extracted.aadhaar')} value={beneficiary.aadhaarNumber} mono />
+                      <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
+                      <Pair label={t('extracted.act_type')} value={formatActType(beneficiary.actType)} />
+                    </dl>
+
+                    <div className="mt-2.5 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                          <VerificationIcon className="w-3 h-3" />
+                          {beneficiary.verificationStatus.replace('-', ' ')}
+                        </span>
+                        {beneficiary.scStCertificate && (
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getCategoryColor(beneficiary.category)}`}>
+                            <FileText className="w-3 h-3" />
+                            Cert
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {beneficiary.scStCertificate && (
+                          <button
+                            aria-label="View certificate"
+                            onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
+                            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
+                            title="View Certificate"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          aria-label="Edit beneficiary"
+                          onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
+                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                          title={t('extracted.edit')}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          aria-label="Delete beneficiary"
+                          onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
+                          disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
+                          title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
+                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === beneficiary.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         ) : (
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2 lg:grid-cols-3'} gap-4 p-4`}>
-            {paginatedBeneficiaries.map((beneficiary, idx) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {paginatedBeneficiaries.map((beneficiary) => {
               const StatusIcon = getStatusIcon(beneficiary.status);
               const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-              
+
               return (
-                <motion.div
+                <div
                   key={beneficiary.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  whileHover={isMobile ? {} : { y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="theme-bg-glass theme-border-glass border rounded-xl p-4 cursor-pointer"
+                  className="theme-bg-card theme-border-glass border rounded-lg p-3.5 cursor-pointer hover:theme-bg-hover transition-colors"
                   onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold flex-shrink-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-full accent-gradient flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
                         {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium theme-text-primary truncate">{beneficiary.name}</p>
-                        <p className="text-xs theme-text-muted truncate">{beneficiary.id}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
+                        <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getPriorityColor(beneficiary.priority)}`}>
-                      {beneficiary.priority}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 mb-3">
-                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                      <Fingerprint className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{beneficiary.aadhaarNumber}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                      <MapPin className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{beneficiary.district}, {beneficiary.state}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                      <Scale className="w-4 h-4 flex-shrink-0" />
-                      <span>{formatActType(beneficiary.actType)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm theme-text-secondary">
-                      <FileText className="w-4 h-4 flex-shrink-0" />
-                      <span className={beneficiary.scStCertificate ? 'text-green-500' : 'theme-text-muted'}>
-                        {beneficiary.scStCertificate ? 'Certificate uploaded' : 'No certificate'}
+                    {beneficiary.priority && (
+                      <span className={`flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getPriorityColor(beneficiary.priority)}`}>
+                        {beneficiary.priority}
                       </span>
-                    </div>
+                    )}
                   </div>
-                  
-                  <div className="flex items-center justify-between pt-3 border-t theme-border-glass">
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
+
+                  <dl className="mt-3 space-y-1.5">
+                    <Pair label={t('extracted.aadhaar')} value={beneficiary.aadhaarNumber} mono />
+                    <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
+                    <Pair label={t('extracted.act_type')} value={formatActType(beneficiary.actType)} />
+                    <Pair label={t('extracted.assigned_officer')} value={beneficiary.assignedOfficer || '—'} />
+                  </dl>
+
+                  <div className="mt-3 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
                         <StatusIcon className="w-3 h-3" />
-                        <span className="hidden sm:inline">{beneficiary.status.replace('-', ' ')}</span>
+                        {beneficiary.status.replace('-', ' ')}
                       </span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
                         <VerificationIcon className="w-3 h-3" />
+                        {beneficiary.verificationStatus.replace('-', ' ')}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        aria-label="View beneficiary"
-                        className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); });
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                    <div className="flex items-center gap-0.5">
                       {beneficiary.scStCertificate && (
                         <button
                           aria-label="View certificate"
-                          className="p-1.5 rounded-lg theme-bg-glass hover:bg-green-500/20 hover:text-green-400 transition-colors theme-text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(beneficiary.scStCertificate, '_blank');
-                          }}
+                          onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
+                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
                           title="View Certificate"
                         >
                           <FileText className="w-4 h-4" />
@@ -2773,8 +2246,9 @@ const BeneficiariesPage = () => {
                       )}
                       <button
                         aria-label="Edit beneficiary"
-                        className="p-1.5 rounded-lg theme-bg-glass hover:accent-gradient hover:text-white transition-colors theme-text-primary"
                         onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
+                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                        title={t('extracted.edit')}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -2782,159 +2256,157 @@ const BeneficiariesPage = () => {
                         aria-label="Delete beneficiary"
                         onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
                         disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : undefined}
-                        className="p-1.5 rounded-lg theme-bg-glass hover:bg-red-500/10 hover:text-red-500 transition-colors theme-text-primary disabled:opacity-50"
+                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
+                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
                       >
                         {deletingId === beneficiary.id ? (
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Trash className="w-4 h-4 text-red-600" />
+                          <Trash className="w-4 h-4" />
                         )}
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
         )}
+
         {/* Pagination */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-t theme-border-glass theme-bg-glass">
-          <p className="text-sm theme-text-muted">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t theme-border-glass">
+          <p className="text-xs theme-text-muted">
             {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
           </p>
-          <div className="flex items-center gap-2">
-            {isMobile ? (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1 || noPages}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-3.5 py-2 rounded-md theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
+          {!noPages && (
+            <div className="flex items-center gap-1">
+              <button
+                disabled={currentPage === 1 || noPages}
+                onClick={() => setCurrentPage((p: number) => p - 1)}
+                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i).map((pageNum: number) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
                 >
-                  {t('extracted.prev')}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages || noPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-3.5 py-2 rounded-md theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  {t('extracted.next')}
-                </motion.button>
-              </>
-            ) : (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === 1 || noPages}
-                  onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </motion.button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <motion.button
-                    key={i}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1.5 rounded-lg ${currentPage === i + 1 ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary'}`}
-                    style={currentPage !== i + 1 && theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined}
-                  >
-                    {i + 1}
-                  </motion.button>
-                ))}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={currentPage === totalPages || noPages}
-                  onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
-                  style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </motion.button>
-              </>
-            )}
-          </div>
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                disabled={currentPage === totalPages || noPages}
+                onClick={() => setCurrentPage((p: number) => p + 1)}
+                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 
-      {/* Inline Beneficiary View (rendered under the table) */}
-      <AnimatePresence>
-        {selectedBeneficiary && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden mt-6">
-            <div className="p-5 border-b theme-border-glass flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{selectedBeneficiary.name}</h2>
-                <p className="theme-text-muted">{selectedBeneficiary.id} • {formatActType(selectedBeneficiary.actType)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => { setSelectedBeneficiary(null); setDetailStatus(''); setDetailVerification(''); }} className="p-2 rounded-lg theme-bg-card theme-border-glass border hover:bg-red-500/20 theme-text-primary"><X className="w-5 h-5" /></button>
-                <button onClick={() => { setShowNewBeneficiaryForm(true); }} className="px-3 py-2 rounded-lg theme-bg-card theme-border-glass border theme-text-primary">{t('extracted.edit')}</button>
-              </div>
+      {/* Beneficiary Detail Inspector */}
+      {selectedBeneficiary && (
+        <div ref={detailRef} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20">
+          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedBeneficiary.name}</h2>
+              <span className="hidden sm:inline text-xs theme-text-muted font-mono flex-shrink-0">{selectedBeneficiary.id}</span>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
+                {selectedBeneficiary.status.replace('-', ' ')}
+              </span>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
+                {selectedBeneficiary.verificationStatus.replace('-', ' ')}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(selectedBeneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                title={t('extracted.edit')}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => { setSelectedBeneficiary(null); setDetailStatus(''); setDetailVerification(''); }}
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="px-4 py-3.5">
+            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+              <Pair label={t('extracted.full_name')} value={selectedBeneficiary.name} />
+              <Pair label={t('extracted.father_name') || 'Father'} value={selectedBeneficiary.fatherName || '—'} />
+              <Pair label={t('extracted.aadhaar_number')} value={selectedBeneficiary.aadhaarNumber} mono />
+              <Pair label={t('extracted.phone_number')} value={selectedBeneficiary.phone} />
+              <Pair label={t('extracted.email')} value={selectedBeneficiary.email || '—'} />
+              <Pair label={t('extracted.location')} value={`${selectedBeneficiary.district}, ${selectedBeneficiary.state}`} />
+              <Pair label={t('extracted.act_type')} value={formatActType(selectedBeneficiary.actType)} />
+              <Pair label={t('extracted.category')} value={selectedBeneficiary.category} />
+              <Pair label={t('extracted.registration_date') || 'Registered'} value={formatDate(selectedBeneficiary.registrationDate)} />
+              <Pair label={t('extracted.age') || 'Age'} value={selectedBeneficiary.age ?? '—'} />
+              <Pair label={t('extracted.gender') || 'Gender'} value={selectedBeneficiary.gender || '—'} />
+              <Pair label={t('extracted.marital_status') || 'Marital Status'} value={selectedBeneficiary.maritalStatus || '—'} />
+              <Pair label={t('extracted.bank_name') || 'Bank'} value={selectedBeneficiary.bankName || '—'} />
+              <Pair label={t('extracted.ifsc_code') || 'IFSC'} value={selectedBeneficiary.ifsc || '—'} mono />
+              <Pair label={t('extracted.assigned_officer')} value={selectedBeneficiary.assignedOfficer || '—'} />
+              <Pair label={t('extracted.disbursed')} value={formatCurrency(selectedBeneficiary.disbursedAmount)} />
+            </dl>
+
+            <div className="mt-3.5 pt-3 border-t theme-border-glass flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5 theme-text-muted flex-shrink-0" />
+              <span className="text-[11px] uppercase tracking-wider theme-text-muted flex-shrink-0">{t('extracted.sc_st_certificate')}</span>
+              {selectedBeneficiary.scStCertificate ? (
+                <a
+                  href={selectedBeneficiary.scStCertificate}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-medium underline underline-offset-2 theme-text-primary hover:opacity-80 transition-opacity truncate"
+                >
+                  {t('extracted.view_file') || 'View file'}
+                </a>
+              ) : (
+                <span className="text-[13px] theme-text-muted">Not provided</span>
+              )}
             </div>
 
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs theme-text-muted">{t('extracted.full_name')}</p>
-                  <p className="font-medium theme-text-primary">{selectedBeneficiary.name}</p>
-                </div>
-                <div>
-                  <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')}</p>
-                  <p className="font-medium theme-text-primary">{selectedBeneficiary.aadhaarNumber}</p>
-                </div>
-                <div>
-                  <p className="text-xs theme-text-muted">{t('extracted.phone_number')}</p>
-                  <p className="font-medium theme-text-primary">{selectedBeneficiary.phone}</p>
-                </div>
-                <div>
-                  <p className="text-xs theme-text-muted">{t('extracted.email')}</p>
-                  <p className="font-medium theme-text-primary">{selectedBeneficiary.email || '—'}</p>
-                </div>
+            <div className="mt-3.5 pt-3 border-t theme-border-glass flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <select value={detailStatus} onChange={(e) => setDetailStatus(e.target.value)} className={`${inlineInputCls} flex-1`} aria-label={t('extracted.application_status')}>
+                  <option value="pending-verification">{t('extracted.pending_verification') || 'Pending Verification'}</option>
+                  <option value="verified">{t('extracted.verified') || 'Verified'}</option>
+                  <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
+                  <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
+                </select>
+                <button onClick={() => updateBeneficiaryStatus(selectedBeneficiary.id, detailStatus)} className="h-9 px-3 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors flex-shrink-0">
+                  {t('extracted.save')}
+                </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                  <p className="text-sm theme-text-muted mb-2">{t('extracted.application_status')}</p>
-                  <div className="flex items-center gap-3">
-                    <select value={detailStatus} onChange={(e) => setDetailStatus(e.target.value)} className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary flex-1">
-                      <option value="pending-verification">{t('extracted.pending_verification') || 'Pending Verification'}</option>
-                      <option value="verified">{t('extracted.verified') || 'Verified'}</option>
-                      <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
-                      <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
-                    </select>
-                    <button onClick={() => updateBeneficiaryStatus(selectedBeneficiary.id, detailStatus)} className="px-3 py-2 rounded-lg bg-blue-600 text-white">{t('extracted.save')}</button>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                  <p className="text-sm theme-text-muted mb-2">{t('extracted.verification_status')}</p>
-                  <div className="flex items-center gap-3">
-                    <select value={detailVerification} onChange={(e) => setDetailVerification(e.target.value)} className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary flex-1">
-                      <option value="pending">{t('extracted.pending') || 'Pending'}</option>
-                      <option value="verified">{t('extracted.verified') || 'Verified'}</option>
-                      <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
-                      <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
-                    </select>
-                    <button onClick={() => updateBeneficiaryVerification(selectedBeneficiary.id, detailVerification)} className="px-3 py-2 rounded-lg bg-green-600 text-white">{t('extracted.save')}</button>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <select value={detailVerification} onChange={(e) => setDetailVerification(e.target.value)} className={`${inlineInputCls} flex-1`} aria-label={t('extracted.verification_status')}>
+                  <option value="pending">{t('extracted.pending') || 'Pending'}</option>
+                  <option value="verified">{t('extracted.verified') || 'Verified'}</option>
+                  <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
+                  <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
+                </select>
+                <button onClick={() => updateBeneficiaryVerification(selectedBeneficiary.id, detailVerification)} className="h-9 px-3 rounded-md bg-green-600 text-white text-xs font-semibold hover:bg-green-500 transition-colors flex-shrink-0">
+                  {t('extracted.save')}
+                </button>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </div>
-      </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

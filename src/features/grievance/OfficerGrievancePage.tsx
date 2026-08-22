@@ -1,14 +1,54 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Download, Plus, Eye, Edit, MoreVertical, Clock, Star, PlayCircle, CheckCircle, Check, AlertCircle, AlertOctagon, MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap, Timer, Mail, MessageSquare, BarChart3, Shield, Target, ArrowUpRight, Activity, ChevronDown, Calendar, Mic, MicOff } from 'lucide-react';
+import {
+  Search, Download, Plus, Eye, Edit, Clock, Star, CheckCircle, AlertCircle, AlertOctagon,
+  MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap,
+  Mail, MessageSquare, BarChart3, Shield, ArrowUpRight, ChevronDown, Mic, MicOff
+} from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
+import ExportModal from '@/components/dashboard/ExportModal';
+
+const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
+
+const textareaCls = "w-full min-h-[80px] px-2.5 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors resize-y";
+
+const ghostBtn = "h-9 px-3 rounded-md border theme-border-glass theme-text-secondary font-medium hover:theme-bg-glass inline-flex items-center gap-1.5 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+
+const primaryBtn = "h-9 px-3.5 rounded-md accent-gradient text-white font-semibold hover:opacity-90 inline-flex items-center gap-1.5 text-xs transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
+
+const iconBtn = "p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+
+const pillCls = "inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide";
+
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
+);
+
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{children}</h3>
+);
+
+const DetailItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</dt>
+    <dd className="text-[13px] font-medium theme-text-primary mt-0.5 truncate">{value ?? '\u2014'}</dd>
+  </div>
+);
+
+const StatCell = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="theme-bg-card p-3.5">
+    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</p>
+    <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">{value}</p>
+  </div>
+);
 
 // Web Speech API type declarations
 declare global {
@@ -97,7 +137,7 @@ const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Gr
         const expectedResolution = toIso(data?.expectedResolution);
         return {
           id: d.id,
-          beneficiaryName: data.beneficiaryName || data.name || '—',
+          beneficiaryName: data.beneficiaryName || data.name || '\u2014',
           beneficiaryId: data.beneficiaryId,
           phone: data.phone,
           email: data.email,
@@ -130,10 +170,15 @@ const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Gr
   }, [setState]);
 };
 
-// New Grievance Form (client-side modal)
-const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => void; onCreated?: (g: Grievance) => void; initialData?: Grievance | null }) => {
-  const { theme } = useTheme();
+interface NewGrievanceDrawerProps {
+  initialData?: Grievance | null;
+  onClose: () => void;
+  onCreated?: (g: Grievance) => void;
+}
+
+const NewGrievanceDrawer = ({ initialData, onClose, onCreated }: NewGrievanceDrawerProps) => {
   const { t } = useLocale();
+  const [mounted, setMounted] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState('');
   const [beneficiaryName, setBeneficiaryName] = useState('');
   const [phone, setPhone] = useState('');
@@ -153,6 +198,23 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
     { value: 'information-correction', label: 'Information Correction' },
     { value: 'technical-issues', label: 'Technical Issues' }
   ];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll + close on Escape while drawer is open
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
 
   const handleLookupBeneficiary = async (id: string) => {
     setBeneficiaryName('');
@@ -259,67 +321,131 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-        
+  if (!mounted) return null;
 
-        <div className="md:col-span-2">
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.beneficiary_id') || 'Beneficiary ID'}</label>
-          <input placeholder={t('extracted.beneficiary_id') || 'Beneficiary ID'} value={beneficiaryId} onChange={(e) => setBeneficiaryId(e.target.value)} onBlur={() => handleLookupBeneficiary(beneficiaryId)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" required />
-          {beneficiaryName && <p className="text-xs theme-text-muted mt-1">{beneficiaryName}</p>}
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/50 z-[60]"
+      />
+
+      {/* Panel */}
+      <motion.aside
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
+          <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
+            {initialData ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div>
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.phone_number') || 'Phone Number'}</label>
-          <input placeholder={t('extracted.phone_number') || 'Phone Number'} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
+        <form onSubmit={handleSubmit} id="new-grievance-form" className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+          <section>
+            <Label>{t('extracted.beneficiary_id') || 'Beneficiary ID'} *</Label>
+            <input
+              placeholder={t('extracted.beneficiary_id') || 'Beneficiary ID'}
+              value={beneficiaryId}
+              onChange={(e) => setBeneficiaryId(e.target.value)}
+              onBlur={() => handleLookupBeneficiary(beneficiaryId)}
+              className={inputCls}
+              required
+            />
+            {beneficiaryName && <p className="text-xs theme-text-muted mt-1.5">{beneficiaryName}</p>}
+          </section>
+
+          <section className="pt-4 border-t theme-border-glass">
+            <SectionTitle>{t('extracted.contact')}</SectionTitle>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t('extracted.phone_number') || 'Phone Number'}</Label>
+                <input type="tel" placeholder={t('extracted.phone_number') || 'Phone Number'} value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <Label>{t('extracted.email') || 'Email'}</Label>
+                <input type="email" placeholder={t('extracted.email') || 'Email'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+              </div>
+            </div>
+          </section>
+
+          <section className="pt-4 border-t theme-border-glass">
+            <SectionTitle>{t('extracted.category_1') || 'Classification'}</SectionTitle>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t('extracted.category_1') || 'Category'}</Label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
+                  {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label>{t('extracted.sub_category') || 'Sub-category'}</Label>
+                <input placeholder={t('extracted.sub_category') || 'Sub-category'} value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className={inputCls} />
+              </div>
+            </div>
+          </section>
+
+          <section className="pt-4 border-t theme-border-glass">
+            <SectionTitle>{t('extracted.description') || 'Assessment'}</SectionTitle>
+            <div className="space-y-3">
+              <div>
+                <Label>{t('extracted.priority') || 'Priority'}</Label>
+                <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')} className={inputCls}>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div>
+                <Label>{t('extracted.description') || 'Description'}</Label>
+                <textarea placeholder={t('extracted.description') || 'Description'} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={textareaCls} />
+              </div>
+            </div>
+          </section>
+
+          {error && <div className="text-sm text-red-500">{error}</div>}
+        </form>
+
+        <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
+          >
+            {t('extracted.cancel')}
+          </button>
+          <button
+            type="submit"
+            form="new-grievance-form"
+            disabled={isSubmitting}
+            className="flex-1 h-9 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (t('extracted.saving') || 'Saving...') : (initialData ? (t('extracted.save') || 'Save') : (t('extracted.create') || 'Create'))}
+          </button>
         </div>
-
-        <div>
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.email') || 'Email'}</label>
-          <input placeholder={t('extracted.email') || 'Email'} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.category_1') || 'Category'}</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-            {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.sub_category') || 'Sub-category'}</label>
-          <input placeholder={t('extracted.sub_category') || 'Sub-category'} value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.priority') || 'Priority'}</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')} className={`w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="text-sm font-medium theme-text-muted block mb-2">{t('extracted.description') || 'Description'}</label>
-          <textarea placeholder={t('extracted.description') || 'Description'} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30" />
-        </div>
-      </div>
-
-      {error && <div className="text-sm text-red-500">{error}</div>}
-
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <button type="button" onClick={onClose} className="btn-cancel">{t('extracted.cancel')}</button>
-        <button type="submit" disabled={isSubmitting} className="px-3.5 py-2 rounded-md accent-gradient text-white font-semibold shadow">
-          {isSubmitting ? (t('extracted.saving') || 'Saving...') : (initialData ? (t('extracted.save') || 'Save') : (t('extracted.create') || 'Create'))}
-        </button>
-      </div>
-    </form>
+      </motion.aside>
+    </>,
+    document.body
   );
 };
-
 
 const GrievancePage = () => {
   const { theme } = useTheme();
@@ -340,7 +466,6 @@ const GrievancePage = () => {
   const [showNewCaseModal, setShowNewCaseModal] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'dashboard' | 'list'>('dashboard');
-  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [newMessage, setNewMessage] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
@@ -349,8 +474,8 @@ const GrievancePage = () => {
   const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLElement>(null);
 
   // Feedback state
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -406,18 +531,18 @@ const GrievancePage = () => {
     if (priorityFilter !== 'all') filtered = filtered.filter(g => g.priority === priorityFilter);
     if (actTypeFilter !== 'all') filtered = filtered.filter(g => g.actType === actTypeFilter);
     if (assignedToFilter !== 'all') filtered = filtered.filter(g => g.assignedTo === assignedToFilter);
-    
+
     // First sort by priority (urgent > high > medium > low), then by selected criteria
     filtered.sort((a, b) => {
       // Priority order: urgent > high > medium > low
       const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
       const aPriority = priorityOrder[(a.priority || 'low').toLowerCase() as keyof typeof priorityOrder] || 1;
       const bPriority = priorityOrder[(b.priority || 'low').toLowerCase() as keyof typeof priorityOrder] || 1;
-      
+
       if (aPriority !== bPriority) {
         return bPriority - aPriority; // Higher priority first
       }
-      
+
       // If priorities are equal, sort by selected criteria
       const getVal = (obj: Record<string, unknown>, key: string) => {
         const val = obj[key as keyof typeof obj];
@@ -502,24 +627,12 @@ const GrievancePage = () => {
     };
   }, [grievances]);
 
-  // Mobile detection
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
-      const matches = 'matches' in e ? e.matches : mq.matches;
-      setIsMobile(matches);
-    };
-    handler(mq);
-    mq.addEventListener('change', handler as EventListener);
-    return () => mq.removeEventListener('change', handler as EventListener);
-  }, []);
-
   // Voice recognition initialization
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
-      
+
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'en-US';
@@ -553,102 +666,12 @@ const GrievancePage = () => {
     }
   }, [selectedGrievance?.communication, pendingMessages, activeTab]);
 
-  // Three.js background
+  // Scroll inspector into view when a grievance is selected
   useEffect(() => {
-    if (!canvasRef.current) return;
-    let cancelled = false;
-
-    (async () => {
-      const THREE = await import('three');
-      if (cancelled) return;
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current!, alpha: true, antialias: true });
-
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      camera.position.z = 5;
-
-      const particleColor = theme === 'dark' ? 0x3b82f6 : 0x1e40af;
-      const lineColor = theme === 'dark' ? 0xf59e0b : 0xd97706;
-
-      const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = 800;
-      const posArray = new Float32Array(particlesCount * 3);
-
-      for (let i = 0; i < particlesCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 15;
-      }
-
-      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-      const particlesMaterial = new THREE.PointsMaterial({
-        size: theme === 'dark' ? 0.015 : 0.01,
-        color: particleColor,
-        transparent: true,
-        opacity: theme === 'dark' ? 0.4 : 0.3,
-      });
-
-      const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-      scene.add(particlesMesh);
-
-      const linesGeometry = new THREE.BufferGeometry();
-      const linesMaterial = new THREE.LineBasicMaterial({ 
-        color: lineColor, 
-        transparent: true, 
-        opacity: theme === 'dark' ? 0.1 : 0.08 
-      });
-
-      const linesPositions: number[] = [];
-      for (let i = 0; i < 60; i++) {
-        const x1 = (Math.random() - 0.5) * 12;
-        const y1 = (Math.random() - 0.5) * 12;
-        const z1 = (Math.random() - 0.5) * 12;
-        const x2 = x1 + (Math.random() - 0.5) * 2;
-        const y2 = y1 + (Math.random() - 0.5) * 2;
-        const z2 = z1 + (Math.random() - 0.5) * 2;
-        linesPositions.push(x1, y1, z1, x2, y2, z2);
-      }
-
-      linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linesPositions, 3));
-      const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
-      scene.add(linesMesh);
-
-      let animationId: number;
-      const animate = () => {
-        animationId = requestAnimationFrame(animate);
-        particlesMesh.rotation.y += 0.0002;
-        particlesMesh.rotation.x += 0.0001;
-        linesMesh.rotation.y -= 0.00015;
-        renderer.render(scene, camera);
-      };
-
-      animate();
-
-      const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      return () => {
-        cancelled = true;
-        window.removeEventListener('resize', handleResize);
-        cancelAnimationFrame(animationId);
-        renderer.dispose();
-      };
-    })();
-  }, [theme]);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    if (selectedGrievance && detailRef.current) {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [selectedGrievance?.communication, pendingMessages]);
+  }, [selectedGrievance?.id]);
 
   const getStatusColor = (status?: string) => {
     const colors = {
@@ -998,7 +1021,7 @@ const GrievancePage = () => {
         throw new Error('Failed to send email');
       }
 
-      const result = await response.json();
+      await response.json();
       alert(`Grievances report sent successfully to ${emailAddress}! Check your Gmail inbox.`);
       setEmailAddress('');
       setShowExportModal(false);
@@ -1010,611 +1033,425 @@ const GrievancePage = () => {
     }
   };
 
-
- 
-
- 
-
   return (
-    <div data-theme={theme} className="p-4 lg:p-5 space-y-5 relative overflow-hidden">
-      {/* Three.js Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none -z-10"
-      />
-
-      {/* Custom Theme Styles */}
-      <style jsx global>{`
-        [data-theme="dark"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-          --card-bg: rgba(15, 23, 42, 0.8);
-          --card-border: rgba(255, 255, 255, 0.1);
-          --nav-bg: rgba(15, 23, 42, 0.95);
-          --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
-          --text-muted: #64748b;
-          --accent-primary: #06b6d4;
-          --accent-secondary: #8b5cf6;
-          --glass-bg: rgba(15, 23, 42, 0.6);
-          --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="light"] {
-          --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.08), transparent 8%), 
-                         radial-gradient(900px 500px at 90% 90%, rgba(245, 158, 11, 0.06), transparent 8%), 
-                         linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
-          --card-bg: rgba(255, 255, 255, 0.9);
-          --card-border: rgba(0, 0, 0, 0.08);
-          --nav-bg: rgba(255, 255, 255, 0.95);
-          --text-primary: #0f172a;
-          --text-secondary: #475569;
-          --text-muted: #64748b;
-          --accent-primary: #fb7185;
-          --accent-secondary: #fb923c;
-          --glass-bg: rgba(255, 255, 255, 0.7);
-          --glass-border: rgba(0, 0, 0, 0.08);
-        }
-
-        .theme-text-primary { color: var(--text-primary) !important; }
-        .theme-text-secondary { color: var(--text-secondary) !important; }
-        .theme-text-muted { color: var(--text-muted) !important; }
-        .theme-bg-card { background: var(--card-bg) !important; }
-        .theme-border-card { border-color: var(--card-border) !important; }
-        .theme-bg-glass { background: var(--glass-bg) !important; }
-        .theme-border-glass { border-color: var(--glass-border) !important; }
-        
-        .accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
-        }
-        
-        .text-accent-gradient {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .glass-effect {
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-        }
-        .btn-cancel {
-          background: transparent;
-          border: 1px solid var(--glass-border);
-          color: var(--text-muted);
-          padding: 0.5rem 0.75rem;
-          border-radius: 0.5rem;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        [data-theme="light"] .btn-cancel:hover {
-          background: rgba(0,0,0,0.04);
-        }
-        [data-theme="dark"] .btn-cancel:hover {
-          background: rgba(255,255,255,0.03);
-        }
-        .action-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.6rem 1rem;
-          border-radius: 0.75rem;
-          border: 1px solid var(--glass-border);
-          background: var(--glass-bg);
-          color: var(--text-primary);
-          font-weight: 600;
-        }
-        .action-btn svg { color: inherit; }
-        [data-theme="light"] .action-btn:hover { background: rgba(0,0,0,0.04); }
-        [data-theme="dark"] .action-btn:hover { background: rgba(255,255,255,0.02); }
-
-        .action-btn-accent {
-          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-          border-color: transparent;
-          color: white;
-        }
-        .action-btn-accent svg { color: rgba(255,255,255,0.95); }
-      `}</style>
-
-      {/* Header Section - Real-time Monitoring */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-5 p-4 lg:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-      >
-        {/* Animated gradient background */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
-        />
-        
-        <div className="relative z-10 text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-            <motion.div
-              className="w-3 h-3 rounded-full bg-purple-500"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <span className="text-sm font-medium theme-text-secondary">
-              {t('extracted.live_tracking')} • {filteredGrievances.length} {t('extracted.active_grievances')}
-            </span>
-          </div>
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
-            {t('extracted.grievance')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
+    <div className="space-y-4 max-w-[1400px]">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+            {t('extracted.grievance')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
           </h1>
-          <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_grievance_tracking_description')} <span className="text-red-500 font-medium">• Sorted by priority (Urgent → High → Medium → Low)</span></p>
+          <p className="text-xs theme-text-muted mt-0.5 truncate">
+            {t('extracted.realtime_grievance_tracking_description')}
+          </p>
         </div>
-        
-        <div className="relative z-10 flex items-center justify-center lg:justify-end gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowExportModal(true)}
-            aria-label={t('extracted.export_data_1')}
-            className={`px-4 py-2 rounded-md border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
-          >
-            <Download className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : ''}`} />
-            <span className="font-semibold">{t('extracted.export_data')} </span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowNewCaseModal(true)}
-            className="px-4 py-2 rounded-md accent-gradient text-white flex items-center gap-3 shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="font-semibold">{t('extracted.new_case')} </span>
-          </motion.button>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => setShowExportModal(true)} aria-label={t('extracted.export_data_1')} className={ghostBtn}>
+            <Download className="w-3.5 h-3.5" />
+            <span>{t('extracted.export_data')}</span>
+          </button>
+          <button onClick={() => setShowNewCaseModal(true)} className={primaryBtn}>
+            <Plus className="w-3.5 h-3.5" />
+            <span>{t('extracted.new_case')}</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Inline New Case Section (appears above grid/table) */}
-      {/* Export Modal */}
-      <AnimatePresence>
-        {showExportModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-black/60" onClick={() => setShowExportModal(false)} />
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-4 lg:p-5 rounded-xl theme-border-glass border shadow-sm"
-              style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
-            >
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
-                    <Download className="w-5 h-5 text-accent-gradient" />
-                    {t('extracted.export') || 'Export Data'}
-                  </h3>
-                  <p className="text-sm theme-text-muted mt-1">{t('extracted.exportDescription') || 'Export grievances as CSV or a printable PDF report.'}</p>
-                </div>
-                <button onClick={() => setShowExportModal(false)} aria-label="Close export modal" className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors">
-                  <X className="w-5 h-5 theme-text-primary" />
-                </button>
-              </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden">
+        <StatCell label={t('extracted.active_cases_label')} value={stats.open + stats.inProgress} />
+        <StatCell label={t('extracted.avg_resolution_label')} value={`${stats.avgResolutionTime}d`} />
+        <StatCell label={t('extracted.satisfaction_label')} value={`${stats.satisfactionRate}%`} />
+        <StatCell label={t('extracted.escalated_label')} value={stats.escalated} />
+      </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportAll') || 'Export All'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportAllDescription') || 'Download the full grievances dataset in the chosen format.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{grievances.length} {t('extracted.grievances') || 'grievances'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportGrievancesData(grievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                      <button onClick={() => { exportGrievancesPDF(grievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`rounded-lg p-4 border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
-                          <Download className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold theme-text-primary">{t('extracted.exportFiltered') || 'Export Filtered'}</h4>
-                          <p className="text-xs theme-text-muted">{t('extracted.exportFilteredDescription') || 'Download only the results matching your current filters.'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm theme-text-muted">{filteredGrievances.length} {t('extracted.grievances') || 'grievances'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesData(filteredGrievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesPDF(filteredGrievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Export Section */}
-              <div className={`mt-6 p-4 rounded-lg border ${theme === 'light' ? 'bg-white' : 'bg-gray-900/90'}`}>
-                <div className="mb-4">
-                  <h4 className="font-semibold theme-text-primary mb-2 flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    {t('extracted.emailExport') || 'Email Export'}
-                  </h4>
-                  <input
-                    type="email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.allGrievances') || 'All Grievances'} ({grievances.length})</h5>
-                    <div className="flex gap-3">
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendGrievancesEmail(grievances, 'csv')}
-                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendCsv') || 'Send CSV'}
-                      </button>
-                      <button
-                        disabled={!emailAddress.trim() || sendingEmail}
-                        onClick={() => sendGrievancesEmail(grievances, 'pdf')}
-                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendPdf') || 'Send PDF'}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <h5 className="text-sm font-medium theme-text-primary mb-2">{t('extracted.filteredGrievances') || 'Filtered Grievances'} ({filteredGrievances.length})</h5>
-                    <div className="flex gap-3">
-                      <button
-                        disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
-                        onClick={() => sendGrievancesEmail(filteredGrievances, 'csv')}
-                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendFilteredCsv') || 'Send Filtered CSV'}
-                      </button>
-                      <button
-                        disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
-                        onClick={() => sendGrievancesEmail(filteredGrievances, 'pdf')}
-                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
-                        {t('extracted.sendFilteredPdf') || 'Send Filtered PDF'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {showNewCaseModal && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h3 className="text-base font-semibold theme-text-primary">{selectedGrievance ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}</h3>
-              <p className="text-sm theme-text-muted">{selectedGrievance ? (t('extracted.edit_case_description') || 'Edit the grievance details and save changes.') : (t('extracted.new_case_description') || 'Create a new grievance and link it to a beneficiary.')}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setShowNewCaseModal(false)} className="btn-cancel text-sm">
-                <X className="w-4 h-4 inline-block" /> <span>{t('extracted.cancel')}</span>
-              </button>
-            </div>
+      {/* Toolbar + Cases */}
+      <div className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b theme-border-glass flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{t('extracted.active_cases')}</h2>
+            <span className="text-xs theme-text-muted tabular-nums">({filteredGrievances.length})</span>
           </div>
-          <NewGrievanceForm
-            initialData={selectedGrievance}
-            onClose={() => { setShowNewCaseModal(false); setSelectedGrievance(null); }}
-            onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }}
-          />
-        </motion.div>
-      )}
-
-      {/* Inline Grievance Detail Section (appears in-page for view/edit) - moved above grid/table */}
-      {selectedGrievance && (
-        <motion.section
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          className="theme-bg-card theme-border-glass border rounded-xl p-4 mb-4"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-16 h-16 rounded-xl accent-gradient flex items-center justify-center text-white shadow-sm">
-                <Shield className="w-8 h-8" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.id}</h2>
-                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
-                    {selectedGrievance.priority ? `${selectedGrievance.priority.toUpperCase()} ${t('extracted.priority_tag')}` : '-'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 flex-wrap">
-                  <p className="theme-text-muted text-lg">{selectedGrievance.beneficiaryName}</p>
-                  <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted">{selectedGrievance.actType}</p>
-                  <span className="text-sm theme-text-muted">•</span>
-                  <p className="theme-text-muted">{t('extracted.created')}: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleDateString() : '—'}</p>
-                </div>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t('extracted.search_cases')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full sm:w-56 pl-8 pr-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setSelectedGrievance(null)} className="btn-cancel">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="border-b theme-border-glass mb-4">
-            <div className="flex overflow-x-auto">
-              {[
-                { id: 'overview', labelKey: 'extracted.tab_overview', icon: Eye },
-                { id: 'communication', labelKey: 'extracted.tab_communication', icon: MessageCircle },
-                { id: 'timeline', labelKey: 'extracted.tab_timeline', icon: Clock },
-                { id: 'documents', labelKey: 'extracted.tab_documents', icon: FileText },
-                { id: 'analytics', labelKey: 'extracted.tab_analytics', icon: BarChart3 }
-              ].map((tab) => (
+            <div className="flex items-center rounded-md border theme-border-glass p-0.5 shrink-0">
+              {([
+                { mode: 'dashboard', labelKey: 'extracted.dashboard_view' },
+                { mode: 'list', labelKey: 'extracted.list_view' }
+              ] as const).map(({ mode, labelKey }) => (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 theme-text-primary'
-                      : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`h-8 px-2.5 rounded text-xs font-medium transition-colors ${
+                    viewMode === mode ? 'theme-bg-glass theme-text-primary' : 'theme-text-muted hover:theme-bg-hover'
                   }`}
                 >
-                  <tab.icon className="w-4 h-4" />
-                  {t((tab as any).labelKey)}
+                  {t(labelKey)}
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="p-2">
-            {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-3">
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')}</h4>
-                    <p className="text-sm theme-text-muted">{selectedGrievance.beneficiaryName || '—'}</p>
-                    <p className="text-xs theme-text-muted mt-1">ID: {selectedGrievance.beneficiaryId || '—'}</p>
+        {viewMode === 'dashboard' ? (
+          <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {paginatedGrievances.map((grievance) => (
+              <div
+                key={grievance.id}
+                onClick={() => setSelectedGrievance(grievance)}
+                className="theme-bg-card theme-border-glass border rounded-lg p-3.5 cursor-pointer hover:theme-bg-hover transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+                      {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold theme-text-primary truncate">{grievance.beneficiaryName}</p>
+                      <p className="text-xs theme-text-muted truncate">{grievance.id}</p>
+                    </div>
                   </div>
+                  <span className={`${pillCls} ${getPriorityColor(grievance.priority)} shrink-0`}>
+                    {grievance.priority ? grievance.priority.toUpperCase() : '-'}
+                  </span>
+                </div>
 
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.contact')}</h4>
-                    <p className="text-sm theme-text-muted">{selectedGrievance.phone || '-'}</p>
-                    <p className="text-sm theme-text-muted">{selectedGrievance.email || '-'}</p>
+                <p className="text-[13px] theme-text-secondary line-clamp-2 mb-2.5">{grievance.description}</p>
+
+                <div className="grid grid-cols-3 gap-x-4 gap-y-2 mb-2.5">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.files')}</p>
+                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">{grievance.attachments}</p>
                   </div>
-
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.location')}</h4>
-                    <p className="text-sm theme-text-muted">{selectedGrievance.district || '-'}, {selectedGrievance.state || '-'}</p>
-                    <p className="text-xs theme-text-muted mt-1">{t('extracted.act')}: {selectedGrievance.actType || '-'}</p>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.messages')}</p>
+                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">{grievance.communication?.length ?? 0}</p>
                   </div>
-
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.identification')}</h4>
-                    <p className="text-sm theme-text-muted">{t('extracted.application_id')}: {selectedGrievance.applicationId || '—'}</p>
-                    <p className="text-sm theme-text-muted">{t('extracted.grievance_id')}: {selectedGrievance.id}</p>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.escalation')}</p>
+                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">L{grievance.escalationLevel}</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.case_details')}</h4>
-                    <p className="text-sm theme-text-muted"><strong>{t('extracted.category')}:</strong> {selectedGrievance.category || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>{t('extracted.sub_category')}:</strong> {selectedGrievance.subCategory || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>{t('extracted.priority')}:</strong> {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>{t('extracted.status')}:</strong> {selectedGrievance.status || '-'}</p>
-                    <p className="text-sm theme-text-muted"><strong>{t('extracted.assigned_to')}:</strong> {selectedGrievance.assignedTo || '-'}</p>
+                <div className="pt-2.5 border-t theme-border-glass flex items-center gap-2">
+                  <select
+                    onClick={(e) => e.stopPropagation()}
+                    value={grievance.status}
+                    onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(grievance.id, e.target.value); }}
+                    className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(grievance.status)}`}
+                  >
+                    {statuses.map(s => (
+                      <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>
+                    ))}
+                  </select>
+                  <div className="ml-auto flex items-center gap-0.5">
+                    <button
+                      className={iconBtn}
+                      aria-label={`View ${grievance.id}`}
+                      onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      className={iconBtn}
+                      aria-label={`Edit ${grievance.id}`}
+                      onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); setShowNewCaseModal(true); }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
                   </div>
+                </div>
+              </div>
+            ))}
+            {paginatedGrievances.length === 0 && (
+              <div className="md:col-span-2 py-10 text-center text-sm theme-text-muted">
+                {t('extracted.no_activity')}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Mobile Card View */}
+            <div className="lg:hidden p-3 grid grid-cols-1 gap-3">
+              {paginatedGrievances.map((g) => (
+                <div key={g.id} className="theme-bg-card theme-border-glass border rounded-lg p-3.5">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold theme-text-primary truncate">{g.beneficiaryName}</p>
+                      <p className="text-xs theme-text-muted truncate">{g.id} \u2022 {g.district}</p>
+                    </div>
+                    <span className={`${pillCls} ${getPriorityColor(g.priority)} shrink-0`}>
+                      {g.priority ? g.priority.toUpperCase() : '-'}
+                    </span>
+                  </div>
+                  <p className="text-[13px] theme-text-secondary line-clamp-2 mb-2.5">{g.description}</p>
+                  <div className="pt-2.5 border-t theme-border-glass flex items-center gap-2">
+                    <select
+                      value={g.status}
+                      onChange={(e) => updateGrievanceStatus(g.id, e.target.value)}
+                      className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(g.status)}`}
+                    >
+                      {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                    </select>
+                    <div className="ml-auto flex items-center gap-0.5">
+                      <button className={iconBtn} onClick={() => setSelectedGrievance(g)} aria-label={`View ${g.id}`}>
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className={iconBtn} onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} aria-label={`Edit ${g.id}`}>
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.timestamps')}</h4>
-                    <p className="text-sm theme-text-muted">{t('extracted.created')}: {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">{t('extracted.last_updated')}: {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">{t('extracted.expected_resolution')}: {selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '—'}</p>
-                    <p className="text-sm theme-text-muted">{t('extracted.resolution_date')}: {selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '—'}</p>
-                  </div>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b theme-border-glass">
+                  <tr className="whitespace-nowrap">
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">ID</th>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.beneficiary')}</th>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.district')}</th>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.priority')}</th>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.status')}</th>
+                    <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y theme-border-glass">
+                  {paginatedGrievances.map((g) => (
+                    <tr key={g.id} className="hover:theme-bg-hover transition-colors">
+                      <td className="py-2.5 px-3 text-[13px] font-medium theme-text-primary whitespace-nowrap">{g.id}</td>
+                      <td className="py-2.5 px-3 text-[13px] theme-text-primary">{g.beneficiaryName}</td>
+                      <td className="py-2.5 px-3 text-[13px] theme-text-muted">{g.district}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`${pillCls} ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <select
+                          value={g.status}
+                          onChange={(e) => updateGrievanceStatus(g.id, e.target.value)}
+                          className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(g.status)}`}
+                        >
+                          {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
+                        </select>
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <div className="inline-flex items-center gap-0.5">
+                          <button className={iconBtn} onClick={() => setSelectedGrievance(g)} aria-label={`View ${g.id}`}>
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button className={iconBtn} onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} aria-label={`Edit ${g.id}`}>
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {paginatedGrievances.length === 0 && (
+                <div className="py-10 text-center text-sm theme-text-muted">{t('extracted.no_activity')}</div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
 
-                  <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                    <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.attachments_communication')}</h4>
-                    <p className="text-sm theme-text-muted">{t('extracted.attachments_label')}: {selectedGrievance.attachments ?? 0}</p>
-                    <p className="text-sm theme-text-muted">{t('extracted.messages_label')}: {selectedGrievance.communication?.length ?? 0}</p>
-                    {(selectedGrievance.communication?.length ?? 0) > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {(selectedGrievance.communication ?? []).slice(0,3).map((c, i) => (
-                          <div key={i} className="text-xs theme-text-muted">
-                            <strong>{c.user || (t('extracted.user') || 'User')}:</strong> {String(c.text || c.message || c.body || '—')}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+      {/* Grievance Detail Inspector */}
+      {selectedGrievance && (
+        <section ref={detailRef} className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden scroll-mt-20">
+          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedGrievance.id}</h2>
+              <span className={`${pillCls} ${getPriorityColor(selectedGrievance.priority)} shrink-0`}>
+                {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}
+              </span>
+            </div>
+            <button onClick={() => setSelectedGrievance(null)} className={`${iconBtn} shrink-0`} aria-label="Close">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="px-4 border-b theme-border-glass flex overflow-x-auto">
+            {[
+              { id: 'overview', labelKey: 'extracted.tab_overview', icon: Eye },
+              { id: 'communication', labelKey: 'extracted.tab_communication', icon: MessageCircle },
+              { id: 'timeline', labelKey: 'extracted.tab_timeline', icon: Clock },
+              { id: 'documents', labelKey: 'extracted.tab_documents', icon: FileText },
+              { id: 'analytics', labelKey: 'extracted.tab_analytics', icon: BarChart3 }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2.5 -mb-px text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-[var(--accent-primary)] theme-text-primary'
+                    : 'border-transparent theme-text-muted hover:theme-text-primary'
+                }`}
+              >
+                <tab.icon className="w-3.5 h-3.5" />
+                {t((tab as any).labelKey)}
+              </button>
+            ))}
+          </div>
+
+          <div className="px-4 py-3.5">
+            {activeTab === 'overview' && (
+              <div className="space-y-4">
+                <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+                  <DetailItem label={t('extracted.beneficiary')} value={selectedGrievance.beneficiaryName || '\u2014'} />
+                  <DetailItem label="ID" value={selectedGrievance.beneficiaryId || '\u2014'} />
+                  <DetailItem label={t('extracted.phone_number') || 'Phone'} value={selectedGrievance.phone || '-'} />
+                  <DetailItem label={t('extracted.email') || 'Email'} value={selectedGrievance.email || '-'} />
+                  <DetailItem label={t('extracted.district')} value={`${selectedGrievance.district || '-'}, ${selectedGrievance.state || '-'}`} />
+                  <DetailItem label={t('extracted.act')} value={selectedGrievance.actType || '-'} />
+                </dl>
+
+                <div className="pt-4 border-t theme-border-glass">
+                  <SectionTitle>{t('extracted.case_details')}</SectionTitle>
+                  <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+                    <DetailItem label={t('extracted.category')} value={selectedGrievance.category || '-'} />
+                    <DetailItem label={t('extracted.sub_category')} value={selectedGrievance.subCategory || '-'} />
+                    <DetailItem label={t('extracted.priority')} value={selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'} />
+                    <DetailItem label={t('extracted.status')} value={selectedGrievance.status || '-'} />
+                    <DetailItem label={t('extracted.assigned_to')} value={selectedGrievance.assignedTo || '-'} />
+                    <DetailItem label={t('extracted.application_id')} value={selectedGrievance.applicationId || '\u2014'} />
+                  </dl>
+                </div>
+
+                <div className="pt-4 border-t theme-border-glass">
+                  <SectionTitle>{t('extracted.timestamps')}</SectionTitle>
+                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                    <DetailItem label={t('extracted.created')} value={selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '\u2014'} />
+                    <DetailItem label={t('extracted.last_updated')} value={selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '\u2014'} />
+                    <DetailItem label={t('extracted.expected_resolution')} value={selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '\u2014'} />
+                    <DetailItem label={t('extracted.resolution_date')} value={selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '\u2014'} />
+                  </dl>
+                </div>
+
+                <div className="pt-4 border-t theme-border-glass">
+                  <SectionTitle>{t('extracted.attachments_communication')}</SectionTitle>
+                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                    <DetailItem label={t('extracted.attachments_label')} value={selectedGrievance.attachments ?? 0} />
+                    <DetailItem label={t('extracted.messages_label')} value={selectedGrievance.communication?.length ?? 0} />
+                  </dl>
+                  {(selectedGrievance.communication?.length ?? 0) > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      {(selectedGrievance.communication ?? []).slice(0, 3).map((c, i) => (
+                        <div key={i} className="text-xs theme-text-muted">
+                          <span className="font-medium theme-text-secondary">{c.user || (t('extracted.user') || 'User')}:</span> {String(c.text || c.message || c.body || '\u2014')}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {activeTab === 'communication' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <MessageCircle className="w-5 h-5 theme-text-primary" />
-                  <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.communication_history') || 'Communication History'}</h3>
-                </div>
-
+              <div className="space-y-3">
                 <div
                   ref={chatRef}
-                  className="max-h-96 overflow-y-auto p-4 space-y-4 border theme-border-glass rounded-xl theme-bg-glass scroll-smooth"
+                  className="max-h-80 overflow-y-auto p-3 space-y-3 border theme-border-glass rounded-md theme-bg-glass scroll-smooth"
                 >
                   {(selectedGrievance.communication ?? []).length === 0 && pendingMessages.length === 0 ? (
                     <div className="text-center py-8">
-                      <MessageCircle className="w-10 h-10 theme-text-muted mx-auto mb-3 opacity-50" />
-                      <p className="theme-text-muted">{t('extracted.no_messages') || 'No messages yet'}</p>
-                      <p className="text-sm theme-text-muted mt-1">{t('extracted.start_conversation') || 'Start a conversation with the beneficiary'}</p>
+                      <MessageCircle className="w-8 h-8 theme-text-muted mx-auto mb-2 opacity-50" />
+                      <p className="text-sm theme-text-secondary">{t('extracted.no_messages') || 'No messages yet'}</p>
+                      <p className="text-xs theme-text-muted mt-1">{t('extracted.start_conversation') || 'Start a conversation with the beneficiary'}</p>
                     </div>
                   ) : (
                     <>
                       {(selectedGrievance.communication ?? []).map((c, i) => {
-                        const isOfficer = c.type !== 'user';
+                        const isOfficerMsg = c.type !== 'user';
                         return (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className={`flex items-start gap-3 ${isOfficer ? 'justify-end' : 'justify-start'}`}
-                          >
-                            {!isOfficer && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                                {c.user?.charAt(0)?.toUpperCase() || 'U'}
-                              </div>
-                            )}
-                            <div className={`max-w-xs lg:max-w-md ${isOfficer ? 'order-1' : 'order-2'}`}>
-                              <div className={`p-3 rounded-xl shadow-sm ${
-                                isOfficer
-                                  ? 'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm'
-                                  : 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-tl-sm'
-                              }`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  {!isOfficer && <Shield className="w-4 h-4 text-blue-500" />}
-                                  <span className={`text-xs font-medium ${!isOfficer ? 'text-blue-600' : 'theme-text-muted'}`}>
-                                    {!isOfficer ? (c.user || (t('extracted.user') || 'User')) : (t('extracted.officer') || 'Officer')}
-                                  </span>
-                                </div>
-                                <p className={`text-sm ${!isOfficer ? 'text-blue-700' : 'theme-text-primary'}`}>
-                                  {String(c.text || c.message || c.body || '')}
-                                </p>
-                                <p className={`text-xs mt-2 ${!isOfficer ? 'text-blue-500' : 'theme-text-muted'}`}>
-                                  {c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}
-                                </p>
-                              </div>
+                          <div key={i} className={`max-w-[85%] sm:max-w-md rounded-lg border p-3 ${isOfficerMsg ? 'ml-auto bg-blue-500/10 border-blue-500/20' : 'mr-auto theme-bg-card theme-border-glass'}`}>
+                            <div className="flex items-center justify-between gap-3 mb-1">
+                              <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                                {isOfficerMsg ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
+                              </span>
+                              <span className="text-[10px] theme-text-muted">
+                                {c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}
+                              </span>
                             </div>
-                            {isOfficer && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 order-2">
-                                {c.user?.charAt(0)?.toUpperCase() || 'U'}
-                              </div>
-                            )}
-                          </motion.div>
+                            <p className="text-[13px] theme-text-primary break-words">{String(c.text || c.message || c.body || '')}</p>
+                          </div>
                         );
                       })}
                       {pendingMessages.map((c, i) => (
-                        <motion.div
-                          key={`pending-${i}`}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex items-start gap-3 justify-end"
-                        >
-                          <div className="max-w-xs lg:max-w-md">
-                            <div className="p-3 rounded-xl shadow-sm bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm opacity-70">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Shield className="w-4 h-4 text-blue-500" />
-                                <span className="text-xs font-medium text-blue-600">
-                                  {t('extracted.officer') || 'Officer'}
-                                </span>
-                              </div>
-                              <p className="text-sm text-blue-700">{c.text}</p>
-                              <p className="text-xs mt-2 text-blue-500">
-                                {t('extracted.sending') || 'Sending...'}
-                              </p>
-                            </div>
+                        <div key={`pending-${i}`} className="max-w-[85%] sm:max-w-md ml-auto rounded-lg border p-3 opacity-60 bg-blue-500/10 border-blue-500/20">
+                          <div className="flex items-center justify-between gap-3 mb-1">
+                            <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.officer') || 'Officer'}</span>
+                            <span className="text-[10px] theme-text-muted">{t('extracted.sending') || 'Sending...'}</span>
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                            <Shield className="w-4 h-4" />
-                          </div>
-                        </motion.div>
+                          <p className="text-[13px] theme-text-primary break-words">{c.text}</p>
+                        </div>
                       ))}
                     </>
                   )}
                 </div>
 
-                <div className="flex gap-3">
-                  <div className="flex-1 relative">
-                    <input
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                      placeholder={t('extracted.write_message') || 'Write a message...'}
-                      className="w-full px-3 py-2.5 pr-20 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                      {recognition && (
-                        <button
-                          onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                          className={`p-2 rounded-lg transition-all hover:shadow-sm ${
-                            isRecording
-                              ? 'bg-red-500 text-white animate-pulse'
-                              : 'accent-gradient text-white hover:opacity-90'
-                          }`}
-                          aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
-                          title={isRecording ? 'Stop recording' : 'Start voice recording'}
-                        >
-                          {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                        </button>
-                      )}
-                      <button
-                        onClick={sendMessage}
-                        disabled={!newMessage.trim()}
-                        className="p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-sm"
-                        aria-label={t('extracted.send_message') || 'Send message'}
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder={t('extracted.write_message') || 'Write a message...'}
+                    className={`${inputCls} flex-1`}
+                  />
+                  {recognition && (
+                    <button
+                      onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                      className={`h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md transition-colors ${
+                        isRecording ? 'bg-red-500 text-white animate-pulse' : 'border theme-border-glass theme-text-secondary hover:theme-bg-glass'
+                      }`}
+                      aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+                      title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                    >
+                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </button>
+                  )}
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                    aria-label={t('extracted.send_message') || 'Send message'}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )}
 
             {activeTab === 'timeline' && (
-              <div className="space-y-3">
-                <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.created')}:</strong> {selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '—'}</p>
-                  <p className="text-sm theme-text-muted"><strong>{t('extracted.last_updated')}:</strong> {selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '—'}</p>
-                </div>
-                <div className="p-3 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.activity')}</h4>
-                  {(selectedGrievance.communication ?? []).length === 0 ? <p className="theme-text-muted">{t('extracted.no_activity')}</p> : (
+              <div className="space-y-4">
+                <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                  <DetailItem label={t('extracted.created')} value={selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '\u2014'} />
+                  <DetailItem label={t('extracted.last_updated')} value={selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '\u2014'} />
+                </dl>
+                <div className="pt-4 border-t theme-border-glass">
+                  <SectionTitle>{t('extracted.activity')}</SectionTitle>
+                  {(selectedGrievance.communication ?? []).length === 0 ? (
+                    <p className="text-sm theme-text-muted">{t('extracted.no_activity')}</p>
+                  ) : (
                     <ul className="list-disc pl-5 space-y-2">
                       {(selectedGrievance.communication ?? []).map((c, i) => (
                         <li key={i} className="text-sm theme-text-muted flex items-start gap-2">
-                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500 mt-0.5 flex-shrink-0" />}
+                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />}
                           <span>
-                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))} — {String(c.text || c.message || c.body || '')}
+                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))} \u2014 {String(c.text || c.message || c.body || '')}
                             <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span>
                           </span>
                         </li>
@@ -1626,879 +1463,331 @@ const GrievancePage = () => {
             )}
 
             {activeTab === 'documents' && (
-              <div className="space-y-3">
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.attachments_label')}</h4>
-                  <p className="text-sm theme-text-muted">{t('extracted.count')}: {selectedGrievance.attachments ?? 0}</p>
-                  <p className="text-xs theme-text-muted">{t('extracted.upload_download_note')}</p>
-                </div>
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                  <label className="text-sm theme-text-muted">{t('extracted.add_document_not_implemented')}</label>
-                  <input type="file" disabled className="mt-2" />
+              <div className="space-y-4">
+                <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                  <DetailItem label={t('extracted.attachments_label')} value={selectedGrievance.attachments ?? 0} />
+                </dl>
+                <p className="text-xs theme-text-muted">{t('extracted.upload_download_note')}</p>
+                <div className="pt-4 border-t theme-border-glass">
+                  <Label>{t('extracted.add_document_not_implemented')}</Label>
+                  <input type="file" disabled className="block text-xs theme-text-muted" />
                 </div>
               </div>
             )}
 
             {activeTab === 'analytics' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.communication?.length ?? 0}</div>
-                  <div className="text-sm theme-text-muted">{t('extracted.messages')}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px theme-bg-glass theme-border-glass border rounded-lg overflow-hidden">
+                <div className="theme-bg-card p-3.5 text-center">
+                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{selectedGrievance.communication?.length ?? 0}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.messages')}</p>
                 </div>
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.attachments ?? 0}</div>
-                  <div className="text-sm theme-text-muted">{t('extracted.attachments_label')}</div>
+                <div className="theme-bg-card p-3.5 text-center">
+                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{selectedGrievance.attachments ?? 0}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.attachments_label')}</p>
                 </div>
-                <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{(() => {
+                <div className="theme-bg-card p-3.5 text-center">
+                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{(() => {
                     const created = selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).getTime() : Date.now();
                     const diff = Date.now() - created;
                     return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
-                  })()}</div>
-                  <div className="text-sm theme-text-muted">{t('extracted.days_open')}</div>
+                  })()}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.days_open')}</p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={async (e) => { e.stopPropagation(); await resolveCase(); }}
-                disabled={statusUpdating === selectedGrievance?.id || selectedGrievance?.status === 'closed'}
-                className={`action-btn ${statusUpdating === selectedGrievance?.id ? 'opacity-60 cursor-wait' : ''} ${selectedGrievance?.status === 'closed' ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <CheckCircle className="w-4 h-4" />
-                {selectedGrievance?.status === 'closed' ? (t('extracted.resolved') || 'Resolved') : (t('extracted.resolve_case') || 'Resolve')}
-              </motion.button>
-              {selectedGrievance?.phone ? (
-                <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  href={`tel:${selectedGrievance.phone.trim()}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="action-btn"
-                  aria-label={t('extracted.call_now')}
-                >
-                  <PhoneCall className="w-4 h-4" />
-                  {t('extracted.call_now')}
-                </motion.a>
-              ) : (
-                <motion.button whileHover={{}} whileTap={{}} className="action-btn opacity-50 cursor-not-allowed" aria-disabled>
-                  <PhoneCall className="w-4 h-4" />
-                  {t('extracted.call_now')}
-                </motion.button>
-              )}
-
-              {selectedGrievance?.email ? (
-                <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  href={`mailto:${selectedGrievance.email.trim()}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="action-btn"
-                  aria-label={t('extracted.send_email')}
-                >
-                  <Mail className="w-4 h-4" />
-                  {t('extracted.send_email')}
-                </motion.a>
-              ) : (
-                <motion.button whileHover={{}} whileTap={{}} className="action-btn opacity-50 cursor-not-allowed" aria-disabled>
-                  <Mail className="w-4 h-4" />
-                  {t('extracted.send_email')}
-                </motion.button>
-              )}
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="action-btn action-btn-accent">
-                <AlertOctagon className="w-4 h-4" />
-                {t('extracted.escalate_case')}
-              </motion.button>
+          <div className="px-4 py-3 border-t theme-border-glass flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => resolveCase()}
+              disabled={statusUpdating === selectedGrievance?.id || selectedGrievance?.status === 'closed'}
+              className={`${ghostBtn} ${statusUpdating === selectedGrievance?.id ? 'opacity-60 cursor-wait' : ''}`}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              {selectedGrievance?.status === 'closed' ? (t('extracted.resolved') || 'Resolved') : (t('extracted.resolve_case') || 'Resolve')}
+            </button>
+            {selectedGrievance?.phone ? (
+              <a href={`tel:${selectedGrievance.phone.trim()}`} target="_blank" rel="noreferrer" className={ghostBtn} aria-label={t('extracted.call_now')}>
+                <PhoneCall className="w-3.5 h-3.5" />
+                {t('extracted.call_now')}
+              </a>
+            ) : (
+              <button disabled className={ghostBtn} aria-disabled>
+                <PhoneCall className="w-3.5 h-3.5" />
+                {t('extracted.call_now')}
+              </button>
+            )}
+            {selectedGrievance?.email ? (
+              <a href={`mailto:${selectedGrievance.email.trim()}`} target="_blank" rel="noreferrer" className={ghostBtn} aria-label={t('extracted.send_email')}>
+                <Mail className="w-3.5 h-3.5" />
+                {t('extracted.send_email')}
+              </a>
+            ) : (
+              <button disabled className={ghostBtn} aria-disabled>
+                <Mail className="w-3.5 h-3.5" />
+                {t('extracted.send_email')}
+              </button>
+            )}
+            <button className={`${primaryBtn} ml-auto`}>
+              <AlertOctagon className="w-3.5 h-3.5" />
+              {t('extracted.escalate_case')}
+            </button>
           </div>
-        </motion.section>
+        </section>
       )}
 
-      {/* Dashboard Grid - New Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-5">
-        {/* Analytics Sidebar */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="xl:col-span-1 order-2 xl:order-1"
-        >
-          {/* Quick Stats */}
-          <div className="theme-bg-card theme-border-glass border rounded-xl p-5 glass-effect">
-            <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_analytics')} </h3>
-            <div className="space-y-4">
-              {[
-                { labelKey: 'extracted.active_cases_label', value: stats.open + stats.inProgress, trend: '+8%', icon: AlertCircle, color: 'from-amber-500 to-orange-500' },
-                { labelKey: 'extracted.avg_resolution_label', value: `${stats.avgResolutionTime}d`, trend: '-1.2d', icon: Timer, color: 'from-blue-500 to-cyan-500' },
-                { labelKey: 'extracted.satisfaction_label', value: `${stats.satisfactionRate}%`, trend: '+5%', icon: Star, color: 'from-yellow-500 to-amber-500' },
-                { labelKey: 'extracted.escalated_label', value: stats.escalated, trend: '+2', icon: AlertOctagon, color: 'from-red-500 to-rose-500' }
-              ].map((stat, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl theme-bg-glass">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                      <stat.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold theme-text-primary">{stat.value}</p>
-                      <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-semibold ${stat.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                    {stat.trend}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+      {/* Sidebar + Performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {/* Quick Actions */}
-          <div className="my-8 theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect">
-            <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.quick_actions_1')} </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-3">
+          <div className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary">{t('extracted.quick_actions')}</h2>
+            </div>
+            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
               {[
-                { labelKey: 'extracted.assign_cases', icon: UserCheck, color: 'bg-blue-500/20 text-blue-400' },
-                { labelKey: 'extracted.bulk_update', icon: Edit, color: 'bg-purple-500/20 text-purple-400' },
-                { labelKey: 'extracted.generate_report', icon: FileText, color: 'bg-green-500/20 text-green-400' },
-                { labelKey: 'extracted.call_center', icon: PhoneCall, color: 'bg-orange-500/20 text-orange-400' }
-              ].map((action, idx) => (
-                <motion.button
-                  key={idx}
-                  whileHover={{ x: 4 }}
-                  className={`w-full flex flex-col lg:flex-row items-center gap-1 lg:gap-3 p-2 lg:p-3 rounded-lg lg:rounded-xl ${action.color} transition-colors`}
+                { key: 'escalate', icon: AlertOctagon, labelKey: 'extracted.escalate_urgent_cases', onClick: () => setShowExportModal(false), badge: stats.escalated },
+                { key: 'assign', icon: UserCheck, labelKey: 'extracted.assign_officers', onClick: () => setSelectedGrievance(null) },
+                { key: 'report', icon: FileText, labelKey: 'extracted.generate_report', onClick: () => setShowExportModal(true) },
+                { key: 'analytics', icon: BarChart3, labelKey: 'extracted.view_analytics', onClick: () => setViewMode('list') }
+              ].map((action) => (
+                <button
+                  key={action.key}
+                  onClick={action.onClick}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-md border theme-border-glass theme-bg-glass text-left hover:theme-bg-hover transition-colors group"
                 >
-                  <action.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span className="font-medium text-xs lg:text-sm text-center lg:text-left">{t(action.labelKey)}</span>
-                </motion.button>
+                  <span className="w-7 h-7 rounded-md theme-bg-card theme-border-glass border inline-flex items-center justify-center shrink-0 group-hover:text-[var(--accent-primary)] transition-colors">
+                    <action.icon className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="text-[13px] font-medium theme-text-primary truncate">{t(action.labelKey)}</span>
+                  {'badge' in action && typeof action.badge === 'number' && action.badge > 0 ? (
+                    <span className="ml-auto pillCls text-[10px] bg-red-500/15 text-red-500 shrink-0 tabular-nums">{action.badge}</span>
+                  ) : null}
+                </button>
               ))}
             </div>
           </div>
 
           {/* Category Distribution */}
-          <div className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect">
-            <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.case_categories')} </h3>
-            <div className="space-y-2 lg:space-y-3">
-              {Object.entries(categoryStats).map(([category, count], idx) => {
-                const Icon = getCategoryIcon(category);
-                const categoryKey = `extracted.${category.replace('-', '_')}`;
+          <div className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b theme-border-glass">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary">{t('extracted.category_distribution')}</h2>
+            </div>
+            <ul className="p-3 space-y-2">
+              {(Object.entries(categoryStats) as [string, number][]).map(([key, count]) => {
+                const Icon = getCategoryIcon(key);
+                const total = grievances.length || 1;
                 return (
-                  <div key={idx} className="flex items-center justify-between p-2 lg:p-3 rounded-lg lg:rounded-xl theme-bg-glass">
-                    <div className="flex items-center gap-2 lg:gap-3">
-                      <Icon className="w-4 h-4 lg:w-5 lg:h-5 theme-text-primary" />
-                      <span className="text-sm lg:text-base theme-text-primary">{t(categoryKey)}</span>
+                  <li key={key} className="flex items-center gap-2.5">
+                    <span className="w-6 h-6 rounded-md theme-bg-glass inline-flex items-center justify-center shrink-0">
+                      <Icon className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-[13px] theme-text-secondary truncate capitalize">
+                      {key.replace(/-/g, ' ')}
+                    </span>
+                    <div className="ml-auto flex items-center gap-2 min-w-[72px]">
+                      <div className="h-1 w-full rounded-full theme-bg-glass overflow-hidden">
+                        <div className="h-full accent-gradient rounded-full transition-all" style={{ width: `${Math.round((count / total) * 100)}%` }} />
+                      </div>
+                      <span className="text-xs font-medium theme-text-muted tabular-nums w-5 text-right">{count}</span>
                     </div>
-                    <span className="text-sm lg:text-base theme-text-muted">{count}</span>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Main Content Area */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="xl:col-span-3 order-1 xl:order-2 space-y-4 lg:space-y-5"
-          >
-          {/* View Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl lg:text-lg font-semibold tracking-tight theme-text-primary">
-                {t('extracted.active_cases')} <span className="theme-text-muted text-lg lg:text-xl">({filteredGrievances.length})</span>
-              </h2>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-              {/* Search */}
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
-                <input
-                  type="text"
-                  placeholder={t('extracted.search_cases')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-64 pl-9 lg:pl-10 pr-4 py-2.5 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm lg:text-base"
-                />
-              </div>
-
-              {/* View Toggle */}
-              <div className="flex items-center gap-2 theme-bg-glass rounded-xl p-1">
-                {[
-                  { mode: 'dashboard', labelKey: 'extracted.dashboard_view' },
-                  { mode: 'list', labelKey: 'extracted.list_view' }
-                ].map(({ mode, labelKey }) => (
-                  <motion.button
-                    key={mode}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setViewMode(mode as 'dashboard' | 'list')}
-                    className={`px-3 lg:px-3.5 py-2 rounded-md text-sm lg:text-base ${
-                      viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
-                    }`}
-                  >
-                    {t(labelKey)}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
+        {/* Performance Overview */}
+        <div className="lg:col-span-2 theme-bg-card theme-border-glass border rounded-lg overflow-hidden self-start">
+          <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold tracking-tight theme-text-primary">{t('extracted.performance_overview')}</h2>
+            <span className={`${pillCls} theme-bg-glass theme-text-muted`}>
+              {t('extracted.sla_compliance')}: 94%
+            </span>
           </div>
 
-          {/* Cases Grid / List - separate dashboard and list layouts */}
-          {viewMode === 'dashboard' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
-              {paginatedGrievances.map((grievance, idx) => (
-                <motion.div
-                  key={grievance.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.06 }}
-                  whileHover={{ y: -6, scale: 1.02 }}
-                  className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect cursor-pointer group"
-                  onClick={() => setSelectedGrievance(grievance)}
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3 lg:mb-4">
-                    <div className="flex items-center gap-2 lg:gap-3">
-                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
-                        <div className="text-xs lg:text-sm font-bold">
-                          {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
-                        </div>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold theme-text-primary group-hover:text-accent-gradient transition-colors text-sm lg:text-base line-clamp-1">
-                          {grievance.beneficiaryName}
-                        </h3>
-                        <p className="theme-text-muted text-xs lg:text-sm">{grievance.id}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
-                      <span className={`px-2 lg:px-3 py-1 text-xs font-bold rounded-full ${getPriorityColor(grievance.priority)}`}>
-                        {grievance.priority ? grievance.priority.toUpperCase() : '-'}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border-b theme-border-glass">
+            <StatCell label={t('extracted.avg_first_response')} value="2.4h" />
+            <StatCell label={t('extracted.resolution_rate')} value={stats.total > 0 ? `${Math.round(((stats.resolved + stats.closed) / stats.total) * 100)}%` : '0%'} />
+            <StatCell label={t('extracted.open_over_7d')} value={grievances.filter(g => {
+              if (!g.createdDate || g.status === 'closed' || g.status === 'resolved') return false;
+              return Date.now() - new Date(g.createdDate).getTime() > 7 * 24 * 60 * 60 * 1000;
+            }).length} />
+            <StatCell label={t('extracted.high_priority_open')} value={stats.highPriority} />
+          </div>
+
+          <div className="p-3">
+            <SectionTitle>{t('extracted.recent_activity')}</SectionTitle>
+            <ul className="space-y-1.5">
+              {[...grievances]
+                .sort((a, b) => new Date(b.lastUpdated || b.createdDate || 0).getTime() - new Date(a.lastUpdated || a.createdDate || 0).getTime())
+                .slice(0, 5)
+                .map((g) => {
+                  const Icon = getCategoryIcon(g.category || '');
+                  return (
+                    <li
+                      key={g.id}
+                      onClick={() => setSelectedGrievance(g)}
+                      className="flex items-center gap-2.5 px-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:theme-bg-hover transition-colors"
+                    >
+                      <span className="w-6 h-6 rounded-md theme-bg-glass inline-flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5" />
                       </span>
-                      <button className="p-1 rounded-lg theme-bg-glass hover:theme-bg-card transition-colors border theme-border-glass">
-                        <MoreVertical className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="theme-text-secondary text-xs lg:text-sm mb-3 lg:mb-4 line-clamp-2">
-                    {grievance.description}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-3 lg:mb-4">
-                    <div className="text-center">
-                      <p className="text-sm lg:text-lg font-bold theme-text-primary">{grievance.attachments}</p>
-                      <p className="theme-text-muted text-xs">{t('extracted.files')} </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm lg:text-lg font-bold theme-text-primary">{grievance.communication?.length ?? 0}</p>
-                      <p className="theme-text-muted text-xs">{t('extracted.messages')} </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm lg:text-lg font-bold theme-text-primary">L{grievance.escalationLevel}</p>
-                      <p className="theme-text-muted text-xs">{t('extracted.escalation')} </p>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 lg:pt-4 border-t theme-border-glass">
-                      <div className="flex-1 mr-2">
-                        <select
-                          onClick={(e) => e.stopPropagation()}
-                          value={grievance.status}
-                          onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(grievance.id, e.target.value); }}
-                          className={`w-full px-2 lg:px-3 py-1 rounded-full text-xs font-bold ${theme === 'light' ? 'bg-white border' : 'theme-bg-glass theme-border-glass'} ${getStatusColor(grievance.status)}`}
-                        >
-                          {statuses.map(s => (
-                            <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>
-                          ))}
-                        </select>
-                      </div>
-                    <div className="flex items-center gap-1">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
-                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20 transition-colors border theme-border-glass"
-                        aria-label={`View ${grievance.id}`}
-                      >
-                        <Eye className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); setShowNewCaseModal(true); }}
-                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-yellow-500/20 transition-colors border theme-border-glass"
-                        aria-label={`Edit ${grievance.id}`}
-                      >
-                        <Edit className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => { e.stopPropagation(); /* placeholder for call action */ }}
-                        className="p-1.5 lg:p-2 rounded-lg theme-bg-glass hover:bg-green-500/20 transition-colors border theme-border-glass"
-                        aria-label={`Call ${grievance.id}`}
-                      >
-                        <PhoneCall className="w-3 h-3 lg:w-4 lg:h-4 theme-text-primary" />
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            // List view: responsive layout
-            <div>
-              {/* Mobile/Tablet Card View */}
-              <div className="block lg:hidden space-y-3 lg:space-y-4">
-                {paginatedGrievances.map((g) => (
-                  <div key={g.id} className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-3 lg:p-4 glass-effect">
-                    <div className="flex items-center justify-between">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold theme-text-primary text-sm lg:text-base line-clamp-1">{g.beneficiaryName}</p>
-                        <p className="text-xs theme-text-muted">{g.id} • {g.district}</p>
-                      </div>
-                      <div className="text-right ml-2">
-                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
-                        <div className="mt-2 flex items-center justify-end gap-1">
-                          <select onClick={(e) => e.stopPropagation()} value={g.status} onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(g.id, e.target.value); }} className={`px-2 py-1 rounded-md text-xs ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-                            {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                          </select>
-                          <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-1.5 rounded-lg theme-bg-glass border theme-border-glass">
-                            <Edit className="w-3 h-3 theme-text-primary" />
-                          </button>
-                          <button onClick={() => setSelectedGrievance(g)} className="p-1.5 rounded-lg theme-bg-glass border theme-border-glass">
-                            <Eye className="w-3 h-3 theme-text-primary" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="theme-text-secondary text-xs lg:text-sm mt-2 line-clamp-2">{g.description}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden lg:block theme-bg-card theme-border-glass border rounded-xl overflow-auto">
-                <table className="min-w-full table-fixed">
-                  <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
-                    <tr>
-                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
-                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
-                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
-                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} <span className="text-red-500">⬇</span></th>
-                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
-                      <th className={`px-3 py-2.5 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedGrievances.map((g) => (
-                      <tr key={g.id} className={`border-b ${theme === 'light' ? 'border-gray-200 hover:bg-gray-50' : 'theme-border-glass hover:bg-theme-bg-glass'} transition-colors`}>
-                        <td className="px-3 py-2.5 text-sm theme-text-primary">{g.id}</td>
-                        <td className="px-3 py-2.5 text-sm theme-text-primary">{g.beneficiaryName}</td>
-                        <td className="px-3 py-2.5 text-sm theme-text-muted">{g.district}</td>
-                        <td className="px-3 py-2.5 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
-                        <td className="px-3 py-2.5 text-sm theme-text-muted">
-                          <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
-                            {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-3 py-2.5 text-sm text-right">
-                          <div className="inline-flex items-center gap-2">
-                            <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`Edit ${g.id}`}>
-                              <Edit className="w-4 h-4 theme-text-primary" />
-                            </button>
-                            <button onClick={() => setSelectedGrievance(g)} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`View ${g.id}`}>
-                              <Eye className="w-4 h-4 theme-text-primary" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Performance Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
-            {/* Resolution Metrics */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect"
-            >
-              <div className="flex items-center justify-between mb-4 lg:mb-6">
-                          <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
-                <Target className="w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
-              </div>
-                        <div className="space-y-3 lg:space-y-4">
-                          {/* Compute SLA buckets dynamically */}
-                          {(() => {
-                            const totalWithExpected = grievances.filter(g => g.expectedResolution).length || grievances.length || 1;
-                            const now = new Date();
-                            let within = 0, near = 0, breached = 0;
-                            grievances.forEach(g => {
-                              const exp = g.expectedResolution ? new Date(g.expectedResolution) : null;
-                              const res = g.resolutionDate ? new Date(g.resolutionDate) : null;
-                              if (exp) {
-                                if (res) {
-                                  if (res <= exp) within += 1; else breached += 1;
-                                } else {
-                                  if (exp < now) breached += 1;
-                                  else {
-                                    const daysLeft = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-                                    if (daysLeft <= 2) near += 1; else within += 1;
-                                  }
-                                }
-                              }
-                            });
-                            const withinPct = Math.round((within / totalWithExpected) * 100);
-                            const nearPct = Math.round((near / totalWithExpected) * 100);
-                            const breachedPct = 100 - withinPct - nearPct;
-                            const metrics = [
-                              { label: t('extracted.within_sla'), value: withinPct, color: 'bg-green-500' },
-                              { label: t('extracted.near_sla'), value: nearPct, color: 'bg-amber-500' },
-                              { label: t('extracted.breached_sla'), value: breachedPct, color: 'bg-red-500' }
-                            ];
-                            return metrics.map((metric) => (
-                              <div key={metric.label} className="space-y-1 lg:space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className={`text-xs lg:text-sm ${theme === 'light' ? 'text-gray-700' : 'theme-text-primary'}`}>{metric.label}</span>
-                                  <span className={`text-xs lg:text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'theme-text-primary'}`}>{metric.value}%</span>
-                                </div>
-                                <div className={`w-full rounded-full h-1.5 lg:h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`}>
-                                  <div 
-                                    className={`h-1.5 lg:h-2 rounded-full ${metric.color} transition-all duration-1000`}
-                                    style={{ width: `${metric.value}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-            </motion.div>
-
-            {/* Recent Activity */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect"
-            >
-              <div className="flex items-center justify-between mb-4 lg:mb-6">
-                <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.recent_updates')} </h3>
-                <Activity className="w-4 h-4 lg:w-5 lg:h-5 theme-text-muted" />
-              </div>
-              <div className="space-y-3 lg:space-y-4">
-                {(() => {
-                  // Build recent activities from grievances
-                  const now = new Date();
-                  const recent: { action: string; user: string; time: string; status: 'success' | 'warning' | 'info' | 'error' }[] = [];
-                  const seen = new Set<string>();
-                  const items = [...grievances].sort((a, b) => {
-                    const aTime = new Date(a.lastUpdated || a.createdDate || '').getTime() || 0;
-                    const bTime = new Date(b.lastUpdated || b.createdDate || '').getTime() || 0;
-                    return bTime - aTime;
-                  });
-                  const withinWindowMs = 1000 * 60 * 60 * 24 * 7; // 7 days
-                  for (const g of items) {
-                    if (recent.length >= 4) break;
-                    const lu = new Date(g.lastUpdated || g.createdDate || now.toISOString());
-                    if (now.getTime() - lu.getTime() > withinWindowMs) continue;
-                    const timeLabel = (() => {
-                      const mins = Math.round((now.getTime() - lu.getTime()) / 60000);
-                      if (mins < 60) return `${mins} min ago`;
-                      const hrs = Math.round(mins / 60);
-                      if (hrs < 24) return `${hrs} hr ago`;
-                      const days = Math.round(hrs / 24);
-                      return `${days} day${days > 1 ? 's' : ''} ago`;
-                    })();
-
-                    if (g.status === 'resolved' && !seen.has('resolved')) {
-                      recent.push({ action: t('extracted.case_resolved') || 'Case Resolved', user: g.assignedTo || g.beneficiaryName || 'System', time: timeLabel, status: 'success' });
-                      seen.add('resolved');
-                      continue;
-                    }
-                    if ((g.escalationLevel || 0) > 0 && !seen.has('escalation')) {
-                      recent.push({ action: t('extracted.new_escalation') || 'New Escalation', user: 'System', time: timeLabel, status: 'warning' });
-                      seen.add('escalation');
-                      continue;
-                    }
-                    if ((g.attachments || 0) > 0 && !seen.has('document')) {
-                      recent.push({ action: t('extracted.document_uploaded') || 'Document Uploaded', user: t('extracted.beneficiary_user') || g.beneficiaryName || 'Beneficiary', time: timeLabel, status: 'info' });
-                      seen.add('document');
-                      continue;
-                    }
-                    if (g.followUpRequired && !seen.has('followup')) {
-                      recent.push({ action: t('extracted.followup_required') || 'Follow-up Required', user: g.assignedTo || 'Officer', time: timeLabel, status: 'error' });
-                      seen.add('followup');
-                      continue;
-                    }
-                  }
-                  // Fallback: if no recent activities found, synthesize a dynamic event from the latest item
-                  if (recent.length === 0 && items.length) {
-                    const latest = items[0];
-                    const lu = new Date(latest.lastUpdated || latest.createdDate || new Date().toISOString());
-                    const timeLabel = (() => {
-                      const mins = Math.round((now.getTime() - lu.getTime()) / 60000);
-                      if (mins < 1) return 'just now';
-                      if (mins < 60) return `${mins} min ago`;
-                      const hrs = Math.round(mins / 60);
-                      if (hrs < 24) return `${hrs} hr ago`;
-                      const days = Math.round(hrs / 24);
-                      return `${days} day${days > 1 ? 's' : ''} ago`;
-                    })();
-
-                    let action = t('extracted.case_updated') || 'Updated';
-                    let statusLabel: 'success' | 'warning' | 'info' | 'error' = 'info';
-                    if (latest.status === 'resolved' || latest.status === 'closed') {
-                      action = t('extracted.case_resolved') || 'Case Resolved';
-                      statusLabel = 'success';
-                    } else if ((latest.escalationLevel || 0) > 0) {
-                      action = t('extracted.new_escalation') || 'New Escalation';
-                      statusLabel = 'warning';
-                    } else if ((latest.attachments || 0) > 0) {
-                      action = t('extracted.document_uploaded') || 'Document Uploaded';
-                      statusLabel = 'info';
-                    } else if (latest.followUpRequired) {
-                      action = t('extracted.followup_required') || 'Follow-up Required';
-                      statusLabel = 'error';
-                    } else if ((latest.communication?.length ?? 0) > 0) {
-                      action = t('extracted.new_message') || 'New Message';
-                      statusLabel = 'info';
-                    }
-
-                    recent.push({ action, user: latest.assignedTo || latest.beneficiaryName || 'System', time: timeLabel, status: statusLabel });
-                  }
-                  return recent.map((activity, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass">
-                      <div className={`w-2 h-2 rounded-full ${
-                        activity.status === 'success' ? 'bg-green-500' :
-                        activity.status === 'warning' ? 'bg-amber-500' :
-                        activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium theme-text-primary truncate">{activity.action}</p>
-                        <p className="text-xs theme-text-muted truncate">{activity.user} • {activity.time}</p>
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 theme-text-muted flex-shrink-0" />
-                    </div>
-                  ));
-                })()}
-              </div>
-            </motion.div>
+                      <span className="text-[13px] font-medium theme-text-primary truncate">{g.beneficiaryName}</span>
+                      <ArrowUpRight className="w-3 h-3 theme-text-muted shrink-0 opacity-0 group-hover:opacity-100" />
+                      <span className="ml-auto text-xs theme-text-muted whitespace-nowrap hidden sm:inline">
+                        {new Date(g.lastUpdated || g.createdDate || Date.now()).toLocaleDateString()}
+                      </span>
+                      <span className={`${pillCls} ${getStatusColor(g.status)} shrink-0`}>
+                        {(g.status || '-').replace('-', ' ').toUpperCase()}
+                      </span>
+                    </li>
+                  );
+                })}
+              {grievances.length === 0 && (
+                <li className="py-8 text-center text-sm theme-text-muted">{t('extracted.no_activity')}</li>
+              )}
+            </ul>
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Feedback Section */}
-      {user && profile?.role === 'officer' ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="relative p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-        >
-        {/* Animated gradient background */}
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"
-        />
-
-        <div className="relative z-10">
-          {/* Enhanced Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-6">
-            <div className="text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-                <motion.div
-                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Star className="w-5 h-5 text-white" />
-                </motion.div>
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
-                    {t('extracted.feedback_analytics.userFeedback')}
-                  </h2>
-                  <p className="text-sm theme-text-secondary">
-                    {feedbacks.length} {feedbacks.length === 1 ? t('extracted.feedback_analytics.submissions').toLowerCase().slice(0, -1) : t('extracted.feedback_analytics.submissions').toLowerCase()} • {t('extracted.feedback_analytics.averageRating', { rating: sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '0.0' })}
-                  </p>
-                </div>
-              </div>
-              <p className="theme-text-muted max-w-md mx-auto lg:mx-0">
-                {t('extracted.feedback_analytics.insightsFromUserExperiences')}
-              </p>
-            </div>
-
-            {/* Enhanced Sort Controls */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium theme-text-secondary hidden sm:inline">{t('extracted.feedback_analytics.sortBy')}</span>
-                <div className="relative">
-                  <select
-                    value={feedbackSortBy}
-                    onChange={(e) => setFeedbackSortBy(e.target.value as 'rating' | 'createdAt')}
-                    className="appearance-none px-4 py-2 pr-8 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all cursor-pointer hover:theme-bg-glass-hover"
-                  >
-                    <option value="createdAt">{t('extracted.feedback_analytics.dateCreated').replace('📅 ', '')}</option>
-                    <option value="rating">{t('extracted.feedback_analytics.rating')}</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 theme-text-muted pointer-events-none" />
-                </div>
-              </div>
-              <motion.button
-                onClick={() => setFeedbackSortOrder(feedbackSortOrder === 'asc' ? 'desc' : 'asc')}
-                className="p-2 rounded-xl theme-bg-glass theme-border-glass border hover:theme-bg-glass-hover transition-all duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title={feedbackSortOrder === 'asc' ? t('extracted.feedback_analytics.sortDescending') : t('extracted.feedback_analytics.sortAscending')}
-              >
-                <ArrowUpRight className={`w-4 h-4 theme-text-secondary transition-transform duration-200 ${feedbackSortOrder === 'asc' ? 'rotate-90' : '-rotate-90'}`} />
-              </motion.button>
-            </div>
+      {/* Beneficiary Feedback */}
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{t('extracted.beneficiary_feedback')}</h2>
+            <span className="text-xs theme-text-muted tabular-nums">({sortedFeedbacks.length})</span>
           </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted hidden sm:inline">{t('extracted.sort_by')}</span>
+            <select
+              value={feedbackSortBy}
+              onChange={(e) => setFeedbackSortBy(e.target.value as 'rating' | 'createdAt')}
+              className="h-8 px-2 rounded-md border theme-border-glass theme-bg-input theme-text-secondary text-xs focus:outline-none focus:border-[var(--accent-primary)] cursor-pointer"
+            >
+              <option value="createdAt">{t('extracted.date')}</option>
+              <option value="rating">{t('extracted.rating')}</option>
+            </select>
+            <button
+              onClick={() => setFeedbackSortOrder(feedbackSortOrder === 'desc' ? 'asc' : 'desc')}
+              className={`${iconBtn} w-8 h-8`}
+              aria-label="Toggle sort order"
+              title={feedbackSortOrder === 'desc' ? 'Descending' : 'Ascending'}
+            >
+              <ChevronDown className={`w-4 h-4 transition-transform ${feedbackSortOrder === 'asc' ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+        </div>
 
-          {/* Enhanced Feedback Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
-            {sortedFeedbacks.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="col-span-full text-center py-16"
-              >
-                <div className="mx-auto w-20 h-20 rounded-xl flex items-center justify-center mb-6 theme-bg-glass border theme-border-glass">
-                  <MessageSquare className="w-10 h-10 theme-text-muted" />
-                </div>
-                <h3 className="text-lg font-semibold theme-text-primary mb-2">No feedback yet</h3>
-                <p className="text-sm theme-text-muted max-w-sm mx-auto">
-                  User feedback and ratings will appear here once submissions start coming in
-                </p>
-              </motion.div>
-            ) : (
-              sortedFeedbacks.map((feedback, index) => (
-                <motion.div
-                  key={feedback.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -6, scale: 1.03 }}
-                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-sm hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-xl lg:rounded-xl p-4 lg:p-5"
-                >
-                  {/* Enhanced gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden">
+          <StatCell label={t('extracted.total_responses')} value={sortedFeedbacks.length} />
+          <StatCell label={t('extracted.average_rating')} value={sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((s, f) => s + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '\u2014'} />
+          <StatCell label={t('extracted.five_star_percentage')} value={sortedFeedbacks.length > 0 ? `${Math.round((sortedFeedbacks.filter(f => f.rating === 5).length / sortedFeedbacks.length) * 100)}%` : '0%'} />
+          <StatCell label={t('extracted.needs_attention')} value={sortedFeedbacks.filter(f => f.rating <= 2).length} />
+        </div>
 
-                  <div className="relative z-10">
-                    {/* Rating Section */}
-                    <div className="flex items-center justify-between mb-3 lg:mb-4">
-                      <div className="flex items-center gap-2 lg:gap-3">
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <motion.div
-                              key={star}
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: (index * 0.1) + (star * 0.05) }}
-                            >
-                              <Star
-                                className={`w-4 h-4 lg:w-5 lg:h-5 transition-colors duration-200 ${
-                                  star <= feedback.rating
-                                    ? 'text-yellow-500 fill-current drop-shadow-sm'
-                                    : 'text-gray-400 dark:text-gray-600'
-                                }`}
-                              />
-                            </motion.div>
-                          ))}
-                        </div>
-                        <div className="px-2 lg:px-3 py-1 lg:py-1.5 rounded-full bg-yellow-300 border border-yellow-500 dark:bg-yellow-900/30 dark:border-yellow-700">
-                          <span className="text-xs lg:text-sm font-bold text-yellow-950 dark:text-yellow-300">
-                            {feedback.rating}/5
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Status indicator */}
-                      <div className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-xs font-semibold border-2 ${
-                        feedback.status === 'resolved'
-                          ? 'bg-green-300 text-green-950 border-green-500 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700'
-                          : feedback.status === 'in-review'
-                          ? 'bg-blue-300 text-blue-950 border-blue-500 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700'
-                          : 'bg-gray-300 text-gray-950 border-gray-500 dark:bg-gray-900/40 dark:text-gray-300 dark:border-gray-700'
-                      }`}>
-                        {feedback.status === 'in-review' ? 'In Review' : feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
-                      </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {sortedFeedbacks.slice(0, 6).map((f) => (
+              <article key={f.id} className="theme-bg-card theme-border-glass border rounded-lg p-3.5 flex flex-col">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+                      {(f.subject || 'U').charAt(0).toUpperCase()}
                     </div>
-
-                    {/* Subject */}
-                    <h4 className="font-bold theme-text-primary mb-2 lg:mb-3 text-base lg:text-lg leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {feedback.subject}
-                    </h4>
-
-                    {/* Message */}
-                    <p className="text-sm theme-text-secondary mb-3 lg:mb-4 line-clamp-3 leading-relaxed">
-                      {feedback.message}
-                    </p>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-3 lg:pt-4 border-t theme-border-glass">
-                      <div className="flex items-center gap-2 text-xs theme-text-muted">
-                        <Clock className="w-3 h-3" />
-                        <span className="font-medium">
-                          {feedback.createdAt?.toDate?.()?.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          }) || 'Unknown date'}
-                        </span>
-                      </div>
-                      <div className="text-xs font-mono font-semibold theme-text-secondary bg-gray-100 dark:bg-gray-100 border theme-border-glass px-2 lg:px-2.5 py-1 rounded-lg">
-                        #{feedback.id.slice(-6)}
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold theme-text-primary truncate">{f.subject || t('extracted.feedback')}</p>
+                      <p className="text-xs theme-text-muted">
+                        {f.createdAt?.toDate?.()
+                          ? new Date(f.createdAt.toDate()).toLocaleDateString()
+                          : ''}
+                      </p>
                     </div>
                   </div>
-                </motion.div>
-              ))
+                  <span className={`${pillCls} shrink-0 ${f.status === 'resolved' ? 'bg-green-500/15 text-green-500' : f.status === 'in-review' ? 'bg-blue-500/15 text-blue-500' : 'theme-bg-glass theme-text-muted'}`}>
+                    {(f.status || 'new').replace('-', ' ').toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-0.5 mb-2" aria-label={`Rated ${f.rating} out of 5`}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star key={i} className={`w-3.5 h-3.5 ${i <= f.rating ? 'text-yellow-400 fill-current' : 'theme-text-muted'}`} />
+                  ))}
+                </div>
+
+                <p className="text-[13px] theme-text-secondary line-clamp-3 mb-3 flex-1">{f.message}</p>
+
+                <div className="pt-2.5 border-t theme-border-glass flex items-center gap-2">
+                  <button className={`${ghostBtn} h-7 px-2 text-[11px]`} aria-label={t('extracted.view_details')}>
+                    <Eye className="w-3 h-3" />
+                    <span>{t('extracted.view')}</span>
+                  </button>
+                  <span className="ml-auto text-[11px] theme-text-muted">#{(f.id || '').slice(0, 6)}</span>
+                </div>
+              </article>
+            ))}
+            {sortedFeedbacks.length === 0 && (
+              <div className="md:col-span-2 py-10 text-center text-sm theme-text-muted border theme-border-glass theme-bg-card rounded-lg">
+                {t('extracted.no_feedback_yet') || 'No beneficiary feedback yet.'}
+              </div>
             )}
           </div>
 
-          {/* Enhanced Statistics Dashboard */}
-          {sortedFeedbacks.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-8 pt-8 border-t theme-border-glass"
-            >
-              <div className="mb-6 text-center">
-                <h3 className="text-lg font-semibold theme-text-primary mb-2">{t('extracted.feedback_analytics.feedbackAnalytics')}</h3>
-                <p className="text-sm theme-text-muted">{t('extracted.feedback_analytics.insightsFromUserExperiences')}</p>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-5">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
-                >
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <MessageSquare className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-                  </div>
-                  <div className="text-2xl lg:text-lg font-semibold tracking-tight theme-text-primary mb-1">
-                    {sortedFeedbacks.length}
-                  </div>
-                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.totalFeedback')}</div>
-                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.allSubmissions')}</div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
-                >
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white fill-current" />
-                  </div>
-                  <div className="text-2xl lg:text-lg font-semibold tracking-tight theme-text-primary mb-1">
-                    {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
-                  </div>
-                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.averageRating', { rating: (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) }).replace('⭐', '')} <Star className="inline w-3 h-3 lg:w-4 lg:h-4" /></div>
-                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.outOf5Stars')}</div>
-                </motion.div>
-
-                {/* High Ratings */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
-                >
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-                  </div>
-                  <div className="text-2xl lg:text-lg font-semibold tracking-tight text-green-600 dark:text-green-400 mb-1">
-                    {sortedFeedbacks.filter(f => f.rating >= 4).length}
-                  </div>
-                  <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.highRatings').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
-                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.starsRange', { range: '4-5', percentage: Math.round((sortedFeedbacks.filter(f => f.rating >= 4).length / sortedFeedbacks.length) * 100) })}</div>
-                </motion.div>
-
-                {/* Medium/Low Ratings */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-4 rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
-                >
-                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <AlertCircle className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-lg font-semibold tracking-tight text-amber-600 dark:text-amber-400 mb-1">
-                    {sortedFeedbacks.filter(f => f.rating < 4).length}
-                  </div>
-                  <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.needsAttention').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
-                  <div className="text-xs theme-text-muted mt-1">{t('extracted.feedback_analytics.starsRange', { range: 'Below 4', percentage: Math.round((sortedFeedbacks.filter(f => f.rating < 4).length / sortedFeedbacks.length) * 100) })}</div>
-                </motion.div>
-              </div>
-
-              {/* Rating Distribution Chart */}
-              <div className="mt-6 lg:mt-8 p-4 lg:p-5 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border">
-                <h4 className="text-sm lg:text-md font-semibold theme-text-primary mb-3 lg:mb-4 text-center">{t('extracted.feedback_analytics.ratingDistribution')}</h4>
-                <div className="space-y-2 lg:space-y-3">
-                  {[5, 4, 3, 2, 1].map((rating) => {
-                    const count = sortedFeedbacks.filter(f => f.rating === rating).length;
-                    const percentage = sortedFeedbacks.length > 0 ? (count / sortedFeedbacks.length) * 100 : 0;
-                    return (
-                      <div key={rating} className="flex items-center gap-2 lg:gap-3">
-                        <div className="flex items-center gap-1 lg:gap-2 w-8 lg:w-12">
-                          <span className="text-xs lg:text-sm font-medium theme-text-secondary">{rating}</span>
-                          <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-400 fill-current" />
-                        </div>
-                        <div className="flex-1 bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 lg:h-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${percentage}%` }}
-                            transition={{ delay: 0.5, duration: 0.8 }}
-                            className={`h-1.5 lg:h-2 rounded-full ${
-                              rating >= 4 ? 'bg-green-500' :
-                              rating === 3 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                          />
-                        </div>
-                        <div className="text-xs lg:text-sm theme-text-muted w-6 lg:w-8 text-right">
-                          {count}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="relative p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-        >
-          <div className="text-center py-12">
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 theme-bg-glass">
-              <Shield className="w-8 h-8 theme-text-muted" />
+          {/* Rating distribution */}
+          <div className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden self-start">
+            <div className="px-4 py-3 border-b theme-border-glass">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary">{t('extracted.rating_distribution')}</h2>
             </div>
-            <p className="theme-text-secondary mb-2">Access Restricted</p>
-            <p className="text-sm theme-text-muted">Feedback management requires officer privileges</p>
+            <ul className="p-3 space-y-2.5">
+              {[5, 4, 3, 2, 1].map((r) => {
+                const count = feedbacks.filter(f => f.rating === r).length;
+                const pct = feedbacks.length > 0 ? Math.round((count / feedbacks.length) * 100) : 0;
+                return (
+                  <li key={r} className="flex items-center gap-2.5">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium theme-text-muted w-8 shrink-0 tabular-nums">
+                      {r}<Star className="w-3 h-3 text-yellow-400 fill-current" />
+                    </span>
+                    <div className="h-1 w-full rounded-full theme-bg-glass overflow-hidden">
+                      <div className="h-full accent-gradient rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs font-medium theme-text-muted tabular-nums w-9 text-right shrink-0">{count}</span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </motion.div>
-      )}
+        </div>
+      </section>
 
+      {/* Modals */}
+      <ExportModal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        items={grievances}
+        filteredItems={filteredGrievances}
+        onExportCsv={exportGrievancesData}
+        onExportPdf={exportGrievancesPDF}
+        emailAddress={emailAddress}
+        setEmailAddress={setEmailAddress}
+        sendingEmail={sendingEmail}
+        onSendEmail={sendGrievancesEmail}
+        title={t('extracted.export_data_1')}
+        subtitle={t('extracted.export_subtitle') || t('extracted.choose_export_options')}
+        allTitle={t('extracted.all_cases')}
+        filteredTitle={t('extracted.filtered_cases')}
+      />
+
+      <AnimatePresence>
+        {showNewCaseModal && (
+          <NewGrievanceDrawer
+            initialData={selectedGrievance}
+            onClose={() => { setShowNewCaseModal(false); setSelectedGrievance(null); }}
+            onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
