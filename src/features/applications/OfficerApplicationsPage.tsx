@@ -21,613 +21,7 @@ import {
 } from 'lucide-react';
 
 import { POA_OFFENCES } from "@/components/dashboard/POAOffencesTable";
-
-// New Application Form Component
-const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: Application | null, onSaved?: () => void }) => {
-    const { theme } = useTheme();
-    const { t } = useLocale();
-    const [formData, setFormData] = useState({
-        applicantName: '',
-        aadhaar: '',
-        phone: '',
-        district: '',
-        state: '',
-        actType: '',
-        beneficiaryId: '',
-        incidentDate: '',
-        firReport: '',
-        medicalReport: '',
-        policeStation: '',
-        caseNumber: '',
-        amount: '',
-        priority: 'medium',
-        assignedOfficer: '',
-        offenceCategory: '',
-        offenceType: ''
-    });
-    const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
-    const [beneficiaryAutoFilled, setBeneficiaryAutoFilled] = useState<boolean>(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            // Ensure beneficiary id exists in Firestore before creating/updating
-            if (!formData.beneficiaryId) {
-                alert(t('applications.beneficiaryIdRequired'));
-                setIsSubmitting(false);
-                return;
-            }
-
-            // For new applications, beneficiary is selected from dropdown so it exists
-            // For editing, validate if the beneficiary still exists
-            if (initialData && initialData.id) {
-                const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
-                const beneficiarySnap = await getDoc(beneficiaryRef);
-                if (!beneficiarySnap.exists()) {
-                    alert(t('applications.beneficiaryNotFound'));
-                    setIsSubmitting(false);
-                    return;
-                }
-            }
-            if (initialData && initialData.id) {
-                // Editing existing application
-                const ref = doc(db, 'applications', initialData.id);
-                const updatedApplication = {
-                    applicantName: formData.applicantName,
-                    aadhaar: formData.aadhaar,
-                    phone: formData.phone,
-                    district: formData.district,
-                    state: formData.state,
-                    actType: formData.actType,
-                    beneficiaryId: formData.beneficiaryId,
-                    incidentDate: formData.incidentDate,
-                    firReport: formData.firReport,
-                    medicalReport: formData.medicalReport,
-                    policeStation: formData.policeStation,
-                    caseNumber: formData.caseNumber,
-                    // keep original applicationDate if present
-                    lastUpdate: Timestamp.fromDate(new Date()),
-                    status: initialData.status || 'pending',
-                    amount: parseFloat(formData.amount) || 0,
-                    priority: formData.priority,
-                    assignedOfficer: formData.assignedOfficer,
-                    documents: initialData.documents || 0,
-                    offenceCategory: formData.offenceCategory,
-                    offenceType: formData.offenceType,
-                };
-
-                await updateDoc(ref, updatedApplication);
-                onSaved?.();
-                onCancel();
-            } else {
-                const applicationsRef = collection(db, 'applications');
-                // Generate numeric-only suffix ID prefixed with 'APP'
-                const newId = `APP${Date.now()}`;
-                const newApplication = {
-                    applicantName: formData.applicantName,
-                    aadhaar: formData.aadhaar,
-                    phone: formData.phone,
-                    district: formData.district,
-                    state: formData.state,
-                    actType: formData.actType,
-                    beneficiaryId: formData.beneficiaryId,
-                    incidentDate: formData.incidentDate,
-                    firReport: formData.firReport,
-                    medicalReport: formData.medicalReport,
-                    policeStation: formData.policeStation,
-                    caseNumber: formData.caseNumber,
-                    applicationDate: Timestamp.fromDate(new Date()),
-                    status: 'pending',
-                    amount: parseFloat(formData.amount) || 0,
-                    priority: formData.priority,
-                    assignedOfficer: formData.assignedOfficer,
-                    documents: 0,
-                    lastUpdate: Timestamp.fromDate(new Date()),
-                    offenceCategory: formData.offenceCategory,
-                    offenceType: formData.offenceType,
-                    id: newId
-                };
-
-                // Create the document with the generated numeric ID (prefixed with APP)
-                const ref = doc(db, 'applications', newId);
-                await setDoc(ref, newApplication);
-                onCancel(); // Hide form after successful creation
-            }
-        } catch (error) {
-            console.error('Error creating application:', error);
-            // You could add error handling here
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-        if (field === 'beneficiaryId') {
-            // reset validation state while user types
-            setBeneficiaryExists(null);
-        }
-    };
-
-    // Prefill form when editing
-    useEffect(() => {
-        if (initialData) {
-            setFormData({
-                applicantName: initialData.applicantName || '',
-                aadhaar: initialData.aadhaar || '',
-                phone: initialData.phone || '',
-                district: initialData.district || '',
-                state: initialData.state || '',
-                actType: initialData.actType || '',
-                beneficiaryId: (initialData as any).beneficiaryId || '',
-                incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
-                firReport: (initialData as any).firReport || '',
-                medicalReport: (initialData as any).medicalReport || '',
-                policeStation: (initialData as any).policeStation || '',
-                caseNumber: (initialData as any).caseNumber || '',
-                amount: String(initialData.amount || ''),
-                priority: initialData.priority || 'medium',
-                assignedOfficer: initialData.assignedOfficer || '',
-                offenceCategory: (initialData as any).offenceCategory || '',
-                offenceType: (initialData as any).offenceType || ''
-            });
-            // if editing and beneficiaryId present, set and validate later
-            if ((initialData as any).beneficiaryId) {
-                setFormData(prev => ({ ...prev, beneficiaryId: (initialData as any).beneficiaryId }));
-                // optimistic mark - we'll validate on blur or explicitly
-                setBeneficiaryExists(true);
-            }
-        } else {
-            // Reset form for new application
-            setFormData({
-                applicantName: '',
-                aadhaar: '',
-                phone: '',
-                district: '',
-                state: '',
-                actType: '',
-                beneficiaryId: '',
-                incidentDate: '',
-                firReport: '',
-                medicalReport: '',
-                policeStation: '',
-                caseNumber: '',
-                amount: '',
-                priority: 'medium',
-                assignedOfficer: '',
-                offenceCategory: '',
-                offenceType: ''
-            });
-            setBeneficiaryExists(null);
-            setBeneficiaryAutoFilled(false);
-        }
-    }, [initialData]);
-
-    // check beneficiary existence helper
-    const checkBeneficiaryExists = async (id: string) => {
-        if (!id) { setBeneficiaryExists(null); return false; }
-        try {
-            const ref = doc(db, 'beneficiaries', id);
-            const snap = await getDoc(ref);
-            const exists = snap.exists();
-            setBeneficiaryExists(exists);
-            if (exists) {
-                const data = snap.data() as any || {};
-                // Overwrite form fields with beneficiary data (even if fields already have values)
-                const normalizeDate = (val: any) => {
-                    if (!val) return undefined;
-                    if (val?.toDate && typeof val.toDate === 'function') {
-                        try { return val.toDate().toISOString().split('T')[0]; } catch { }
-                    }
-                    if (typeof val === 'string') {
-                        // try to parse and return yyyy-mm-dd
-                        const d = new Date(val);
-                        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-                        return val.slice(0, 10);
-                    }
-                    if (typeof val === 'number') {
-                        try { return new Date(val).toISOString().split('T')[0]; } catch {}
-                    }
-                    return undefined;
-                };
-
-                setFormData(prev => ({
-                    ...prev,
-                    applicantName: data.name ?? data.fullName ?? data.applicantName ?? prev.applicantName ?? '',
-                    aadhaar: data.aadhaar ?? data.aadhar ?? data.aadharNumber ?? data.aadhaarNumber ?? data.aadhar_no ?? prev.aadhaar ?? '',
-                    phone: data.phone ?? data.mobile ?? data.phoneNumber ?? prev.phone ?? '',
-                    district: data.district ?? (data.address && data.address.district) ?? prev.district ?? '',
-                    state: data.state ?? (data.address && data.address.state) ?? prev.state ?? '',
-                    actType: data.actType ?? data.act ?? data.caseType ?? prev.actType ?? '',
-                    incidentDate: normalizeDate(data.incidentDate) ?? normalizeDate(data.incident_date) ?? normalizeDate(data.dateOfIncident) ?? prev.incidentDate ?? '',
-                    amount: (data.amount ?? data.reliefAmount ?? data.requestedAmount ?? data.request_amount ?? prev.amount) ? String(data.amount ?? data.reliefAmount ?? data.requestedAmount ?? data.request_amount ?? prev.amount ?? '') : prev.amount ?? '',
-                    priority: data.priority ?? prev.priority ?? ''
-                }));
-                // show a quick auto-filled indicator
-                setBeneficiaryAutoFilled(true);
-                window.setTimeout(() => setBeneficiaryAutoFilled(false), 3500);
-            }
-            return exists;
-        } catch (err) {
-            console.error('Error checking beneficiary', err);
-            setBeneficiaryExists(false);
-            return false;
-        }
-    };
-
-    // If editing an existing application that already has a beneficiaryId, fetch its details to prefill
-    useEffect(() => {
-        if (initialData && (initialData as any).beneficiaryId) {
-            // validate and attempt to auto-fill
-            checkBeneficiaryExists((initialData as any).beneficiaryId);
-        }
-    }, [initialData]);
-
-    // Fetch beneficiaries for dropdown
-    useEffect(() => {
-        const unsubscribe = onSnapshot(
-            query(collection(db, 'beneficiaries'), orderBy('name')),
-            (snapshot) => {
-                const beneficiariesData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setBeneficiaries(beneficiariesData);
-            },
-            (error) => {
-                console.error('Error fetching beneficiaries:', error);
-            }
-        );
-
-        return () => unsubscribe();
-    }, []);
-
-    return (
-        <form onSubmit={handleSubmit} className="p-5 space-y-5">
-            {/* Applicant Information */}
-            <div>
-                <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicantInformation')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')} *</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.applicantName}
-                            onChange={(e) => handleInputChange('applicantName', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterApplicantFullName')}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')} *</label>
-                        <input
-                            type="tel"
-                            required
-                            value={formData.phone}
-                            onChange={(e) => handleInputChange('phone', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterPhoneNumber')}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')} *</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.aadhaar}
-                            onChange={(e) => handleInputChange('aadhaar', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enter12DigitAadhaarNumber')}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId')} *</label>
-                        <select
-                            required
-                            value={formData.beneficiaryId}
-                            onChange={(e) => {
-                                const selectedId = e.target.value;
-                                handleInputChange('beneficiaryId', selectedId);
-                                // Auto-fill form with beneficiary data
-                                if (selectedId) {
-                                    const selectedBeneficiary = beneficiaries.find(b => b.id === selectedId);
-                                    if (selectedBeneficiary) {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            beneficiaryId: selectedId,
-                                            applicantName: selectedBeneficiary.name || prev.applicantName,
-                                            aadhaar: selectedBeneficiary.aadhaarNumber || prev.aadhaar,
-                                            phone: selectedBeneficiary.phone || prev.phone,
-                                            district: selectedBeneficiary.district || prev.district,
-                                            state: selectedBeneficiary.state || prev.state,
-                                            actType: selectedBeneficiary.actType || prev.actType
-                                        }));
-                                        setBeneficiaryExists(true);
-                                    }
-                                } else {
-                                    setBeneficiaryExists(null);
-                                }
-                            }}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        >
-                            <option value="">{t('applications.selectBeneficiary') || 'Select Beneficiary'}</option>
-                            {beneficiaries.map((beneficiary) => (
-                                <option key={beneficiary.id} value={beneficiary.id}>
-                                    {beneficiary.id} - {beneficiary.name} ({beneficiary.aadhaarNumber})
-                                </option>
-                            ))}
-                        </select>
-                        {initialData && beneficiaryExists === true && <span className="text-green-500 text-sm">{t('applications.beneficiaryFound')}</span>}
-                        {initialData && beneficiaryExists === false && <span className="text-red-500 text-sm">{t('applications.beneficiaryNotFound')}</span>}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.district}
-                            onChange={(e) => handleInputChange('district', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterDistrict')}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')} *</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.state}
-                            onChange={(e) => handleInputChange('state', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterState')}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Application Details */}
-            <div>
-                <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicationDetails')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')} *</label>
-                        <select
-                            required
-                            value={formData.actType}
-                            onChange={(e) => handleInputChange('actType', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        >
-                            <option value="">{t('applications.selectActType')}</option>
-                            <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                            <option value="PoA Act">{t('extracted.poa_act')}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')} *</label>
-                        <input
-                            type="date"
-                            required
-                            value={formData.incidentDate}
-                            onChange={(e) => handleInputChange('incidentDate', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        />
-                    </div>
-                </div>
-
-                {/* POA Act Offence Selection */}
-                {formData.actType === 'PoA Act' && (
-                  <div className="mt-6">
-                    <h4 className="text-md font-semibold theme-text-primary mb-4">PoA Act Offence Classification</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">Offence Category *</label>
-                        <select
-                          required={formData.actType === 'PoA Act'}
-                          value={formData.offenceCategory}
-                          onChange={(e) => handleInputChange('offenceCategory', e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        >
-                          <option value="">Select Offence Category</option>
-                          {Object.keys(POA_OFFENCES).map((category) => (
-                            <option key={category} value={category}>{category}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {formData.offenceCategory && (
-                        <div>
-                          <label className="block text-sm font-medium theme-text-muted mb-2">Specific Offence *</label>
-                          <select
-                            required={formData.actType === 'PoA Act'}
-                            value={formData.offenceType}
-                            onChange={(e) => handleInputChange('offenceType', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                          >
-                            <option value="">Select Specific Offence</option>
-                            {Object.entries(POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES] || {}).map(([offence, compensation]) => {
-                              const compensationText = typeof compensation === 'string' && compensation.includes('-')
-                                ? `₹${compensation.replace('-', ' - ₹')} (range)`
-                                : `₹${compensation.toLocaleString('en-IN')}`;
-                              return (
-                                <option key={offence} value={offence}>
-                                  {offence} • {compensationText}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Expected Compensation Display */}
-                    {formData.offenceType && formData.offenceCategory && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-500 dark:to-green-300 border-2 border-green-100 dark:border-green-400 rounded-xl shadow-sm">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-6 h-6 bg-gradient-to-r from-green-600 to-emerald-700 rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-white text-xs font-bold">₹</span>
-                          </div>
-                          <span className="font-semibold text-green-900 dark:text-green-200 text-sm uppercase tracking-wide">
-                            Expected Compensation
-                          </span>
-                        </div>
-
-                        <div className="text-lg font-semibold tracking-tight text-green-800 dark:text-green-100 mb-2">
-                          {(() => {
-                            const category = POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
-                            const compensation = category && formData.offenceType in category
-                              ? category[formData.offenceType as keyof typeof category] as string | number
-                              : null;
-                            if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-                              return `₹${compensation.replace("-", " - ₹")}`;
-                            }
-                            return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
-                          })()}
-                        </div>
-
-                        <div className="text-sm text-green-900 dark:text-green-300 font-medium leading-relaxed">
-                          Based on <span className="font-semibold">{formData.offenceType}</span> under{" "}
-                          <span className="font-semibold">{formData.offenceCategory}</span>
-                        </div>
-
-                        <div className="mt-3 p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-                          <div className="text-xs text-green-900 dark:text-green-200">
-                            💡 This is the guideline amount. Officers can adjust the final compensation amount.
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4 mt-4">
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
-                        <input
-                            type="number"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.amount}
-                            onChange={(e) => handleInputChange('amount', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterReliefAmount')}
-                        />
-                    </div>
-                </div>
-
-                {/* Case Details */}
-                <div className="mt-6">
-                    <h4 className="text-md font-semibold theme-text-primary mb-4">{t('applications.caseDetails')}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.firReport')}</label>
-                            <input
-                                type="text"
-                                value={formData.firReport}
-                                onChange={(e) => handleInputChange('firReport', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                placeholder={t('applications.enterFirReport')}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.medicalReport')}</label>
-                            <input
-                                type="text"
-                                value={formData.medicalReport}
-                                onChange={(e) => handleInputChange('medicalReport', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                placeholder={t('applications.enterMedicalReport')}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.policeStation')}</label>
-                            <input
-                                type="text"
-                                value={formData.policeStation}
-                                onChange={(e) => handleInputChange('policeStation', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                placeholder={t('applications.enterPoliceStation')}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.caseNumber')}</label>
-                            <input
-                                type="text"
-                                value={formData.caseNumber}
-                                onChange={(e) => handleInputChange('caseNumber', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                                placeholder={t('applications.enterCaseNumber')}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div>
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.priorityLevel')}</label>
-                        <select
-                            value={formData.priority}
-                            onChange={(e) => handleInputChange('priority', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        >
-                            <option value="low">{t('extracted.low')}</option>
-                            <option value="medium">{t('extracted.medium')}</option>
-                            <option value="high">{t('extracted.high')}</option>
-                        </select>
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.assigned_officer')}</label>
-                        <input
-                            type="text"
-                            value={formData.assignedOfficer}
-                            onChange={(e) => handleInputChange('assignedOfficer', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                            placeholder={t('applications.enterAssignedOfficerNameOptional')}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-                <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onCancel}
-                    className="flex-1 px-3 py-2 rounded-md theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-                    style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
-                >
-                    {t('extracted.cancel')}
-                </motion.button>
-                <motion.button
-                    type="submit"
-                    disabled={isSubmitting || beneficiaryExists !== true}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-3 py-2 rounded-md accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-sm transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isSubmitting ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            {t('extracted.creating')}...
-                        </>
-                    ) : (
-                        <>
-                            <Plus className="w-5 h-5" />
-                            {t('applications.createApplication')}
-                        </>
-                    )}
-                </motion.button>
-            </div>
-        </form>
-    );
-};
+import NewApplicationDrawer from './NewApplicationDrawer';
 
 // Application data type
 interface Application {
@@ -1498,6 +892,36 @@ const ApplicationsPage = () => {
         setExpectedAmount(selectedApplication?.amount || 0);
     }, [selectedApplication]);
 
+    // Highlight + scroll-to-row after a new application is created
+    const [highlightId, setHighlightId] = useState<string | null>(null);
+    const filteredRef = useRef<any[]>([]);
+    filteredRef.current = filteredApplications;
+    const pageRef = useRef(currentPage);
+    pageRef.current = currentPage;
+
+    const scrollToApplication = (id: string) => {
+        let attempts = 0;
+        const tick = () => {
+            const idx = filteredRef.current.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                const targetPage = Math.floor(idx / itemsPerPage) + 1;
+                if (targetPage !== pageRef.current) {
+                    setCurrentPage(targetPage);
+                    window.setTimeout(tick, 120);
+                    return;
+                }
+                window.setTimeout(() => {
+                    document.getElementById(`app-row-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setHighlightId(id);
+                    window.setTimeout(() => setHighlightId(null), 5000);
+                }, 150);
+            } else if (attempts++ < 20) {
+                window.setTimeout(tick, 150);
+            }
+        };
+        tick();
+    };
+
     // Allow officers to update application status
     const updateApplicationStatus = async (id: string, status: string) => {
         if (!id) return;
@@ -1657,50 +1081,26 @@ return (
       sendApplicationsEmail={sendApplicationsEmail}
     />
 
-    {/* Main Content */}
-    {showNewApplicationForm ? (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
-      >
-        <div className="p-5 border-b theme-border-glass">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
-                {selectedApplication
-                  ? t("applications.editANewReliefApplication")
-                  : t("applications.createANewReliefApplication")}
-              </h2>
-              <p className="theme-text-muted">
-                {selectedApplication
-                  ? t("applications.editingApplicationDescription")
-                  : t(
-                      "applications.createANewReliefApplicationDescription"
-                    ) || "Create a new relief application"}
-              </p>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowNewApplicationForm(false)}
-              className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20 theme-text-primary transition-colors"
-            >
-              <X className="w-5 h-5 theme-text-primary" />
-            </motion.button>
-          </div>
-        </div>
-        <NewApplicationForm
+    {/* New Application Drawer */}
+    <AnimatePresence>
+      {showNewApplicationForm && (
+        <NewApplicationDrawer
           onCancel={() => setShowNewApplicationForm(false)}
-          initialData={selectedApplication}
-          onSaved={() => {
+          onCreated={(newId) => {
+            setShowNewApplicationForm(false);
             setSelectedApplication(null);
+            setSearchQuery('');
+            setStatusFilter('all');
+            setActTypeFilter('all');
+            setPriorityFilter('all');
+            scrollToApplication(newId);
           }}
         />
-      </motion.div>
-    ) : (
-      <>
+      )}
+    </AnimatePresence>
+
+    {/* Main Content */}
+    <>
       {/* Statistics Cards */}
       <StatisticsCards stats={stats} theme={theme} t={t} />
 
@@ -1766,10 +1166,11 @@ return (
           {paginatedApplications.map((app: any) => (
             <motion.tr
               key={app.id}
+              id={`app-row-${app.id}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
-              className="hover:theme-bg-hover transition-colors"
+              className={`transition-colors ${highlightId === app.id ? 'bg-blue-500/10' : 'hover:theme-bg-hover'}`}
             >
               <td className="py-2.5 px-3 font-medium theme-text-primary truncate text-xs">{app.id}</td>
 
@@ -1909,11 +1310,12 @@ return (
               {paginatedApplications.map((app: any, idx: number) => (
                 <motion.div
                   key={app.id}
+                  id={`app-row-${app.id}`}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.02 }}
                   whileHover={{ y: -2 }}
-                  className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-sm transition-shadow"
+                  className={`theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer transition-shadow ${highlightId === app.id ? 'ring-2 ring-blue-500/50' : 'hover:shadow-sm'}`}
                   onClick={() => setSelectedApplication(app)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -2059,8 +1461,7 @@ return (
             </div>
           </div>
         </motion.div>
-      </>
-    )}
+    </>
 
     {/* Application Detail Inline Section */}
     <ApplicationDetail

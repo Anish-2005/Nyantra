@@ -382,3 +382,7 @@ select {
 .theme-modal-solid {
   background: var(--modal-solid);
 }
+
+/* Drawer panels — near-opaque, crisp surface (portal-rendered sidebars) */
+[data-theme="dark"] .theme-drawer { background: rgba(15, 23, 42, 0.92) !important; }
+[data-theme="light"] .theme-drawer { background: rgba(255, 255, 255, 0.97) !important; }
