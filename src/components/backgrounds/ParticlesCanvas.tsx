@@ -4,11 +4,13 @@ import { useTheme } from '@/context/ThemeContext';
 import type * as THREE from 'three';
 
 interface ParticlesCanvasProps {
+  id?: string;
   className?: string;
   style?: React.CSSProperties;
 }
 
 export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
+  id,
   className = "fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-500",
   style = { zIndex: 0, background: 'transparent' }
 }) => {
@@ -136,6 +138,7 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
   return (
     <canvas
       ref={canvasRef}
+      id={id}
       className={className}
       style={style}
     />

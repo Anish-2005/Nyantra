@@ -39,6 +39,8 @@ export interface InstallmentProgress {
 
 /** Raw Firestore document shape (all fields optional as stored data is loose). */
 export interface DisbursementRaw extends InstallmentProgress {
+  /** Firestore document id, attached by the repository layer. */
+  firestoreId?: string;
   id?: string;
   beneficiaryId?: string | null;
   beneficiaryName?: string | null;
