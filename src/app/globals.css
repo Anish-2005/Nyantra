@@ -338,3 +338,47 @@ select {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+/* ==========================================================================
+   Design-system tokens (additive — existing rules above are untouched).
+   Brand palette (teal) + semantic aliases mapped to the runtime theme vars
+   consumed by components/ui. Values resolve identically in both themes.
+   ========================================================================== */
+@theme {
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+
+  --color-surface-card: var(--card-bg);
+  --color-surface-glass: var(--glass-bg);
+  --color-line-glass: var(--glass-border);
+  --color-fg-primary: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+}
+
+[data-theme="dark"] {
+  --modal-solid: rgba(6, 8, 20, 0.98);
+}
+
+[data-theme="light"] {
+  --modal-solid: rgba(255, 255, 255, 0.98);
+}
+
+/* Solid input background used by form controls (matches legacy inline style) */
+.theme-input-solid {
+  background: var(--glass-bg);
+}
+[data-theme="light"] .theme-input-solid {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.theme-modal-solid {
+  background: var(--modal-solid);
+}
