@@ -181,8 +181,12 @@ export function computeMonthlyTrend(
   }
 
   items.forEach((item) => {
-    const s = item.initiatedDate || item.applicationDate || item.initiatedOn || null;
-    const dt = toDateSafe(s as string | null);
+    // Legacy records may carry alternative date field names.
+    const loose = item as Record<string, unknown>;
+    const s = (loose['initiatedDate'] || loose['applicationDate'] || loose['initiatedOn'] || null) as
+      | string
+      | null;
+    const dt = toDateSafe(s);
     if (!dt) return;
     const idx = keys.findIndex((k) => k.year === dt.getFullYear() && k.month === dt.getMonth());
     if (idx >= 0) {
