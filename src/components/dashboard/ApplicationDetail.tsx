@@ -1,10 +1,9 @@
-import React from "react";
-import { Shield, X, Edit } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Shield, X, Pencil, Check, Loader2 } from "lucide-react";
 
 interface ApplicationDetailProps {
   selectedApplication: any;
   setSelectedApplication: (app: any) => void;
-  setShowNewApplicationForm: (show: boolean) => void;
   t: (key: string) => string;
   theme: string;
   expectedAmount: number;
@@ -13,248 +12,451 @@ interface ApplicationDetailProps {
   detailStatus: string;
   setDetailStatus: (status: string) => void;
   updateApplicationStatus: (id: string, status: string) => void;
+  onUpdateFields: (id: string, data: Record<string, unknown>) => Promise<void> | void;
   formatDate: (date: string) => string;
   formatCurrency: (amt: number) => string;
   POA_OFFENCES: any;
   setShowExportModal: (show: boolean) => void;
 }
 
+const toDateInput = (val: any): string => {
+  if (!val) return "";
+  if (val?.toDate && typeof val.toDate === "function") {
+    try {
+      return val.toDate().toISOString().split("T")[0];
+    } catch {}
+  }
+  if (typeof val === "string") return val.slice(0, 10);
+  if (typeof val === "number") {
+    try {
+      return new Date(val).toISOString().split("T")[0];
+    } catch {}
+  }
+  return "";
+};
+
+const inputCls =
+  "w-full h-8 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-[13px] focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
+
+const Item = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{label}</dt>
+    <dd className="text-[13px] font-medium theme-text-primary mt-0.5 truncate">{children}</dd>
+  </div>
+);
+
+const Field = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: (cls: string) => React.ReactNode;
+}) => (
+  <div className="min-w-0">
+    <label className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{label}</label>
+    <div className="mt-1">{children(inputCls)}</div>
+  </div>
+);
+
 const ApplicationDetail: React.FC<ApplicationDetailProps> = ({
   selectedApplication,
   setSelectedApplication,
-  setShowNewApplicationForm,
   t,
-  theme,
   expectedAmount,
   setExpectedAmount,
   updateApplicationAmount,
   detailStatus,
   setDetailStatus,
   updateApplicationStatus,
+  onUpdateFields,
   formatDate,
   formatCurrency,
   POA_OFFENCES,
   setShowExportModal,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsEditing(false);
+  }, [selectedApplication?.id]);
+
+  useEffect(() => {
+    if (selectedApplication && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedApplication?.id]);
+
   if (!selectedApplication) return null;
+
+  const app = selectedApplication;
+
+  const startEdit = () => {
+    setForm({
+      applicantName: app.applicantName || "",
+      aadhaar: app.aadhaar || "",
+      phone: app.phone || "",
+      district: app.district || "",
+      state: app.state || "",
+      actType: app.actType || "",
+      incidentDate: toDateInput(app.incidentDate),
+      firReport: app.firReport || "",
+      medicalReport: app.medicalReport || "",
+      policeStation: app.policeStation || "",
+      caseNumber: app.caseNumber || "",
+      amount: String(app.amount ?? ""),
+      priority: app.priority || "medium",
+      assignedOfficer: app.assignedOfficer || "",
+      offenceCategory: app.offenceCategory || "",
+      offenceType: app.offenceType || "",
+    });
+    setIsEditing(true);
+  };
+
+  const setField = (field: string, value: string) =>
+    setForm(prev => ({ ...prev, [field]: value }));
+
+  const saveEdit = async () => {
+    setSaving(true);
+    try {
+      await onUpdateFields(app.id, {
+        applicantName: form.applicantName,
+        aadhaar: form.aadhaar,
+        phone: form.phone,
+        district: form.district,
+        state: form.state,
+        actType: form.actType,
+        incidentDate: form.incidentDate,
+        firReport: form.firReport,
+        medicalReport: form.medicalReport,
+        policeStation: form.policeStation,
+        caseNumber: form.caseNumber,
+        amount: parseFloat(form.amount) || 0,
+        priority: form.priority,
+        assignedOfficer: form.assignedOfficer,
+        offenceCategory: form.actType === "PoA Act" ? form.offenceCategory : "",
+        offenceType: form.actType === "PoA Act" ? form.offenceType : "",
+      });
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const guideline = (() => {
+    if (!(app.offenceCategory && app.offenceType)) return null;
+    const category = POA_OFFENCES[app.offenceCategory as keyof typeof POA_OFFENCES];
+    const compensation =
+      category && app.offenceType in category
+        ? category[app.offenceType as keyof typeof category] as string | number
+        : null;
+    if (compensation == null) return null;
+    if (typeof compensation === "string" && compensation.includes("-")) {
+      return `₹${compensation.replace("-", " – ₹")}`;
+    }
+    return `₹${(compensation as number).toLocaleString("en-IN")}`;
+  })();
 
   return (
     <div
-      className="theme-bg-card theme-border-glass border rounded-2xl w-full mt-6 overflow-hidden"
+      ref={containerRef}
+      className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20"
       aria-live="polite"
     >
-      <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b theme-border-glass">
-        <div>
-          <h2 className="text-2xl font-bold theme-text-primary">
-            {selectedApplication.applicantName}
-          </h2>
-          <p className="theme-text-muted">
-            {selectedApplication.id} • {selectedApplication.actType}
-          </p>
+      {/* Header */}
+      <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+        <div className="min-w-0 flex items-center gap-2.5">
+          <h2 className="text-sm font-semibold theme-text-primary truncate">{app.applicantName}</h2>
+          <span className="text-xs theme-text-muted truncate hidden sm:inline">·</span>
+          <span className="text-xs theme-text-muted truncate hidden sm:inline">{app.id}</span>
+          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide theme-bg-glass theme-text-secondary">
+            {app.actType}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSelectedApplication(null)}
-            className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/10 theme-text-primary transition-colors"
-            aria-label={t("extracted.close_sidebar") || "Close"}
-          >
-            <X className="w-5 h-5 theme-text-primary" />
-          </button>
-          <button
-            onClick={() => setShowNewApplicationForm(true)}
-            className="px-3 py-2 rounded-lg accent-gradient text-white"
-          >
-            <Edit className="w-4 h-4 inline-block mr-2" /> {t("applications.edit") || "Edit"}
-          </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isEditing ? (
+            <>
+              <button
+                onClick={() => setIsEditing(false)}
+                disabled={saving}
+                className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={saving}
+                className="h-7 px-3 accent-gradient text-white rounded-md inline-flex items-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Save
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
+              >
+                {t("extracted.export")}
+              </button>
+              <button
+                onClick={startEdit}
+                className="h-7 px-3 accent-gradient text-white rounded-md inline-flex items-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity"
+              >
+                <Pencil className="w-3 h-3" />
+                {t("applications.edit")}
+              </button>
+              <button
+                onClick={() => setSelectedApplication(null)}
+                className="p-1 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                aria-label={t("extracted.close_sidebar") || "Close"}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold theme-text-primary mb-4">
-            {t("applications.details") || "Application Details"}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.applicant")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.applicantName}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.aadhaar_number")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.aadhaar}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.phone_number")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.phone}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.location")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.district}, {selectedApplication.state}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.act_type")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.actType}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.incident_date")}</p>
-              <p className="font-medium theme-text-primary">{formatDate(selectedApplication.incidentDate)}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.application_date")}</p>
-              <p className="font-medium theme-text-primary">{formatDate(selectedApplication.applicationDate)}</p>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.amount_1") || "Amount"}</p>
-              <p className="font-semibold theme-text-primary">{formatCurrency(selectedApplication.amount)}</p>
-            </div>
-            {/* POA Offence Information */}
-            {selectedApplication.actType === "PoA Act" && (selectedApplication.offenceCategory || selectedApplication.offenceType) && (
-              <div className="md:col-span-2 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
-                <h4 className="text-sm font-semibold theme-text-primary mb-3 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-600" />
+      {/* Body */}
+      <div className="px-4 py-3.5 space-y-4">
+        {isEditing ? (
+          /* ---------- EDIT MODE ---------- */
+          <div className="space-y-3.5">
+            <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+              <Field label={t("extracted.applicant")}>
+                {cls => (
+                  <input type="text" required value={form.applicantName} onChange={e => setField("applicantName", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("extracted.phone_number")}>
+                {cls => (
+                  <input type="tel" required value={form.phone} onChange={e => setField("phone", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("extracted.aadhaar_number")}>
+                {cls => (
+                  <input type="text" required value={form.aadhaar} onChange={e => setField("aadhaar", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={`${t("extracted.district")} / ${t("extracted.state")}`}>
+                {cls => (
+                  <div className="flex gap-1.5">
+                    <input type="text" required value={form.district} onChange={e => setField("district", e.target.value)} className={cls} placeholder="District" />
+                    <input type="text" required value={form.state} onChange={e => setField("state", e.target.value)} className={cls} placeholder="State" />
+                  </div>
+                )}
+              </Field>
+              <Field label={t("extracted.act_type")}>
+                {cls => (
+                  <select value={form.actType} onChange={e => { setField("actType", e.target.value); }} className={cls}>
+                    <option value="">Select</option>
+                    <option value="PCR Act">{t("extracted.pcr_act")}</option>
+                    <option value="PoA Act">{t("extracted.poa_act")}</option>
+                  </select>
+                )}
+              </Field>
+              <Field label={t("extracted.incident_date")}>
+                {cls => (
+                  <input type="date" value={form.incidentDate} onChange={e => setField("incidentDate", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("applications.caseNumber")}>
+                {cls => (
+                  <input type="text" value={form.caseNumber} onChange={e => setField("caseNumber", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("applications.firReport")}>
+                {cls => (
+                  <input type="text" value={form.firReport} onChange={e => setField("firReport", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("applications.medicalReport")}>
+                {cls => (
+                  <input type="text" value={form.medicalReport} onChange={e => setField("medicalReport", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("extracted.police_station")}>
+                {cls => (
+                  <input type="text" value={form.policeStation} onChange={e => setField("policeStation", e.target.value)} className={cls} />
+                )}
+              </Field>
+              <Field label={t("extracted.amount_1") || "Amount"}>
+                {cls => (
+                  <input type="number" min={0} required value={form.amount} onChange={e => setField("amount", e.target.value)} className={`${cls} tabular-nums`} />
+                )}
+              </Field>
+              <Field label={t("extracted.priority")}>
+                {cls => (
+                  <select value={form.priority} onChange={e => setField("priority", e.target.value)} className={cls}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                )}
+              </Field>
+              <Field label={t("extracted.assigned_officer")}>
+                {cls => (
+                  <input type="text" value={form.assignedOfficer} onChange={e => setField("assignedOfficer", e.target.value)} className={cls} />
+                )}
+              </Field>
+            </dl>
+
+            {form.actType === "PoA Act" && (
+              <div className="pt-3 border-t theme-border-glass">
+                <p className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-blue-500" />
                   {t("applications.poa_act_offence_details")}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {selectedApplication.offenceCategory && (
-                    <div>
-                      <p className="text-xs theme-text-muted mb-1">{t("applications.offence_category")}</p>
-                      <p className="font-medium theme-text-primary">{selectedApplication.offenceCategory}</p>
-                    </div>
-                  )}
-                  {selectedApplication.offenceType && (
-                    <div>
-                      <p className="text-xs theme-text-muted mb-1">{t("applications.specific_offence")}</p>
-                      <p className="font-medium theme-text-primary">{selectedApplication.offenceType}</p>
-                    </div>
-                  )}
-                </div>
-                {/* Expected Amount Adjustment */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium theme-text-primary">Expected Relief Amount</label>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                        ₹{expectedAmount.toLocaleString("en-IN")}
-                      </div>
-                      <div className="text-xs theme-text-muted">Adjustable by officer</div>
-                    </div>
-                  </div>
-                  {/* Slider */}
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="2000000"
-                      step="10000"
-                      value={expectedAmount}
-                      onChange={(e) => setExpectedAmount(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
-                    />
-                    <div className="flex justify-between text-xs theme-text-muted">
-                      <span>₹0</span>
-                      <span>₹20,00,000</span>
-                    </div>
-                  </div>
-                  {/* Text Input */}
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="1000"
-                      value={expectedAmount}
-                      onChange={(e) => setExpectedAmount(Number(e.target.value) || 0)}
-                      className="flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-sm"
-                      placeholder="Enter amount"
-                    />
-                    <button
-                      onClick={() => {
-                        if (selectedApplication) {
-                          updateApplicationAmount(selectedApplication.id, expectedAmount);
-                        }
-                      }}
-                      disabled={!selectedApplication || expectedAmount === selectedApplication.amount}
-                      className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${
-                        theme === "light" ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"
-                      } disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
-                    >
-                      Update Amount
-                    </button>
-                  </div>
-                  {/* Guideline Amount Display */}
-                  {selectedApplication.offenceCategory && selectedApplication.offenceType && (
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-green-800 dark:text-green-200">PoA Guideline Amount</span>
-                      </div>
-                      <div className="text-lg font-bold text-green-700 dark:text-green-300">
-                        {(() => {
-                          const category = POA_OFFENCES[selectedApplication.offenceCategory as keyof typeof POA_OFFENCES];
-                          const compensation = category && selectedApplication.offenceType in category
-                            ? category[selectedApplication.offenceType as keyof typeof category] as string | number
-                            : null;
-                          if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-                            return `₹${compensation.replace("-", " - ₹")}`;
-                          }
-                          return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
-                        })()}
-                      </div>
-                    </div>
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl">
+                  <Field label={t("applications.offence_category")}>
+                    {cls => (
+                      <select
+                        value={form.offenceCategory}
+                        onChange={e => { setField("offenceCategory", e.target.value); setField("offenceType", ""); }}
+                        className={cls}
+                      >
+                        <option value="">Select Category</option>
+                        {Object.keys(POA_OFFENCES).map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    )}
+                  </Field>
+                  {form.offenceCategory && (
+                    <Field label={t("applications.specific_offence")}>
+                      {cls => (
+                        <select value={form.offenceType} onChange={e => setField("offenceType", e.target.value)} className={cls}>
+                          <option value="">Select Offence</option>
+                          {Object.entries(POA_OFFENCES[form.offenceCategory as keyof typeof POA_OFFENCES] || {}).map(([offence, compensation]) => {
+                            const compensationText =
+                              typeof compensation === "string" && compensation.includes("-")
+                                ? `₹${compensation.replace("-", " - ₹")} (range)`
+                                : `₹${(compensation as number).toLocaleString("en-IN")}`;
+                            return (
+                              <option key={offence} value={offence}>{offence} • {compensationText}</option>
+                            );
+                          })}
+                        </select>
+                      )}
+                    </Field>
                   )}
                 </div>
               </div>
             )}
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.status")}</p>
-              <div className="flex items-center gap-3">
-                <select
-                  value={detailStatus}
-                  onChange={(e) => setDetailStatus(e.target.value)}
-                  className="px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="in-review">In Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="documents-required">Documents Required</option>
-                </select>
-                <button
-                  onClick={() => {
-                    if (selectedApplication) {
-                      updateApplicationStatus(selectedApplication.id, detailStatus);
-                    }
-                  }}
-                  disabled={!selectedApplication || detailStatus === selectedApplication.status}
-                  className={`px-3 py-2 rounded-lg text-white ${theme === "light" ? "bg-blue-600" : "bg-blue-500"}`}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-            <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.priority")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.priority}</p>
-            </div>
-            <div className="md:col-span-2 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-              <p className="text-xs theme-text-muted mb-1">{t("extracted.assigned_officer")}</p>
-              <p className="font-medium theme-text-primary">{selectedApplication.assignedOfficer || "—"}</p>
-            </div>
           </div>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-glass theme-text-primary"
-          >
-            {t("extracted.export")}
-          </button>
-          <button
-            onClick={() => setSelectedApplication(null)}
-            className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass theme-text-primary"
-          >
-            {t("extracted.close")}
-          </button>
-        </div>
+        ) : (
+          /* ---------- READ MODE ---------- */
+          <div className="space-y-3.5">
+            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+              <Item label={t("extracted.status")}>
+                <span className="capitalize">{app.status.replace("-", " ")}</span>
+              </Item>
+              <Item label={t("extracted.priority")}>
+                <span className="capitalize">{app.priority}</span>
+              </Item>
+              <Item label={t("extracted.amount_1") || "Amount"}>{formatCurrency(app.amount)}</Item>
+              <Item label={t("extracted.incident_date")}>{formatDate(app.incidentDate)}</Item>
+              <Item label={t("extracted.location")}>{`${app.district}, ${app.state}`}</Item>
+              <Item label={t("extracted.assigned_officer")}>{app.assignedOfficer || "—"}</Item>
+              <Item label={t("extracted.aadhaar_number")}>{app.aadhaar}</Item>
+              <Item label={t("extracted.phone_number")}>{app.phone}</Item>
+              {app.caseNumber && <Item label={t("applications.caseNumber")}>{app.caseNumber}</Item>}
+              {app.firReport && <Item label={t("applications.firReport")}>{app.firReport}</Item>}
+              {app.policeStation && <Item label={t("extracted.police_station")}>{app.policeStation}</Item>}
+            </dl>
+
+            {/* Officer workflow: status change + PoA relief adjust */}
+            <div className="flex flex-col md:flex-row md:items-end gap-3 pt-3 border-t theme-border-glass">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">
+                  {t("extracted.update_status")}
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={detailStatus}
+                    onChange={e => setDetailStatus(e.target.value)}
+                    className={`${inputCls} w-44`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-review">In Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="documents-required">Documents Required</option>
+                  </select>
+                  <button
+                    onClick={() => updateApplicationStatus(app.id, detailStatus)}
+                    disabled={detailStatus === app.status}
+                    className="h-8 px-3 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              {app.actType === "PoA Act" && app.offenceType && (
+                <div className="min-w-0 md:ml-auto">
+                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1 flex items-center gap-1">
+                    <Shield className="w-3 h-3 text-blue-500" />
+                    {t("applications.specific_offence")}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] theme-text-primary truncate max-w-[220px]">{app.offenceType}</span>
+                    {guideline && (
+                      <span className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold tabular-nums">
+                        Guideline {guideline}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Amount adjustment slider */}
+            {app.actType === "PoA Act" && app.offenceType && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                    {t("extracted.adjust_amount") || "Adjust Relief Amount"}
+                  </span>
+                  <span className="text-sm font-semibold theme-text-primary tabular-nums">
+                    ₹{expectedAmount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2000000"
+                    step="10000"
+                    value={expectedAmount}
+                    onChange={e => setExpectedAmount(Number(e.target.value))}
+                    className="slider flex-1"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={expectedAmount}
+                    onChange={e => setExpectedAmount(Number(e.target.value) || 0)}
+                    className={`${inputCls} w-36 tabular-nums shrink-0`}
+                  />
+                  <button
+                    onClick={() => updateApplicationAmount(app.id, expectedAmount)}
+                    disabled={expectedAmount === app.amount}
+                    className="h-8 px-3 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

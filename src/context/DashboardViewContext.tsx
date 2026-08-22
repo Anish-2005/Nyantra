@@ -27,9 +27,16 @@ const readStoredView = (): DashboardView | null => {
 
 export function DashboardViewProvider({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth();
-  const [view, setViewState] = useState<DashboardView>(() => readStoredView() ?? 'user');
+  const [view, setViewState] = useState<DashboardView>('officer');
 
   const role = loading ? undefined : profile?.role;
+
+  useEffect(() => {
+    const stored = readStoredView();
+    if (stored) {
+      setViewState((current) => (current === stored ? current : stored));
+    }
+  }, []);
 
   useEffect(() => {
     if (role === 'user' && view !== 'user') {

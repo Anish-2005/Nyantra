@@ -1005,118 +1005,48 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div data-theme={theme} className="relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
-          style={{
-            backgroundColor:
-              theme === 'dark' ? '#1e40af' : '#3b82f6'
-          }}
-        ></div>
-        <div
-          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
-          style={{
-            backgroundColor:
-              theme === 'dark' ? '#7c3aed' : '#8b5cf6'
-          }}
-        ></div>
-      </div>
-
-      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
+    <div className="space-y-4 max-w-[1400px]">
         {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-        >
-          {/* Animated gradient background - theme aware */}
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl"
-            style={{
-              background: theme === 'dark'
-                ? 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))'
-                : 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))'
-            }}
-          />
-
-          <div className="relative z-10 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
-              <motion.div
-                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-indigo-500"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [1, 0.8, 1]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-xs sm:text-sm font-medium theme-text-secondary">
-                {t('extracted.applications')} • {t('extracted.manage')}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
-              {t('extracted.my_applications')}{' '}
-              <span className="text-accent-gradient inline-block leading-normal sm:ml-2">
-                {t('extracted.dashboard')}
-              </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+              {t('extracted.my_applications')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
             </h1>
-            <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
+            <p className="text-xs theme-text-muted mt-0.5 truncate">
               {t('extracted.manage_your_relief_applications')}
             </p>
           </div>
+        </div>
 
-          <div className="relative z-10 flex flex-col sm:flex-row gap-3">
-           
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Main Content */}
-          <div className="xl:col-span-2 space-y-5">
+          <div className="xl:col-span-2 space-y-4 min-w-0">
             {/* Action Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-semibold theme-text-primary mb-2">
-                    {applications.length === 0 ? t('extracted.create_first_application') : t('extracted.manage_applications')}
-                  </h2>
-                  <p className="theme-text-muted text-sm">
-                    {applications.length === 0 
-                      ? t('extracted.start_by_creating_application')
-                      : t('extracted.you_have_applications', { count: applications.length })}
-                  </p>
-                  {!userBeneficiary && (
-                    <p className="text-amber-600 text-sm mt-2">
-                      {t('extracted.create_beneficiary_first')}
-                    </p>
-                  )}
-                </div>
-                
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setEditingApplication(null);
-                    setShowNewApplicationForm(true);
-                  }}
-                  disabled={!userBeneficiary}
-                  className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-5 h-5" />
-                  {t('extracted.new_application')}
-                </motion.button>
+            <div className={`theme-bg-card theme-border-glass border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${!userBeneficiary ? 'border-amber-500/40' : ''}`}>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold theme-text-primary">
+                  {applications.length === 0 ? t('extracted.create_first_application') : t('extracted.manage_applications')}
+                </h2>
+                <p className="theme-text-muted text-xs mt-0.5">
+                  {applications.length === 0
+                    ? t('extracted.start_by_creating_application')
+                    : t('extracted.you_have_applications', { count: applications.length })}
+                  {!userBeneficiary && ` · ${t('extracted.create_beneficiary_first')}`}
+                </p>
               </div>
-            </motion.div>
+
+              <button
+                onClick={() => {
+                  setEditingApplication(null);
+                  setShowNewApplicationForm(true);
+                }}
+                disabled={!userBeneficiary}
+                className="h-9 px-3.5 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {t('extracted.new_application')}
+              </button>
+            </div>
 
             {/* New Application Form */}
             <AnimatePresence>
@@ -1145,32 +1075,27 @@ export default function ApplicationsPage() {
             </AnimatePresence>
 
             {/* Applications List */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">
-                  {t('extracted.application_history')} ({filteredApplications.length})
+            <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 border-b theme-border-glass">
+                <h3 className="text-sm font-semibold theme-text-primary">
+                  {t('extracted.application_history')} <span className="theme-text-muted font-normal">({filteredApplications.length})</span>
                 </h3>
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1 sm:flex-none sm:w-64">
-                    <Search className="absolute left-3 top-2.5 w-4 h-4 theme-text-muted" />
+
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted" />
                     <input
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       placeholder={t('applications.searchApplications')}
-                      className="w-full px-4 py-2 pl-10 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full sm:w-52 h-9 pl-8 pr-3 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
                     />
                   </div>
-                  
+
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3.5 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
                   >
                     <option value="all">{t('applications.allStatuses')}</option>
                     <option value="pending">{t('applications.pending')}</option>
@@ -1182,7 +1107,7 @@ export default function ApplicationsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="p-2.5 space-y-2">
                 <AnimatePresence>
                   {filteredApplications.length === 0 ? (
                     <motion.div
@@ -1203,151 +1128,79 @@ export default function ApplicationsPage() {
                       </p>
                     </motion.div>
                   ) : (
-                    paginatedApplications.map((application, index) => (
-                      <motion.div
+                    paginatedApplications.map((application) => (
+                      <div
                         key={application.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={`p-4 rounded-xl border theme-border-glass cursor-pointer transition-all hover:scale-[1.02] ${
-                          selectedApplication?.id === application.id 
-                            ? 'accent-gradient text-white' 
-                            : 'theme-bg-glass hover:theme-border-primary'
+                        className={`p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                          selectedApplication?.id === application.id
+                            ? 'border-[var(--accent-primary)] theme-bg-glass'
+                            : 'theme-border-glass hover:theme-bg-hover'
                         }`}
                         onClick={() => setSelectedApplication(application)}
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
+                            <div className="flex items-center gap-2.5 mb-2.5">
+                              <div className="w-8 h-8 rounded-md theme-bg-glass flex items-center justify-center theme-text-primary text-[11px] font-semibold shrink-0">
                                 {application.applicantName.split(' ').map((n: string) => n[0]).join('')}
                               </div>
-                              <div>
-                                <h4 className={`font-semibold truncate ${
-                                  selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
+                              <div className="min-w-0">
+                                <h4 className="font-semibold truncate theme-text-primary leading-tight">
                                   {application.applicantName}
                                 </h4>
-                                <p className={`text-sm ${
-                                  selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
-                                }`}>
+                                <p className="text-xs theme-text-muted truncate leading-tight mt-0.5">
                                   {application.id} • {application.beneficiaryId}
                                 </p>
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2.5">
                               <div>
-                                <p className={`text-xs ${
-                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.act_type')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {application.actType}
-                                </p>
+                                <p className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.act_type')}</p>
+                                <p className="font-medium text-sm theme-text-primary">{application.actType}</p>
                               </div>
                               <div>
-                                <p className={`text-xs ${
-                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.amount')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {formatCurrency(application.amount)}
-                                </p>
+                                <p className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.amount')}</p>
+                                <p className="font-medium text-sm theme-text-primary tabular-nums">{formatCurrency(application.amount)}</p>
                               </div>
                               <div>
-                                <p className={`text-xs ${
-                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.district')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {application.district}
-                                </p>
+                                <p className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.district')}</p>
+                                <p className="font-medium text-sm theme-text-primary">{application.district}</p>
                               </div>
                               <div>
-                                <p className={`text-xs ${
-                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.application_date')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {formatDate(application.applicationDate)}
-                                </p>
+                                <p className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.application_date')}</p>
+                                <p className="font-medium text-sm theme-text-primary tabular-nums">{formatDate(application.applicationDate)}</p>
                               </div>
                             </div>
 
                             {/* Case Details */}
                             {(application.incidentDate || application.firReport || application.caseNumber) && (
-                              <div className="mt-3 pt-3 border-t theme-border-glass">
-                                <p className={`text-xs font-medium mb-2 ${
-                                  selectedApplication?.id === application.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('applications.caseDetails')}:
-                                </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              <div className="mt-2 pt-2 border-t theme-border-glass">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 text-xs">
                                   {application.incidentDate && (
-                                    <div>
-                                      <span className={`font-medium ${
-                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
-                                      }`}>
-                                        {t('extracted.incident_date')}:
-                                      </span>
-                                      <span className={`ml-1 ${
-                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                      }`}>
-                                        {new Date(application.incidentDate).toLocaleDateString()}
-                                      </span>
-                                    </div>
+                                    <span className="theme-text-secondary">
+                                      <span className="theme-text-muted">{t('extracted.incident_date')}: </span>
+                                      {new Date(application.incidentDate).toLocaleDateString()}
+                                    </span>
                                   )}
                                   {application.firReport && (
-                                    <div>
-                                      <span className={`font-medium ${
-                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
-                                      }`}>
-                                        {t('applications.firReport')}:
-                                      </span>
-                                      <span className={`ml-1 ${
-                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                      }`}>
-                                        {application.firReport}
-                                      </span>
-                                    </div>
+                                    <span className="theme-text-secondary">
+                                      <span className="theme-text-muted">{t('applications.firReport')}: </span>
+                                      {application.firReport}
+                                    </span>
                                   )}
                                   {application.caseNumber && (
-                                    <div>
-                                      <span className={`font-medium ${
-                                        selectedApplication?.id === application.id ? 'text-white/80' : 'theme-text-muted'
-                                      }`}>
-                                        {t('applications.caseNumber')}:
-                                      </span>
-                                      <span className={`ml-1 ${
-                                        selectedApplication?.id === application.id ? 'text-white' : 'theme-text-primary'
-                                      }`}>
-                                        {application.caseNumber}
-                                      </span>
-                                    </div>
+                                    <span className="theme-text-secondary">
+                                      <span className="theme-text-muted">{t('applications.caseNumber')}: </span>
+                                      {application.caseNumber}
+                                    </span>
                                   )}
                                 </div>
                               </div>
                             )}
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                selectedApplication?.id === application.id 
-                                  ? 'bg-white/20 text-white border-white/30' 
-                                  : getStatusColor(application.status)
-                              }`}>
+
+                            <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(application.status)}`}>
                                 {(() => {
                                   const Icon = getStatusIcon(application.status);
                                   return <Icon className="w-3 h-3" />;
@@ -1356,18 +1209,18 @@ export default function ApplicationsPage() {
                               </span>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
+
+                          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingApplication(application);
                                 setShowNewApplicationForm(true);
                               }}
-                              className={`p-2 rounded-lg transition-all hover:scale-110 ${
-                                selectedApplication?.id === application.id 
-                                  ? 'bg-white/20 text-white hover:bg-white/30' 
-                                  : 'theme-bg-glass theme-text-muted hover:theme-border-primary'
+                              className={`p-1.5 rounded-md transition-colors ${
+                                selectedApplication?.id === application.id
+                                  ? 'text-accent-gradient'
+                                  : 'theme-text-muted hover:theme-bg-glass hover:text-blue-500'
                               }`}
                               title={t('extracted.edit_application')}
                             >
@@ -1378,10 +1231,10 @@ export default function ApplicationsPage() {
                                 e.stopPropagation();
                                 deleteApplication(application.id);
                               }}
-                              className={`p-2 rounded-lg transition-all hover:scale-110 ${
-                                selectedApplication?.id === application.id 
-                                  ? 'bg-white/20 text-white hover:bg-red-400' 
-                                  : 'theme-bg-glass theme-text-muted hover:text-red-600'
+                              className={`p-1.5 rounded-md transition-colors ${
+                                selectedApplication?.id === application.id
+                                  ? 'text-red-500'
+                                  : 'theme-text-muted hover:bg-red-500/10 hover:text-red-500'
                               }`}
                               title={t('extracted.delete_application')}
                             >
@@ -1389,22 +1242,22 @@ export default function ApplicationsPage() {
                             </button>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     ))
                   )}
                 </AnimatePresence>
 
                 {/* Pagination */}
                 {filteredApplications.length > 0 && (
-                  <div className="flex items-center justify-between pt-4 border-t theme-border-glass">
-                    <p className="text-sm theme-text-muted">
+                  <div className="flex items-center justify-between pt-3 px-1.5 pb-0.5 border-t theme-border-glass">
+                    <p className="text-xs theme-text-muted">
                       {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, filteredApplications.length)} {t('extracted.of')} {filteredApplications.length}
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(p => p - 1)}
-                        className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 transition-colors"
+                        className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
@@ -1415,7 +1268,7 @@ export default function ApplicationsPage() {
                           <button
                             key={pageNum}
                             onClick={() => setCurrentPage(pageNum)}
-                            className={`px-3 py-1.5 rounded-lg ${currentPage === pageNum ? 'accent-gradient text-white' : 'theme-bg-card theme-border-glass border theme-text-primary hover:bg-slate-200/60'} transition-colors`}
+                            className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
                           >
                             {pageNum}
                           </button>
@@ -1424,7 +1277,7 @@ export default function ApplicationsPage() {
                       <button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage(p => p + 1)}
-                        className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:bg-slate-200/60 transition-colors"
+                        className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -1432,102 +1285,54 @@ export default function ApplicationsPage() {
                   </div>
                 )}
               </div>
-            </motion.div>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-5">
-            {/* Enhanced Summary Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl shadow-sm"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.summary')}</h3>
+          <div className="space-y-4 min-w-0">
+            {/* Summary Card */}
+            <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b theme-border-glass">
+                <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.summary')}</h3>
               </div>
 
               {/* Statistics Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="text-lg font-semibold tracking-tight theme-text-primary mb-1 group-hover:text-blue-600 transition-colors">
-                    {stats.total}
+              <div className="grid grid-cols-2 gap-px theme-bg-glass">
+                {[
+                  { label: t('extracted.total'), value: stats.total, dot: '' },
+                  { label: t('extracted.approved'), value: stats.approved, dot: 'bg-emerald-500' },
+                  { label: t('applications.pending'), value: stats.pending, dot: 'bg-amber-500' },
+                  { label: t('applications.rejected'), value: stats.rejected, dot: 'bg-red-500' },
+                ].map(({ label, value, dot }) => (
+                  <div key={label} className="theme-bg-card p-3.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot || 'accent-gradient'}`} />
+                      <span className="truncate">{label}</span>
+                    </div>
+                    <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">{value}</p>
                   </div>
-                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
-                    {t('extracted.total')}
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="text-lg font-semibold tracking-tight theme-text-primary mb-1 group-hover:text-green-600 transition-colors">
-                    {stats.approved}
-                  </div>
-                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
-                    {t('extracted.approved')}
-                  </div>
-                </motion.div>
+                ))}
               </div>
 
-              {/* Beneficiary Information Card */}
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                className="theme-bg-glass rounded-xl p-4 border theme-border-glass hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
+              {/* Beneficiary Information */}
+              <div className="px-4 py-3 border-t theme-border-glass">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-md theme-bg-glass flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5 theme-text-secondary" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium theme-text-muted uppercase tracking-wide mb-1">
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-0.5">
                       {t('extracted.beneficiary_id')}
                     </div>
-                    <div className="font-mono text-sm theme-text-primary font-semibold truncate mb-1">
+                    <div className="font-mono text-sm theme-text-primary font-semibold truncate leading-tight">
                       {userBeneficiary?.id || t('extracted.not_created')}
                     </div>
-                    <div className="text-xs theme-text-muted truncate">
+                    <div className="text-xs theme-text-muted truncate mt-0.5">
                       {userBeneficiary ? userBeneficiary.name : t('extracted.create_beneficiary_first')}
                     </div>
                   </div>
                 </div>
-              </motion.div>
-
-              {/* Additional Stats */}
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="text-base font-semibold theme-text-primary mb-1 group-hover:text-amber-600 transition-colors">
-                    {stats.pending}
-                  </div>
-                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
-                    {t('applications.pending')}
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="text-base font-semibold theme-text-primary mb-1 group-hover:text-red-600 transition-colors">
-                    {stats.rejected}
-                  </div>
-                  <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
-                    {t('applications.rejected')}
-                  </div>
-                </motion.div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Selected Application Details */}
             <AnimatePresence>

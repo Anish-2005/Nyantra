@@ -58,8 +58,13 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const [disbursementAlertCount, setDisbursementAlertCount] = useState(0);
 
   const isUserView = view === 'user';
-  const displayName = user?.displayName ?? (user?.email ? user.email.split('@')[0] : 'Guest');
-  const userInitials = displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+  const displayName =
+    userProfile?.fullName ||
+    userProfile?.name ||
+    userProfile?.displayName ||
+    user?.displayName ||
+    (user?.email ? user.email.split('@')[0] : 'Guest');
+  const userInitials = String(displayName).split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   const roleLabel = isUserView ? ((userProfile?.role as string) || 'Applicant') : t('extracted.administrator');
 
   const navigationItems = useMemo(() => {
@@ -150,7 +155,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   }, [isUserView, user?.uid]);
 
   useEffect(() => {
-    if (!isUserView || !user?.uid) return;
+    if (!user?.uid) return;
 
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userDocRef, (snapshot) => {
@@ -158,7 +163,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [isUserView, user?.uid]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!isUserView || !user?.uid) return;

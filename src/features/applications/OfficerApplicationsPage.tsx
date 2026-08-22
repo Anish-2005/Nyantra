@@ -4,8 +4,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import GradientOrbs from '@/components/dashboard/GradientOrbs';
-import BackgroundAnimation from '@/components/BackgroundAnimation';
 import jsPDF from 'jspdf';
 import ApplicationDetail from '@/components/dashboard/ApplicationDetail';
 import FiltersSearch from '@/components/dashboard/FiltersSearch';
@@ -1528,6 +1526,20 @@ const ApplicationsPage = () => {
         }
     };
 
+    // Generic in-place edit from the detail panel
+    const updateApplicationFields = async (id: string, data: Record<string, unknown>) => {
+        if (!id) return;
+        try {
+            await updateDoc(doc(db, 'applications', id), { ...data, lastUpdate: Timestamp.fromDate(new Date()) });
+            setApplications(prev => prev.map(a => a.id === id ? { ...a, ...(data as any) } : a));
+            setSelectedApplication(prev => prev ? { ...prev, ...(data as any) } : prev);
+            showToast('success', `Updated ${id}`);
+        } catch (err) {
+            const m = (err as any)?.message || String(err);
+            showToast('error', `Failed to update: ${m}`);
+        }
+    };
+
     if (authLoading) return (
         <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
             <div className="theme-bg-card theme-border-glass border rounded-xl p-5">Loading...</div>
@@ -1544,61 +1556,40 @@ const ApplicationsPage = () => {
     );
 
 return (
-  <div data-theme={theme} className="relative z-10 theme-text-primary flex ">
+  <div className="space-y-4 max-w-[1400px]">
     <style dangerouslySetInnerHTML={{ __html: sliderStyles }} />
-    {/* Three.js Canvas Background */}
-    <BackgroundAnimation />
-    <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5 flex-1">
-
-    {/* Enhanced Gradient Orbs - Subtle Background Animation */}
-    <GradientOrbs theme={theme} />
-
 
     {/* Print Header - Only visible when printing */}
     <PrintHeader title={`${t("extracted.application")} ${t("extracted.monitoring_center")}`} />
 
     {/* Header */}
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-sm shadow-sm"
-    >
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
-            {t("extracted.application")}{" "}
-           <span className="text-accent-gradient inline-block leading-tight pt-4">
-            {t("extracted.monitoring_center")}
-            </span>
-
-          </h1>
-          <p className="theme-text-secondary text-base">
-            {t("extracted.realtime_application_tracking_description")}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowExportModal(true)}
-            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-sm transition-shadow"
-          >
-            <Download className="w-4 h-4" />
-            <span>{t("extracted.export_data")}</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowNewApplicationForm(true)}
-            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("extracted.new_application")}</span>
-          </motion.button>
-        </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+          {t("extracted.application")} <span className="text-accent-gradient">{t("extracted.monitoring_center")}</span>
+        </h1>
+        <p className="text-xs theme-text-muted mt-0.5 truncate">
+          {t("extracted.realtime_application_tracking_description")}
+        </p>
       </div>
-    </motion.div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => setShowExportModal(true)}
+          className="h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>{t("extracted.export_data")}</span>
+        </button>
+        <button
+          onClick={() => setShowNewApplicationForm(true)}
+          className="h-9 px-3.5 accent-gradient text-white rounded-md inline-flex items-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{t("extracted.new_application")}</span>
+        </button>
+      </div>
+    </div>
 
     {/* Toast container (top-right) */}
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
@@ -1756,78 +1747,74 @@ return (
   <div className="w-full flex flex-col overflow-hidden">
     <div className="hidden sm:block overflow-x-auto">
       <table className="w-full table-auto">
-        <thead className="border-b theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm text-sm">
+        <thead className="border-b theme-border-glass">
           <tr className="whitespace-nowrap">
-            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.application_id")}</th>
-            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.applicant")}</th>
-            <th className="hidden sm:table-cell py-3 px-3 text-left font-semibold theme-text-primary min-w-[120px]">{t("applications.beneficiaryId")}</th>
-            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.district")}</th>
-            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.act_type")}</th>
-            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("applications.caseDetails")}</th>
-            <th className="hidden md:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.amount")}</th>
-            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.status")}</th>
-            <th className="hidden sm:table-cell py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.priority")}</th>
-            <th className="py-3 px-2 text-left font-semibold theme-text-primary">{t("extracted.actions")}</th>
+            <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.application_id")}</th>
+            <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.applicant")}</th>
+            <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted min-w-[120px]">{t("applications.beneficiaryId")}</th>
+            <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.district")}</th>
+            <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.act_type")}</th>
+            <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("applications.caseDetails")}</th>
+            <th className="hidden md:table-cell py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.amount")}</th>
+            <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.status")}</th>
+            <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.priority")}</th>
+            <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.actions")}</th>
           </tr>
         </thead>
 
         <tbody className="divide-y theme-border-glass text-sm">
-          {paginatedApplications.map((app: any, idx: number) => (
+          {paginatedApplications.map((app: any) => (
             <motion.tr
               key={app.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.02 }}
-              className={`${
-                idx % 2 === 0
-                  ? "theme-bg-glass dark:bg-gray-900/30"
-                  : "theme-bg-glass dark:bg-gray-800/20"
-              } hover:bg-slate-100/60 dark:hover:bg-gray-800/30 transition-colors`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="hover:theme-bg-hover transition-colors"
             >
-              <td className="py-3 px-2 font-medium theme-text-primary truncate">{app.id}</td>
+              <td className="py-2.5 px-3 font-medium theme-text-primary truncate text-xs">{app.id}</td>
 
-              <td className="py-3 px-2">
+              <td className="py-2.5 px-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
                     {app.applicantName.split(" ").map((n: string) => n[0]).join("")}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-medium theme-text-primary truncate">{app.applicantName}</span>
-                    <span className="text-xs theme-text-muted truncate">{app.phone}</span>
+                    <span className="font-medium theme-text-primary truncate leading-tight">{app.applicantName}</span>
+                    <span className="text-xs theme-text-muted truncate leading-tight">{app.phone}</span>
                   </div>
                 </div>
               </td>
 
-<td className="hidden sm:table-cell py-3 px-3 text-sm theme-text-primary min-w-[120px]">
-  {app.beneficiaryId || "-"}
-</td>
+              <td className="hidden sm:table-cell py-2.5 px-3 text-xs theme-text-secondary tabular-nums min-w-[120px]">
+                {app.beneficiaryId || "-"}
+              </td>
 
-              <td className="hidden sm:table-cell py-3 px-2">
-                <span className="theme-text-primary truncate">{app.district}</span>
+              <td className="hidden sm:table-cell py-2.5 px-3">
+                <span className="text-sm theme-text-primary truncate">{app.district}</span>
                 <span className="text-xs theme-text-muted truncate block">{app.state}</span>
               </td>
 
-              <td className="hidden md:table-cell py-3 px-2">
-                <span className="inline-block rounded text-xs font-medium theme-bg-glass theme-text-primary truncate">
+              <td className="hidden md:table-cell py-2.5 px-3">
+                <span className="inline-block rounded-md px-1.5 py-0.5 text-[11px] font-medium theme-bg-glass theme-text-secondary truncate">
                   {app.actType}
                 </span>
               </td>
 
-              <td className="hidden md:table-cell py-3 px-2 text-sm theme-text-secondary">
-                <div className="space-y-1">
-                  {app.incidentDate && <div><strong>{t('extracted.incident_date')}:</strong> {new Date(app.incidentDate).toLocaleDateString()}</div>}
-                  {app.firReport && <div><strong>{t('applications.firReport')}:</strong> {app.firReport}</div>}
-                  {app.caseNumber && <div><strong>{t('applications.caseNumber')}:</strong> {app.caseNumber}</div>}
+              <td className="hidden md:table-cell py-2.5 px-3 text-xs theme-text-secondary">
+                <div className="space-y-0.5">
+                  {app.incidentDate && <div>{new Date(app.incidentDate).toLocaleDateString()}</div>}
+                  {app.firReport && <div>FIR {app.firReport}</div>}
+                  {app.caseNumber && <div>{app.caseNumber}</div>}
                 </div>
               </td>
 
-              <td className="hidden md:table-cell py-3 px-2 font-semibold theme-text-primary truncate">
+              <td className="hidden md:table-cell py-2.5 px-3 text-sm font-semibold theme-text-primary truncate text-right tabular-nums">
                 {formatCurrency(app.amount)}
               </td>
 
-              <td className="py-3 px-2">
+              <td className="py-2.5 px-3">
                 <span
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(
                     app.status
                   )}`}
                 >
@@ -1839,9 +1826,9 @@ return (
                 </span>
               </td>
 
-              <td className="hidden sm:table-cell py-3 px-2">
+              <td className="hidden sm:table-cell py-2.5 px-3">
                 <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getPriorityColor(
                     app.priority
                   )}`}
                 >
@@ -1849,26 +1836,28 @@ return (
                 </span>
               </td>
 
-              <td className="py-3 px-2">
-                <div className="flex gap-1">
+              <td className="py-2.5 px-3">
+                <div className="flex justify-end gap-0.5">
                   <button
-                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors"
+                    title="View"
+                    className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-blue-500 transition-colors"
                     onClick={() => setSelectedApplication(app)}
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-blue-500 transition-colors"
+                    title="Edit"
+                    className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-blue-500 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedApplication(app);
-                      setShowNewApplicationForm(true);
                     }}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2 rounded-lg theme-bg-glass hover:theme-bg-card theme-text-muted hover:text-red-500 transition-colors"
+                    title="Delete"
+                    className="p-1.5 rounded-md theme-text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       requestDeleteApplication(app.id);
@@ -2003,7 +1992,6 @@ return (
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedApplication(app);
-                          setShowNewApplicationForm(true);
                         }}
                       >
                         <Edit className="w-4 h-4 theme-text-muted hover:text-blue-500" />
@@ -2026,18 +2014,18 @@ return (
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
-            <p className="text-sm theme-text-muted">
+          <div className="flex items-center justify-between px-4 py-2 border-t theme-border-glass">
+            <p className="text-xs theme-text-muted">
               {t("extracted.showing")}{" "}
               {(currentPage - 1) * itemsPerPage + 1} {t("extracted.to")}{" "}
               {Math.min(currentPage * itemsPerPage, filteredApplications.length)}{" "}
               {t("extracted.of")} {filteredApplications.length}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p: number) => p - 1)}
-                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:theme-bg-glass transition-colors"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -2050,11 +2038,11 @@ return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1.5 rounded-lg ${
+                      className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${
                         currentPage === pageNum
-                          ? "accent-gradient text-white"
-                          : "theme-bg-card theme-border-glass border theme-text-primary hover:theme-bg-glass"
-                      } transition-colors`}
+                          ? "theme-bg-glass text-accent-gradient"
+                          : "theme-text-muted hover:theme-bg-glass hover:theme-text-primary"
+                      }`}
                     >
                       {pageNum}
                     </button>
@@ -2064,7 +2052,7 @@ return (
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p: number) => p + 1)}
-                className="p-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary hover:theme-bg-glass transition-colors"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -2078,7 +2066,6 @@ return (
     <ApplicationDetail
       selectedApplication={selectedApplication}
       setSelectedApplication={setSelectedApplication}
-      setShowNewApplicationForm={setShowNewApplicationForm}
       t={t}
       theme={theme}
       expectedAmount={expectedAmount}
@@ -2087,12 +2074,12 @@ return (
       detailStatus={detailStatus}
       setDetailStatus={setDetailStatus}
       updateApplicationStatus={updateApplicationStatus}
+      onUpdateFields={updateApplicationFields}
       formatDate={formatDate}
       formatCurrency={formatCurrency}
       POA_OFFENCES={POA_OFFENCES}
       setShowExportModal={setShowExportModal}
     />
-    </div>
   </div>
 );
 
