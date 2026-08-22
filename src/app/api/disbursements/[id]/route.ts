@@ -23,7 +23,6 @@ import {
   requireOfficer,
 } from '@/lib/server/requestContext';
 import {
-  createDocument,
   deleteDocument,
   getDocument,
   patchDocumentFields,
@@ -35,8 +34,8 @@ interface OpBody {
   [key: string]: unknown;
 }
 
-function asRecord(value: unknown): DisbursementRaw | null {
-  return typeof value === 'object' && value !== null ? (value as DisbursementRaw) : null;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
 
 /** Replicates the legacy updateProgressivePaymentProgress side-effect. */
@@ -52,7 +51,7 @@ async function applyProgressiveCompletionSideWrite(
     'id',
     customId,
   );
-  const record = asRecord(matches[0]);
+  const record = matches[0] as unknown as DisbursementRaw | undefined;
   if (!record || !record.isProgressivePayment || newStatus !== 'completed') return;
   const update = computeLegacyProgressiveCompletionUpdate(record);
   await patchDocumentFields(

@@ -156,6 +156,7 @@ interface TableInstallmentInput {
   reliefAmount?: number | null;
   disbursedAmount?: number | null;
   completedInstallments?: number | null;
+  totalInstallments?: number | null;
 }
 
 /** Fixed-schedule amount per installment index used by table/form paths. */
@@ -532,6 +533,26 @@ export class Disbursement implements Entity, Auditable, Ownable, Approvable, App
 
   get totalInstallments(): number {
     return this.raw.totalInstallments ?? 3;
+  }
+
+  get applicationId(): string | null {
+    return this.raw.applicationId ?? null;
+  }
+
+  get beneficiaryId(): string | null {
+    return this.raw.beneficiaryId ?? null;
+  }
+
+  get ownerId(): string | null {
+    return this.raw.ownerId ?? null;
+  }
+
+  get createdAt(): string | null {
+    return (this.raw as { createdAt?: string | null }).createdAt ?? null;
+  }
+
+  get lastUpdated(): string | null {
+    return (this.raw as { lastUpdated?: string | null }).lastUpdated ?? null;
   }
 
   /** A pending disbursement may be approved once payment references are set. */
