@@ -289,7 +289,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     }, []);
 
     return (
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-5 space-y-5">
             {/* Applicant Information */}
             <div>
                 <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicantInformation')}</h3>
@@ -468,7 +468,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
                     {/* Expected Compensation Display */}
                     {formData.offenceType && formData.offenceCategory && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-500 dark:to-green-300 border-2 border-green-100 dark:border-green-400 rounded-xl shadow-md">
+                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-500 dark:to-green-300 border-2 border-green-100 dark:border-green-400 rounded-xl shadow-sm">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-6 h-6 bg-gradient-to-r from-green-600 to-emerald-700 rounded-full flex items-center justify-center shadow-sm">
                             <span className="text-white text-xs font-bold">₹</span>
@@ -478,7 +478,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                           </span>
                         </div>
 
-                        <div className="text-3xl font-bold text-green-800 dark:text-green-100 mb-2">
+                        <div className="text-lg font-semibold tracking-tight text-green-800 dark:text-green-100 mb-2">
                           {(() => {
                             const category = POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
                             const compensation = category && formData.offenceType in category
@@ -602,7 +602,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={onCancel}
-                    className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+                    className="flex-1 px-3 py-2 rounded-md theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
                     style={{ background: theme === 'light' ? 'rgba(248, 250, 252, 0.8)' : undefined }}
                 >
                     {t('extracted.cancel')}
@@ -612,7 +612,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
                     disabled={isSubmitting || beneficiaryExists !== true}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-3 py-2 rounded-md accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-sm transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? (
                         <>
@@ -1529,26 +1529,26 @@ const ApplicationsPage = () => {
     };
 
     if (authLoading) return (
-        <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-            <div className="theme-bg-card theme-border-glass border rounded-xl p-6">Loading...</div>
+        <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+            <div className="theme-bg-card theme-border-glass border rounded-xl p-5">Loading...</div>
         </div>
     );
 
     if (!isOfficer) return (
-        <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-            <div className="theme-bg-card theme-border-glass border rounded-xl p-6">
-                <h2 className="text-xl font-semibold theme-text-primary">Access restricted</h2>
+        <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+            <div className="theme-bg-card theme-border-glass border rounded-xl p-5">
+                <h2 className="text-base font-semibold theme-text-primary">Access restricted</h2>
                 <p className="theme-text-muted">This page is restricted to officers only. If you believe this is an error, contact your administrator.</p>
             </div>
         </div>
     );
 
 return (
-  <div data-theme={theme} className="relative z-10 theme-text-primary flex min-h-screen">
+  <div data-theme={theme} className="relative z-10 theme-text-primary flex ">
     <style dangerouslySetInnerHTML={{ __html: sliderStyles }} />
     {/* Three.js Canvas Background */}
     <BackgroundAnimation />
-    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 flex-1">
+    <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5 flex-1">
 
     {/* Enhanced Gradient Orbs - Subtle Background Animation */}
     <GradientOrbs theme={theme} />
@@ -1561,11 +1561,11 @@ return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
+      className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-sm shadow-sm"
     >
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
             {t("extracted.application")}{" "}
            <span className="text-accent-gradient inline-block leading-tight pt-4">
             {t("extracted.monitoring_center")}
@@ -1582,7 +1582,7 @@ return (
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
+            className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-sm transition-shadow"
           >
             <Download className="w-4 h-4" />
             <span>{t("extracted.export_data")}</span>
@@ -1591,7 +1591,7 @@ return (
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowNewApplicationForm(true)}
-            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
+            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
           >
             <Plus className="w-4 h-4" />
             <span>{t("extracted.new_application")}</span>
@@ -1674,10 +1674,10 @@ return (
         exit={{ opacity: 0, y: -20 }}
         className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
       >
-        <div className="p-6 border-b theme-border-glass">
+        <div className="p-5 border-b theme-border-glass">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold theme-text-primary">
+              <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
                 {selectedApplication
                   ? t("applications.editANewReliefApplication")
                   : t("applications.createANewReliefApplication")}
@@ -1924,7 +1924,7 @@ return (
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.02 }}
                   whileHover={{ y: -2 }}
-                  className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+                  className="theme-bg-glass theme-border-glass border rounded-lg p-4 cursor-pointer hover:shadow-sm transition-shadow"
                   onClick={() => setSelectedApplication(app)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -2026,7 +2026,7 @@ return (
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between px-6 py-4 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-2.5 border-t theme-border-glass theme-bg-glass dark:bg-gray-800/50 backdrop-blur-sm">
             <p className="text-sm theme-text-muted">
               {t("extracted.showing")}{" "}
               {(currentPage - 1) * itemsPerPage + 1} {t("extracted.to")}{" "}

@@ -179,7 +179,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div data-theme={theme} className="relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -198,12 +198,12 @@ export default function FeedbackPage() {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -234,7 +234,7 @@ export default function FeedbackPage() {
                 {t('extracted.feedback')} • {t('extracted.support')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.feedback') || 'Feedback'}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.center')}
@@ -248,17 +248,17 @@ export default function FeedbackPage() {
         
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-5">
               {/* Feedback Form */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border p-4 md:p-6 shadow-xl"
+                className="rounded-xl border p-4 md:p-5 shadow-sm"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <h2 className="text-xl font-semibold mb-4" style={{ color: currentColors.textPrimary }}>
+                <h2 className="text-base font-semibold mb-4" style={{ color: currentColors.textPrimary }}>
                   {isEditing ? (t('extracted.edit_feedback') || 'Edit Feedback') : (t('extracted.submit_new') || 'Submit New Feedback')}
                 </h2>
 
@@ -300,7 +300,7 @@ export default function FeedbackPage() {
                       value={subject}
                       onChange={e => setSubject(e.target.value)}
                       placeholder={t('extracted.brief_summary_of_your_feedback') || "Brief summary of your feedback"}
-                      className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       style={{
                         backgroundColor: currentColors.glassBg,
                         borderColor: currentColors.glassBorder,
@@ -320,7 +320,7 @@ export default function FeedbackPage() {
                       onChange={e => setMessage(e.target.value)}
                       placeholder={t('extracted.please_provide_detailed_information') || 'Please provide detailed information about your feedback or grievance'}
                       rows={4}
-                      className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
+                      className="w-full px-3 py-2 rounded-md border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
                       style={{
                         backgroundColor: currentColors.glassBg,
                         borderColor: currentColors.glassBorder,
@@ -335,7 +335,7 @@ export default function FeedbackPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting || !subject.trim() || !message.trim()}
-                      className="flex-1 font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
+                      className="flex-1 font-semibold py-3 px-6 rounded-lg shadow-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
                       style={{
                         background: theme === 'light' ? 'linear-gradient(135deg, #f97316, #ea580c, #dc2626)' : 'linear-gradient(135deg, #1e40af, #3b82f6, #8b5cf6)',
                         color: '#ffffff'
@@ -383,10 +383,10 @@ export default function FeedbackPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-2xl border overflow-hidden shadow-xl"
+                className="rounded-xl border overflow-hidden shadow-sm"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
-                <div className="p-4 md:p-6">
+                <div className="p-4 md:p-5">
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold" style={{ color: currentColors.textPrimary }}>
                       {t('extracted.feedback_analytics.yourFeedback')} ({feedbacks.length})
@@ -416,7 +416,7 @@ export default function FeedbackPage() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="rounded-xl border p-4 hover:shadow-md transition-all duration-200"
+                          className="rounded-xl border p-4 hover:shadow-sm transition-all duration-200"
                           style={{ backgroundColor: currentColors.glassBg, borderColor: currentColors.glassBorder }}
                         >
                           <div className="flex items-start justify-between mb-3">
@@ -477,12 +477,12 @@ export default function FeedbackPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Stats Cards */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="rounded-2xl border p-4 md:p-6 shadow-xl"
+                className="rounded-xl border p-4 md:p-5 shadow-sm"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <h3 className="text-lg font-semibold mb-4" style={{ color: currentColors.textPrimary }}>
@@ -521,7 +521,7 @@ export default function FeedbackPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-2xl border p-4 md:p-6 shadow-xl"
+                className="rounded-xl border p-4 md:p-5 shadow-sm"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <h3 className="text-lg font-semibold mb-4" style={{ color: currentColors.textPrimary }}>

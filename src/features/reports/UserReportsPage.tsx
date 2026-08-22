@@ -239,7 +239,7 @@ const UserReportsPage = () => {
   };
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div data-theme={theme} className="relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -258,12 +258,12 @@ const UserReportsPage = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -293,7 +293,7 @@ const UserReportsPage = () => {
                 {t('extracted.reports')} • {t('extracted.download')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.reports')}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.download')}
@@ -314,11 +314,11 @@ const UserReportsPage = () => {
       exit={{ opacity: 0, y: 10 }}
       className="mt-6"
     >
-      <div className="rounded-2xl theme-bg-card theme-border-glass border shadow-lg overflow-hidden">
+      <div className="rounded-xl theme-bg-card theme-border-glass border shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b theme-border-glass">
+        <div className="flex items-center justify-between p-5 border-b theme-border-glass">
           <div>
-            <h2 className="text-2xl font-bold theme-text-primary">
+            <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
               {selectedReport.name}
             </h2>
             <p className="text-sm theme-text-muted mt-1">
@@ -334,8 +334,8 @@ const UserReportsPage = () => {
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="p-4 sm:p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
             <div className="space-y-4">
               <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm font-semibold theme-text-primary mb-2">
@@ -457,7 +457,7 @@ const UserReportsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+          className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect"
         >
           <div className="flex flex-col space-y-4">
             {/* Search */}
@@ -571,7 +571,7 @@ const UserReportsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"
           >
             {filteredReports.map((report, idx) => (
               <motion.div
@@ -580,13 +580,13 @@ const UserReportsPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.03 }}
                 whileHover={{ y: -4, scale: 1.01 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
+                className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-sm transition-all duration-300"
                 onClick={() => setSelectedReport(report)}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
                       {(() => {
                         const Icon = getCategoryIcon(report.category) || FileText;
                         return <Icon className="w-5 h-5 sm:w-6 sm:h-6" />;
@@ -692,33 +692,33 @@ const UserReportsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4 sm:space-y-6"
+            className="space-y-4 sm:space-y-5"
           >
             {/* Desktop Table View */}
-            <div className="hidden md:block theme-bg-card theme-border-glass border rounded-2xl overflow-hidden glass-effect">
+            <div className="hidden md:block theme-bg-card theme-border-glass border rounded-xl overflow-hidden glass-effect">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="theme-bg-glass">
                     <tr>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.report')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.type')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.category')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.records')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.size')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.generated_date')}
                       </th>
-                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
+                      <th className="px-4 lg:px-4 py-2.5 text-left text-xs font-semibold theme-text-primary uppercase tracking-wider">
                         {t('extracted.actions')}
                       </th>
                     </tr>
@@ -733,7 +733,7 @@ const UserReportsPage = () => {
                         className="hover:theme-bg-glass cursor-pointer transition-colors"
                         onClick={() => setSelectedReport(report)}
                       >
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
                               {(() => {
@@ -751,32 +751,32 @@ const UserReportsPage = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <span className="text-sm theme-text-primary capitalize">
                             {report.type}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <span className="text-sm theme-text-primary capitalize">
                             {report.category}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <span className="text-sm theme-text-primary">
                             {report.recordCount ?? '--'}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <span className="text-sm theme-text-primary">
                             {formatFileSize(report.fileSize)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <span className="text-sm theme-text-primary">
                             {formatDate(report.generatedDate)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 lg:px-4 py-2.5">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -812,12 +812,12 @@ const UserReportsPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-4 glass-effect cursor-pointer hover:shadow-lg transition-all duration-300"
+                  className="theme-bg-card theme-border-glass border rounded-xl p-4 glass-effect cursor-pointer hover:shadow-sm transition-all duration-300"
                   onClick={() => setSelectedReport(report)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
                         {(() => {
                           const Icon = getCategoryIcon(report.category) || FileText;
                           return <Icon className="w-5 h-5" />;

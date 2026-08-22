@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import {
   BarChart3, Database, DownloadCloud, FileText, Home, Menu, MessageCircle,
   Users, Wallet, Bell, User, ChevronDown, Settings, HelpCircle, ChevronRight,
-  Link as LinkIcon, LogOut, Repeat, Sun, Moon
+                  Link as LinkIcon, LogOut, Repeat
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useLocale } from "@/context/LocaleContext";
@@ -37,7 +37,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 }
 
 function DashboardShellInner({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const dropdownSolidBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.99)' : 'rgba(255, 255, 255, 0.99)';
   const { t } = useLocale();
   const router = useRouter();
@@ -268,7 +268,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                         : activeTab.replace('-', ' ');
 
   return (
-    <div data-theme={theme} className="relative min-h-screen overflow-hidden transition-all duration-300" style={{ background: 'var(--bg-gradient)' }}>
+    <div data-theme={theme} className="relative min-h-screen transition-all duration-300" style={{ background: 'var(--bg-gradient)' }}>
       <style jsx global>{`
                 [data-theme="dark"] {
                     --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%),
@@ -352,59 +352,40 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           open={sidebarOpen}
           setOpen={setSidebarOpen}
           collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           subtitle={isUserView ? t('extracted.applicant_portal') : t('extracted.dbt_dashboard')}
         />
 
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}`}>
-          <header className={`sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass shadow-sm transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'h-20' : 'h-24'}`}>
-            <div className="flex items-center justify-between px-4 h-full lg:px-6">
-              <div className="flex items-center gap-4 flex-1">
-                <motion.button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="hidden lg:flex p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                >
-                  <ChevronRight className={`w-5 h-5 theme-text-primary transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} />
-                </motion.button>
-
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'}`}>
+          <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass">
+            <div className="flex items-center justify-between px-4 h-14 lg:px-6">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
+                  className="lg:hidden inline-flex p-2 rounded-md theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
                   aria-label={t('extracted.open_sidebar')}
                 >
-                  <Menu className="w-5 h-5 theme-text-primary" />
+                  <Menu className="w-[18px] h-[18px]" />
                 </button>
 
-                <div className="flex items-center gap-3">
-                  <div className="hidden sm:block">
-                    <h1 className="text-xl font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {t('extracted.nyantra_dashboard')}
-                    </h1>
-                    <p className="text-sm theme-text-muted">
-                      {isUserView ? t('extracted.applicant_portal') : t('extracted.direct_benefit_transfer_management')}
-                    </p>
-                  </div>
-                  <div className="sm:hidden">
-                    <h1 className="text-lg font-bold theme-text-primary bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {t('extracted.nyantra')}
-                    </h1>
-                  </div>
+                <div className="flex items-center gap-1.5 text-sm min-w-0 ml-1">
+                  <span className="theme-text-muted truncate">{isUserView ? t('extracted.applicant_portal') : t('extracted.dashboard')}</span>
+                  <ChevronRight className="w-3 h-3 theme-text-muted shrink-0 rotate-90" />
+                  <span className="font-medium theme-text-primary truncate">{breadcrumbLabel}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1 sm:gap-1.5">
                 {/* Officer view switcher */}
                 {canSwitch && (
-                  <div className="relative hidden md:flex items-center rounded-lg theme-bg-glass border theme-border-glass p-0.5" role="group" aria-label="Switch dashboard view">
+                  <div className="hidden md:flex items-center gap-0.5 mr-1" role="group" aria-label="Switch dashboard view">
                     <button
                       onClick={() => handleSwitchView('officer')}
                       disabled={view === 'officer'}
                       aria-pressed={view === 'officer'}
-                      className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${view === 'officer'
-                        ? 'accent-gradient text-white shadow-sm'
-                        : 'theme-text-secondary hover:theme-text-primary'}`}
+                      className={`h-8 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${view === 'officer'
+                        ? 'theme-bg-glass text-accent-gradient'
+                        : 'theme-text-muted hover:theme-text-primary'}`}
                     >
                       Officer
                     </button>
@@ -412,9 +393,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                       onClick={() => handleSwitchView('user')}
                       disabled={view === 'user'}
                       aria-pressed={view === 'user'}
-                      className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${view === 'user'
-                        ? 'accent-gradient text-white shadow-sm'
-                        : 'theme-text-secondary hover:theme-text-primary'}`}
+                      className={`h-8 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${view === 'user'
+                        ? 'theme-bg-glass text-accent-gradient'
+                        : 'theme-text-muted hover:theme-text-primary'}`}
                     >
                       Applicant
                     </button>
@@ -425,43 +406,29 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                 {canSwitch && (
                   <button
                     onClick={() => handleSwitchView(isUserView ? 'officer' : 'user')}
-                    className="md:hidden p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
+                    className="md:hidden inline-flex p-2 rounded-md theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
                     aria-label="Switch dashboard view"
                   >
-                    <Repeat className="w-5 h-5 theme-text-primary" />
+                    <Repeat className="w-[18px] h-[18px]" />
                   </button>
                 )}
-
-                {/* Theme toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className="hidden sm:flex p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="w-5 h-5 theme-text-primary" />
-                  ) : (
-                    <Moon className="w-5 h-5 theme-text-primary" />
-                  )}
-                </button>
 
                 {/* Notifications */}
                 <div className="relative">
                   <motion.button
                     onClick={() => setNotificationOpen(!notificationOpen)}
-                    className="relative p-2 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors group"
-                    whileHover={{ scale: 1.05 }}
+                    className="relative inline-flex p-2 rounded-md theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors group"
                     whileTap={{ scale: 0.95 }}
                     aria-label={t('extracted.notifications_1')}
                   >
-                    <Bell className="w-5 h-5 theme-text-primary group-hover:scale-110 transition-transform" />
+                    <Bell className="w-[18px] h-[18px]" />
                     {isUserView && unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 theme-border-glass flex items-center justify-center">
-                        <span className="text-xs font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                      <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-[9px] font-bold text-white leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
                       </span>
                     )}
                     {!isUserView && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 theme-border-glass"></span>
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                     )}
                   </motion.button>
 
@@ -547,16 +514,15 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                 <div className="relative">
                   <motion.button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-2 py-2 h-9 rounded-lg theme-bg-glass border theme-border-glass hover:theme-bg-hover transition-colors"
-                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-md hover:theme-bg-glass transition-colors"
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-[10px]">
+                    <div className="w-6 h-6 rounded-full accent-gradient flex items-center justify-center text-white font-semibold text-[10px]">
                       {userInitials}
                     </div>
                     <div className="hidden sm:block text-left">
                       <p className="text-xs font-medium theme-text-primary truncate max-w-24 leading-tight">{displayName}</p>
-                      <p className="text-[11px] theme-text-muted leading-tight">{roleLabel}</p>
+                      <p className="text-[10px] theme-text-muted leading-tight">{roleLabel}</p>
                     </div>
                     <ChevronDown className={`w-3 h-3 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
@@ -650,15 +616,6 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                     )}
                   </AnimatePresence>
                 </div>
-              </div>
-            </div>
-
-            {/* Breadcrumb */}
-            <div className="border-t theme-border-glass px-4 lg:px-6 py-2">
-              <div className="flex items-center gap-2 text-sm theme-text-muted">
-                <span>{isUserView ? t('extracted.applicant_portal') : t('extracted.dashboard')}</span>
-                <ChevronDown className="w-3 h-3 rotate-270" />
-                <span className="theme-text-primary capitalize">{breadcrumbLabel}</span>
               </div>
             </div>
           </header>

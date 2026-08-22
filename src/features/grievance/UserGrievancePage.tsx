@@ -476,7 +476,7 @@ export default function GrievancePage() {
   const resolvedCount = grievances.filter(l => l.status === 'resolved' || l.status === 'closed').length;
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div data-theme={theme} className="relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -537,9 +537,9 @@ export default function GrievancePage() {
       {loading || (user && beneficiaries.length === 0) ? (
         <LoadingState message={t('extracted.loading_grievances')} />
       ) : !currentUser ? (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center ">
           <div className="text-center">
-            <h2 className="text-xl font-semibold theme-text-primary mb-4">
+            <h2 className="text-base font-semibold theme-text-primary mb-4">
               {beneficiaries.length === 0 ? 'No Beneficiaries Found' : 'Please select a beneficiary'}
             </h2>
             <p className="theme-text-muted mb-4">
@@ -559,12 +559,12 @@ export default function GrievancePage() {
           </div>
         </div>
       ) : (
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -595,7 +595,7 @@ export default function GrievancePage() {
                 {t('extracted.grievances')} • {t('extracted.support')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.grievance_portal')}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.dashboard')}
@@ -609,16 +609,16 @@ export default function GrievancePage() {
           
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5">
             {/* Grievance Form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5"
             >
-              <h2 className="text-xl font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')}</h2>
+              <h2 className="text-base font-semibold theme-text-primary mb-4">{t('extracted.file_new_grievance')}</h2>
               
               <form onSubmit={submitGrievance} className="space-y-4">
                 {/* Beneficiary Selection */}
@@ -639,7 +639,7 @@ export default function GrievancePage() {
                           setBeneficiaryEmail('');
                         }
                       }}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
                       <option value="">{t('extracted.select_a_beneficiary')}</option>
                       {beneficiaries.map((beneficiary) => (
@@ -662,7 +662,7 @@ export default function GrievancePage() {
                       onChange={(e) => setBeneficiaryName(e.target.value)}
                       readOnly={!!selectedBeneficiary?.name}
                       placeholder={t('extracted.enterBeneficiaryName')}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
                   
@@ -675,7 +675,7 @@ export default function GrievancePage() {
                       onChange={(e) => setBeneficiaryPhone(e.target.value)}
                       readOnly={!!selectedBeneficiary?.phone}
                       placeholder={t('extracted.enterPhoneNumber')}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -691,7 +691,7 @@ export default function GrievancePage() {
                       readOnly={!!selectedBeneficiary?.email}
                       placeholder={t('extracted.enter_your_email')}
                       type="email"
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
                   
@@ -702,7 +702,7 @@ export default function GrievancePage() {
                     <input 
                       value={currentUser?.id || ''}
                       readOnly
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -716,7 +716,7 @@ export default function GrievancePage() {
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
                       <option value="disbursement-delay">{t('extracted.disbursement_delay')}</option>
                       <option value="document-issues">{t('extracted.document_issues')}</option>
@@ -735,7 +735,7 @@ export default function GrievancePage() {
                       value={subCategory}
                       onChange={(e) => setSubCategory(e.target.value)}
                       placeholder={t('extracted.optional_sub_category')}
-                      className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -749,7 +749,7 @@ export default function GrievancePage() {
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder={t('extracted.please_provide_detailed_information_about_your_grievance')}
                     rows={4}
-                    className="w-full px-4 py-3 rounded-lg border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
+                    className="w-full px-3 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary placeholder-theme-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
                     required
                   />
                 </div>
@@ -757,7 +757,7 @@ export default function GrievancePage() {
                 <button 
                   type="submit"
                   disabled={!description.trim() || isSubmitting}
-                  className="w-full accent-gradient text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
+                  className="w-full accent-gradient text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -784,7 +784,7 @@ export default function GrievancePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold theme-text-primary">
@@ -808,7 +808,7 @@ export default function GrievancePage() {
                     <select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value as 'all' | 'open' | 'in-progress' | 'pending' | 'resolved' | 'closed' | 'escalated')}
-                      className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="px-3.5 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
                       <option value="all">{t('extracted.all_status')}</option>
                       <option value="open">{t('extracted.open')}</option>
@@ -925,22 +925,22 @@ export default function GrievancePage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Summary Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5"
             >
               <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.grievance_summary')}</h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold theme-text-primary mb-1">{grievances.length}</div>
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary mb-1">{grievances.length}</div>
                   <div className="text-xs theme-text-muted">{t('extracted.total')}</div>
                 </div>
                 <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center">
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">{openCount}</div>
+                  <div className="text-lg font-semibold tracking-tight text-amber-600 dark:text-amber-400 mb-1">{openCount}</div>
                   <div className="text-xs theme-text-muted">{t('extracted.urgent')}</div>
                 </div>
               </div>
@@ -994,7 +994,7 @@ export default function GrievancePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6"
+                  className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold theme-text-primary">{t('extracted.grievance_details')}</h4>
@@ -1083,7 +1083,7 @@ export default function GrievancePage() {
                         {(!selectedGrv.communication || selectedGrv.communication.length === 0) ? (
                           <div className="flex items-center justify-center h-full">
                             <div className="text-center theme-text-muted">
-                              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center">
+                              <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center">
                                 <Shield className="w-6 h-6 text-blue-400" />
                               </div>
                               <p className="text-sm">{t('extracted.no_messages')}</p>
@@ -1110,7 +1110,7 @@ export default function GrievancePage() {
                                     </span>
                                   </div>
                                   <div
-                                    className={`p-3 rounded-2xl shadow-sm ${
+                                    className={`p-3 rounded-xl shadow-sm ${
                                       isOfficer
                                         ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-tl-sm'
                                         : 'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm'
@@ -1141,13 +1141,13 @@ export default function GrievancePage() {
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder={t('extracted.write_message')}
-                            className="w-full px-4 py-3 pr-12 text-sm rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                            className="w-full px-3 py-2.5 pr-12 text-sm rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                           />
                           {recognition && (
                             <button
                               onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                              className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all hover:shadow-lg ${
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all hover:shadow-sm ${
                                 isRecording
                                   ? 'bg-red-500 text-white animate-pulse'
                                   : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
@@ -1162,7 +1162,7 @@ export default function GrievancePage() {
                         <button
                           onClick={sendMessage}
                           disabled={!newMessage.trim()}
-                          className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                          className="px-3 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-sm transform hover:scale-105 active:scale-95"
                         >
                           {t('extracted.send')}
                         </button>

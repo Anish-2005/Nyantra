@@ -154,7 +154,7 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ color: currentColors.foreground }}>
+    <div className="relative overflow-hidden" style={{ color: currentColors.foreground }}>
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: currentColors.bgOrb1 }}></div>
@@ -162,15 +162,15 @@ export default function UserDashboard() {
       </div>
 
       <div className="relative z-10">
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto p-4 sm:p-5 md:p-5 lg:p-5">
           {/* Hero Welcome Section */}
          <motion.div
   initial={{ opacity: 0, y: -20 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.6 }}
-  className="mb-6 sm:mb-8 md:mb-12"
+  className="mb-6 sm:mb-6 md:mb-12"
 >
-            <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 md:p-12 text-white shadow-2xl" style={{ background: currentColors.bgGradient }}>
+            <div className="relative overflow-hidden rounded-xl p-5 sm:p-5 md:p-12 text-white shadow-sm" style={{ background: currentColors.bgGradient }}>
     {/* Background pattern */}
     <div className="absolute inset-0 opacity-10">
       <div className="absolute top-4 right-4 w-32 h-32 border-2 border-amber-200 rounded-full"></div>
@@ -196,7 +196,7 @@ export default function UserDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight text-white dark:text-white"
+        className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight text-white dark:text-white"
       >
         {t('extracted.your_dashboard') || 'Your Dashboard'}
       </motion.h1>
@@ -219,19 +219,19 @@ export default function UserDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="mb-6 sm:mb-8 md:mb-12"
+            className="mb-6 sm:mb-6 md:mb-12"
           >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
+            <h2 className="text-xl sm:text-lg font-semibold tracking-tight mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
               {t('extracted.your_impact') || 'Your Impact'}
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {/* Total Applications */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -241,7 +241,7 @@ export default function UserDashboard() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-lg font-semibold tracking-tight mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.totalApplications}
                 </div>
                 <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
@@ -254,7 +254,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.0 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -264,7 +264,7 @@ export default function UserDashboard() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-lg font-semibold tracking-tight mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.pendingApplications}
                 </div>
                 <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
@@ -277,7 +277,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.1 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -287,7 +287,7 @@ export default function UserDashboard() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-lg font-semibold tracking-tight mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   {stats.approvedApplications}
                 </div>
                 <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
@@ -300,7 +300,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.2 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -310,7 +310,7 @@ export default function UserDashboard() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
+                <div className="text-2xl sm:text-lg font-semibold tracking-tight mb-1 sm:mb-2" style={{ color: currentColors.textPrimary }}>
                   ₹{stats.totalAmountRequested.toLocaleString()}
                 </div>
                 <div className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
@@ -325,19 +325,19 @@ export default function UserDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.4 }}
-            className="mb-6 sm:mb-8 md:mb-12"
+            className="mb-6 sm:mb-6 md:mb-12"
           >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
+            <h2 className="text-xl sm:text-lg font-semibold tracking-tight mb-4 sm:mb-6" style={{ color: currentColors.textPrimary }}>
               {t('extracted.quick_actions') || 'Quick Actions'}
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {/* New Application */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.5 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/dashboard/applications')}
               >
@@ -361,7 +361,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.6 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/dashboard/applications')}
               >
@@ -385,7 +385,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.7 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/dashboard/grievance')}
               >
@@ -409,7 +409,7 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.8 }}
-                className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="rounded-xl border p-4 sm:p-5 shadow-sm hover:shadow-sm transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
                 onClick={() => router.push('/dashboard/beneficiaries')}
               >
@@ -436,8 +436,8 @@ export default function UserDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.0 }}
           >
-            <div className="rounded-2xl border overflow-hidden shadow-xl" style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}>
-              <div className="p-4 sm:p-6 md:p-8">
+            <div className="rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}>
+              <div className="p-4 sm:p-5 md:p-5">
                 <div className="flex items-center gap-3 mb-4 sm:mb-6">
                   <div className="p-2 rounded-lg" style={{ backgroundColor: theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)' }}>
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'light' ? '#2563eb' : '#60a5fa' }}>
@@ -445,7 +445,7 @@ export default function UserDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-bold" style={{ color: currentColors.textPrimary }}>
+                    <h3 className="text-lg sm:text-base font-semibold" style={{ color: currentColors.textPrimary }}>
                       {t('extracted.recent_activity') || 'Recent Activity'}
                     </h3>
                     <p className="text-xs sm:text-sm" style={{ color: currentColors.textMuted }}>
@@ -456,7 +456,7 @@ export default function UserDashboard() {
 
                 {recent.length === 0 ? (
                   <div className="text-center py-8 sm:py-12">
-                    <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4" style={{ backgroundColor: currentColors.glassBg, border: `1px solid ${currentColors.glassBorder}` }}>
+                    <div className="mx-auto w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4" style={{ backgroundColor: currentColors.glassBg, border: `1px solid ${currentColors.glassBorder}` }}>
                       <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: currentColors.textMuted }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
@@ -482,7 +482,7 @@ export default function UserDashboard() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 2.1 + index * 0.1 }}
-                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border hover:shadow-md transition-all duration-200"
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border hover:shadow-sm transition-all duration-200"
                         style={{ backgroundColor: currentColors.glassBg, borderColor: currentColors.glassBorder }}
                       >
                         <div className="flex-shrink-0 self-start sm:self-center">

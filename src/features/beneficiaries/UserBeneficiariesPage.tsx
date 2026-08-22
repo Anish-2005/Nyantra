@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardView } from '@/context/DashboardViewContext';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
@@ -251,7 +252,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
   }, [initialData]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="p-5 space-y-5">
       <div>
         <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.edit_beneficiary')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -398,7 +399,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
           type="submit"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -417,6 +418,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
 export default function BeneficiariesPage() {
   const { user, profile } = useAuth();
+  const { view } = useDashboardView();
   const { theme } = useTheme();
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
@@ -665,7 +667,7 @@ export default function BeneficiariesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="p-5 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('extracted.login_required')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.login_to_manage_beneficiaries')}</p>
@@ -674,9 +676,9 @@ export default function BeneficiariesPage() {
     );
   }
 
-  if (profile && profile.role !== 'user') {
+  if (view !== 'user') {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="p-5 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('extracted.applicant_only_access')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.contact_admin_if_needed')}</p>
@@ -690,7 +692,7 @@ export default function BeneficiariesPage() {
   }
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div data-theme={theme} className="relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -709,12 +711,12 @@ export default function BeneficiariesPage() {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -745,7 +747,7 @@ export default function BeneficiariesPage() {
                 {t('extracted.beneficiaries')} • {t('extracted.management')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.beneficiary_management')}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.dashboard')}
@@ -759,18 +761,18 @@ export default function BeneficiariesPage() {
          
         </motion.div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           {/* Main Content */}
-          <div className="xl:col-span-2 space-y-6">
+          <div className="xl:col-span-2 space-y-5">
             {/* Action Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary mb-2">
+                  <h2 className="text-base font-semibold theme-text-primary mb-2">
                     {beneficiaries.length === 0 ? t('extracted.create_beneficiary') : t('extracted.manage_beneficiary')}
                   </h2>
                   <p className="theme-text-muted text-sm">
@@ -786,7 +788,7 @@ export default function BeneficiariesPage() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={createNewBeneficiary}
-                      className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
+                      className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
                     >
                       <Plus className="w-5 h-5" />
                       {t('extracted.create_beneficiary')}
@@ -800,7 +802,7 @@ export default function BeneficiariesPage() {
                           setEditingBeneficiary(selectedBeneficiary);
                           setShowNewBeneficiaryForm(true);
                         }}
-                        className="px-6 py-3 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+                        className="px-6 py-3 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary hover:shadow-sm transition-shadow"
                       >
                         <Edit className="w-5 h-5" />
                         {t('extracted.edit')}
@@ -827,7 +829,7 @@ export default function BeneficiariesPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl overflow-hidden"
+                  className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
                 >
                   <NewBeneficiaryForm
                     onCancel={() => {
@@ -850,7 +852,7 @@ export default function BeneficiariesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold theme-text-primary">
@@ -893,7 +895,7 @@ export default function BeneficiariesPage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
+                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
                                 {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                               </div>
                               <div>
@@ -935,7 +937,7 @@ export default function BeneficiariesPage() {
                                   {beneficiary.scStCertificate ? (
                                     <button
                                       onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                                      className="px-3 py-1.5 rounded-lg accent-gradient text-white text-sm font-medium shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5 border border-white/20"
+                                      className="px-3 py-1.5 rounded-lg accent-gradient text-white text-sm font-medium shadow-sm hover:shadow-sm transition-shadow flex items-center gap-1.5 border border-white/20"
                                     >
                                       <Eye className="w-3.5 h-3.5" />
                                       View Certificate
@@ -1022,13 +1024,13 @@ export default function BeneficiariesPage() {
           </div>
 
           {/* Sidebar - Selected Beneficiary Details */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Beneficiary Status Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5"
             >
               <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_status')}</h3>
               
@@ -1076,7 +1078,7 @@ export default function BeneficiariesPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-6 shadow-sm"
+                  className="theme-bg-card theme-border-glass border rounded-xl p-5 shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -1091,7 +1093,7 @@ export default function BeneficiariesPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {/* Personal Information Card */}
                     <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
                       <div className="flex items-center gap-3 mb-4">
@@ -1170,7 +1172,7 @@ export default function BeneficiariesPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-5">
                         {/* Certificate Section */}
                         <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
                           <div className="flex items-center gap-3 mb-3">
@@ -1196,7 +1198,7 @@ export default function BeneficiariesPage() {
                               </div>
                               <button
                                 onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg accent-gradient text-white font-medium shadow-sm hover:shadow-md transition-all hover:scale-105 border border-white/20"
+                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md accent-gradient text-white font-medium shadow-sm hover:shadow-sm transition-all hover:scale-105 border border-white/20"
                               >
                                 <Eye className="w-4 h-4" />
                                 {t('extracted.view_certificate')}
@@ -1275,7 +1277,7 @@ export default function BeneficiariesPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-5">
                         {/* Beneficiary ID Section */}
                         <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
                           <div className="flex items-center gap-3 mb-3">
@@ -1288,7 +1290,7 @@ export default function BeneficiariesPage() {
                             </div>
                           </div>
 
-                          <div className="font-mono text-lg theme-text-primary theme-bg-card px-4 py-3 rounded-lg border theme-border-glass font-semibold">
+                          <div className="font-mono text-lg theme-text-primary theme-bg-card px-3 py-2 rounded-md border theme-border-glass font-semibold">
                             {selectedBeneficiary.id}
                           </div>
                         </div>

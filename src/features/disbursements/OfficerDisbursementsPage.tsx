@@ -60,7 +60,7 @@ export default function DisbursementsPage() {
       }
       if (ctl.filteredDisbursements.length === 0) {
         return (
-          <div className="p-6 text-center theme-text-muted">
+          <div className="p-5 text-center theme-text-muted">
             {t('disbursements.no_records') || 'No disbursements found.'}
           </div>
         );
@@ -85,8 +85,8 @@ export default function DisbursementsPage() {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="relative ">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 space-y-5">
         <DisbursementsPageChrome />
 
         <DisbursementsHeader

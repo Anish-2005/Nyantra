@@ -140,7 +140,7 @@ export default function BlockchainDashboard() {
 
   if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -154,7 +154,7 @@ export default function BlockchainDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="relative">
       <BackgroundAnimation />
 
       {/* Access Key Modal */}
@@ -172,12 +172,12 @@ export default function BlockchainDashboard() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-md mx-4"
             >
-              <div className="theme-bg-card theme-border-glass border rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
+              <div className="theme-bg-card theme-border-glass border rounded-xl p-5 shadow-sm backdrop-blur-xl">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                     <Lock className="w-8 h-8 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold theme-text-primary mb-2">
+                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
                     Access Restricted
                   </h2>
                   <p className="text-sm theme-text-muted">
@@ -238,7 +238,7 @@ export default function BlockchainDashboard() {
 
       {/* Main Content - Blurred when locked */}
       <div className={`relative z-10 transition-all duration-500 ${!isUnlocked ? 'blur-sm pointer-events-none select-none' : ''}`}>
-        <div className="p-6 space-y-8">
+        <div className="p-5 space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -283,21 +283,21 @@ export default function BlockchainDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-5"
         >
-          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-6">
+          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-5">
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Shield className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <p className="text-sm theme-text-muted">{t('blockchain.totalBlocks')}</p>
-                <p className="text-2xl font-bold theme-text-primary">{chain.length}</p>
+                <p className="text-lg font-semibold tracking-tight theme-text-primary">{chain.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-6">
+          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-5">
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <Activity className="w-6 h-6 text-green-400" />
@@ -309,7 +309,7 @@ export default function BlockchainDashboard() {
             </div>
           </div>
 
-          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-6">
+          <div className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-5">
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Database className="w-6 h-6 text-purple-400" />
@@ -336,7 +336,7 @@ export default function BlockchainDashboard() {
             whileTap={{ scale: 0.95 }}
             onClick={fetchChain}
             disabled={fetchLoading}
-            className="flex items-center space-x-2 px-6 py-3 rounded-xl theme-bg-glass theme-border-glass border backdrop-blur-xl theme-text-primary hover:theme-bg-glass/80 transition-all duration-200 disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2 rounded-md theme-bg-glass theme-border-glass border backdrop-blur-xl theme-text-primary hover:theme-bg-glass/80 transition-all duration-200 disabled:opacity-50"
           >
             <RefreshCw className={`w-5 h-5 ${fetchLoading ? 'animate-spin' : ''}`} />
             <span>{fetchLoading ? t('blockchain.refreshing') : t('blockchain.refreshChain')}</span>

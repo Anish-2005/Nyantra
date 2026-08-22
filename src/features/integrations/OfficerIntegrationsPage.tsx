@@ -550,7 +550,7 @@ const stats = useMemo(() => {
   };
 
   return (
-  <div data-theme={theme} className="min-h-screen p-3 sm:p-4 lg:p-6 space-y-6 relative overflow-hidden">
+  <div data-theme={theme} className="p-3 sm:p-4 lg:p-5 space-y-5 relative overflow-hidden">
       {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
@@ -620,7 +620,7 @@ const stats = useMemo(() => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -646,7 +646,7 @@ const stats = useMemo(() => {
               {t('extracted.live_tracking')} • {filteredIntegrations.length} {t('extracted.active_integrations')}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+          <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
             {t('extracted.integration')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_integration_tracking_description')}</p>
@@ -685,7 +685,7 @@ const stats = useMemo(() => {
               setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
               setIsAdding(true);
             }}
-            className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-xl text-sm sm:text-base"
+            className="px-3 sm:px-6 py-2 sm:py-3 rounded-xl accent-gradient text-white flex items-center gap-2 sm:gap-3 shadow-sm text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
             <span className="font-semibold">{t('extracted.new_integration')}</span>
@@ -707,7 +707,7 @@ const stats = useMemo(() => {
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
-        className={`border rounded-none w-full h-full mx-0 my-0 overflow-visible shadow-2xl sm:rounded-2xl sm:mx-auto sm:my-6 ${
+        className={`border rounded-none w-full h-full mx-0 my-0 overflow-visible shadow-sm sm:rounded-xl sm:mx-auto sm:my-6 ${
           theme === 'light'
             ? 'bg-white border-gray-200'
             : 'bg-slate-900 border-gray-700'
@@ -715,7 +715,7 @@ const stats = useMemo(() => {
       >
         {/* Header */}
         <div
-          className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-8 ${
+          className={`sticky top-0 backdrop-blur-xl border-b p-4 sm:p-5 ${
             theme === 'light'
               ? 'bg-white/95 border-gray-200'
               : 'theme-bg-card theme-border-glass'
@@ -723,7 +723,7 @@ const stats = useMemo(() => {
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 sm:gap-4 flex-1">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-lg">
+              <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
                 {((isEditing || isAdding) && editedIntegration && editedIntegration.imageUrl) || (selectedIntegration && selectedIntegration.imageUrl) ? (
                   <img
                     src={((isEditing || isAdding) && editedIntegration && editedIntegration.imageUrl) ? editedIntegration.imageUrl : selectedIntegration.imageUrl}
@@ -766,10 +766,10 @@ const stats = useMemo(() => {
                           name: e.target.value,
                         })
                       }
-                      className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary bg-transparent border-b focus:outline-none"
+                      className="text-xl sm:text-2xl md:text-lg font-semibold tracking-tight theme-text-primary bg-transparent border-b focus:outline-none"
                     />
                   ) : (
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text-primary">
+                    <h2 className="text-xl sm:text-2xl md:text-lg font-semibold tracking-tight theme-text-primary">
                       {selectedIntegration.name}
                     </h2>
                   )}
@@ -903,16 +903,16 @@ const stats = useMemo(() => {
 
         {/* Content – Scrollable if too long */}
         <div
-          className={`p-4 sm:p-8 space-y-8 max-h-full sm:max-h-[70vh] overflow-y-auto ${
+          className={`p-4 sm:p-5 space-y-5 max-h-full sm:max-h-[70vh] overflow-y-auto ${
             theme === 'light' ? 'bg-white' : ''
           }`}
         >
           {activeTab === 'overview' && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* Overview Header */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold theme-text-primary mb-4">
+                  <h3 className="text-lg font-semibold tracking-tight theme-text-primary mb-4">
                     {t('extracted.integration_overview')}
                   </h3>
                   {(isEditing || isAdding) && editedIntegration ? (
@@ -1072,7 +1072,7 @@ const stats = useMemo(() => {
                   )}
                 </div>
                 {selectedIntegration && (
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-4">
                       <FileText className="w-6 h-6 theme-text-primary" />
                       <h4 className="text-lg font-semibold theme-text-primary">
@@ -1081,7 +1081,7 @@ const stats = useMemo(() => {
                     </div>
                     <a
                       href={selectedIntegration.documentation}
-                      className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors ${
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border transition-colors ${
                         theme === 'light'
                           ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300'
                           : 'theme-bg-card theme-border-glass hover:bg-blue-500/20'
@@ -1099,7 +1099,7 @@ const stats = useMemo(() => {
               </div>
 
               {selectedIntegration && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                   {[
                     {
                       labelKey: 'extracted.success_rate',
@@ -1128,14 +1128,14 @@ const stats = useMemo(() => {
                   ].map((metric, idx) => (
                     <div
                       key={idx}
-                      className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center"
+                      className="p-5 rounded-xl theme-bg-glass border theme-border-glass text-center"
                     >
                       <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}
+                        className={`w-10 h-10 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mx-auto mb-3`}
                       >
                         <metric.icon className="w-6 h-6 text-white" />
                       </div>
-                      <p className="text-2xl font-bold theme-text-primary mb-1">
+                      <p className="text-lg font-semibold tracking-tight theme-text-primary mb-1">
                         {metric.value}
                       </p>
                       <p className="text-sm theme-text-muted">
@@ -1147,8 +1147,8 @@ const stats = useMemo(() => {
               )}
 
               {selectedIntegration && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-3">
                       <Clock className="w-5 h-5 theme-text-primary" />
                       <h4 className="font-semibold theme-text-primary">
@@ -1159,7 +1159,7 @@ const stats = useMemo(() => {
                       {selectedIntegration.lastSync}
                     </p>
                   </div>
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-3">
                       <RefreshCw className="w-5 h-5 theme-text-primary" />
                       <h4 className="font-semibold theme-text-primary">
@@ -1170,7 +1170,7 @@ const stats = useMemo(() => {
                       {selectedIntegration.nextSync}
                     </p>
                   </div>
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-3">
                       <Timer className="w-5 h-5 theme-text-primary" />
                       <h4 className="font-semibold theme-text-primary">
@@ -1186,10 +1186,10 @@ const stats = useMemo(() => {
 
               {selectedIntegration && (
                 <div>
-                  <h3 className="text-2xl font-bold theme-text-primary mb-6">
+                  <h3 className="text-lg font-semibold tracking-tight theme-text-primary mb-6">
                     {t('extracted.usage_statistics_1')}
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {[
                       {
                         labelKey: 'extracted.monthly_requests',
@@ -1211,10 +1211,10 @@ const stats = useMemo(() => {
                     ].map((stat, idx) => (
                       <div
                         key={idx}
-                        className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center"
+                        className="p-5 rounded-xl theme-bg-glass border theme-border-glass text-center"
                       >
                         <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
-                        <p className="text-3xl font-bold theme-text-primary mb-2">
+                        <p className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
                           {stat.value}
                         </p>
                         <p className="text-sm theme-text-muted">
@@ -1229,15 +1229,15 @@ const stats = useMemo(() => {
           )}
 
           {activeTab === 'configuration' && selectedIntegration && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* API Configuration */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">
+                <h3 className="text-lg font-semibold tracking-tight theme-text-primary mb-6">
                   {t('extracted.api_configuration_1')}
                 </h3>
 
                 {/* read-only cards like before */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {[
                     {
                       labelKey: 'extracted.authentication_type',
@@ -1262,7 +1262,7 @@ const stats = useMemo(() => {
                   ].map((config, idx) => (
                     <div
                       key={idx}
-                      className="p-6 rounded-2xl theme-bg-glass border theme-border-glass"
+                      className="p-5 rounded-xl theme-bg-glass border theme-border-glass"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <config.icon className="w-5 h-5 theme-text-primary" />
@@ -1340,11 +1340,11 @@ const stats = useMemo(() => {
 
               {/* Security Information */}
               <div>
-                <h3 className="text-2xl font-bold theme-text-primary mb-6">
+                <h3 className="text-lg font-semibold tracking-tight theme-text-primary mb-6">
                   {t('extracted.security_compliance')}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-4">
                       <Shield className="w-6 h-6 theme-text-primary" />
                       <h4 className="text-lg font-semibold theme-text-primary">
@@ -1371,7 +1371,7 @@ const stats = useMemo(() => {
                     </div>
                   </div>
 
-                  <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                  <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                     <div className="flex items-center gap-3 mb-4">
                       <Scale className="w-6 h-6 theme-text-primary" />
                       <h4 className="text-lg font-semibold theme-text-primary">
@@ -1399,7 +1399,7 @@ const stats = useMemo(() => {
               </div>
 
               {/* API Key */}
-              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+              <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                 <div className="flex items-center gap-3 mb-4">
                   <Key className="w-6 h-6 theme-text-primary" />
                   <h4 className="text-lg font-semibold theme-text-primary">
@@ -1407,13 +1407,13 @@ const stats = useMemo(() => {
                   </h4>
                 </div>
                 <div className="flex items-center gap-4">
-                  <code className="flex-1 px-4 py-3 theme-bg-card rounded-xl theme-text-primary font-mono text-lg">
+                  <code className="flex-1 px-3 py-2.5 theme-bg-card rounded-xl theme-text-primary font-mono text-lg">
                     {selectedIntegration.apiKey}
                   </code>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-3 rounded-xl theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
+                    className="px-4 py-2 rounded-md theme-bg-card theme-border-glass border hover:bg-blue-500/20 transition-colors"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </motion.button>
@@ -1423,9 +1423,9 @@ const stats = useMemo(() => {
           )}
 
           {activeTab === 'performance' && selectedIntegration && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* Performance Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                   {
                     label: 'Success Rate',
@@ -1460,7 +1460,7 @@ const stats = useMemo(() => {
                 ].map((metric, idx) => (
                   <div
                     key={idx}
-                    className="p-6 rounded-2xl theme-bg-glass border theme-border-glass"
+                    className="p-5 rounded-xl theme-bg-glass border theme-border-glass"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <metric.icon className={`w-8 h-8 ${metric.color}`} />
@@ -1468,7 +1468,7 @@ const stats = useMemo(() => {
                         {metric.trend}
                       </span>
                     </div>
-                    <p className="text-3xl font-bold theme-text-primary mb-2">
+                    <p className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
                       {metric.value}
                     </p>
                     <p className="text-sm theme-text-muted">{metric.label}</p>
@@ -1477,7 +1477,7 @@ const stats = useMemo(() => {
               </div>
 
               {/* Response Time Distribution */}
-              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+              <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                 <h4 className="text-lg font-semibold theme-text-primary mb-4">
                   {t('extracted.response_time_distribution_1')}
                 </h4>
@@ -1509,10 +1509,10 @@ const stats = useMemo(() => {
           )}
 
           {activeTab === 'security' && selectedIntegration && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* Security Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <Shield className="w-6 h-6 theme-text-primary" />
                     <h4 className="text-lg font-semibold theme-text-primary">
@@ -1550,7 +1550,7 @@ const stats = useMemo(() => {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <Scale className="w-6 h-6 theme-text-primary" />
                     <h4 className="text-lg font-semibold theme-text-primary">
@@ -1576,7 +1576,7 @@ const stats = useMemo(() => {
               </div>
 
               {/* Security Features */}
-              <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+              <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                 <h4 className="text-lg font-semibold theme-text-primary mb-4">
                   {t('extracted.security_features_1')}
                 </h4>
@@ -1617,7 +1617,7 @@ const stats = useMemo(() => {
           {activeTab === 'logs' && selectedIntegration && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold theme-text-primary">
+                <h3 className="text-lg font-semibold tracking-tight theme-text-primary">
                   {t('extracted.recent_activity_logs')}
                 </h3>
                 <div className="flex items-center gap-2">
@@ -1639,7 +1639,7 @@ const stats = useMemo(() => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-2xl theme-bg-glass border theme-border-glass hover:theme-bg-card transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-xl theme-bg-glass border theme-border-glass hover:theme-bg-card transition-colors"
                     >
                       <div
                         className={`w-3 h-3 rounded-full ${
@@ -1677,9 +1677,9 @@ const stats = useMemo(() => {
           )}
 
           {activeTab === 'analytics' && selectedIntegration && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* Analytics Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                   { label: 'Total API Calls', value: '2.4M', icon: Database },
                   { label: 'Avg Daily Usage', value: '8.2K', icon: Activity },
@@ -1688,10 +1688,10 @@ const stats = useMemo(() => {
                 ].map((stat, idx) => (
                   <div
                     key={idx}
-                    className="p-6 rounded-2xl theme-bg-glass border theme-border-glass text-center"
+                    className="p-5 rounded-xl theme-bg-glass border theme-border-glass text-center"
                   >
                     <stat.icon className="w-8 h-8 theme-text-primary mx-auto mb-3" />
-                    <p className="text-2xl font-bold theme-text-primary mb-1">
+                    <p className="text-lg font-semibold tracking-tight theme-text-primary mb-1">
                       {stat.value}
                     </p>
                     <p className="text-sm theme-text-muted">{stat.label}</p>
@@ -1700,8 +1700,8 @@ const stats = useMemo(() => {
               </div>
 
               {/* Usage Trends */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                   <h4 className="text-lg font-semibold theme-text-primary mb-4">
                     {t('extracted.usage_trends_30d')}
                   </h4>
@@ -1740,14 +1740,14 @@ const stats = useMemo(() => {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl theme-bg-glass border theme-border-glass">
+                <div className="p-5 rounded-xl theme-bg-glass border theme-border-glass">
                   <h4 className="text-lg font-semibold theme-text-primary mb-4">
                     {t('extracted.performance_score')}
                   </h4>
                   <div className="flex items-center justify-center">
                     <div className="relative w-32 h-32">
                       <div className="w-full h-full rounded-full border-8 border-blue-500/20 flex items-center justify-center">
-                        <span className="text-3xl font-bold theme-text-primary">
+                        <span className="text-lg font-semibold tracking-tight theme-text-primary">
                           94%
                         </span>
                       </div>
@@ -1761,7 +1761,7 @@ const stats = useMemo(() => {
 
         {/* Footer buttons */}
         <div
-          className={`sticky bottom-0 backdrop-blur-xl border-t p-4 sm:p-8 ${
+          className={`sticky bottom-0 backdrop-blur-xl border-t p-4 sm:p-5 ${
             theme === 'light'
               ? 'bg-white/95 border-gray-200'
               : 'theme-bg-card theme-border-glass'
@@ -1783,7 +1783,7 @@ const stats = useMemo(() => {
                       console.error('Add failed', e);
                     }
                   }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
                       : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
@@ -1801,7 +1801,7 @@ const stats = useMemo(() => {
                     setEditedIntegration(null);
                     setSelectedIntegration(null);
                   }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                       : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'
@@ -1830,7 +1830,7 @@ const stats = useMemo(() => {
                       console.error('Save failed', e);
                     }
                   }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
                       : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
@@ -1847,7 +1847,7 @@ const stats = useMemo(() => {
                     setIsEditing(false);
                     setEditedIntegration(null);
                   }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                       : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'
@@ -1867,7 +1867,7 @@ const stats = useMemo(() => {
                     selectedIntegration &&
                     handleTestConnection(selectedIntegration.id)
                   }
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
                       : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
@@ -1888,7 +1888,7 @@ const stats = useMemo(() => {
                     selectedIntegration &&
                     handleSyncNow(selectedIntegration.id)
                   }
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
                       : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'
@@ -1911,7 +1911,7 @@ const stats = useMemo(() => {
                       setIsEditing(true);
                     }
                   }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                       : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'
@@ -1928,7 +1928,7 @@ const stats = useMemo(() => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+                  className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
                     theme === 'light'
                       ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
                       : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'
@@ -1965,18 +1965,18 @@ const stats = useMemo(() => {
           <motion.div
             key={idx}
             whileHover={{ y: -4, scale: 1.02 }}
-            className="relative theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect cursor-pointer overflow-hidden group"
+            className="relative theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect cursor-pointer overflow-hidden group"
           >
             {/* Status indicator dot (static) */}
             <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${stat.statusColor}`} />
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold theme-text-primary mb-1">{stat.value}</p>
+                <p className="text-lg font-semibold tracking-tight theme-text-primary mb-1">{stat.value}</p>
                 <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
               </div>
               <div className="relative">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
                   <stat.icon className="w-6 h-6 text-white relative z-10" />
                 </div>
               </div>
@@ -1989,23 +1989,23 @@ const stats = useMemo(() => {
             
             {/* Hover glow effect */}
             <motion.div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+              className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
             />
           </motion.div>
         ))}
       </motion.div>
 
       {/* Main Content Area - New Layout */}
-  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5">
         {/* Sidebar Filters - New Design */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="xl:col-span-1 space-y-4 sm:space-y-6"
+          className="xl:col-span-1 space-y-4 sm:space-y-5"
         >
           {/* Search Box */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.search_filter')} </h3>
             <div className="space-y-4">
               <div className="relative">
@@ -2075,7 +2075,7 @@ const stats = useMemo(() => {
                   setHealthFilter('all');
                   setCurrentPage(1);
                 }}
-                className={`w-full px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border ${theme === 'light' ? 'bg-white/90 border-gray-200 text-black hover:bg-blue-50' : 'theme-bg-glass theme-border-glass hover:bg-blue-500/20'}`}
+                className={`w-full px-3 py-2 rounded-md flex items-center justify-center gap-2 transition-colors border ${theme === 'light' ? 'bg-white/90 border-gray-200 text-black hover:bg-blue-50' : 'theme-bg-glass theme-border-glass hover:bg-blue-500/20'}`}
               >
                 <RefreshCw className="w-4 h-4" />
                 <span className="font-semibold">{t('extracted.clear_filters')}</span>
@@ -2084,7 +2084,7 @@ const stats = useMemo(() => {
           </div>
 
           {/* Category Overview */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('categories')} </h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count]) => {
@@ -2116,16 +2116,16 @@ const stats = useMemo(() => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="xl:col-span-3 space-y-6"
+          className="xl:col-span-3 space-y-5"
         >
           {/* Action Buttons - Bottom of Grid */}
-          <div className={`border-t p-4 sm:p-8 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
+          <div className={`border-t p-4 sm:p-5 ${theme === 'light' ? 'bg-white/95 border-gray-200' : 'theme-bg-card theme-border-glass'}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => selectedIntegration && handleTestConnection(selectedIntegration.id)}
-                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
+                className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' : 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'}`}
               >
                 <Wifi className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('extracted.test_connection')}</span>
@@ -2135,7 +2135,7 @@ const stats = useMemo(() => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => selectedIntegration && handleSyncNow(selectedIntegration.id)}
-                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
+                className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100' : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'}`}
               >
                 <RefreshCw className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('extracted.sync_now')}</span>
@@ -2150,7 +2150,7 @@ const stats = useMemo(() => {
                     setIsEditing(true);
                   }
                 }}
-                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
+                className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass theme-text-primary hover:theme-bg-card'}`}
               >
                 <Edit className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('extracted.edit_config')}</span>
@@ -2159,7 +2159,7 @@ const stats = useMemo(() => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
+                className={`w-full px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${theme === 'light' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'}`}
               >
                 <X className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('extracted.disable')}</span>
@@ -2170,7 +2170,7 @@ const stats = useMemo(() => {
 
             <div>
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                   {loadingIntegrations ? (
                     // Loading state (grid)
                     Array.from({ length: 6 }, (_, idx) => (
@@ -2179,10 +2179,10 @@ const stats = useMemo(() => {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className="p-6 rounded-2xl theme-bg-card theme-border-glass border animate-pulse"
+                        className="p-5 rounded-xl theme-bg-card theme-border-glass border animate-pulse"
                       >
                         <div className="flex items-center gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
+                          <div className="w-10 h-10 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
                           <div className="flex-1">
                             <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
                             <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
@@ -2236,7 +2236,7 @@ const stats = useMemo(() => {
                           setEditedIntegration({ name: '', provider: '', category: 'identity-verification', status: 'active', health: 'good', lastSync: '', nextSync: '', syncFrequency: 'hourly', successRate: 100, responseTime: '1s', apiVersion: '1.0', endpoints: 1, description: '', documentation: '', apiKey: '', security: '', dataEncryption: '', compliance: [], usage: { monthly: 0, daily: 0, errors: 0 }, config: { authType: '', rateLimit: '', timeout: '' }, logs: [], imageUrl: '' });
                           setIsAdding(true);
                         }}
-                        className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-xl"
+                        className="px-4 py-2 rounded-md accent-gradient text-white flex items-center gap-2 shadow-sm"
                       >
                         <Plus className="w-5 h-5" />
                         <span className="font-semibold">Add First Integration</span>
@@ -2250,12 +2250,12 @@ const stats = useMemo(() => {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="p-6 rounded-2xl theme-bg-card theme-border-glass border"
+                        className="p-5 rounded-xl theme-bg-card theme-border-glass border"
                         onClick={() => setSelectedIntegration(integration)}
                       >
                         {/* Header with Image/Logo */}
                         <div className="flex items-center gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
                             {integration.imageUrl ? (
                               <img
                                 src={integration.imageUrl}
@@ -2286,15 +2286,15 @@ const stats = useMemo(() => {
                       {/* Stats */}
                         <div className="grid grid-cols-3 gap-3 mb-4">
                           <div className="text-center">
-                            <p className="text-2xl font-bold theme-text-primary">{integration.successRate}%</p>
+                            <p className="text-lg font-semibold tracking-tight theme-text-primary">{integration.successRate}%</p>
                             <p className="theme-text-muted text-xs">{t('extracted.success')}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-2xl font-bold theme-text-primary">{integration.responseTime}</p>
+                            <p className="text-lg font-semibold tracking-tight theme-text-primary">{integration.responseTime}</p>
                             <p className="theme-text-muted text-xs">{t('extracted.response')}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-2xl font-bold theme-text-primary">{integration.endpoints}</p>
+                            <p className="text-lg font-semibold tracking-tight theme-text-primary">{integration.endpoints}</p>
                             <p className="theme-text-muted text-xs">{t('extracted.endpoints')}</p>
                           </div>
                         </div>
@@ -2342,7 +2342,7 @@ const stats = useMemo(() => {
                 <div className="space-y-4">
                   {loadingIntegrations ? (
                     Array.from({ length: 6 }, (_, idx) => (
-                      <motion.div key={idx} className="p-4 rounded-2xl theme-bg-card theme-border-glass border animate-pulse" />
+                      <motion.div key={idx} className="p-4 rounded-xl theme-bg-card theme-border-glass border animate-pulse" />
                     ))
                   ) : paginatedIntegrations.length === 0 ? (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-16 px-4">
@@ -2363,11 +2363,11 @@ const stats = useMemo(() => {
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="p-4 rounded-2xl theme-bg-card theme-border-glass border flex items-center justify-between"
+                        className="p-4 rounded-xl theme-bg-card theme-border-glass border flex items-center justify-between"
                         onClick={() => setSelectedIntegration(integration)}
                       >
                         <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
                             {integration.imageUrl ? (
                               <img src={integration.imageUrl} alt={integration.name} className="w-full h-full object-cover" />
                             ) : (
@@ -2460,12 +2460,12 @@ const stats = useMemo(() => {
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.98, opacity: 0 }}
-        className="relative w-full h-full max-w-none mx-0 p-4 rounded-none theme-border-glass border shadow-lg sm:max-w-3xl sm:mx-4 sm:p-6 sm:rounded-xl"
+        className="relative w-full h-full max-w-none mx-0 p-4 rounded-none theme-border-glass border shadow-sm sm:max-w-3xl sm:mx-4 sm:p-5 sm:rounded-xl"
         style={{ background: theme === 'light' ? 'rgba(255,255,255,1)' : 'rgba(6,8,20,1)' }}
       >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+            <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
               <Download className="w-5 h-5 text-accent-gradient" />
               {t('extracted.export_report') || 'Export Data'}
             </h3>
@@ -2492,8 +2492,8 @@ const stats = useMemo(() => {
                 <p className="text-sm theme-text-muted">{integrations.length} {t('extracted.integrations')}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <button onClick={() => { exportIntegrationsData(integrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                <button onClick={() => { exportIntegrationsPDF(integrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                <button onClick={() => { exportIntegrationsData(integrations); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                <button onClick={() => { exportIntegrationsPDF(integrations); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
               </div>
             </div>
           </div>
@@ -2513,8 +2513,8 @@ const stats = useMemo(() => {
                 <p className="text-sm theme-text-muted">{filteredIntegrations.length} {t('extracted.integrations')}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsData(filteredIntegrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsPDF(filteredIntegrations); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsData(filteredIntegrations); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                <button disabled={filteredIntegrations.length === 0} onClick={() => { exportIntegrationsPDF(filteredIntegrations); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
               </div>
             </div>
           </div>

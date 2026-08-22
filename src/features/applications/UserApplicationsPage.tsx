@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardView } from '@/context/DashboardViewContext';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import LoadingState from '@/components/LoadingState';
@@ -405,7 +406,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="p-5 space-y-5">
       {/* Applicant Information */}
       <div>
         <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicantInformation')}</h3>
@@ -635,7 +636,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
       bg-gradient-to-r from-green-50 to-green-100
       dark:from-green-500 dark:to-green-300
       border-2 border-green-100 dark:border-green-400
-      rounded-xl shadow-md
+      rounded-xl shadow-sm
     "
   >
     <div className="flex items-center gap-3 mb-3">
@@ -658,7 +659,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
       </span>
     </div>
 
-    <div className="text-3xl font-bold text-green-800 dark:text-green-100 mb-2">
+    <div className="text-lg font-semibold tracking-tight text-green-800 dark:text-green-100 mb-2">
       {(() => {
         const category =
           POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
@@ -714,7 +715,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onCancel}
-          className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
+          className="flex-1 px-3 py-2 rounded-md theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
         >
           {t('extracted.cancel')}
         </motion.button>
@@ -723,7 +724,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
           disabled={isSubmitting || beneficiaryExists !== true}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex-1 px-4 py-3 rounded-xl accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-3 py-2 rounded-md accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-sm transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>
@@ -744,6 +745,7 @@ const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }:
 
 export default function ApplicationsPage() {
   const { user, profile } = useAuth();
+  const { view } = useDashboardView();
   const { theme } = useTheme();
   const { t } = useLocale();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -978,7 +980,7 @@ export default function ApplicationsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="p-5 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('extracted.login_required')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.login_to_view_applications')}</p>
@@ -987,9 +989,9 @@ export default function ApplicationsPage() {
     );
   }
 
-  if (profile && profile.role !== 'user') {
+  if (view !== 'user') {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="p-5 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('extracted.applicant_only_access')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.contact_admin_if_needed')}</p>
@@ -1003,7 +1005,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div data-theme={theme} className="min-h-screen relative overflow-hidden">
+    <div data-theme={theme} className="relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -1022,12 +1024,12 @@ export default function ApplicationsPage() {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -1058,7 +1060,7 @@ export default function ApplicationsPage() {
                 {t('extracted.applications')} • {t('extracted.manage')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.my_applications')}{' '}
               <span className="text-accent-gradient inline-block leading-normal sm:ml-2">
                 {t('extracted.dashboard')}
@@ -1074,18 +1076,18 @@ export default function ApplicationsPage() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           {/* Main Content */}
-          <div className="xl:col-span-2 space-y-6">
+          <div className="xl:col-span-2 space-y-5">
             {/* Action Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary mb-2">
+                  <h2 className="text-base font-semibold theme-text-primary mb-2">
                     {applications.length === 0 ? t('extracted.create_first_application') : t('extracted.manage_applications')}
                   </h2>
                   <p className="theme-text-muted text-sm">
@@ -1108,7 +1110,7 @@ export default function ApplicationsPage() {
                     setShowNewApplicationForm(true);
                   }}
                   disabled={!userBeneficiary}
-                  className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-5 h-5" />
                   {t('extracted.new_application')}
@@ -1123,7 +1125,7 @@ export default function ApplicationsPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl overflow-hidden"
+                  className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
                 >
                   <NewApplicationForm
                     onCancel={() => {
@@ -1147,7 +1149,7 @@ export default function ApplicationsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold theme-text-primary">
@@ -1168,7 +1170,7 @@ export default function ApplicationsPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="px-3.5 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
                     <option value="all">{t('applications.allStatuses')}</option>
                     <option value="pending">{t('applications.pending')}</option>
@@ -1217,7 +1219,7 @@ export default function ApplicationsPage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
+                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
                                 {application.applicantName.split(' ').map((n: string) => n[0]).join('')}
                               </div>
                               <div>
@@ -1434,13 +1436,13 @@ export default function ApplicationsPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Enhanced Summary Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-6 backdrop-blur-xl shadow-sm"
+              className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl shadow-sm"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -1453,9 +1455,9 @@ export default function ApplicationsPage() {
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="text-3xl font-bold theme-text-primary mb-1 group-hover:text-blue-600 transition-colors">
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary mb-1 group-hover:text-blue-600 transition-colors">
                     {stats.total}
                   </div>
                   <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
@@ -1465,9 +1467,9 @@ export default function ApplicationsPage() {
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                  className="theme-bg-glass rounded-xl p-4 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="text-3xl font-bold theme-text-primary mb-1 group-hover:text-green-600 transition-colors">
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary mb-1 group-hover:text-green-600 transition-colors">
                     {stats.approved}
                   </div>
                   <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
@@ -1479,7 +1481,7 @@ export default function ApplicationsPage() {
               {/* Beneficiary Information Card */}
               <motion.div
                 whileHover={{ scale: 1.01 }}
-                className="theme-bg-glass rounded-xl p-4 border theme-border-glass hover:shadow-md transition-all duration-200"
+                className="theme-bg-glass rounded-xl p-4 border theme-border-glass hover:shadow-sm transition-all duration-200"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
@@ -1503,9 +1505,9 @@ export default function ApplicationsPage() {
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="text-xl font-bold theme-text-primary mb-1 group-hover:text-amber-600 transition-colors">
+                  <div className="text-base font-semibold theme-text-primary mb-1 group-hover:text-amber-600 transition-colors">
                     {stats.pending}
                   </div>
                   <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
@@ -1515,9 +1517,9 @@ export default function ApplicationsPage() {
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-md transition-all duration-200"
+                  className="theme-bg-glass rounded-xl p-3 border theme-border-glass text-center group hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="text-xl font-bold theme-text-primary mb-1 group-hover:text-red-600 transition-colors">
+                  <div className="text-base font-semibold theme-text-primary mb-1 group-hover:text-red-600 transition-colors">
                     {stats.rejected}
                   </div>
                   <div className="text-xs font-medium theme-text-muted uppercase tracking-wide">
@@ -1534,7 +1536,7 @@ export default function ApplicationsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-6"
+                  className="theme-bg-card theme-border-glass border rounded-xl p-5"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold theme-text-primary">{t('extracted.application_details')}</h4>

@@ -504,7 +504,7 @@ const AnalyticsPage = () => {
       case 'compact':
         return 'p-2 lg:p-3 space-y-3 text-sm';
       default:
-        return 'p-4 lg:p-6 space-y-6';
+        return 'p-4 lg:p-5 space-y-5';
     }
   }, [viewMode]);
 
@@ -523,13 +523,13 @@ const AnalyticsPage = () => {
   const chartsGridClass = useMemo(() => {
     if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
     if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
-    return 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-5';
   }, [viewMode]);
 
   const stateCategoryGridClass = useMemo(() => {
     if (viewMode === 'list') return 'grid grid-cols-1 gap-4';
     if (viewMode === 'compact') return 'grid grid-cols-1 lg:grid-cols-2 gap-3';
-    return 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-5';
   }, [viewMode]);
 
   const performanceMetricsGridClass = useMemo(() => {
@@ -1138,7 +1138,7 @@ const AnalyticsPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -1168,7 +1168,7 @@ const AnalyticsPage = () => {
             </span>
 
           </div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2 gap-2">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2 gap-2">
             <span>{t("extracted.analytics")}</span>
             <span className="text-accent-gradient inline-block leading-normal ml-2">
               {t("extracted.monitoring_center")}
@@ -1182,7 +1182,7 @@ const AnalyticsPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-md transition-shadow"
+            className="px-4 py-2 rounded-xl theme-bg-glass theme-border-glass border flex items-center gap-2 theme-text-primary hover:shadow-sm transition-shadow"
             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
             onClick={() => window.print()}
           >
@@ -1192,7 +1192,7 @@ const AnalyticsPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-lg"
+            className="px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-2 shadow-sm"
           >
             <RefreshCw className="w-4 h-4" />
             <span>{t('extracted.refresh_data')}</span>
@@ -1472,13 +1472,13 @@ const AnalyticsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + idx * 0.1 }}
               whileHover={{ y: -4 }}
-              className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+              className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
               style={{
                 background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
               }}
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${indicator.color} flex items-center justify-center`}>
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${indicator.color} flex items-center justify-center`}>
                   <indicator.icon className="w-6 h-6 text-white" />
                 </div>
                 <div className={`flex items-center gap-1 ${getTrendColor(indicator.trend)}`}>
@@ -1486,7 +1486,7 @@ const AnalyticsPage = () => {
                   <span className="text-sm font-medium">{indicator.change}</span>
                 </div>
               </div>
-              <p className="text-2xl font-bold theme-text-primary mb-1">{indicator.value}</p>
+              <p className="text-lg font-semibold tracking-tight theme-text-primary mb-1">{indicator.value}</p>
               <p className="text-sm theme-text-muted">{t(indicator.labelKey)}</p>
             </motion.div>
           );
@@ -1517,7 +1517,7 @@ const AnalyticsPage = () => {
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 mx-auto`}>
               <stat.icon className="w-5 h-5 text-white" />
             </div>
-            <p className="text-2xl font-bold theme-text-primary">{stat.value}</p>
+            <p className="text-lg font-semibold tracking-tight theme-text-primary">{stat.value}</p>
             <p className="text-sm theme-text-muted">{t(stat.labelKey)}</p>
           </motion.div>
         ))}
@@ -1530,7 +1530,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1565,7 +1565,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1574,7 +1574,7 @@ const AnalyticsPage = () => {
             </div>
             <PieChart className="w-5 h-5 theme-text-muted" />
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-5">
             <div className="text-center">
               <div className="relative inline-block mb-4">
                 <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
@@ -1612,7 +1612,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1647,7 +1647,7 @@ const AnalyticsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+          className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1689,7 +1689,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45 }}
-        className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+        className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
       >
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -1750,7 +1750,7 @@ const AnalyticsPage = () => {
           background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
         }}
       >
-        <div className="p-6 border-b theme-border-glass">
+        <div className="p-5 border-b theme-border-glass">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.top_performing_districts')} </h3>
@@ -1787,8 +1787,8 @@ const AnalyticsPage = () => {
           <table className="w-full">
             <thead className="theme-bg-glass border-b theme-border-glass">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.rank')} </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.rank')} </th>
+                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
                   setSortBy('district');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
@@ -1797,8 +1797,8 @@ const AnalyticsPage = () => {
                     {sortBy === 'district' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </div>
                 </th>
-                <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.state')} </th>
-                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.state')} </th>
+                <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
                   setSortBy('applications');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
@@ -1807,7 +1807,7 @@ const AnalyticsPage = () => {
                     {sortBy === 'applications' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </div>
                 </th>
-                <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
                   setSortBy('disbursements');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
@@ -1816,7 +1816,7 @@ const AnalyticsPage = () => {
                     {sortBy === 'disbursements' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </div>
                 </th>
-                <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
+                <th className="hidden lg:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary cursor-pointer hover:theme-text-primary" onClick={() => {
                   setSortBy('successRate');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}>
@@ -1825,7 +1825,7 @@ const AnalyticsPage = () => {
                     {sortBy === 'successRate' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
               </tr>
             </thead>
             <tbody>
@@ -1837,16 +1837,16 @@ const AnalyticsPage = () => {
                   transition={{ delay: idx * 0.05 }}
                   className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5">
                     <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium theme-text-primary">{district.district}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">{district.state}</td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">{district.applications}</td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">{district.disbursements}</td>
-                  <td className="hidden lg:table-cell px-4 py-3">
+                  <td className="px-3 py-2.5 text-sm font-medium theme-text-primary">{district.district}</td>
+                  <td className="hidden sm:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.state}</td>
+                  <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.applications}</td>
+                  <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">{district.disbursements}</td>
+                  <td className="hidden lg:table-cell px-3 py-2.5">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${district.successRate >= 80
                       ? theme === 'dark'
                         ? 'bg-green-900/30 text-green-300 border border-green-700/50'
@@ -1862,7 +1862,7 @@ const AnalyticsPage = () => {
                       {district.successRate.toFixed(1)}%
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5">
                     <div className="flex gap-1">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -1891,7 +1891,7 @@ const AnalyticsPage = () => {
         {/* Pagination */}
         {
           totalPages > 1 && (
-            <div className="px-6 py-4 border-t theme-border-glass flex items-center justify-between">
+            <div className="px-4 py-2.5 border-t theme-border-glass flex items-center justify-between">
               <div className="text-sm theme-text-muted">
                 {t('extracted.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('extracted.to')} {Math.min(currentPage * itemsPerPage, sortedDistricts.length)} {t('extracted.of')} {sortedDistricts.length} {t('extracted.entries')}
               </div>
@@ -1942,7 +1942,7 @@ const AnalyticsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.55 }}
-        className={`theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
+        className={`theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-xl ${viewMode === 'compact' ? 'compact-card' : ''}`}
         style={{
           background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined
         }}
@@ -1955,12 +1955,12 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Professional Export Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
           {/* Monthly Report Card */}
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
             onClick={generateMonthlyReport}
           >
@@ -1999,7 +1999,7 @@ const AnalyticsPage = () => {
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
             onClick={generatePerformanceReport}
           >
@@ -2038,7 +2038,7 @@ const AnalyticsPage = () => {
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-6 backdrop-blur-xl cursor-pointer"
+            className="group relative overflow-hidden rounded-xl theme-bg-glass theme-border-glass border p-5 backdrop-blur-xl cursor-pointer"
             style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 1.0)' : undefined }}
             onClick={() => exportToCSV()}
           >
@@ -2090,12 +2090,12 @@ const AnalyticsPage = () => {
                 initial={{ scale: 0.98, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.98, opacity: 0 }}
-                className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
+                className="relative w-full max-w-3xl mx-4 p-4 lg:p-5 rounded-xl theme-border-glass border shadow-sm"
                 style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
               >
                 <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                    <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
                       <Download className="w-5 h-5 text-accent-gradient" />
                       {t('extracted.export') || 'Export Data'}
                     </h3>
@@ -2122,8 +2122,8 @@ const AnalyticsPage = () => {
                         <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
                       </div>
                     </div>
                   </div>
@@ -2143,8 +2143,8 @@ const AnalyticsPage = () => {
                         <p className="text-sm theme-text-muted">{analyticsData.overview.totalApplications} {t('extracted.applications') || 'applications'}</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                        <button onClick={() => { exportToCSV(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                        <button onClick={() => { exportToPDF(); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
                       </div>
                     </div>
                   </div>
@@ -2172,7 +2172,7 @@ const AnalyticsPage = () => {
                         <button
                           disabled={!emailAddress.trim() || sendingEmail}
                           onClick={() => sendAnalyticsEmail('csv')}
-                          className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                         >
                           {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                           {t('extracted.sendCsv') || 'Send CSV'}
@@ -2180,7 +2180,7 @@ const AnalyticsPage = () => {
                         <button
                           disabled={!emailAddress.trim() || sendingEmail}
                           onClick={() => sendAnalyticsEmail('pdf')}
-                          className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                          className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                         >
                           {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                           {t('extracted.sendPdf') || 'Send PDF'}

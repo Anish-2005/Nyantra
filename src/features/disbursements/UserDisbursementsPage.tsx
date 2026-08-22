@@ -537,7 +537,7 @@ const getStatusColor = (status: string) => {
 
   if (!user) {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="p-5 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('extracted.login_required')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.login_to_view_disbursements')}</p>
@@ -553,7 +553,7 @@ const getStatusColor = (status: string) => {
   return (
     <div 
       data-theme={theme} 
-      className="min-h-screen relative overflow-hidden"
+      className="relative overflow-hidden"
       onClick={markPageAsViewed}
     >
       {/* Background decorative elements */}
@@ -574,12 +574,12 @@ const getStatusColor = (status: string) => {
         ></div>
       </div>
 
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           {/* Animated gradient background - theme aware */}
           <motion.div
@@ -610,7 +610,7 @@ const getStatusColor = (status: string) => {
                 {t('extracted.disbursements')} • {t('extracted.tracking')}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text-primary mb-2">
+            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
               {t('extracted.my_disbursements')}{' '}
               <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
                 {t('extracted.dashboard')}
@@ -702,14 +702,14 @@ const getStatusColor = (status: string) => {
         </AnimatePresence>
 
         {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
           {/* Sidebar (on top for mobile) */}
-          <div className="space-y-6 order-1 lg:order-2">
+          <div className="space-y-5 order-1 lg:order-2">
             {/* Summary Cards */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6 shadow-sm"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5 shadow-sm"
             >
               <div className="flex items-center justify-between gap-2 mb-4">
                 <h3 className="font-semibold theme-text-primary">
@@ -797,7 +797,7 @@ const getStatusColor = (status: string) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6 shadow-sm"
+                  className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5 shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold theme-text-primary">
@@ -1019,11 +1019,11 @@ const getStatusColor = (status: string) => {
 
           {/* Main Content (list) */}
           <div className="lg:col-span-2 order-2 lg:order-1">
-            <div className="theme-bg-card theme-border-glass border rounded-2xl p-4 md:p-6 shadow-sm">
+            <div className="theme-bg-card theme-border-glass border rounded-xl p-4 md:p-5 shadow-sm">
               {/* Header with Filters */}
               <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold theme-text-primary">
+                  <h2 className="text-base font-semibold theme-text-primary">
                     {t('extracted.disbursement_history')}
                   </h2>
                   <p className="theme-text-muted mt-1 text-sm">
@@ -1101,9 +1101,9 @@ const getStatusColor = (status: string) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.03 }}
         onClick={() => setSelectedDisbursement(disbursement)}
-        className={`p-4 rounded-xl border theme-border-glass cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg ${
+        className={`p-4 rounded-xl border theme-border-glass cursor-pointer transition-all hover:scale-[1.01] hover:shadow-sm ${
           selectedDisbursement?.id === disbursement.id
-            ? 'accent-gradient text-white shadow-md ring-2 ring-white/20'
+            ? 'accent-gradient text-white shadow-sm ring-2 ring-white/20'
             : 'theme-bg-glass hover:theme-border-primary'
         }`}
       >

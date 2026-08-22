@@ -312,7 +312,7 @@ const NewGrievanceForm = ({ onClose, onCreated, initialData }: { onClose: () => 
 
       <div className="flex items-center justify-end gap-3 pt-2">
         <button type="button" onClick={onClose} className="btn-cancel">{t('extracted.cancel')}</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold shadow">
+        <button type="submit" disabled={isSubmitting} className="px-3.5 py-2 rounded-md accent-gradient text-white font-semibold shadow">
           {isSubmitting ? (t('extracted.saving') || 'Saving...') : (initialData ? (t('extracted.save') || 'Save') : (t('extracted.create') || 'Create'))}
         </button>
       </div>
@@ -1016,7 +1016,7 @@ const GrievancePage = () => {
  
 
   return (
-    <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">
+    <div data-theme={theme} className="p-4 lg:p-5 space-y-5 relative overflow-hidden">
       {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
@@ -1123,7 +1123,7 @@ const GrievancePage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 p-4 lg:p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-5 p-4 lg:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -1149,7 +1149,7 @@ const GrievancePage = () => {
               {t('extracted.live_tracking')} • {filteredGrievances.length} {t('extracted.active_grievances')}
             </span>
           </div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
             {t('extracted.grievance')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">{t('extracted.realtime_grievance_tracking_description')} <span className="text-red-500 font-medium">• Sorted by priority (Urgent → High → Medium → Low)</span></p>
@@ -1161,7 +1161,7 @@ const GrievancePage = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowExportModal(true)}
             aria-label={t('extracted.export_data_1')}
-            className={`px-6 py-3 rounded-xl border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
+            className={`px-4 py-2 rounded-md border flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme === 'light' ? 'bg-white text-gray-800 border-gray-200' : 'theme-bg-glass theme-border-glass'}`} 
           >
             <Download className={`w-5 h-5 ${theme === 'light' ? 'text-gray-800' : ''}`} />
             <span className="font-semibold">{t('extracted.export_data')} </span>
@@ -1170,7 +1170,7 @@ const GrievancePage = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowNewCaseModal(true)}
-            className="px-6 py-3 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
+            className="px-4 py-2 rounded-md accent-gradient text-white flex items-center gap-3 shadow-sm"
           >
             <Plus className="w-5 h-5" />
             <span className="font-semibold">{t('extracted.new_case')} </span>
@@ -1193,12 +1193,12 @@ const GrievancePage = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-4 lg:p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-3xl mx-4 p-4 lg:p-5 rounded-xl theme-border-glass border shadow-sm"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                  <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
                     <Download className="w-5 h-5 text-accent-gradient" />
                     {t('extracted.export') || 'Export Data'}
                   </h3>
@@ -1225,8 +1225,8 @@ const GrievancePage = () => {
                       <p className="text-sm theme-text-muted">{grievances.length} {t('extracted.grievances') || 'grievances'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => { exportGrievancesData(grievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
-                      <button onClick={() => { exportGrievancesPDF(grievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow">PDF</button>
+                      <button onClick={() => { exportGrievancesData(grievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary">CSV</button>
+                      <button onClick={() => { exportGrievancesPDF(grievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow">PDF</button>
                     </div>
                   </div>
                 </div>
@@ -1246,8 +1246,8 @@ const GrievancePage = () => {
                       <p className="text-sm theme-text-muted">{filteredGrievances.length} {t('extracted.grievances') || 'grievances'}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesData(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
-                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesPDF(filteredGrievances); setShowExportModal(false); }} className="px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
+                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesData(filteredGrievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed">CSV</button>
+                      <button disabled={filteredGrievances.length === 0} onClick={() => { exportGrievancesPDF(filteredGrievances); setShowExportModal(false); }} className="px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow disabled:opacity-50">PDF</button>
                     </div>
                   </div>
                 </div>
@@ -1275,7 +1275,7 @@ const GrievancePage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendGrievancesEmail(grievances, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendCsv') || 'Send CSV'}
@@ -1283,7 +1283,7 @@ const GrievancePage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendGrievancesEmail(grievances, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendPdf') || 'Send PDF'}
@@ -1296,7 +1296,7 @@ const GrievancePage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
                         onClick={() => sendGrievancesEmail(filteredGrievances, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendFilteredCsv') || 'Send Filtered CSV'}
@@ -1304,7 +1304,7 @@ const GrievancePage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredGrievances.length === 0 || sendingEmail}
                         onClick={() => sendGrievancesEmail(filteredGrievances, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendFilteredPdf') || 'Send Filtered PDF'}
@@ -1326,7 +1326,7 @@ const GrievancePage = () => {
         >
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h3 className="text-xl font-semibold theme-text-primary">{selectedGrievance ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}</h3>
+              <h3 className="text-base font-semibold theme-text-primary">{selectedGrievance ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}</h3>
               <p className="text-sm theme-text-muted">{selectedGrievance ? (t('extracted.edit_case_description') || 'Edit the grievance details and save changes.') : (t('extracted.new_case_description') || 'Create a new grievance and link it to a beneficiary.')}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -1353,12 +1353,12 @@ const GrievancePage = () => {
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-4 flex-1">
-              <div className="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg">
+              <div className="w-16 h-16 rounded-xl accent-gradient flex items-center justify-center text-white shadow-sm">
                 <Shield className="w-8 h-8" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold theme-text-primary">{selectedGrievance.id}</h2>
+                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.id}</h2>
                   <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-bold rounded-full">
                     {selectedGrievance.priority ? `${selectedGrievance.priority.toUpperCase()} ${t('extracted.priority_tag')}` : '-'}
                   </span>
@@ -1391,7 +1391,7 @@ const GrievancePage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600 theme-text-primary'
                       : 'border-transparent theme-text-muted hover:theme-text-primary hover:bg-theme-bg-glass'
@@ -1406,7 +1406,7 @@ const GrievancePage = () => {
 
           <div className="p-2">
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border">
                     <h4 className="text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')}</h4>
@@ -1482,7 +1482,7 @@ const GrievancePage = () => {
                 >
                   {(selectedGrievance.communication ?? []).length === 0 && pendingMessages.length === 0 ? (
                     <div className="text-center py-8">
-                      <MessageCircle className="w-12 h-12 theme-text-muted mx-auto mb-3 opacity-50" />
+                      <MessageCircle className="w-10 h-10 theme-text-muted mx-auto mb-3 opacity-50" />
                       <p className="theme-text-muted">{t('extracted.no_messages') || 'No messages yet'}</p>
                       <p className="text-sm theme-text-muted mt-1">{t('extracted.start_conversation') || 'Start a conversation with the beneficiary'}</p>
                     </div>
@@ -1504,7 +1504,7 @@ const GrievancePage = () => {
                               </div>
                             )}
                             <div className={`max-w-xs lg:max-w-md ${isOfficer ? 'order-1' : 'order-2'}`}>
-                              <div className={`p-3 rounded-2xl shadow-sm ${
+                              <div className={`p-3 rounded-xl shadow-sm ${
                                 isOfficer
                                   ? 'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm'
                                   : 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-tl-sm'
@@ -1540,7 +1540,7 @@ const GrievancePage = () => {
                           className="flex items-start gap-3 justify-end"
                         >
                           <div className="max-w-xs lg:max-w-md">
-                            <div className="p-3 rounded-2xl shadow-sm bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm opacity-70">
+                            <div className="p-3 rounded-xl shadow-sm bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-500/20 rounded-tr-sm opacity-70">
                               <div className="flex items-center gap-2 mb-1">
                                 <Shield className="w-4 h-4 text-blue-500" />
                                 <span className="text-xs font-medium text-blue-600">
@@ -1569,13 +1569,13 @@ const GrievancePage = () => {
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       placeholder={t('extracted.write_message') || 'Write a message...'}
-                      className="w-full px-4 py-3 pr-20 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="w-full px-3 py-2.5 pr-20 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                       {recognition && (
                         <button
                           onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                          className={`p-2 rounded-lg transition-all hover:shadow-lg ${
+                          className={`p-2 rounded-lg transition-all hover:shadow-sm ${
                             isRecording
                               ? 'bg-red-500 text-white animate-pulse'
                               : 'accent-gradient text-white hover:opacity-90'
@@ -1589,7 +1589,7 @@ const GrievancePage = () => {
                       <button
                         onClick={sendMessage}
                         disabled={!newMessage.trim()}
-                        className="p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+                        className="p-2 rounded-lg accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-sm"
                         aria-label={t('extracted.send_message') || 'Send message'}
                       >
                         <MessageCircle className="w-4 h-4" />
@@ -1642,15 +1642,15 @@ const GrievancePage = () => {
             {activeTab === 'analytics' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.communication?.length ?? 0}</div>
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.communication?.length ?? 0}</div>
                   <div className="text-sm theme-text-muted">{t('extracted.messages')}</div>
                 </div>
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-2xl font-bold theme-text-primary">{selectedGrievance.attachments ?? 0}</div>
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{selectedGrievance.attachments ?? 0}</div>
                   <div className="text-sm theme-text-muted">{t('extracted.attachments_label')}</div>
                 </div>
                 <div className="p-4 rounded-lg theme-bg-glass theme-border-glass border text-center">
-                  <div className="text-2xl font-bold theme-text-primary">{(() => {
+                  <div className="text-lg font-semibold tracking-tight theme-text-primary">{(() => {
                     const created = selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).getTime() : Date.now();
                     const diff = Date.now() - created;
                     return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
@@ -1720,7 +1720,7 @@ const GrievancePage = () => {
       )}
 
       {/* Dashboard Grid - New Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-5">
         {/* Analytics Sidebar */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -1729,7 +1729,7 @@ const GrievancePage = () => {
           className="xl:col-span-1 order-2 xl:order-1"
         >
           {/* Quick Stats */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.case_analytics')} </h3>
             <div className="space-y-4">
               {[
@@ -1757,7 +1757,7 @@ const GrievancePage = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="my-8 theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect">
+          <div className="my-8 theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect">
             <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.quick_actions_1')} </h3>
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-3">
               {[
@@ -1779,7 +1779,7 @@ const GrievancePage = () => {
           </div>
 
           {/* Category Distribution */}
-          <div className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect">
             <h3 className="text-base lg:text-lg font-semibold theme-text-primary mb-3 lg:mb-4">{t('extracted.case_categories')} </h3>
             <div className="space-y-2 lg:space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
@@ -1804,12 +1804,12 @@ const GrievancePage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="xl:col-span-3 order-1 xl:order-2 space-y-4 lg:space-y-6"
+          className="xl:col-span-3 order-1 xl:order-2 space-y-4 lg:space-y-5"
           >
           {/* View Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-xl lg:text-2xl font-bold theme-text-primary">
+              <h2 className="text-xl lg:text-lg font-semibold tracking-tight theme-text-primary">
                 {t('extracted.active_cases')} <span className="theme-text-muted text-lg lg:text-xl">({filteredGrievances.length})</span>
               </h2>
             </div>
@@ -1838,7 +1838,7 @@ const GrievancePage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(mode as 'dashboard' | 'list')}
-                    className={`px-3 lg:px-4 py-2 rounded-lg text-sm lg:text-base ${
+                    className={`px-3 lg:px-3.5 py-2 rounded-md text-sm lg:text-base ${
                       viewMode === mode ? 'accent-gradient text-white' : 'theme-text-muted'
                     }`}
                   >
@@ -1851,7 +1851,7 @@ const GrievancePage = () => {
 
           {/* Cases Grid / List - separate dashboard and list layouts */}
           {viewMode === 'dashboard' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
               {paginatedGrievances.map((grievance, idx) => (
                 <motion.div
                   key={grievance.id}
@@ -1859,13 +1859,13 @@ const GrievancePage = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.06 }}
                   whileHover={{ y: -6, scale: 1.02 }}
-                  className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect cursor-pointer group"
+                  className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect cursor-pointer group"
                   onClick={() => setSelectedGrievance(grievance)}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3 lg:mb-4">
                     <div className="flex items-center gap-2 lg:gap-3">
-                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
                         <div className="text-xs lg:text-sm font-bold">
                           {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
                         </div>
@@ -1961,7 +1961,7 @@ const GrievancePage = () => {
               {/* Mobile/Tablet Card View */}
               <div className="block lg:hidden space-y-3 lg:space-y-4">
                 {paginatedGrievances.map((g) => (
-                  <div key={g.id} className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-3 lg:p-4 glass-effect">
+                  <div key={g.id} className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-3 lg:p-4 glass-effect">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold theme-text-primary text-sm lg:text-base line-clamp-1">{g.beneficiaryName}</p>
@@ -1988,31 +1988,31 @@ const GrievancePage = () => {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden lg:block theme-bg-card theme-border-glass border rounded-2xl overflow-auto">
+              <div className="hidden lg:block theme-bg-card theme-border-glass border rounded-xl overflow-auto">
                 <table className="min-w-full table-fixed">
                   <thead className={`${theme === 'light' ? 'bg-white/80' : 'bg-gray-800'}`}>
                     <tr>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} <span className="text-red-500">⬇</span></th>
-                      <th className={`px-4 py-3 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
-                      <th className={`px-4 py-3 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
+                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>ID</th>
+                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.beneficiary')} </th>
+                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.district')} </th>
+                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.priority')} <span className="text-red-500">⬇</span></th>
+                      <th className={`px-3 py-2.5 text-left text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.status')} </th>
+                      <th className={`px-3 py-2.5 text-right text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'theme-text-muted'}`}>{t('extracted.actions')} </th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedGrievances.map((g) => (
                       <tr key={g.id} className={`border-b ${theme === 'light' ? 'border-gray-200 hover:bg-gray-50' : 'theme-border-glass hover:bg-theme-bg-glass'} transition-colors`}>
-                        <td className="px-4 py-3 text-sm theme-text-primary">{g.id}</td>
-                        <td className="px-4 py-3 text-sm theme-text-primary">{g.beneficiaryName}</td>
-                        <td className="px-4 py-3 text-sm theme-text-muted">{g.district}</td>
-                        <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
-                        <td className="px-4 py-3 text-sm theme-text-muted">
+                        <td className="px-3 py-2.5 text-sm theme-text-primary">{g.id}</td>
+                        <td className="px-3 py-2.5 text-sm theme-text-primary">{g.beneficiaryName}</td>
+                        <td className="px-3 py-2.5 text-sm theme-text-muted">{g.district}</td>
+                        <td className="px-3 py-2.5 text-sm"><span className={`px-2 py-1 text-xs font-bold rounded-full ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span></td>
+                        <td className="px-3 py-2.5 text-sm theme-text-muted">
                           <select value={g.status} onChange={(e) => updateGrievanceStatus(g.id, e.target.value)} className={`px-2 py-1 rounded-md text-sm ${theme === 'light' ? 'bg-white text-gray-800 border' : 'bg-[#0b1220] text-slate-100 border border-gray-700'}`}>
                             {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
                           </select>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right">
+                        <td className="px-3 py-2.5 text-sm text-right">
                           <div className="inline-flex items-center gap-2">
                             <button onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} className="p-2 rounded-lg theme-bg-glass border theme-border-glass" aria-label={`Edit ${g.id}`}>
                               <Edit className="w-4 h-4 theme-text-primary" />
@@ -2031,11 +2031,11 @@ const GrievancePage = () => {
           )}
 
           {/* Performance Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
             {/* Resolution Metrics */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect"
             >
               <div className="flex items-center justify-between mb-4 lg:mb-6">
                           <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.resolution_metrics_1')} </h3>
@@ -2091,7 +2091,7 @@ const GrievancePage = () => {
             {/* Recent Activity */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-2xl p-4 lg:p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl lg:rounded-xl p-4 lg:p-5 glass-effect"
             >
               <div className="flex items-center justify-between mb-4 lg:mb-6">
                 <h3 className="text-base lg:text-lg font-semibold theme-text-primary">{t('extracted.recent_updates')} </h3>
@@ -2205,7 +2205,7 @@ const GrievancePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="relative p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
         {/* Animated gradient background */}
         <motion.div
@@ -2219,18 +2219,18 @@ const GrievancePage = () => {
 
         <div className="relative z-10">
           {/* Enhanced Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-6">
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
                 <motion.div
-                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Star className="w-5 h-5 text-white" />
                 </motion.div>
                 <div>
-                  <h2 className="text-2xl font-bold theme-text-primary">
+                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
                     {t('extracted.feedback_analytics.userFeedback')}
                   </h2>
                   <p className="text-sm theme-text-secondary">
@@ -2272,14 +2272,14 @@ const GrievancePage = () => {
           </div>
 
           {/* Enhanced Feedback Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
             {sortedFeedbacks.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="col-span-full text-center py-16"
               >
-                <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 theme-bg-glass border theme-border-glass">
+                <div className="mx-auto w-20 h-20 rounded-xl flex items-center justify-center mb-6 theme-bg-glass border theme-border-glass">
                   <MessageSquare className="w-10 h-10 theme-text-muted" />
                 </div>
                 <h3 className="text-lg font-semibold theme-text-primary mb-2">No feedback yet</h3>
@@ -2295,7 +2295,7 @@ const GrievancePage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -6, scale: 1.03 }}
-                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-xl lg:rounded-2xl p-4 lg:p-6"
+                  className="group relative theme-bg-card theme-border-glass border-2 hover:shadow-sm hover:shadow-blue-500/20 dark:hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden rounded-xl lg:rounded-xl p-4 lg:p-5"
                 >
                   {/* Enhanced gradient overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -2386,15 +2386,15 @@ const GrievancePage = () => {
                 <p className="text-sm theme-text-muted">{t('extracted.feedback_analytics.insightsFromUserExperiences')}</p>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-5">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
                 >
                   <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <MessageSquare className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold theme-text-primary mb-1">
+                  <div className="text-2xl lg:text-lg font-semibold tracking-tight theme-text-primary mb-1">
                     {sortedFeedbacks.length}
                   </div>
                   <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.totalFeedback')}</div>
@@ -2403,12 +2403,12 @@ const GrievancePage = () => {
 
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
                 >
                   <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white fill-current" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold theme-text-primary mb-1">
+                  <div className="text-2xl lg:text-lg font-semibold tracking-tight theme-text-primary mb-1">
                     {(sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1)}
                   </div>
                   <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.averageRating', { rating: (sortedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / sortedFeedbacks.length).toFixed(1) }).replace('⭐', '')} <Star className="inline w-3 h-3 lg:w-4 lg:h-4" /></div>
@@ -2418,12 +2418,12 @@ const GrievancePage = () => {
                 {/* High Ratings */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-3 lg:p-4 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
                 >
                   <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  <div className="text-2xl lg:text-lg font-semibold tracking-tight text-green-600 dark:text-green-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating >= 4).length}
                   </div>
                   <div className="text-xs lg:text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.highRatings').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
@@ -2433,12 +2433,12 @@ const GrievancePage = () => {
                 {/* Medium/Low Ratings */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-4 rounded-2xl theme-bg-glass theme-border-glass border group hover:shadow-lg transition-all duration-300"
+                  className="text-center p-4 rounded-xl theme-bg-glass theme-border-glass border group hover:shadow-sm transition-all duration-300"
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <AlertCircle className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                  <div className="text-lg font-semibold tracking-tight text-amber-600 dark:text-amber-400 mb-1">
                     {sortedFeedbacks.filter(f => f.rating < 4).length}
                   </div>
                   <div className="text-sm theme-text-secondary font-medium">{t('extracted.feedback_analytics.needsAttention').replace('⭐', '')} <Star className="inline w-3 h-3" /></div>
@@ -2447,7 +2447,7 @@ const GrievancePage = () => {
               </div>
 
               {/* Rating Distribution Chart */}
-              <div className="mt-6 lg:mt-8 p-4 lg:p-6 rounded-xl lg:rounded-2xl theme-bg-glass theme-border-glass border">
+              <div className="mt-6 lg:mt-8 p-4 lg:p-5 rounded-xl lg:rounded-xl theme-bg-glass theme-border-glass border">
                 <h4 className="text-sm lg:text-md font-semibold theme-text-primary mb-3 lg:mb-4 text-center">{t('extracted.feedback_analytics.ratingDistribution')}</h4>
                 <div className="space-y-2 lg:space-y-3">
                   {[5, 4, 3, 2, 1].map((rating) => {
@@ -2487,7 +2487,7 @@ const GrievancePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="relative p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+          className="relative p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
         >
           <div className="text-center py-12">
             <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 theme-bg-glass">

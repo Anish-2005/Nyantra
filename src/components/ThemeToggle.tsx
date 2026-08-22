@@ -7,22 +7,26 @@ import { useLocale } from '../context/LocaleContext';
 export default function ThemeToggle({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLocale();
-  
+
   if (compact) {
     return (
-      <button 
-        onClick={toggleTheme} 
-        aria-label={t('extracted.toggle_theme')} 
-        className={`px-3 py-2 rounded-lg border transition-all ${theme === 'light' ? 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200' : 'theme-bg-glass theme-border-glass hover:theme-bg-hover'} ${className || ''}`}
+      <button
+        onClick={toggleTheme}
+        aria-label={t('extracted.toggle_theme')}
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-md theme-text-secondary transition-colors hover:theme-bg-glass hover:theme-text-primary ${className || ''}`}
       >
         {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
       </button>
     );
   }
-  
+
   return (
-    <button onClick={toggleTheme} aria-label={t('extracted.toggle_theme')} className={className}>
-      {theme === 'dark' ? <Sun className="w-5 h-5" style={{ color: 'var(--accent-secondary)' }} /> : <Moon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />}
+    <button
+      onClick={toggleTheme}
+      aria-label={t('extracted.toggle_theme')}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-md theme-text-secondary transition-colors hover:theme-bg-glass hover:theme-text-primary ${className || ''}`}
+    >
+      {theme === 'dark' ? <Sun className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} /> : <Moon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />}
     </button>
   );
 }

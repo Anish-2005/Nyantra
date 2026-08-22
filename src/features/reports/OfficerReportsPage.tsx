@@ -345,7 +345,7 @@ const NewReportForm = ({ onClose, onCreated, initialData }: { onClose: () => voi
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 rounded-lg accent-gradient text-white font-semibold shadow"
+          className="px-3.5 py-2 rounded-md accent-gradient text-white font-semibold shadow"
         >
           {isSubmitting
             ? t('extracted.saving') || 'Saving...'
@@ -1567,7 +1567,7 @@ const ReportsPage = () => {
   };
 
   return (
-    <div data-theme={theme} className="min-h-screen p-4 lg:p-6 space-y-6 relative overflow-hidden">
+    <div data-theme={theme} className="p-4 lg:p-5 space-y-5 relative overflow-hidden">
       {/* Three.js Canvas Background */}
       <canvas
         ref={canvasRef}
@@ -1655,7 +1655,7 @@ const ReportsPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
+        className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
       >
         {/* Animated gradient background */}
         <motion.div
@@ -1681,7 +1681,7 @@ const ReportsPage = () => {
               {t('extracted.live_tracking')} • {t('extracted.report_hub')}
             </span>
           </div>
-          <h1 className="text-3xl font-bold theme-text-primary mb-2">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2">
             {t('extracted.report_hub')} <span className="text-accent-gradient inline-block leading-normal ml-2">{t('extracted.monitoring_center')}</span>
           </h1>
           <p className="theme-text-secondary max-w-2xl mx-auto lg:mx-0">
@@ -1705,7 +1705,7 @@ const ReportsPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowNewReportModal(true)}
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-xl"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl accent-gradient text-white flex items-center gap-3 shadow-sm"
             >
               <FilePlus className="w-5 h-5" />
               <span className="font-semibold text-sm">{t('extracted.generate_report')}</span>
@@ -1725,7 +1725,7 @@ const ReportsPage = () => {
           >
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="text-xl font-semibold theme-text-primary">
+                <h3 className="text-base font-semibold theme-text-primary">
                   {selectedReport ? (t('extracted.edit_report') || 'Edit Report') : (t('extracted.new_report') || 'New Report')}
                 </h3>
                 <p className="text-sm theme-text-muted">
@@ -1761,12 +1761,12 @@ const ReportsPage = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-3xl mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-3xl mx-4 p-5 rounded-xl theme-border-glass border shadow-sm"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                  <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
                     <Download className="w-5 h-5 text-accent-gradient" />
                     {t('extracted.export') || 'Export Data'}
                   </h3>
@@ -1796,7 +1796,7 @@ const ReportsPage = () => {
                       <button
                         onClick={() => { exportComprehensiveReport(); setShowExportModal(false); }}
                         disabled={loading}
-                        className="px-6 py-3 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-6 py-3 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         {loading ? (
                           <>
@@ -1840,7 +1840,7 @@ const ReportsPage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendReportsEmail(reports, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendCsv') || 'Send CSV'}
@@ -1848,7 +1848,7 @@ const ReportsPage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendReportsEmail(reports, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendPdf') || 'Send PDF'}
@@ -1861,7 +1861,7 @@ const ReportsPage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredReports.length === 0 || sendingEmail}
                         onClick={() => sendReportsEmail(filteredReports, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendFilteredCsv') || 'Send Filtered CSV'}
@@ -1869,7 +1869,7 @@ const ReportsPage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredReports.length === 0 || sendingEmail}
                         onClick={() => sendReportsEmail(filteredReports, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t('extracted.sendFilteredPdf') || 'Send Filtered PDF'}
@@ -1893,12 +1893,12 @@ const ReportsPage = () => {
         >
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
             <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 flex-1">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-lg flex-shrink-0 mx-auto sm:mx-0">
+              <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl accent-gradient flex items-center justify-center text-white shadow-sm flex-shrink-0 mx-auto sm:mx-0">
                 <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                  <h2 className="text-xl sm:text-2xl font-bold theme-text-primary">{selectedReport.name}</h2>
+                  <h2 className="text-xl sm:text-lg font-semibold tracking-tight theme-text-primary">{selectedReport.name}</h2>
                   <span className={`px-2 py-1 sm:px-3 sm:py-1 ${getStatusColor(selectedReport.status)} text-xs sm:text-sm font-bold rounded-full self-center sm:self-start`}>
                     {selectedReport.status.toUpperCase()}
                   </span>
@@ -1927,7 +1927,7 @@ const ReportsPage = () => {
           </div>
 
           <div className="px-1 sm:px-2">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               <div className="space-y-3">
                 <div className="p-3 sm:p-4 rounded-lg theme-bg-glass theme-border-glass border">
                   <h4 className="text-sm font-semibold theme-text-primary mb-2">{t('extracted.report_details')}</h4>
@@ -2003,7 +2003,7 @@ const ReportsPage = () => {
                   }
                 }}
                 disabled={selectedReport.status !== 'completed'}
-                className={`px-2 sm:px-4 py-3 rounded-xl border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
+                className={`px-2 sm:px-3 py-2 rounded-md border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
                   selectedReport.status === 'completed'
                     ? theme === 'light'
                       ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
@@ -2019,7 +2019,7 @@ const ReportsPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => { setShowNewReportModal(true); }}
-                className={`px-2 sm:px-4 py-3 rounded-xl border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
+                className={`px-2 sm:px-3 py-2 rounded-md border font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 transition-colors text-xs sm:text-sm ${
                   theme === 'light'
                     ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100'
                     : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
@@ -2033,7 +2033,7 @@ const ReportsPage = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleShare(selectedReport)}
-              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+              className={`px-3 py-2 rounded-md border font-semibold flex items-center justify-center gap-3 transition-colors ${
                 theme === 'light'
                   ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
                   : 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30'
@@ -2046,7 +2046,7 @@ const ReportsPage = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`px-4 py-3 rounded-xl border font-semibold flex items-center justify-center gap-3 transition-colors ${
+              className={`px-3 py-2 rounded-md border font-semibold flex items-center justify-center gap-3 transition-colors ${
                 theme === 'light'
                   ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                   : 'theme-bg-glass theme-border-glass hover:theme-bg-card'
@@ -2064,16 +2064,16 @@ const ReportsPage = () => {
       )}
 
       {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Analytics Sidebar */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-3 xl:col-span-3 space-y-6 order-2 lg:order-1"
+          className="lg:col-span-3 xl:col-span-3 space-y-5 order-2 lg:order-1"
         >
           {/* Quick Stats */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_analytics')}</h3>
             <div className="space-y-4">
               {[
@@ -2099,7 +2099,7 @@ const ReportsPage = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.quick_actions_1')}</h3>
             <div className="space-y-3">
               {[
@@ -2121,7 +2121,7 @@ const ReportsPage = () => {
           </div>
 
           {/* Report Categories */}
-          <div className="theme-bg-card theme-border-glass border rounded-2xl p-6 glass-effect">
+          <div className="theme-bg-card theme-border-glass border rounded-xl p-5 glass-effect">
             <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.report_categories_header')}</h3>
             <div className="space-y-3">
               {Object.entries(categoryStats).map(([category, count], idx) => {
@@ -2146,16 +2146,16 @@ const ReportsPage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-9 xl:col-span-9 space-y-6 order-1 lg:order-2"
+          className="lg:col-span-9 xl:col-span-9 space-y-5 order-1 lg:order-2"
         >
           {/* View Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 theme-bg-card theme-border-glass border rounded-2xl glass-effect">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 theme-bg-card theme-border-glass border rounded-xl glass-effect">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold theme-text-primary">{t('extracted.recent_reports')}</h2>
+                <h2 className="text-lg sm:text-base font-semibold theme-text-primary">{t('extracted.recent_reports')}</h2>
                 <p className="text-sm theme-text-muted">{viewMode === 'templates' ? t('extracted.no_templates') : `${filteredReports.length} ${t('extracted.reports_found')}`}</p>
               </div>
             </div>
@@ -2200,7 +2200,7 @@ const ReportsPage = () => {
           </div>
 
           {/* Reports Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {paginatedReports.map((report, idx) => (
               <motion.div
                 key={report.id}
@@ -2208,13 +2208,13 @@ const ReportsPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.03 }}
                 whileHover={{ y: -4, scale: 1.01 }}
-                className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-lg transition-all duration-300"
+                className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect cursor-pointer group hover:shadow-sm transition-all duration-300"
                 onClick={() => setSelectedReport(report)}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
                       {(() => {
                         const Icon = getCategoryIcon(report.category) || FileText;
                         return <Icon className="w-5 h-5 sm:w-6 sm:h-6" />;
@@ -2336,11 +2336,11 @@ const ReportsPage = () => {
           </div>
 
           {/* Analytics Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
             {/* Performance Chart */}
             <motion.div
               whileHover={{ y: -2 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.report_analytics')}</h3>
@@ -2396,7 +2396,7 @@ const ReportsPage = () => {
             {/* Recent Activity */}
             <motion.div
               whileHover={{ y: -2 }}
-              className="theme-bg-card theme-border-glass border rounded-2xl p-4 sm:p-6 glass-effect"
+              className="theme-bg-card theme-border-glass border rounded-xl p-4 sm:p-5 glass-effect"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base sm:text-lg font-semibold theme-text-primary">{t('extracted.recent_activity')}</h3>

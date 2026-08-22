@@ -47,11 +47,11 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
     >
       {/* Glow effect for recent blocks */}
       {isRecent && (
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
       )}
 
       <div
-      className="relative theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10"
+      className="relative theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-sm hover:shadow-blue-500/10"
       onClick={() => {
         const newOpen = !open;
         setOpen(newOpen);
@@ -59,7 +59,7 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
       }}
       >
         {/* Header with gradient background */}
-        <div className={`relative px-4 py-3 ${
+        <div className={`relative px-3 py-2.5 ${
           isGenesis
             ? 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10'
             : isRecent
@@ -71,10 +71,10 @@ export default function BlockCard({ block, index, onOpenChange }: any) {
               {/* Block icon with dynamic styling */}
               <div className={`relative p-2 rounded-lg ${
                 isGenesis
-                  ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25'
+                  ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm shadow-amber-500/25'
                   : isRecent
-                  ? 'bg-gradient-to-br from-blue-400 to-purple-500 shadow-lg shadow-blue-500/25'
-                  : 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/25'
+                  ? 'bg-gradient-to-br from-blue-400 to-purple-500 shadow-sm shadow-blue-500/25'
+                  : 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-sm shadow-green-500/25'
               }`}>
                 {isGenesis ? (
                   <Zap className="w-4 h-4 text-white" />

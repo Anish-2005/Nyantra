@@ -233,7 +233,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
   }, [initialData]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="p-5 space-y-5">
       <div>
         <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.add_beneficiary')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -351,7 +351,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
                 <button
                   type="button"
                   onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
-                  className={`px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
+                  className={`px-3.5 py-2 rounded-md theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
                   disabled={isSubmitting || isUploading}
                 >
                   <Upload className="w-4 h-4" />
@@ -473,7 +473,7 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
           type="submit"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isSubmitting || isUploading}
         >
           {isSubmitting ? (
@@ -1576,14 +1576,14 @@ const BeneficiariesPage = () => {
   const noPages = totalPages === 0;
 
   if (authLoading) return (
-    <div data-theme={theme} className="p-4 lg:p-6 space-y-6">
-      <div className="theme-bg-card theme-border-glass border rounded-xl p-6">Loading...</div>
+    <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+      <div className="theme-bg-card theme-border-glass border rounded-xl p-5">Loading...</div>
     </div>
   );
 
   return (
-    <div data-theme={theme} className="relative z-10 theme-text-primary flex min-h-screen">
-      <div className="p-4 lg:p-6 space-y-6 flex-1">
+    <div data-theme={theme} className="relative z-10 theme-text-primary flex ">
+      <div className="p-4 lg:p-5 space-y-5 flex-1">
       <style jsx global>{`
         [data-theme="dark"] {
           --bg-gradient: radial-gradient(1200px 600px at 10% 10%, rgba(30, 64, 175, 0.08), transparent 8%), 
@@ -1653,11 +1653,11 @@ const BeneficiariesPage = () => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-sm shadow-sm"
+                className="theme-bg-card theme-border-glass border rounded-xl p-5 backdrop-blur-sm shadow-sm"
             >
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                       <h1 className="text-3xl font-bold theme-text-primary mb-2 inline-block leading-tight pt-4">
+                       <h1 className="text-lg font-semibold tracking-tight theme-text-primary mb-2 inline-block leading-tight pt-4">
                         {t("beneficiary.beneficiary")}{" "}
                         <span className="text-accent-gradient inline-block leading-normal">
                           {t("beneficiary.management")}
@@ -1674,7 +1674,7 @@ const BeneficiariesPage = () => {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => setShowExportModal(true)}
-                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-md transition-shadow"
+                          className="px-4 py-2.5 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary shadow-sm hover:shadow-sm transition-shadow"
                         >
                           <Download className="w-4 h-4" />
                           <span>{t('extracted.export_data')}</span>
@@ -1683,7 +1683,7 @@ const BeneficiariesPage = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setShowNewBeneficiaryForm(true)}
-                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow font-semibold"
+                            className="px-4 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
                         >
                             <Plus className="w-4 h-4" />
                             <span>{t('extracted.add_beneficiary')}</span>
@@ -1728,12 +1728,12 @@ const BeneficiariesPage = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-md mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-md mx-4 p-5 rounded-xl theme-border-glass border shadow-sm"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
+                  <h3 className="text-base font-semibold theme-text-primary flex items-center gap-3">
                     <Download className="w-5 h-5 text-accent-gradient" />
                     {t("beneficiary.exportTitle") || "Export Beneficiaries"}
                   </h3>
@@ -1756,8 +1756,8 @@ const BeneficiariesPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => { exportBeneficiariesData(beneficiaries); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
-                    <button onClick={() => { exportBeneficiariesPDF(beneficiaries); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
+                    <button onClick={() => { exportBeneficiariesData(beneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
+                    <button onClick={() => { exportBeneficiariesPDF(beneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
                   </div>
                 </div>
 
@@ -1770,8 +1770,8 @@ const BeneficiariesPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesData(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
-                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesPDF(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
+                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesData(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t("beneficiary.exportCsv") || "Export CSV"}</button>
+                    <button disabled={filteredBeneficiaries.length === 0} onClick={() => { exportBeneficiariesPDF(filteredBeneficiaries); setShowExportModal(false); }} className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow">{t("beneficiary.exportPdf") || "Export PDF"}</button>
                   </div>
                 </div>
 
@@ -1792,7 +1792,7 @@ const BeneficiariesPage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendBeneficiariesEmail(beneficiaries, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t("beneficiary.sendCsv")}
@@ -1800,7 +1800,7 @@ const BeneficiariesPage = () => {
                       <button
                         disabled={!emailAddress.trim() || sendingEmail}
                         onClick={() => sendBeneficiariesEmail(beneficiaries, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t("beneficiary.sendPdf")}
@@ -1810,7 +1810,7 @@ const BeneficiariesPage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredBeneficiaries.length === 0 || sendingEmail}
                         onClick={() => sendBeneficiariesEmail(filteredBeneficiaries, 'csv')}
-                        className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                         {t("beneficiary.sendFilteredCsv")}
@@ -1818,7 +1818,7 @@ const BeneficiariesPage = () => {
                       <button
                         disabled={!emailAddress.trim() || filteredBeneficiaries.length === 0 || sendingEmail}
                         onClick={() => sendBeneficiariesEmail(filteredBeneficiaries, 'pdf')}
-                        className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                        className="flex-1 px-3.5 py-2 rounded-md text-sm accent-gradient text-white shadow hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                       >
                         {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                         {t("beneficiary.sendFilteredPdf")}
@@ -1846,7 +1846,7 @@ const BeneficiariesPage = () => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              className="relative w-full max-w-lg mx-4 p-6 rounded-xl theme-border-glass border shadow-lg"
+              className="relative w-full max-w-lg mx-4 p-5 rounded-xl theme-border-glass border shadow-sm"
               style={{ background: theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(6,8,20,0.98)' }}
             >
               <div className="flex items-start justify-between mb-4">
@@ -1860,8 +1860,8 @@ const BeneficiariesPage = () => {
               </div>
 
               <div className="flex items-center justify-end gap-3">
-                <button onClick={() => { setShowDeleteModal(false); setDeleteTargetId(null); }} className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">{t('extracted.cancel')}</button>
-                <button disabled={!deleteTargetId || deletingId === deleteTargetId} onClick={() => performDelete(deleteTargetId)} className="px-4 py-2 rounded-lg bg-red-600 text-white flex items-center gap-2">
+                <button onClick={() => { setShowDeleteModal(false); setDeleteTargetId(null); }} className="px-3.5 py-2 rounded-md theme-bg-glass theme-border-glass border theme-text-primary">{t('extracted.cancel')}</button>
+                <button disabled={!deleteTargetId || deletingId === deleteTargetId} onClick={() => performDelete(deleteTargetId)} className="px-3.5 py-2 rounded-md bg-red-600 text-white flex items-center gap-2">
                   {deletingId === deleteTargetId ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash className="w-4 h-4" />}
                   <span>{t('extracted.delete')}</span>
                 </button>
@@ -1892,7 +1892,7 @@ const BeneficiariesPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-sm transition-shadow"
           >
             <div className="flex items-center justify-between mb-2">
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
@@ -1926,7 +1926,7 @@ const BeneficiariesPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + idx * 0.1 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
+            className="theme-bg-card theme-border-glass border rounded-xl p-4 backdrop-blur-sm shadow-sm hover:shadow-sm transition-shadow"
           >
             <div className="flex items-center justify-between mb-2">
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${card.color} flex items-center justify-center`}>
@@ -1947,7 +1947,7 @@ const BeneficiariesPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-6 backdrop-blur-xl overflow-hidden group"
+        className="relative theme-bg-card theme-border-glass border-2 rounded-3xl p-5 backdrop-blur-xl overflow-hidden group"
       >
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden rounded-3xl">
@@ -1987,12 +1987,12 @@ const BeneficiariesPage = () => {
           />
         </div>
 
-        <div className="relative z-10 space-y-6">
+        <div className="relative z-10 space-y-5">
           {/* Enhanced Search Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <motion.div
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-sm"
                 whileHover={{ rotate: 360, scale: 1.1 }}
                 transition={{ duration: 0.8 }}
               >
@@ -2010,7 +2010,7 @@ const BeneficiariesPage = () => {
                 placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-lg font-medium shadow-xl"
+                className="w-full pl-12 pr-4 py-4 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-lg font-medium shadow-sm"
                 style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 whileFocus={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -2070,7 +2070,7 @@ const BeneficiariesPage = () => {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`px-4 py-3 rounded-lg theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
+                                className={`px-3 py-2 rounded-md theme-border-glass border flex items-center gap-2 ${showFilters ? 'accent-gradient text-white' : 'theme-bg-glass theme-text-primary'} transition-colors`}
                             >
                                 <Filter className="w-4 h-4" />
                                 <span>{t('extracted.filters')}</span>
@@ -2102,11 +2102,11 @@ const BeneficiariesPage = () => {
                         backgroundSize: '400% 400%',
                         borderRadius: '16px'
                       }}
-                      className="absolute inset-0 rounded-2xl"
+                      className="absolute inset-0 rounded-xl"
                     />
                   </div>
 
-                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     {/* Status Filter */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -2123,7 +2123,7 @@ const BeneficiariesPage = () => {
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-sm font-medium shadow-lg"
+                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-sm font-medium shadow-sm"
                         style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                       >
                         <option value="all">{t('extracted.all_statuses')}</option>
@@ -2150,7 +2150,7 @@ const BeneficiariesPage = () => {
                       <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-sm font-medium shadow-lg"
+                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-sm font-medium shadow-sm"
                         style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                       >
                         <option value="all">{t('extracted.all_categories')}</option>
@@ -2176,7 +2176,7 @@ const BeneficiariesPage = () => {
                       <select
                         value={verificationFilter}
                         onChange={(e) => setVerificationFilter(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm font-medium shadow-lg"
+                        className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm font-medium shadow-sm"
                         style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                       >
                         <option value="all">{t('extracted.all_verification')}</option>
@@ -2190,7 +2190,7 @@ const BeneficiariesPage = () => {
 
                   {/* Sorting Controls */}
                   <div className="mt-6 pt-4 border-t theme-border-glass relative z-20">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {/* Sort By */}
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -2207,7 +2207,7 @@ const BeneficiariesPage = () => {
                         <select
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-lg relative z-40"
+                          className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm font-medium shadow-sm relative z-40"
                           style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                         >
                           <option value="registrationDate">{t("beneficiary.sortOptions.registrationDate") || "Registration Date"}</option>
@@ -2232,7 +2232,7 @@ const BeneficiariesPage = () => {
                         <select
                           value={sortOrder}
                           onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                          className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-sm font-medium shadow-lg relative z-40"
+                          className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border-2 theme-text-primary focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-sm font-medium shadow-sm relative z-40"
                           style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                         >
                           <option value="desc">
@@ -2431,7 +2431,7 @@ const BeneficiariesPage = () => {
                     {/* Header Row */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
+                        <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm">
                           {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -2523,7 +2523,7 @@ const BeneficiariesPage = () => {
                     <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                        className="px-3 py-2 rounded-lg accent-gradient text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>{t('extracted.view')} </span>
@@ -2558,16 +2558,16 @@ const BeneficiariesPage = () => {
               <table className="w-full">
                 <thead className="theme-bg-glass border-b theme-border-glass">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary_id')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.aadhaar')} </th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.phone')} </th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.email')} </th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.verification')} </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
+                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary_id')} </th>
+                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.beneficiary')} </th>
+                    <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.aadhaar')} </th>
+                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.phone')} </th>
+                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.email')} </th>
+                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.district')} </th>
+                    <th className="hidden md:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.act_type')} </th>
+                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.status')} </th>
+                    <th className="hidden sm:table-cell px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.verification')} </th>
+                    <th className="px-3 py-2.5 text-left text-sm font-semibold theme-text-primary">{t('extracted.actions')} </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2579,8 +2579,8 @@ const BeneficiariesPage = () => {
                       transition={{ delay: idx * 0.05 }}
                       className="border-b theme-border-glass hover:theme-bg-glass transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm font-medium theme-text-primary">{beneficiary.id}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 text-sm font-medium theme-text-primary">{beneficiary.id}</td>
+                      <td className="px-3 py-2.5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
                             {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
@@ -2591,27 +2591,27 @@ const BeneficiariesPage = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm theme-text-primary">
+                      <td className="hidden sm:table-cell px-3 py-2.5 text-sm theme-text-primary">
                         {beneficiary.aadhaarNumber}
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">
+                      <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">
                         {beneficiary.phone}
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-sm theme-text-primary">
+                      <td className="hidden md:table-cell px-3 py-2.5 text-sm theme-text-primary">
                         {beneficiary.email || '—'}
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3">
+                      <td className="hidden md:table-cell px-3 py-2.5">
                         <div>
                           <p className="text-sm theme-text-primary">{beneficiary.district}</p>
                           <p className="text-xs theme-text-muted">{beneficiary.state}</p>
                         </div>
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3">
+                      <td className="hidden md:table-cell px-3 py-2.5">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(beneficiary.category)}`}>
                           {formatActType(beneficiary.actType)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(beneficiary.status)}`}>
                           {(() => {
                             const Icon = getStatusIcon(beneficiary.status);
@@ -2620,7 +2620,7 @@ const BeneficiariesPage = () => {
                           {beneficiary.status.replace('-', ' ')}
                         </span>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
+                      <td className="hidden sm:table-cell px-3 py-2.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getVerificationColor(beneficiary.verificationStatus)}`}>
                           {(() => {
                             const Icon = getVerificationIcon(beneficiary.verificationStatus);
@@ -2629,7 +2629,7 @@ const BeneficiariesPage = () => {
                           {beneficiary.verificationStatus.replace('-', ' ')}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
                           <motion.button
                             whileHover={{ scale: 1.1 }}
@@ -2703,7 +2703,7 @@ const BeneficiariesPage = () => {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white font-bold flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold flex-shrink-0">
                         {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -2799,7 +2799,7 @@ const BeneficiariesPage = () => {
           </div>
         )}
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-glass theme-bg-glass">
+        <div className="flex items-center justify-between px-3 py-2.5 border-t theme-border-glass theme-bg-glass">
           <p className="text-sm theme-text-muted">
             {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
           </p>
@@ -2811,7 +2811,7 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === 1 || noPages}
                   onClick={() => setCurrentPage((p: number) => p - 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  className="px-3.5 py-2 rounded-md theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   {t('extracted.prev')}
@@ -2821,7 +2821,7 @@ const BeneficiariesPage = () => {
                   whileTap={{ scale: 0.95 }}
                   disabled={currentPage === totalPages || noPages}
                   onClick={() => setCurrentPage((p: number) => p + 1)}
-                  className="px-4 py-2 rounded-lg theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
+                  className="px-3.5 py-2 rounded-md theme-bg-card theme-border-glass border disabled:opacity-50 theme-text-primary"
                   style={{ background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : undefined }}
                 >
                   {t('extracted.next')}
@@ -2870,10 +2870,10 @@ const BeneficiariesPage = () => {
       {/* Inline Beneficiary View (rendered under the table) */}
       <AnimatePresence>
         {selectedBeneficiary && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="theme-bg-card theme-border-glass border rounded-2xl w-full overflow-hidden mt-6">
-            <div className="p-6 border-b theme-border-glass flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden mt-6">
+            <div className="p-5 border-b theme-border-glass flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold theme-text-primary">{selectedBeneficiary.name}</h2>
+                <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{selectedBeneficiary.name}</h2>
                 <p className="theme-text-muted">{selectedBeneficiary.id} • {formatActType(selectedBeneficiary.actType)}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -2882,7 +2882,7 @@ const BeneficiariesPage = () => {
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-xs theme-text-muted">{t('extracted.full_name')}</p>

@@ -33,9 +33,9 @@ export default function ChainView({ chain }: { chain: any[] }) {
       >
         <div className="flex flex-col items-center space-y-4">
           <div className="p-4 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20">
-            <GitBranch className="w-12 h-12 theme-text-primary" />
+            <GitBranch className="w-10 h-10 theme-text-primary" />
           </div>
-          <h3 className="text-xl font-semibold theme-text-primary">{t('blockchain.noBlocksFound')}</h3>
+          <h3 className="text-base font-semibold theme-text-primary">{t('blockchain.noBlocksFound')}</h3>
           <p className="theme-text-muted">{t('blockchain.emptyDescription')}</p>
         </div>
       </motion.div>
@@ -46,19 +46,19 @@ export default function ChainView({ chain }: { chain: any[] }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-8"
+      className="space-y-5"
     >
       <div className="flex items-center space-x-3">
         <div className="p-2 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20">
           <Link className="w-6 h-6 theme-text-primary" />
         </div>
-        <h2 className="text-2xl font-bold theme-text-primary">{t('blockchain.networkTitle')}</h2>
+        <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{t('blockchain.networkTitle')}</h2>
         <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-sm theme-text-primary">
           {chain.length} Blocks
         </span>
       </div>
 
-      <div className="relative flex flex-col items-start space-y-8">
+      <div className="relative flex flex-col items-start space-y-5">
         {chain.map((block, index) => {
           const isLastBlock = index === chain.length - 1;
 
@@ -80,7 +80,7 @@ export default function ChainView({ chain }: { chain: any[] }) {
 
                 {/* Enhanced tooltip - only show when block is not expanded */}
                 {!openBlocks.has(index) && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 w-80 p-4 theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 w-80 p-4 theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 rounded-full bg-green-400"></div>

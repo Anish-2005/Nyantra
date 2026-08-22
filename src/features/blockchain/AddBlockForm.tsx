@@ -64,17 +64,17 @@ export default function AddBlockForm({ onSuccess }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-8"
+      className="theme-bg-glass theme-border-glass border backdrop-blur-xl rounded-xl p-5"
     >
       <div className="flex items-center space-x-3 mb-6">
         <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
           <Plus className="w-6 h-6 text-white" />
         </div>
-        <h2 className="text-2xl font-bold theme-text-primary">{t('blockchain.addNewBlock')}</h2>
+        <h2 className="text-lg font-semibold tracking-tight theme-text-primary">{t('blockchain.addNewBlock')}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {[
             { key: "beneficiary_id", label: t('blockchain.beneficiaryId'), placeholder: t('blockchain.enterBeneficiaryId'), type: "text" },
             { key: "utp_number", label: t('blockchain.utpNumber'), placeholder: t('blockchain.enterUtpNumber'), type: "text" },
@@ -97,7 +97,7 @@ export default function AddBlockForm({ onSuccess }: any) {
                 onChange={(e) =>
                   setForm({ ...form, [field.key]: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 placeholder:theme-text-muted"
+                className="w-full px-3 py-2 rounded-md theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 placeholder:theme-text-muted"
                 required
               />
             </motion.div>
@@ -112,7 +112,7 @@ export default function AddBlockForm({ onSuccess }: any) {
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center space-x-2 px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
