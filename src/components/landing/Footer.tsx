@@ -1,153 +1,141 @@
-import React from 'react';
+'use client';
+
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { ChevronRight, Globe, Mail, Phone, MapPinned, Send } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useLocale } from '../../context/LocaleContext';
+import { ChevronRight, Globe, Mail, Phone, MapPinned, Send } from 'lucide-react';
+import { Reveal } from './primitives';
 
 const Footer = () => {
   const { theme } = useTheme();
   const { t } = useLocale();
 
+  const socials = [
+    { icon: Globe, label: t('footer.social.website') },
+    { icon: Mail, label: t('footer.social.email') },
+    { icon: Phone, label: t('footer.social.phone') },
+    { icon: MapPinned, label: t('footer.social.location') },
+  ];
+
+  const quickLinks = [
+    t('footer.links.about'),
+    t('footer.links.howItWorks'),
+    t('footer.links.successStories'),
+    t('footer.links.newsUpdates'),
+    t('footer.links.careers'),
+    t('footer.links.contact'),
+  ];
+
+  const legalLinks = [
+    t('footer.links.privacyPolicy'),
+    t('footer.links.termsOfService'),
+    t('footer.links.cookiePolicy'),
+    t('footer.links.accessibility'),
+  ];
+
   return (
     <footer className="relative py-16 px-4 sm:px-6 lg:px-8 border-t theme-border-glass">
       <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Company Info */}
-          <div>
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-12 h-12 flex items-center justify-center overflow-hidden bg-transparent theme-border-glass border-2 rounded-2xl">
-                <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={44} height={44} className="object-contain" />
+        <Reveal>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-14">
+            <div>
+              <div className="flex items-center gap-3.5 mb-5">
+                <div className="w-11 h-11 flex items-center justify-center overflow-hidden theme-border-glass border rounded-xl">
+                  <Image src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'} alt={t('nav.brandName')} width={40} height={40} className="object-contain" />
+                </div>
+                <span className="text-xl font-bold text-accent-gradient">{t('nav.brandName')}</span>
               </div>
-              <span className="text-2xl font-bold text-accent-gradient overflow-visible" style={{ lineHeight: '1.4' }}>
-                {t('nav.brandName')}
-              </span>
-            </div>
-            <p className="theme-text-secondary mb-6 leading-relaxed overflow-visible py-2 text-base">
-              {t('footer.companyDesc')}
-            </p>
-            <div className="flex space-x-3">
-              {[
-                { icon: Globe, label: t('footer.social.website') },
-                { icon: Mail, label: t('footer.social.email') },
-                { icon: Phone, label: t('footer.social.phone') },
-                { icon: MapPinned, label: t('footer.social.location') }
-              ].map((social, i) => (
-                <motion.button
-                  key={i}
-                  className="w-12 h-12 theme-bg-glass theme-border-glass border rounded-xl flex items-center justify-center hover:shadow-lg transition-all group"
-                  whileHover={{ scale: 1.1, backgroundColor: 'var(--accent-primary)' }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-5 h-5 theme-text-primary group-hover:text-white transition-colors" />
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.quickLinks')}</h3>
-            <ul className="space-y-3">
-              {[
-                t('footer.links.about'),
-                t('footer.links.howItWorks'),
-                t('footer.links.successStories'),
-                t('footer.links.newsUpdates'),
-                t('footer.links.careers'),
-                t('footer.links.contact')
-              ].map((link, i) => (
-                <motion.li key={i} whileHover={{ x: 5 }}>
-                  <a href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors flex items-center space-x-2 overflow-visible py-1">
-                    <ChevronRight className="w-4 h-4" />
-                    <span>{link}</span>
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Enhanced Contact Info */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.contact.title')}</h3>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-5 h-5 text-accent-gradient" />
-                </div>
-                <div className="overflow-visible">
-                  <p className="text-sm theme-text-muted mb-1">{t('footer.contact.helpline')}</p>
-                  <p className="theme-text-primary font-semibold">{t('footer.contact.helplineNumber')}</p>
-                  <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.available247')}</p>
-                </div>
+              <p className="text-sm theme-text-secondary leading-relaxed mb-6">{t('footer.companyDesc')}</p>
+              <div className="flex gap-2.5">
+                {socials.map((social, i) => (
+                  <button
+                    key={i}
+                    className="w-9 h-9 theme-bg-glass theme-border-glass border rounded-lg flex items-center justify-center theme-text-secondary hover:text-white hover:bg-accent-primary hover:border-transparent transition-all"
+                    aria-label={social.label}
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 theme-bg-glass rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-5 h-5 text-accent-gradient" />
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 theme-text-primary">{t('footer.quickLinks')}</h3>
+              <ul className="space-y-3">
+                {quickLinks.map((link, i) => (
+                  <li key={i}>
+                    <a href="#" className="group inline-flex items-center gap-1.5 text-sm theme-text-secondary hover:text-accent-gradient transition-colors">
+                      <ChevronRight className="w-3.5 h-3.5 opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      <span>{link}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 theme-text-primary">{t('footer.contact.title')}</h3>
+              <div className="space-y-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 shrink-0 theme-bg-glass border theme-border-glass rounded-lg flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-accent-gradient" />
+                  </div>
+                  <div>
+                    <p className="text-xs theme-text-muted mb-0.5">{t('footer.contact.helpline')}</p>
+                    <p className="text-sm font-semibold theme-text-primary">{t('footer.contact.helplineNumber')}</p>
+                    <p className="text-xs theme-text-muted mt-0.5">{t('footer.contact.available247')}</p>
+                  </div>
                 </div>
-                <div className="overflow-visible">
-                  <p className="text-sm theme-text-muted mb-1">{t('footer.contact.email')}</p>
-                  <p className="theme-text-primary font-semibold">{t('footer.contact.emailAddress')}</p>
-                  <p className="text-xs theme-text-muted overflow-visible">{t('footer.contact.responseTime')}</p>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 shrink-0 theme-bg-glass border theme-border-glass rounded-lg flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-accent-gradient" />
+                  </div>
+                  <div>
+                    <p className="text-xs theme-text-muted mb-0.5">{t('footer.contact.email')}</p>
+                    <p className="text-sm font-semibold theme-text-primary">{t('footer.contact.emailAddress')}</p>
+                    <p className="text-xs theme-text-muted mt-0.5">{t('footer.contact.responseTime')}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 theme-text-primary overflow-visible">{t('footer.newsletter.title')}</h3>
-            <div className="space-y-4">
-              <p className="theme-text-secondary text-sm overflow-visible">{t('footer.newsletter.description')}</p>
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 theme-text-primary">{t('footer.newsletter.title')}</h3>
+              <p className="text-sm theme-text-secondary leading-relaxed mb-4">{t('footer.newsletter.description')}</p>
+              <form className="flex flex-col sm:flex-row gap-2.5" onSubmit={(e) => e.preventDefault()}>
                 <input
                   type="email"
                   placeholder={t('footer.newsletter.placeholder')}
-                  className="flex-1 px-4 py-3 theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
+                  className="flex-1 min-w-0 px-4 py-2.5 text-sm theme-bg-glass theme-border-glass border rounded-lg theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary transition-all"
                 />
-                <motion.button
-                  className="px-4 sm:px-6 py-3 accent-gradient rounded-lg font-semibold flex items-center justify-center space-x-2 text-white shadow-lg whitespace-nowrap"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
+                  type="submit"
+                  aria-label={t('footer.newsletter.subscribe')}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 accent-gradient rounded-lg text-sm font-semibold text-white shadow-md whitespace-nowrap transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
                 >
-                  <span className="hidden sm:inline">{t('footer.newsletter.subscribe')}</span>
-                  <span className="sm:hidden">{t('footer.newsletter.subscribe')}</span>
-                  <Send className="w-4 h-4" />
-                </motion.button>
-              </div>
+                  {t('footer.newsletter.subscribe')}
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </form>
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        {/* Bottom Bar */}
-        <div className="border-t theme-border-glass pt-8">
+        <div className="border-t theme-border-glass pt-7">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="theme-text-secondary text-sm text-center md:text-left overflow-visible">
-              <p className="overflow-visible">{t('footer.copyright')}</p>
-              <p className="text-xs mt-1 overflow-visible py-1" style={{ lineHeight: '1.4' }}>
-                {t('footer.developedBy')}
-              </p>
+            <div className="theme-text-secondary text-sm text-center md:text-left">
+              <p>{t('footer.copyright')}</p>
+              <p className="text-xs theme-text-muted mt-1">{t('footer.developedBy')}</p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-              {[
-                t('footer.links.privacyPolicy'),
-                t('footer.links.termsOfService'),
-                t('footer.links.cookiePolicy'),
-                t('footer.links.accessibility')
-              ].map((link, i) => (
-                <motion.a
-                  key={i}
-                  href="#"
-                  className="theme-text-secondary hover:text-accent-gradient transition-colors overflow-visible"
-                  whileHover={{ scale: 1.05 }}
-                >
+            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" aria-label="Legal">
+              {legalLinks.map((link, i) => (
+                <a key={i} href="#" className="theme-text-secondary hover:text-accent-gradient transition-colors">
                   {link}
-                </motion.a>
+                </a>
               ))}
-            </div>
+            </nav>
           </div>
         </div>
       </div>
