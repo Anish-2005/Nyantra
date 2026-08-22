@@ -40,7 +40,7 @@ export function MobileDisbursementsList({ items, onView, onDelete }: Props) {
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-12 h-12 rounded-lg accent-gradient flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md">
-                  {disbursement.beneficiaryName
+                  {(disbursement.beneficiaryName ?? '')
                     .split(' ')
                     .map((n: string) => n[0])
                     .join('')}

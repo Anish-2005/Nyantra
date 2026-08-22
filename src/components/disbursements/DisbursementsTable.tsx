@@ -68,7 +68,7 @@ export function DisbursementsTable({ items, onView, onDelete, renderInstallmentC
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white text-xs font-bold">
-                      {disbursement.beneficiaryName
+                      {(disbursement.beneficiaryName ?? '')
                         .split(' ')
                         .map((n: string) => n[0])
                         .join('')}

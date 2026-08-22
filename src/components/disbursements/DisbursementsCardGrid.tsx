@@ -37,7 +37,7 @@ export function DisbursementsCardGrid({ items, onView, onDelete, renderInstallme
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg accent-gradient flex items-center justify-center text-white font-bold">
-                  {disbursement.beneficiaryName
+                  {(disbursement.beneficiaryName ?? '')
                     .split(' ')
                     .map((n: string) => n[0])
                     .join('')}
