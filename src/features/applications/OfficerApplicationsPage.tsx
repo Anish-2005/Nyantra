@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -789,42 +790,22 @@ const ApplicationsPage = () => {
     }, []);
 
     const getStatusColor = (status: string) => {
-        if (theme === 'dark') {
-            switch (status) {
-                case 'approved': return 'text-green-300 bg-green-900/30';
-                case 'pending': return 'text-amber-300 bg-amber-900/30';
-                case 'in-review': return 'text-blue-300 bg-blue-900/30';
-                case 'rejected': return 'text-red-300 bg-red-900/30';
-                case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-                default: return 'text-gray-300 bg-gray-800';
-            }
-        }
-
         switch (status) {
-            case 'approved': return 'text-green-700 bg-green-100';
-            case 'pending': return 'text-amber-700 bg-amber-100';
-            case 'in-review': return 'text-blue-700 bg-blue-100';
-            case 'rejected': return 'text-red-700 bg-red-100';
-            case 'documents-required': return 'text-purple-700 bg-purple-100';
-            default: return 'text-gray-700 bg-gray-100';
+            case 'approved': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+            case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+            case 'in-review': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+            case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+            case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+            default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
         }
     };
 
     const getPriorityColor = (priority: string) => {
-        if (theme === 'dark') {
-            switch (priority) {
-                case 'high': return 'text-red-300 bg-red-900/30';
-                case 'medium': return 'text-amber-300 bg-amber-900/30';
-                case 'low': return 'text-green-300 bg-green-900/30';
-                default: return 'text-gray-300 bg-gray-800';
-            }
-        }
-
         switch (priority) {
-            case 'high': return 'text-red-700 bg-red-100';
-            case 'medium': return 'text-amber-700 bg-amber-100';
-            case 'low': return 'text-green-700 bg-green-100';
-            default: return 'text-gray-700 bg-gray-100';
+            case 'high': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+            case 'medium': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+            case 'low': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+            default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
         }
     };
 
@@ -965,13 +946,13 @@ const ApplicationsPage = () => {
     };
 
     if (authLoading) return (
-        <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+        <div className="space-y-4 max-w-[1400px]">
             <div className="theme-bg-card theme-border-glass border rounded-xl p-5">Loading...</div>
         </div>
     );
 
     if (!isOfficer) return (
-        <div data-theme={theme} className="p-4 lg:p-5 space-y-5">
+        <div className="space-y-4 max-w-[1400px]">
             <div className="theme-bg-card theme-border-glass border rounded-xl p-5">
                 <h2 className="text-base font-semibold theme-text-primary">Access restricted</h2>
                 <p className="theme-text-muted">This page is restricted to officers only. If you believe this is an error, contact your administrator.</p>
@@ -1020,16 +1001,10 @@ return (
       {toasts.map((toast: any) => {
         const toastClass =
           toast.type === "success"
-            ? theme === "light"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : "bg-green-900/30 border-green-800 text-green-200"
+            ? "bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400"
             : toast.type === "error"
-            ? theme === "light"
-              ? "bg-red-50 border-red-200 text-red-800"
-              : "bg-red-900/30 border-red-800 text-red-200"
-            : theme === "light"
-            ? "bg-gray-50 border-gray-200 text-gray-900"
-            : "bg-gray-900/30 border-gray-800 text-gray-200";
+            ? "bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400"
+            : "bg-gray-500/10 border-gray-500/40 theme-text-primary";
 
         return (
           <div

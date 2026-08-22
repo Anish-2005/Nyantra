@@ -1,20 +1,20 @@
 "use client";
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardView } from '@/context/DashboardViewContext';
-import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc } from 'firebase/firestore';
+import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import LoadingState from '@/components/LoadingState';
+import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
-import LoadingState from '@/components/LoadingState';
 import {
-  User, Plus, Edit, Trash, Eye,
+  Search, Filter, Plus, Edit, Trash, Eye,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
-  Shield, Award, MapPin, Phone, Calendar,
-  DollarSign, FileText, Check, ChevronLeft, ChevronRight,
-  Upload, File, CheckCircle, XCircle, Hash
+  Shield, FileText, File,
+  ChevronLeft, ChevronRight, Loader2, User
 } from 'lucide-react';
 
 type Beneficiary = {
@@ -45,9 +45,20 @@ type Beneficiary = {
   scStCertificate: string;
 };
 
-// New Beneficiary Form Component (same as officer page)
+const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
+
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
+);
+
+const Pair = ({ label, value, mono }: { label: string; value: string | number; mono?: boolean }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] uppercase tracking-wider theme-text-muted truncate">{label}</dt>
+    <dd className={`text-[13px] font-medium theme-text-primary mt-0.5 truncate ${mono ? 'font-mono' : ''}`}>{value}</dd>
+  </div>
+);
+
 const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () => void, initialData?: any | null, onSaved?: ((saved?: any) => void) | undefined }) => {
-  const { theme } = useTheme();
   const { t } = useLocale();
   const [formData, setFormData] = useState({
     name: '',
@@ -67,14 +78,25 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     maritalStatus: '',
     bankAccount: '',
     ifsc: '',
-    scStCertificate: '' // Now stores Cloudinary URL
+    scStCertificate: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onCancel]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -83,87 +105,72 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
     }
 
-    // Father's name validation
     if (!formData.fatherName.trim()) {
       newErrors.fatherName = 'Father\'s name is required';
     } else if (formData.fatherName.trim().length < 2) {
       newErrors.fatherName = 'Father\'s name must be at least 2 characters';
     }
 
-    // Aadhaar validation
     if (!formData.aadhaarNumber.trim()) {
       newErrors.aadhaarNumber = 'Aadhaar number is required';
     } else if (!/^\d{12}$/.test(formData.aadhaarNumber.trim())) {
       newErrors.aadhaarNumber = 'Aadhaar number must be 12 digits';
     }
 
-    // Phone validation
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
 
-    // Email validation (optional but must be valid if provided)
     if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // District validation
     if (!formData.district.trim()) {
       newErrors.district = 'District is required';
     }
 
-    // State validation
     if (!formData.state.trim()) {
       newErrors.state = 'State is required';
     }
 
-    // Address validation
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required';
     }
 
-    // SC/ST Certificate validation (required for SC/ST category)
     if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
       newErrors.scStCertificate = 'SC/ST certificate URL is required for SC/ST category';
     }
 
-    // Age validation (optional but must be valid number if provided)
     if (formData.age.trim() && (isNaN(Number(formData.age)) || Number(formData.age) < 0 || Number(formData.age) > 120)) {
       newErrors.age = 'Please enter a valid age (0-120)';
     }
 
-    // Gender validation
     if (!formData.gender) {
       newErrors.gender = 'Gender is required';
     }
 
-    // Category validation
     if (!formData.category) {
       newErrors.category = 'Category is required';
     }
 
-    // Marital Status validation
     if (!formData.maritalStatus) {
       newErrors.maritalStatus = 'Marital status is required';
     }
 
-    // Bank Account validation
     if (!formData.bankAccount.trim()) {
       newErrors.bankAccount = 'Bank account number is required';
     } else if (!/^\d{9,18}$/.test(formData.bankAccount.trim())) {
       newErrors.bankAccount = 'Bank account number must be 9-18 digits';
     }
 
-    // IFSC validation
     if (!formData.ifsc.trim()) {
       newErrors.ifsc = 'IFSC code is required';
     } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc.trim().toUpperCase())) {
@@ -176,15 +183,14 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       if (initialData && initialData.id) {
-        // update existing beneficiary
         const regDate = formData.registrationDate
           ? Timestamp.fromDate(new Date(formData.registrationDate))
           : (initialData?.registrationDate && typeof initialData.registrationDate.toDate === 'function'
@@ -225,7 +231,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     }
   };
 
-  // Prefill form when editing
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -251,183 +256,211 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved }: { onCancel: () =
     }
   }, [initialData]);
 
-  return (
-    <form onSubmit={handleSubmit} className="p-5 space-y-5">
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.edit_beneficiary')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
-            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.name ? 'border-red-500' : ''}`} />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.fatheraposs_name')}</label>
-            <input required value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.fatherName ? 'border-red-500' : ''}`} />
-            {errors.fatherName && <p className="text-red-500 text-xs mt-1">{errors.fatherName}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')}</label>
-            <input required value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.aadhaarNumber ? 'border-red-500' : ''}`} />
-            {errors.aadhaarNumber && <p className="text-red-500 text-xs mt-1">{errors.aadhaarNumber}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')}</label>
-            <input required value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.phone ? 'border-red-500' : ''}`} />
-            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.email')}</label>
-            <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.email ? 'border-red-500' : ''}`} />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
-            <input required value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.district ? 'border-red-500' : ''}`} />
-            {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')}</label>
-            <input required value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.state ? 'border-red-500' : ''}`} />
-            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
-            <input required value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.address ? 'border-red-500' : ''}`} />
-            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-          </div>
-        </div>
-      </div>
+  if (!mounted) return null;
 
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.verification_details')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
-            <div className="space-y-2">
-              <input
-                type="url"
-                value={formData.scStCertificate}
-                onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
-                placeholder="Enter certificate URL (e.g., https://example.com/certificate.pdf)"
-                className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.scStCertificate ? 'border-red-500' : ''}`}
-                disabled={isSubmitting}
-              />
-              {formData.scStCertificate && (
-                <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <File className="w-4 h-4 text-green-500" />
-                  <span className="text-sm theme-text-primary">Certificate URL provided</span>
-                  <button
-                    onClick={() => window.open(formData.scStCertificate, '_blank')}
-                    className="text-blue-500 hover:text-blue-600 text-sm underline"
-                  >
-                    View File
-                  </button>
-                </div>
-              )}
-              {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
+  return createPortal(
+    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/50"
+        onClick={onCancel}
+      />
+      <motion.aside
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+      >
+        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{initialData ? t('extracted.edit_beneficiary') : t('extracted.create_new_beneficiary')}</h3>
+            <p className="text-[11px] theme-text-muted truncate">{initialData ? t('extracted.edit_beneficiary_description') : t('extracted.create_new_beneficiary_description')}</p>
+          </div>
+          <button type="button" onClick={onCancel} className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors shrink-0" aria-label="Close">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form id="beneficiary-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+          <section>
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.basic_details')}</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label>{t('extracted.full_name')}</Label>
+                <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`${inputCls} ${errors.name ? 'border-red-500' : ''}`} />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label>{t('extracted.fatheraposs_name')}</Label>
+                <input required value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className={`${inputCls} ${errors.fatherName ? 'border-red-500' : ''}`} />
+                {errors.fatherName && <p className="text-red-500 text-xs mt-1">{errors.fatherName}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.aadhaar_number')}</Label>
+                <input required value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className={`${inputCls} ${errors.aadhaarNumber ? 'border-red-500' : ''}`} />
+                {errors.aadhaarNumber && <p className="text-red-500 text-xs mt-1">{errors.aadhaarNumber}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.phone_number')}</Label>
+                <input required value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`${inputCls} ${errors.phone ? 'border-red-500' : ''}`} />
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label>{t('extracted.email')}</Label>
+                <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`${inputCls} ${errors.email ? 'border-red-500' : ''}`} />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.district')}</Label>
+                <input required value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`${inputCls} ${errors.district ? 'border-red-500' : ''}`} />
+                {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.state')}</Label>
+                <input required value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`${inputCls} ${errors.state ? 'border-red-500' : ''}`} />
+                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label>{t('extracted.complete_address')}</Label>
+                <input required value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`${inputCls} ${errors.address ? 'border-red-500' : ''}`} />
+                {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('extracted.personal_details')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.age')}</label>
-            <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.age ? 'border-red-500' : ''}`} />
-            {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.gender')}</label>
-            <select required value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.gender ? 'border-red-500' : ''}`}>
-              <option value="">{t('extracted.select_gender')}</option>
-              <option value="Male">{t('extracted.male')}</option>
-              <option value="Female">{t('extracted.female')}</option>
-              <option value="Other">{t('extracted.other')}</option>
-            </select>
-            {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.category_1') || 'Category'}</label>
-            <select required value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.category ? 'border-red-500' : ''}`}>
-              <option value="">Select category</option>
-              <option value="SC">SC</option>
-              <option value="ST">ST</option>
-              <option value="OBC">OBC</option>
-              <option value="General">General</option>
-            </select>
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.marital_status')}</label>
-            <select required value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.maritalStatus ? 'border-red-500' : ''}`}>
-              <option value="">{t('extracted.select_marital_status')}</option>
-              <option value="Single">{t('extracted.single')}</option>
-              <option value="Married">{t('extracted.married')}</option>
-              <option value="Divorced">{t('extracted.divorced')}</option>
-              <option value="Widowed">{t('extracted.widowed')}</option>
-            </select>
-            {errors.maritalStatus && <p className="text-red-500 text-xs mt-1">{errors.maritalStatus}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>
-            <input required value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.bankAccount ? 'border-red-500' : ''}`} />
-            {errors.bankAccount && <p className="text-red-500 text-xs mt-1">{errors.bankAccount}</p>}
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.ifsc_code')}</label>
-            <input required value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${errors.ifsc ? 'border-red-500' : ''}`} />
-            {errors.ifsc && <p className="text-red-500 text-xs mt-1">{errors.ifsc}</p>}
-          </div>
-        </div>
-      </div>
+          <section className="pt-4 border-t theme-border-glass">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.verification_details')}</h4>
+            <div className="col-span-2">
+              <Label>{t('extracted.sc_st_certificate')}</Label>
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  value={formData.scStCertificate}
+                  onChange={(e) => handleInputChange('scStCertificate', e.target.value)}
+                  placeholder="Enter certificate URL (e.g., https://example.com/certificate.pdf)"
+                  className={`${inputCls} ${errors.scStCertificate ? 'border-red-500' : ''}`}
+                  disabled={isSubmitting}
+                />
+                {formData.scStCertificate && (
+                  <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <File className="w-4 h-4 text-green-500" />
+                    <span className="text-sm theme-text-primary">Certificate URL provided</span>
+                    <button
+                      type="button"
+                      onClick={() => window.open(formData.scStCertificate, '_blank')}
+                      className="text-blue-500 hover:text-blue-600 text-sm underline"
+                    >
+                      View File
+                    </button>
+                  </div>
+                )}
+                {errors.scStCertificate && <p className="text-red-500 text-xs mt-1">{errors.scStCertificate}</p>}
+              </div>
+            </div>
+          </section>
 
-      <div className="flex justify-end gap-4 pt-6 border-t theme-border-glass">
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onCancel}
-          className="px-6 py-2.5 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:bg-red-500/10 transition-colors"
-          disabled={isSubmitting}
-        >
-          {t('extracted.cancel')}
-        </motion.button>
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="px-6 py-2.5 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <Edit className="w-4 h-4" />
-              {t('extracted.save')}
-            </>
-          )}
-        </motion.button>
-      </div>
-    </form>
+          <section className="pt-4 border-t theme-border-glass">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.personal_details')}</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t('extracted.age')}</Label>
+                <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className={`${inputCls} ${errors.age ? 'border-red-500' : ''}`} />
+                {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.gender')}</Label>
+                <select required value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className={`${inputCls} ${errors.gender ? 'border-red-500' : ''}`}>
+                  <option value="">{t('extracted.select_gender')}</option>
+                  <option value="Male">{t('extracted.male')}</option>
+                  <option value="Female">{t('extracted.female')}</option>
+                  <option value="Other">{t('extracted.other')}</option>
+                </select>
+                {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.category_1') || 'Category'}</Label>
+                <select required value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={`${inputCls} ${errors.category ? 'border-red-500' : ''}`}>
+                  <option value="">Select category</option>
+                  <option value="SC">SC</option>
+                  <option value="ST">ST</option>
+                  <option value="OBC">OBC</option>
+                  <option value="General">General</option>
+                </select>
+                {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+              </div>
+              <div>
+                <Label>{t('extracted.marital_status')}</Label>
+                <select required value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className={`${inputCls} ${errors.maritalStatus ? 'border-red-500' : ''}`}>
+                  <option value="">{t('extracted.select_marital_status')}</option>
+                  <option value="Single">{t('extracted.single')}</option>
+                  <option value="Married">{t('extracted.married')}</option>
+                  <option value="Divorced">{t('extracted.divorced')}</option>
+                  <option value="Widowed">{t('extracted.widowed')}</option>
+                </select>
+                {errors.maritalStatus && <p className="text-red-500 text-xs mt-1">{errors.maritalStatus}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label>{t('extracted.bank_account')}</Label>
+                <input required value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className={`${inputCls} ${errors.bankAccount ? 'border-red-500' : ''}`} />
+                {errors.bankAccount && <p className="text-red-500 text-xs mt-1">{errors.bankAccount}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label>{t('extracted.ifsc_code')}</Label>
+                <input required value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className={`${inputCls} ${errors.ifsc ? 'border-red-500' : ''}`} />
+                {errors.ifsc && <p className="text-red-500 text-xs mt-1">{errors.ifsc}</p>}
+              </div>
+            </div>
+          </section>
+        </form>
+
+        <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary hover:theme-bg-hover hover:theme-text-primary transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            {t('extracted.cancel')}
+          </button>
+          <button
+            type="submit"
+            form="beneficiary-form"
+            disabled={isSubmitting}
+            className="flex-1 h-9 rounded-md accent-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t('extracted.save')}
+          </button>
+        </div>
+      </motion.aside>
+    </div>,
+    document.body
   );
 };
 
 export default function BeneficiariesPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { view } = useDashboardView();
-  const { theme } = useTheme();
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [verificationFilter, setVerificationFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const { t } = useLocale();
-  
-  // Toasts
+  const detailRef = useRef<HTMLDivElement>(null);
+
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
   const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -435,7 +468,6 @@ export default function BeneficiariesPage() {
     window.setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
   };
 
-  // Subscribe to user's beneficiaries
   useEffect(() => {
     if (!user) {
       return;
@@ -443,7 +475,7 @@ export default function BeneficiariesPage() {
 
     setLoading(true);
     const q = query(collection(db, 'beneficiaries'), where('ownerId', '==', user.uid));
-    
+
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const items: Beneficiary[] = [];
       querySnapshot.forEach((doc) => {
@@ -476,11 +508,10 @@ export default function BeneficiariesPage() {
           scStCertificate: data.scStCertificate || ''
         });
       });
-      
+
       setBeneficiaries(items);
       setLoading(false);
-      
-      // Auto-select the first beneficiary if none selected
+
       if (items.length > 0 && !selectedBeneficiary) {
         setSelectedBeneficiary(items[0]);
       }
@@ -498,7 +529,6 @@ export default function BeneficiariesPage() {
       return;
     }
 
-    // Enforce single beneficiary per user
     if (beneficiaries.length > 0) {
       showToast('info', t('extracted.only_one_beneficiary_allowed'));
       setSelectedBeneficiary(beneficiaries[0]);
@@ -536,13 +566,13 @@ export default function BeneficiariesPage() {
 
       const ref = doc(db, 'beneficiaries', newId);
       await setDoc(ref, { ...newBeneficiary, id: newId });
-      
+
       const saved = { id: newId, ...newBeneficiary };
       setBeneficiaries([saved]);
       setSelectedBeneficiary(saved);
       setEditingBeneficiary({ ...saved, age: saved.age ?? 0 });
       setShowNewBeneficiaryForm(true);
-      
+
       showToast('success', t('extracted.beneficiary_created'));
     } catch (err) {
       console.error('Error creating beneficiary:', err);
@@ -557,36 +587,39 @@ export default function BeneficiariesPage() {
         if (exists) return prev.map(b => b.id === savedBeneficiary.id ? { ...b, ...savedBeneficiary } : b);
         return [savedBeneficiary, ...prev];
       });
-      
+
       setSelectedBeneficiary(savedBeneficiary);
       showToast('success', t('extracted.beneficiary_updated'));
     }
   };
 
-  const deleteBeneficiary = async (id: string) => {
-    if (!window.confirm(t('extracted.are_you_sure_remove_beneficiary'))) return;
-    
+  const confirmDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setShowDeleteModal(true);
+  };
+
+  const performDelete = async (id: string | null) => {
+    if (!id) return;
+
     try {
       await deleteDoc(doc(db, 'beneficiaries', id));
       setBeneficiaries(prev => prev.filter(b => b.id !== id));
-      
+
       if (selectedBeneficiary?.id === id) {
         setSelectedBeneficiary(null);
       }
       if (editingBeneficiary?.id === id) {
         setEditingBeneficiary(null);
       }
-      
+
       showToast('success', t('extracted.beneficiary_deleted'));
     } catch (err) {
       console.error('Error deleting beneficiary:', err);
       showToast('error', t('extracted.failed_delete'));
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteTargetId(null);
     }
-  };
-
-  const formatCurrency = (n?: number | null) => {
-    if (n == null || Number.isNaN(n)) return '₹0';
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n as number);
   };
 
   const formatDate = (date: any) => {
@@ -603,42 +636,23 @@ export default function BeneficiariesPage() {
   };
 
   const getStatusColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'verified': return 'text-green-300 bg-green-900/30';
-        case 'disbursed': return 'text-emerald-300 bg-emerald-900/30';
-        case 'pending-verification': return 'text-amber-300 bg-amber-900/30';
-        case 'rejected': return 'text-red-300 bg-red-900/30';
-        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
     switch (status) {
-      case 'verified': return 'text-green-700 bg-green-100';
-      case 'disbursed': return 'text-emerald-700 bg-emerald-100';
-      case 'pending-verification': return 'text-amber-700 bg-amber-100';
-      case 'rejected': return 'text-red-700 bg-red-100';
-      case 'documents-required': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'disbursed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+      case 'pending-verification': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
   const getVerificationColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'verified': return 'text-green-300 bg-green-900/30';
-        case 'pending': return 'text-amber-300 bg-amber-900/30';
-        case 'rejected': return 'text-red-300 bg-red-900/30';
-        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
     switch (status) {
-      case 'verified': return 'text-green-700 bg-green-100';
-      case 'pending': return 'text-amber-700 bg-amber-100';
-      case 'rejected': return 'text-red-700 bg-red-100';
-      case 'documents-required': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'documents-required': return 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -663,13 +677,66 @@ export default function BeneficiariesPage() {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const filteredBeneficiaries = beneficiaries;
+  const filteredBeneficiaries = useMemo(() => {
+    let filtered = [...beneficiaries];
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(beneficiary =>
+        beneficiary.name.toLowerCase().includes(q) ||
+        beneficiary.id.toLowerCase().includes(q) ||
+        beneficiary.district.toLowerCase().includes(q) ||
+        beneficiary.aadhaarNumber.includes(searchQuery)
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(beneficiary => beneficiary.status === statusFilter);
+    }
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(beneficiary => beneficiary.category === categoryFilter);
+    }
+
+    if (verificationFilter !== 'all') {
+      filtered = filtered.filter(beneficiary => beneficiary.verificationStatus === verificationFilter);
+    }
+
+    return filtered;
+  }, [beneficiaries, searchQuery, statusFilter, categoryFilter, verificationFilter]);
+
+  const stats = useMemo(() => ({
+    total: beneficiaries.length,
+    verified: beneficiaries.filter(b => b.verificationStatus === 'verified').length,
+    pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
+    rejected: beneficiaries.filter(b => b.status === 'rejected').length,
+    documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length
+  }), [beneficiaries]);
+
+  const totalPages = Math.ceil(filteredBeneficiaries.length / itemsPerPage);
+  const paginatedBeneficiaries = filteredBeneficiaries.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalItems = filteredBeneficiaries.length;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems);
+  const noPages = totalPages === 0;
+
+  const hasActiveFilters = statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all';
+
+  useEffect(() => {
+    if (selectedBeneficiary?.id) {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedBeneficiary?.id]);
 
   if (!user) {
     return (
-      <div className="p-5 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">{t('extracted.login_required')}</h3>
+      <div className="space-y-4 max-w-[1400px]">
+        <div className="theme-bg-card theme-border-glass border rounded-xl p-5 text-center">
+          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.login_required')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.login_to_manage_beneficiaries')}</p>
         </div>
       </div>
@@ -678,9 +745,9 @@ export default function BeneficiariesPage() {
 
   if (view !== 'user') {
     return (
-      <div className="p-5 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">{t('extracted.applicant_only_access')}</h3>
+      <div className="space-y-4 max-w-[1400px]">
+        <div className="theme-bg-card theme-border-glass border rounded-xl p-5 text-center">
+          <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.applicant_only_access')}</h3>
           <p className="text-sm theme-text-muted mt-2">{t('extracted.contact_admin_if_needed')}</p>
         </div>
       </div>
@@ -692,685 +759,536 @@ export default function BeneficiariesPage() {
   }
 
   return (
-    <div data-theme={theme} className="relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
-          style={{
-            backgroundColor:
-              theme === 'dark' ? '#1e40af' : '#3b82f6'
-          }}
-        ></div>
-        <div
-          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
-          style={{
-            backgroundColor:
-              theme === 'dark' ? '#7c3aed' : '#8b5cf6'
-          }}
-        ></div>
+    <div className="space-y-4 max-w-[1400px]">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between gap-3"
+      >
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+            {t('extracted.beneficiary_management')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
+          </h1>
+          <p className="text-xs theme-text-muted mt-0.5 truncate">
+            {t('extracted.manage_your_beneficiary_information')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={createNewBeneficiary}
+            className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{t('extracted.add_beneficiary')}</span>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Toast container */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {toasts.map(tst => {
+          const toastClass = tst.type === 'success'
+            ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
+            : tst.type === 'error'
+              ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
+              : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
+
+          return (
+            <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
+              <div className="flex items-center justify-between">
+                <div className="text-sm">{tst.message}</div>
+                <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="relative z-10 p-4 sm:p-5 space-y-4 sm:space-y-5">
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl theme-bg-card theme-border-glass border backdrop-blur-xl overflow-hidden"
-        >
-          {/* Animated gradient background - theme aware */}
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1]
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        open={showDeleteModal && !!deleteTargetId}
+        message={t('extracted.are_you_sure_remove_beneficiary')}
+        title={t('extracted.delete')}
+        confirmLabel={t('extracted.delete')}
+        onCancel={() => { setShowDeleteModal(false); setDeleteTargetId(null); }}
+        onConfirm={() => performDelete(deleteTargetId)}
+      />
+
+      {/* Statistics band */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden"
+      >
+        {[
+          { labelKey: 'extracted.total', value: stats.total },
+          { labelKey: 'extracted.verified', value: stats.verified },
+          { labelKey: 'extracted.pending', value: stats.pendingVerification },
+          { labelKey: 'extracted.rejected', value: stats.rejected },
+          { labelKey: 'extracted.documents_required', value: stats.documentsRequired }
+        ].map((stat, idx) => (
+          <div key={idx} className="theme-bg-card p-3.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{t(stat.labelKey)}</p>
+            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{stat.value}</p>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Filters and Search Toolbar */}
+      <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b theme-border-glass flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
+            <input
+              type="text"
+              placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-8 pr-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+            />
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${showFilters ? 'accent-gradient text-white' : 'theme-text-secondary hover:theme-bg-glass hover:theme-text-primary'}`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>{t('extracted.filters')}</span>
+              {hasActiveFilters && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
+            </button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div>
+                  <Label>{t('extracted.status')}</Label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_statuses')}</option>
+                    <option value="verified">{t('extracted.verified')}</option>
+                    <option value="pending-verification">{t('extracted.pending_verification')}</option>
+                    <option value="rejected">{t('extracted.rejected')}</option>
+                    <option value="documents-required">{t('extracted.documents_required')}</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>{t('extracted.category_1')}</Label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_categories')}</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="OBC">OBC</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>{t('extracted.verification')}</Label>
+                  <select
+                    value={verificationFilter}
+                    onChange={(e) => setVerificationFilter(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="all">{t('extracted.all_verification')}</option>
+                    <option value="verified">{t('extracted.verified')}</option>
+                    <option value="pending">{t('extracted.pending')}</option>
+                    <option value="rejected">{t('extracted.rejected')}</option>
+                    <option value="documents-required">{t('extracted.documents_required')}</option>
+                  </select>
+                </div>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
+                  {statusFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Status: {statusFilter.replace('-', ' ')}
+                      <button onClick={() => setStatusFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear status filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {categoryFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Category: {categoryFilter}
+                      <button onClick={() => setCategoryFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear category filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {verificationFilter !== 'all' && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
+                      Verification: {verificationFilter.replace('-', ' ')}
+                      <button onClick={() => setVerificationFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear verification filter">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setCategoryFilter('all');
+                      setVerificationFilter('all');
+                    }}
+                    className="px-2 py-1 rounded-md theme-bg-glass theme-text-muted text-xs font-medium hover:theme-text-primary transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Add/Edit Beneficiary Drawer */}
+      <AnimatePresence>
+        {showNewBeneficiaryForm && (
+          <NewBeneficiaryForm
+            onCancel={() => {
+              setShowNewBeneficiaryForm(false);
+              setEditingBeneficiary(null);
             }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl"
-            style={{
-              background: theme === 'dark'
-                ? 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))'
-                : 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))'
+            initialData={editingBeneficiary}
+            onSaved={(saved) => {
+              updateBeneficiary(saved);
+              setShowNewBeneficiaryForm(false);
+              setEditingBeneficiary(null);
             }}
           />
+        )}
+      </AnimatePresence>
 
-          <div className="relative z-10 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
-              <motion.div
-                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-indigo-500"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [1, 0.8, 1]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-xs sm:text-sm font-medium theme-text-secondary">
-                {t('extracted.beneficiaries')} • {t('extracted.management')}
-              </span>
+      {/* Beneficiaries List */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
+      >
+        {paginatedBeneficiaries.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="mx-auto w-12 h-12 theme-bg-glass rounded-full flex items-center justify-center mb-3">
+              <User className="w-5 h-5 theme-text-muted" />
             </div>
-            <h1 className="text-2xl sm:text-lg font-semibold tracking-tight theme-text-primary mb-2">
-              {t('extracted.beneficiary_management')}{' '}
-              <span className="text-accent-gradient inline-block leading-normal ml-1 sm:ml-2">
-                {t('extracted.dashboard')}
-              </span>
-            </h1>
-            <p className="theme-text-secondary text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
-              {t('extracted.manage_your_beneficiary_information')}
+            <p className="theme-text-muted mb-1">
+              {beneficiaries.length === 0 ? t('extracted.no_beneficiaries_yet') : t('extracted.try_adjusting_search_terms')}
             </p>
+            {beneficiaries.length === 0 && (
+              <p className="text-sm theme-text-muted">
+                {t('extracted.click_create_to_get_started')}
+              </p>
+            )}
           </div>
+        ) : (
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b theme-border-glass">
+                  <tr>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary')}</th>
+                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.aadhaar_number')}</th>
+                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.phone')}</th>
+                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.email')}</th>
+                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.location')}</th>
+                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.category_1')}</th>
+                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.registration_date')}</th>
+                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.status')}</th>
+                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.verification')}</th>
+                    <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedBeneficiaries.map((beneficiary) => {
+                    const StatusIcon = getStatusIcon(beneficiary.status);
+                    const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
 
-         
-        </motion.div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          {/* Main Content */}
-          <div className="xl:col-span-2 space-y-5">
-            {/* Action Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-semibold theme-text-primary mb-2">
-                    {beneficiaries.length === 0 ? t('extracted.create_beneficiary') : t('extracted.manage_beneficiary')}
-                  </h2>
-                  <p className="theme-text-muted text-sm">
-                    {beneficiaries.length === 0 
-                      ? t('extracted.add_your_beneficiary_details_to_get_started')
-                      : t('extracted.view_and_edit_your_beneficiary_information')}
-                  </p>
-                </div>
-                
-                <div className="flex gap-3">
-                  {beneficiaries.length === 0 ? (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={createNewBeneficiary}
-                      className="px-6 py-3 accent-gradient text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-sm transition-shadow font-semibold"
-                    >
-                      <Plus className="w-5 h-5" />
-                      {t('extracted.create_beneficiary')}
-                    </motion.button>
-                  ) : (
-                    <>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setEditingBeneficiary(selectedBeneficiary);
-                          setShowNewBeneficiaryForm(true);
-                        }}
-                        className="px-6 py-3 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 theme-text-primary hover:shadow-sm transition-shadow"
-                      >
-                        <Edit className="w-5 h-5" />
-                        {t('extracted.edit')}
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => selectedBeneficiary && deleteBeneficiary(selectedBeneficiary.id)}
-                        className="px-6 py-3 theme-bg-glass theme-border-glass border rounded-lg flex items-center gap-2 text-red-600 hover:bg-red-500/10 transition-colors"
-                      >
-                        <Trash className="w-5 h-5" />
-                        {t('extracted.delete')}
-                      </motion.button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* New Beneficiary Form */}
-            <AnimatePresence>
-              {showNewBeneficiaryForm && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
-                >
-                  <NewBeneficiaryForm
-                    onCancel={() => {
-                      setShowNewBeneficiaryForm(false);
-                      setEditingBeneficiary(null);
-                    }}
-                    initialData={editingBeneficiary}
-                    onSaved={(saved) => {
-                      updateBeneficiary(saved);
-                      setShowNewBeneficiaryForm(false);
-                      setEditingBeneficiary(null);
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Beneficiaries List */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <h3 className="text-lg font-semibold theme-text-primary">
-                  {t('extracted.your_beneficiary')}
-                </h3>
-              </div>
-
-              <div className="space-y-4">
-                <AnimatePresence>
-                  {filteredBeneficiaries.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-12 theme-bg-glass rounded-xl border theme-border-glass"
-                    >
-                      <div className="mx-auto w-16 h-16 theme-bg-primary rounded-full flex items-center justify-center mb-4">
-                        <User className="w-8 h-8 theme-text-muted" />
-                      </div>
-                      <p className="theme-text-muted mb-2">
-                        {t('extracted.no_beneficiaries_yet')}
-                      </p>
-                      <p className="text-sm theme-text-muted">
-                        {t('extracted.click_create_to_get_started')}
-                      </p>
-                    </motion.div>
-                  ) : (
-                    filteredBeneficiaries.map((beneficiary, index) => (
-                      <motion.div
+                    return (
+                      <tr
                         key={beneficiary.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={`p-4 rounded-xl border theme-border-glass cursor-pointer transition-all hover:scale-[1.02] ${
-                          selectedBeneficiary?.id === beneficiary.id 
-                            ? 'accent-gradient text-white' 
-                            : 'theme-bg-glass hover:theme-border-primary'
+                        className={`border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors ${
+                          selectedBeneficiary?.id === beneficiary.id ? 'theme-bg-glass' : ''
                         }`}
                         onClick={() => setSelectedBeneficiary(beneficiary)}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold">
-                                {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                              </div>
-                              <div>
-                                <h4 className={`font-semibold truncate ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {beneficiary.name}
-                                </h4>
-                                <p className={`text-sm ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/80' : 'theme-text-muted'
-                                }`}>
-                                  {beneficiary.aadhaarNumber} • {beneficiary.district}, {beneficiary.state}
-                                </p>
-                              </div>
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full accent-gradient text-white text-[11px] font-bold grid place-items-center uppercase flex-shrink-0">
+                              {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                             </div>
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                              <div>
-                                <p className={`text-xs ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.email')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {beneficiary.email || 'Not provided'}
-                                </p>
-                              </div>
-                              <div>
-                                <p className={`text-xs ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.sc_st_certificate')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {beneficiary.scStCertificate ? (
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                                      className="px-3 py-1.5 rounded-lg accent-gradient text-white text-sm font-medium shadow-sm hover:shadow-sm transition-shadow flex items-center gap-1.5 border border-white/20"
-                                    >
-                                      <Eye className="w-3.5 h-3.5" />
-                                      View Certificate
-                                    </button>
-                                  ) : 'Not provided'}
-                                </p>
-                              </div>
-                              <div>
-                                <p className={`text-xs ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.category_1')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {beneficiary.category}
-                                </p>
-                              </div>
-                              <div>
-                                <p className={`text-xs ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white/70' : 'theme-text-muted'
-                                }`}>
-                                  {t('extracted.registration_date')}
-                                </p>
-                                <p className={`font-medium ${
-                                  selectedBeneficiary?.id === beneficiary.id ? 'text-white' : 'theme-text-primary'
-                                }`}>
-                                  {formatDate(beneficiary.registrationDate)}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                selectedBeneficiary?.id === beneficiary.id 
-                                  ? 'bg-white/20 text-white border-white/30' 
-                                  : getStatusColor(beneficiary.status)
-                              }`}>
-                                {(() => {
-                                  const Icon = getStatusIcon(beneficiary.status);
-                                  return <Icon className="w-3 h-3" />;
-                                })()}
-                                {beneficiary.status.replace('-', ' ')}
-                              </span>
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                selectedBeneficiary?.id === beneficiary.id 
-                                  ? 'bg-white/20 text-white border-white/30' 
-                                  : getVerificationColor(beneficiary.verificationStatus)
-                              }`}>
-                                {(() => {
-                                  const Icon = getVerificationIcon(beneficiary.verificationStatus);
-                                  return <Icon className="w-3 h-3" />;
-                                })()}
-                                {beneficiary.verificationStatus.replace('-', ' ')}
-                              </span>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-medium theme-text-primary truncate">{beneficiary.name}</p>
+                              <p className="text-[11px] theme-text-muted font-mono truncate">{beneficiary.id}</p>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
+                        </td>
+                        <td className="hidden lg:table-cell py-2.5 px-3 text-xs font-mono theme-text-primary">{beneficiary.aadhaarNumber}</td>
+                        <td className="hidden lg:table-cell py-2.5 px-3 text-[13px] theme-text-primary whitespace-nowrap">{beneficiary.phone}</td>
+                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary"><span className="block max-w-[160px] truncate">{beneficiary.email || '—'}</span></td>
+                        <td className="hidden lg:table-cell py-2.5 px-3">
+                          <p className="text-[13px] theme-text-primary">{beneficiary.district}</p>
+                          <p className="text-[11px] theme-text-muted">{beneficiary.state}</p>
+                        </td>
+                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary">{beneficiary.category}</td>
+                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary tabular-nums whitespace-nowrap">{formatDate(beneficiary.registrationDate)}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {beneficiary.status.replace('-', ' ')}
+                          </span>
+                        </td>
+                        <td className="hidden xl:table-cell py-2.5 px-3">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                            <VerificationIcon className="w-3 h-3" />
+                            {beneficiary.verificationStatus.replace('-', ' ')}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center justify-end gap-1">
+                            {beneficiary.scStCertificate && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
+                                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-green-500 transition-colors"
+                                title="View Certificate"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingBeneficiary(beneficiary);
                                 setShowNewBeneficiaryForm(true);
                               }}
-                              className={`p-2 rounded-lg transition-all hover:scale-110 ${
-                                selectedBeneficiary?.id === beneficiary.id 
-                                  ? 'bg-white/20 text-white hover:bg-white/30' 
-                                  : 'theme-bg-glass theme-text-muted hover:theme-border-primary'
-                              }`}
-                              title={t('extracted.edit_beneficiary')}
+                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                              title={t('extracted.edit')}
                             >
                               <Edit className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
+                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-red-500 transition-colors"
+                              title={t('extracted.delete')}
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile flat list */}
+            <div className="md:hidden">
+              {paginatedBeneficiaries.map((beneficiary) => {
+                const StatusIcon = getStatusIcon(beneficiary.status);
+                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
+
+                return (
+                  <div
+                    key={beneficiary.id}
+                    className={`p-3.5 border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors ${
+                      selectedBeneficiary?.id === beneficiary.id ? 'theme-bg-glass' : ''
+                    }`}
+                    onClick={() => setSelectedBeneficiary(beneficiary)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-full accent-gradient text-white text-[11px] font-bold grid place-items-center uppercase flex-shrink-0">
+                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
                         </div>
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Sidebar - Selected Beneficiary Details */}
-          <div className="space-y-5">
-            {/* Beneficiary Status Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="theme-bg-card theme-border-glass border rounded-xl p-5"
-            >
-              <h3 className="font-semibold theme-text-primary mb-4">{t('extracted.beneficiary_status')}</h3>
-              
-              <div className="space-y-4">
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm theme-text-muted">{t('extracted.status')}</span>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      beneficiaries[0]?.status === 'approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                      beneficiaries[0]?.status === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                      beneficiaries[0]?.status === 'documents-required' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
-                      'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                    }`}>
-                      {beneficiaries[0]?.status?.replace('-', ' ') || 'pending'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm theme-text-muted">{t('extracted.verification')}</span>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      beneficiaries[0]?.verificationStatus === 'verified' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                      beneficiaries[0]?.verificationStatus === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                      'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {beneficiaries[0]?.verificationStatus || 'pending'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="theme-bg-glass rounded-xl p-4 border theme-border-glass">
-                  <div className="text-xs theme-text-muted mb-1">{t('extracted.registered_on')}</div>
-                  <div className="font-medium theme-text-primary text-sm">
-                    {beneficiaries[0] ? formatDate(beneficiaries[0].createdAt) : '—'}
-                  </div>
-                  <div className="text-xs theme-text-muted mt-1">
-                    {t('extracted.last_updated')}: {beneficiaries[0] ? formatDate(beneficiaries[0].lastUpdate) : '—'}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Selected Beneficiary Details */}
-            <AnimatePresence>
-              {selectedBeneficiary && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="theme-bg-card theme-border-glass border rounded-xl p-5 shadow-sm"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h4 className="font-semibold theme-text-primary text-lg">{t('extracted.beneficiary_details')}</h4>
-                      <p className="text-sm theme-text-muted mt-1">{t('extracted.detailed_information')}</p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedBeneficiary(null)}
-                      className="p-2 rounded-lg theme-text-muted hover:theme-bg-glass transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-5">
-                    {/* Personal Information Card */}
-                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <User className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium theme-text-primary">{t('extracted.personal_information')}</h5>
-                          <p className="text-xs theme-text-muted">{t('extracted.basic_details')}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
+                          <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
                         </div>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.full_name')}</div>
-                            <div className="font-medium theme-text-primary">{selectedBeneficiary.name}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.fatheraposs_name')}</div>
-                            <div className="font-medium theme-text-primary">{selectedBeneficiary.fatherName || '—'}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.aadhaar_number')}</div>
-                            <div className="font-medium theme-text-primary font-mono">{selectedBeneficiary.aadhaarNumber}</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.phone_number')}</div>
-                            <div className="font-medium theme-text-primary">{selectedBeneficiary.phone}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.email')}</div>
-                            <div className="font-medium theme-text-primary">{selectedBeneficiary.email || '—'}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.category_1')}</div>
-                            <div className="font-medium theme-text-primary">{selectedBeneficiary.category}</div>
-                          </div>
-                        </div>
-                      </div>
+                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        {beneficiary.status.replace('-', ' ')}
+                      </span>
                     </div>
 
-                    {/* Address Information Card */}
-                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
-                          <MapPin className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium theme-text-primary">{t('extracted.address_information')}</h5>
-                          <p className="text-xs theme-text-muted">{t('extracted.location_details')}</p>
-                        </div>
-                      </div>
+                    <dl className="mt-2.5 space-y-1.5">
+                      <Pair label={t('extracted.aadhaar_number')} value={beneficiary.aadhaarNumber} mono />
+                      <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
+                      <Pair label={t('extracted.registration_date')} value={formatDate(beneficiary.registrationDate)} />
+                    </dl>
 
-                      <div>
-                        <div className="text-xs theme-text-muted mb-1 uppercase tracking-wide">{t('extracted.complete_address')}</div>
-                        <div className="font-medium theme-text-primary leading-relaxed">
-                          {selectedBeneficiary.address}<br />
-                          {selectedBeneficiary.district}, {selectedBeneficiary.state}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Documents & Status Card */}
-                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium theme-text-primary">{t('extracted.documents_status')}</h5>
-                          <p className="text-xs theme-text-muted">{t('extracted.verification_documents')}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-5">
-                        {/* Certificate Section */}
-                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                              <FileText className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium theme-text-primary">{t('extracted.sc_st_certificate')}</div>
-                              <div className="text-xs theme-text-muted">{t('extracted.required_verification_document')}</div>
-                            </div>
-                          </div>
-
-                          {selectedBeneficiary.scStCertificate ? (
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                                  <CheckCircle className="w-5 h-5 text-green-500" />
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium theme-text-primary">{t('extracted.certificate_available')}</div>
-                                  <div className="text-xs theme-text-muted">{t('extracted.click_to_view_document')}</div>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => window.open(selectedBeneficiary.scStCertificate, '_blank')}
-                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md accent-gradient text-white font-medium shadow-sm hover:shadow-sm transition-all hover:scale-105 border border-white/20"
-                              >
-                                <Eye className="w-4 h-4" />
-                                {t('extracted.view_certificate')}
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
-                                <Clock className="w-5 h-5 text-yellow-500" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium theme-text-primary">{t('extracted.certificate_pending')}</div>
-                                <div className="text-xs theme-text-muted italic">{t('extracted.not_provided')}</div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Status Section */}
-                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
-                              <CheckCircle className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium theme-text-primary">{t('extracted.verification_status')}</div>
-                              <div className="text-xs theme-text-muted">{t('extracted.current_application_status')}</div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${
-                                selectedBeneficiary.status === 'verified' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                                selectedBeneficiary.status === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                                selectedBeneficiary.status === 'pending' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
-                                selectedBeneficiary.status === 'documents-required' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
-                                'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                              }`}>
-                                {selectedBeneficiary.status === 'verified' && <CheckCircle className="w-4 h-4" />}
-                                {selectedBeneficiary.status === 'rejected' && <XCircle className="w-4 h-4" />}
-                                {selectedBeneficiary.status === 'pending' && <Clock className="w-4 h-4" />}
-                                {selectedBeneficiary.status === 'documents-required' && <AlertCircle className="w-4 h-4" />}
-                                {selectedBeneficiary.status === 'verified' ? t('extracted.verified') :
-                                 selectedBeneficiary.status === 'rejected' ? t('extracted.rejected') :
-                                 selectedBeneficiary.status === 'pending' ? t('extracted.pending') :
-                                 selectedBeneficiary.status === 'documents-required' ? t('extracted.documents_required') :
-                                 t('extracted.unknown')}
-                              </span>
-                            </div>
-
-                            <div className="text-right">
-                              <div className="text-xs theme-text-muted uppercase tracking-wide">Status</div>
-                              <div className="text-sm font-medium theme-text-primary">
-                                {selectedBeneficiary.status === 'verified' ? t('extracted.approved') :
-                                 selectedBeneficiary.status === 'rejected' ? t('extracted.denied') :
-                                 selectedBeneficiary.status === 'pending' ? t('extracted.under_review') :
-                                 selectedBeneficiary.status === 'documents-required' ? t('extracted.action_required') :
-                                 t('extracted.processing')}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Registration Information Card */}
-                    <div className="theme-bg-glass rounded-xl p-5 border theme-border-glass">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                          <Calendar className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium theme-text-primary">{t('extracted.registration_info')}</h5>
-                          <p className="text-xs theme-text-muted">{t('extracted.registration_details')}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-5">
-                        {/* Beneficiary ID Section */}
-                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                              <Hash className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium theme-text-primary">{t('extracted.beneficiary_id')}</div>
-                              <div className="text-xs theme-text-muted">{t('extracted.unique_identification_number')}</div>
-                            </div>
-                          </div>
-
-                          <div className="font-mono text-lg theme-text-primary theme-bg-card px-3 py-2 rounded-md border theme-border-glass font-semibold">
-                            {selectedBeneficiary.id}
-                          </div>
-                        </div>
-
-                        {/* Registration Date Section */}
-                        <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                              <Calendar className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium theme-text-primary">{t('extracted.registered_on')}</div>
-                              <div className="text-xs theme-text-muted">{t('extracted.account_creation_date')}</div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                              <Calendar className="w-5 h-5 text-blue-500" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-semibold theme-text-primary">{formatDate(selectedBeneficiary.createdAt)}</div>
-                              <div className="text-xs theme-text-muted">{t('extracted.registration_timestamp')}</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Last Updated Section */}
-                        {selectedBeneficiary.lastUpdate && (
-                          <div className="p-4 rounded-lg theme-bg-card border theme-border-glass">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                                <Clock className="w-4 h-4 text-white" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium theme-text-primary">{t('extracted.last_updated')}</div>
-                                <div className="text-xs theme-text-muted">{t('extracted.most_recent_modification')}</div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                                <Clock className="w-5 h-5 text-amber-500" />
-                              </div>
-                              <div>
-                                <div className="text-lg font-semibold theme-text-primary">{formatDate(selectedBeneficiary.lastUpdate)}</div>
-                                <div className="text-xs theme-text-muted">{t('extracted.last_activity_timestamp')}</div>
-                              </div>
-                            </div>
-                          </div>
+                    <div className="mt-2.5 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                        <VerificationIcon className="w-3 h-3" />
+                        {beneficiary.verificationStatus.replace('-', ' ')}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {beneficiary.scStCertificate && (
+                          <button
+                            aria-label="View certificate"
+                            onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
+                            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-green-500 transition-colors"
+                            title="View Certificate"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         )}
+                        <button
+                          aria-label="Edit beneficiary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingBeneficiary(beneficiary);
+                            setShowNewBeneficiaryForm(true);
+                          }}
+                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                          title={t('extracted.edit')}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          aria-label="Delete beneficiary"
+                          onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
+                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-red-500 transition-colors"
+                          title={t('extracted.delete')}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t theme-border-glass">
+          <p className="text-xs theme-text-muted">
+            {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
+          </p>
+          {!noPages && (
+            <div className="flex items-center gap-1">
+              <button
+                disabled={currentPage === 1 || noPages}
+                onClick={() => setCurrentPage((p: number) => p - 1)}
+                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i).map((pageNum: number) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                disabled={currentPage === totalPages || noPages}
+                onClick={() => setCurrentPage((p: number) => p + 1)}
+                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Beneficiary Detail Inspector */}
+      {selectedBeneficiary && (
+        <div ref={detailRef} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20">
+          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedBeneficiary.name}</h2>
+              <span className="hidden sm:inline text-xs theme-text-muted font-mono flex-shrink-0">{selectedBeneficiary.id}</span>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
+                {selectedBeneficiary.status.replace('-', ' ')}
+              </span>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
+                {selectedBeneficiary.verificationStatus.replace('-', ' ')}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setEditingBeneficiary(selectedBeneficiary);
+                  setShowNewBeneficiaryForm(true);
+                }}
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                title={t('extracted.edit')}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSelectedBeneficiary(null)}
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="px-4 py-3.5">
+            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+              <Pair label={t('extracted.full_name')} value={selectedBeneficiary.name} />
+              <Pair label={t('extracted.fatheraposs_name')} value={selectedBeneficiary.fatherName || '—'} />
+              <Pair label={t('extracted.aadhaar_number')} value={selectedBeneficiary.aadhaarNumber} mono />
+              <Pair label={t('extracted.beneficiary_id')} value={selectedBeneficiary.id} mono />
+              <Pair label={t('extracted.phone_number')} value={selectedBeneficiary.phone} />
+              <Pair label={t('extracted.email')} value={selectedBeneficiary.email || '—'} />
+              <Pair label={t('extracted.location')} value={`${selectedBeneficiary.district}, ${selectedBeneficiary.state}`} />
+              <Pair label={t('extracted.complete_address')} value={selectedBeneficiary.address || '—'} />
+              <Pair label={t('extracted.category_1') || 'Category'} value={selectedBeneficiary.category} />
+              <Pair label={t('extracted.age') || 'Age'} value={selectedBeneficiary.age ?? '—'} />
+              <Pair label={t('extracted.gender') || 'Gender'} value={selectedBeneficiary.gender || '—'} />
+              <Pair label={t('extracted.marital_status') || 'Marital Status'} value={selectedBeneficiary.maritalStatus || '—'} />
+              <Pair label={t('extracted.bank_account') || 'Bank Account'} value={selectedBeneficiary.bankAccount || '—'} mono />
+              <Pair label={t('extracted.ifsc_code') || 'IFSC'} value={selectedBeneficiary.ifsc || '—'} mono />
+              <Pair label={t('extracted.registered_on')} value={formatDate(selectedBeneficiary.createdAt)} />
+              <Pair label={t('extracted.last_updated')} value={formatDate(selectedBeneficiary.lastUpdate)} />
+            </dl>
+
+            <div className="mt-3.5 pt-3 border-t theme-border-glass flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5 theme-text-muted flex-shrink-0" />
+              <span className="text-[11px] uppercase tracking-wider theme-text-muted flex-shrink-0">{t('extracted.sc_st_certificate')}</span>
+              {selectedBeneficiary.scStCertificate ? (
+                <a
+                  href={selectedBeneficiary.scStCertificate}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-medium underline underline-offset-2 theme-text-primary hover:opacity-80 transition-opacity truncate"
+                >
+                  {t('extracted.view_certificate')}
+                </a>
+              ) : (
+                <span className="text-[13px] theme-text-muted">{t('extracted.not_provided')}</span>
               )}
-            </AnimatePresence>
+            </div>
           </div>
         </div>
-
-        {/* Toast container */}
-        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-          {toasts.map(tst => {
-            const toastClass = tst.type === 'success'
-              ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
-              : tst.type === 'error'
-                ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
-                : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
-
-            return (
-              <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm">{tst.message}</div>
-                  <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

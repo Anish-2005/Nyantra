@@ -1614,11 +1614,11 @@ const AnalyticsPage = () => {
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0">
               <span className="inline-flex items-center gap-1.5 text-[11px] theme-text-muted">
-                <span className={`w-1.5 h-1.5 rounded-full ${theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'}`} />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                 {t('extracted.applications')}
               </span>
               <span className="inline-flex items-center gap-1.5 text-[11px] theme-text-muted">
-                <span className={`w-1.5 h-1.5 rounded-full ${theme === 'dark' ? 'bg-emerald-400' : 'bg-emerald-600'}`} />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {t('extracted.disbursements')}
               </span>
             </div>

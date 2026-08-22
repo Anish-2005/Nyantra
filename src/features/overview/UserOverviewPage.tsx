@@ -156,7 +156,7 @@ export default function UserDashboard() {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.welcome_back')}{userName || '…'}
+            {t('extracted.welcome_back')} {userName || '…'}
           </h1>
           <p className="text-xs theme-text-muted mt-0.5">{t('extracted.track_applications')}</p>
         </div>

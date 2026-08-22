@@ -2,9 +2,10 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardView } from '@/context/DashboardViewContext';
+import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import NewApplicationDrawer from './NewApplicationDrawer';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import LoadingState from '@/components/LoadingState';
@@ -113,640 +114,9 @@ interface Application {
   offenceType?: string;
 }
 
-// New Application Form Component for Users
-const NewApplicationForm = ({ onCancel, initialData, onSaved, userBeneficiary }: { 
-  onCancel: () => void, 
-  initialData?: Application | null, 
-  onSaved?: () => void,
-  userBeneficiary: any | null
-}) => {
-  const { theme } = useTheme();
-  const { t } = useLocale();
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    applicantName: '',
-    aadhaar: '',
-    phone: '',
-    district: '',
-    state: '',
-    actType: '',
-    beneficiaryId: '',
-    incidentDate: '',
-    firReport: '',
-    medicalReport: '',
-    policeStation: '',
-    caseNumber: '',
-    amount: '',
-    // beneficiary common fields
-    fatherName: '',
-    email: '',
-    address: '',
-    registrationDate: '',
-    category: '',
-    age: '',
-    gender: '',
-    maritalStatus: '',
-    bankAccount: '',
-    ifsc: '',
-    priority: 'medium',
-    assignedOfficer: '',
-    // PoA specific fields
-    offenceCategory: '',
-    offenceType: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Validate beneficiary exists
-      if (!formData.beneficiaryId) {
-        alert(t('applications.beneficiaryIdRequired'));
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Check if beneficiary exists in Firestore
-      const beneficiaryRef = doc(db, 'beneficiaries', formData.beneficiaryId);
-      const beneficiarySnap = await getDoc(beneficiaryRef);
-      if (!beneficiarySnap.exists()) {
-        alert(t('applications.beneficiaryNotFound'));
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (initialData && initialData.id) {
-        // Editing existing application
-        const ref = doc(db, 'applications', initialData.id);
-        const updatedApplication = {
-          applicantName: formData.applicantName,
-          aadhaar: formData.aadhaar,
-          phone: formData.phone,
-          district: formData.district,
-          state: formData.state,
-          actType: formData.actType,
-          beneficiaryId: formData.beneficiaryId,
-          incidentDate: formData.incidentDate,
-          firReport: (formData as any).firReport || null,
-          medicalReport: (formData as any).medicalReport || null,
-          policeStation: (formData as any).policeStation || null,
-          caseNumber: (formData as any).caseNumber || null,
-          // copy common beneficiary fields into the application
-          fatherName: (formData as any).fatherName || null,
-          email: (formData as any).email || null,
-          address: (formData as any).address || null,
-          registrationDate: (formData as any).registrationDate || null,
-          lastUpdate: Timestamp.fromDate(new Date()),
-          status: initialData.status || 'pending',
-          amount: parseFloat(formData.amount) || 0,
-          priority: formData.priority,
-          assignedOfficer: formData.assignedOfficer,
-          documents: initialData.documents || 0,
-          // PoA specific fields
-          offenceCategory: (formData as any).offenceCategory || null,
-          offenceType: (formData as any).offenceType || null,
-        };
-
-        await updateDoc(ref, updatedApplication);
-        onSaved?.();
-        onCancel();
-      } else {
-        // Create new application
-        const newId = `APP${Date.now()}`;
-        const newApplication = {
-          ownerId: user?.uid,
-          applicantName: formData.applicantName,
-          aadhaar: formData.aadhaar,
-          phone: formData.phone,
-          district: formData.district,
-          state: formData.state,
-          actType: formData.actType,
-          beneficiaryId: formData.beneficiaryId,
-          incidentDate: formData.incidentDate,
-          firReport: (formData as any).firReport || null,
-          medicalReport: (formData as any).medicalReport || null,
-          policeStation: (formData as any).policeStation || null,
-          caseNumber: (formData as any).caseNumber || null,
-          // copy common beneficiary fields into the application
-          fatherName: (formData as any).fatherName || null,
-          email: (formData as any).email || null,
-          address: (formData as any).address || null,
-          registrationDate: (formData as any).registrationDate || null,
-          applicationDate: Timestamp.fromDate(new Date()),
-          status: 'pending',
-          amount: parseFloat(formData.amount) || 0,
-          priority: formData.priority,
-          assignedOfficer: formData.assignedOfficer,
-          documents: 0,
-          lastUpdate: Timestamp.fromDate(new Date()),
-          id: newId,
-          // PoA specific fields
-          offenceCategory: (formData as any).offenceCategory || null,
-          offenceType: (formData as any).offenceType || null,
-        };
-
-        const ref = doc(db, 'applications', newId);
-        await setDoc(ref, newApplication);
-        onCancel();
-      }
-    } catch (error) {
-      console.error('Error creating application:', error);
-      alert(t('applications.creationFailed'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-
-      // Handle offence selection for PoA Act
-      if (field === 'offenceType' && value && prev.offenceCategory) {
-        const category = POA_OFFENCES[prev.offenceCategory as keyof typeof POA_OFFENCES];
-        if (category && value in category) {
-          const compensation = category[value as keyof typeof category] as string | number;
-          // Store the compensation value (string for ranges, number for fixed amounts)
-          newData.amount = compensation.toString();
-        }
-      }
-
-      // Reset offence fields when act type changes
-      if (field === 'actType' && value !== 'PoA Act') {
-        newData.offenceCategory = '';
-        newData.offenceType = '';
-      }
-
-      return newData;
-    });
-
-    if (field === 'beneficiaryId') {
-      setBeneficiaryExists(null);
-    }
-  };
-
-  // Prefill form when editing or when user has a beneficiary
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        applicantName: initialData.applicantName || '',
-        aadhaar: initialData.aadhaar || '',
-        phone: initialData.phone || '',
-        district: initialData.district || '',
-        state: initialData.state || '',
-        actType: initialData.actType || '',
-        beneficiaryId: initialData.beneficiaryId || '',
-        incidentDate: typeof initialData.incidentDate === 'string' ? initialData.incidentDate : (initialData.incidentDate ? (initialData.incidentDate as any).toDate?.()?.toISOString?.().split('T')[0] || '' : ''),
-        firReport: (initialData as any).firReport || '',
-        medicalReport: (initialData as any).medicalReport || '',
-        policeStation: (initialData as any).policeStation || '',
-        caseNumber: (initialData as any).caseNumber || '',
-        amount: String(initialData.amount || ''),
-        // populate beneficiary fields if present on the application
-        fatherName: (initialData as any).fatherName || '',
-        email: (initialData as any).email || '',
-        address: (initialData as any).address || '',
-        registrationDate: (initialData as any).registrationDate && (initialData as any).registrationDate.toDate ? (initialData as any).registrationDate.toDate().toISOString() : ((initialData as any).registrationDate || ''),
-        category: (initialData as any).category || '',
-        age: (initialData as any).age ? String((initialData as any).age) : '',
-        gender: (initialData as any).gender || '',
-        maritalStatus: (initialData as any).maritalStatus || '',
-        bankAccount: (initialData as any).bankAccount || '',
-        ifsc: (initialData as any).ifsc || '',
-        priority: initialData.priority || 'medium',
-        assignedOfficer: initialData.assignedOfficer || '',
-        // PoA specific fields
-        offenceCategory: (initialData as any).offenceCategory || '',
-        offenceType: (initialData as any).offenceType || ''
-      });
-      if (initialData.beneficiaryId) {
-        setBeneficiaryExists(true);
-      }
-    } else {
-      // Reset form for new application
-      setFormData({
-        applicantName: userBeneficiary?.name || '',
-        aadhaar: userBeneficiary?.aadhaarNumber || '',
-        phone: userBeneficiary?.phone || '',
-        district: userBeneficiary?.district || '',
-        state: userBeneficiary?.state || '',
-        actType: userBeneficiary?.actType || '',
-        beneficiaryId: userBeneficiary?.id || '',
-        incidentDate: userBeneficiary?.incidentDate || '',
-        firReport: '',
-        medicalReport: '',
-        policeStation: '',
-        caseNumber: '',
-        amount: userBeneficiary?.reliefAmount ? String(userBeneficiary.reliefAmount) : '',
-        fatherName: userBeneficiary?.fatherName || '',
-        email: userBeneficiary?.email || '',
-        address: userBeneficiary?.address || '',
-        registrationDate: userBeneficiary?.registrationDate || '',
-        category: userBeneficiary?.category || '',
-        age: userBeneficiary?.age ? String(userBeneficiary.age) : '',
-        gender: userBeneficiary?.gender || '',
-        maritalStatus: userBeneficiary?.maritalStatus || '',
-        bankAccount: userBeneficiary?.bankAccount || '',
-        ifsc: userBeneficiary?.ifsc || '',
-        priority: 'medium',
-        assignedOfficer: '',
-        // PoA specific fields
-        offenceCategory: '',
-        offenceType: ''
-      });
-      setBeneficiaryExists(userBeneficiary ? true : null);
-    }
-  }, [initialData, userBeneficiary]);
-
-  // Check beneficiary existence
-  const checkBeneficiaryExists = async (id: string) => {
-    if (!id) { 
-      setBeneficiaryExists(null); 
-      return false; 
-    }
-    try {
-      const ref = doc(db, 'beneficiaries', id);
-      const snap = await getDoc(ref);
-      const exists = snap.exists();
-      setBeneficiaryExists(exists);
-      
-      if (exists) {
-        const data = snap.data();
-        // Auto-fill form with beneficiary data
-        setFormData(prev => ({
-          ...prev,
-          applicantName: data?.name || prev.applicantName,
-          aadhaar: data?.aadhaarNumber || prev.aadhaar,
-          phone: data?.phone || prev.phone,
-          district: data?.district || prev.district,
-          state: data?.state || prev.state,
-          actType: data?.actType || prev.actType,
-          fatherName: data?.fatherName || prev.fatherName,
-          email: data?.email || prev.email,
-          address: data?.address || prev.address,
-          caseNumber: data?.caseNumber || prev.caseNumber,
-          registrationDate: data?.registrationDate && typeof data.registrationDate.toDate === 'function' ? data.registrationDate.toDate().toISOString() : (data?.registrationDate || prev.registrationDate),
-          category: data?.category || prev['category'] || '',
-          age: data?.age ? String(data.age) : prev['age'] || '',
-          gender: data?.gender || prev['gender'] || '',
-          maritalStatus: data?.maritalStatus || prev['maritalStatus'] || '',
-          bankAccount: data?.bankAccount || prev['bankAccount'] || '',
-          ifsc: data?.ifsc || prev['ifsc'] || ''
-        }));
-      }
-      return exists;
-    } catch (err) {
-      console.error('Error checking beneficiary', err);
-      setBeneficiaryExists(false);
-      return false;
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="p-5 space-y-5">
-      {/* Applicant Information */}
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicantInformation')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')} *</label>
-            <input
-              type="text"
-              required
-              value={formData.applicantName}
-              onChange={(e) => handleInputChange('applicantName', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enterApplicantFullName')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')} *</label>
-            <input
-              type="tel"
-              required
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enterPhoneNumber')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')} *</label>
-            <input
-              type="text"
-              required
-              value={formData.aadhaar}
-              onChange={(e) => handleInputChange('aadhaar', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enter12DigitAadhaarNumber')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.beneficiaryId')} *</label>
-            <div className="space-y-2">
-              <input
-                type="text"
-                required
-                value={formData.beneficiaryId}
-                onChange={(e) => handleInputChange('beneficiaryId', e.target.value)}
-                onBlur={(e) => checkBeneficiaryExists(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterBeneficiaryId')}
-              />
-              {userBeneficiary && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, beneficiaryId: userBeneficiary.id }));
-                    checkBeneficiaryExists(userBeneficiary.id);
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
-                  <Copy className="w-3 h-3" />
-                  Use my beneficiary ID: {userBeneficiary.id}
-                </button>
-              )}
-              {beneficiaryExists === true && (
-                <span className="text-green-500 text-sm flex items-center gap-1">
-                  <Check className="w-4 h-4" />
-                  {t('applications.beneficiaryFound')}
-                </span>
-              )}
-              {beneficiaryExists === false && (
-                <span className="text-red-500 text-sm flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {t('applications.beneficiaryNotFound')}
-                </span>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')} *</label>
-            <input
-              type="text"
-              required
-              value={formData.district}
-              onChange={(e) => handleInputChange('district', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enterDistrict')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')} *</label>
-            <input
-              type="text"
-              required
-              value={formData.state}
-              onChange={(e) => handleInputChange('state', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder={t('applications.enterState')}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Application Details */}
-      <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-4">{t('applications.applicationDetails')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.act_type')} *</label>
-            <select
-              required
-              value={formData.actType}
-              onChange={(e) => handleInputChange('actType', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-            >
-              <option value="">{t('applications.selectActType')}</option>
-              <option value="PCR Act">{t('extracted.pcr_act')}</option>
-              <option value="PoA Act">{t('extracted.poa_act')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.incident_date')} *</label>
-            <input
-              type="date"
-              required
-              value={formData.incidentDate}
-              onChange={(e) => handleInputChange('incidentDate', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-            />
-          </div>
-        </div>
-
-        {/* Case Details */}
-        <div className="mt-6">
-          <h4 className="text-md font-semibold theme-text-primary mb-4">{t('applications.caseDetails')}</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.firReport')}</label>
-              <input
-                type="text"
-                value={(formData as any).firReport}
-                onChange={(e) => handleInputChange('firReport', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterFirReport')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.medicalReport')}</label>
-              <input
-                type="text"
-                value={(formData as any).medicalReport}
-                onChange={(e) => handleInputChange('medicalReport', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterMedicalReport')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.policeStation')}</label>
-              <input
-                type="text"
-                value={(formData as any).policeStation}
-                onChange={(e) => handleInputChange('policeStation', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterPoliceStation')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.caseNumber')}</label>
-              <input
-                type="text"
-                value={(formData as any).caseNumber}
-                onChange={(e) => handleInputChange('caseNumber', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterCaseNumber')}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Relief Amount / Offence Selection */}
-        <div className="grid grid-cols-1 gap-4 mt-4">
-          {formData.actType === 'PoA Act' ? (
-            <>
-              {/* Offence Category Selection */}
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-2">Offence Category *</label>
-                <select
-                  required
-                  value={formData.offenceCategory}
-                  onChange={(e) => handleInputChange('offenceCategory', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                >
-                  <option value="">Select Offence Category</option>
-                  {Object.keys(POA_OFFENCES).map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Offence Type Selection */}
-              {formData.offenceCategory && (
-                <div>
-                  <label className="block text-sm font-medium theme-text-muted mb-2">Specific Offence *</label>
-                  <select
-                    required
-                    value={formData.offenceType}
-                    onChange={(e) => handleInputChange('offenceType', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                  >
-                    <option value="">Select Specific Offence</option>
-                    {Object.entries(POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES] || {}).map(([offence, compensation]) => {
-                      const compensationText = typeof compensation === 'string' && compensation.includes('-')
-                        ? `₹${compensation.replace('-', ' - ₹')} (range)`
-                        : `₹${compensation.toLocaleString('en-IN')}`;
-                      return (
-                        <option key={offence} value={offence}>
-                          {offence} • {compensationText}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-
-      {formData.offenceType && formData.offenceCategory && (
-  <div
-    className="
-      p-4
-      bg-gradient-to-r from-green-50 to-green-100
-      dark:from-green-500 dark:to-green-300
-      border-2 border-green-100 dark:border-green-400
-      rounded-xl shadow-sm
-    "
-  >
-    <div className="flex items-center gap-3 mb-3">
-      <div
-        className="
-          w-6 h-6
-          bg-gradient-to-r from-green-600 to-emerald-700
-          rounded-full flex items-center justify-center shadow-sm
-        "
-      >
-        <span className="text-white text-xs font-bold">₹</span>
-      </div>
-      <span
-        className="
-          font-semibold text-green-900 dark:text-green-200
-          text-sm uppercase tracking-wide
-        "
-      >
-        Expected Compensation
-      </span>
-    </div>
-
-    <div className="text-lg font-semibold tracking-tight text-green-800 dark:text-green-100 mb-2">
-      {(() => {
-        const category =
-          POA_OFFENCES[formData.offenceCategory as keyof typeof POA_OFFENCES];
-        const compensation = category && formData.offenceType in category
-          ? category[formData.offenceType as keyof typeof category] as string | number
-          : null;
-        if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-          return `₹${compensation.replace("-", " - ₹")}`;
-        }
-        return compensation ? `₹${(compensation as number).toLocaleString("en-IN")}` : "₹0";
-      })()}
-    </div>
-
-    <div className="text-sm text-green-900 dark:text-green-300 font-medium leading-relaxed">
-      Based on <span className="font-semibold">{formData.offenceType}</span> under{" "}
-      <span className="font-semibold">{formData.offenceCategory}</span>
-    </div>
-
-    <div className="mt-3 p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-      <div className="text-xs text-green-900 dark:text-green-200">
-        💡 This amount is automatically calculated based on PoA Act compensation guidelines
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-            </>
-          ) : (
-            /* PCR Act - Relief Amount Input */
-            <div>
-              <label className="block text-sm font-medium theme-text-muted mb-2">{t('applications.reliefAmountINR')} *</label>
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                placeholder={t('applications.enterReliefAmount')}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 pt-4 border-t theme-border-glass">
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onCancel}
-          className="flex-1 px-3 py-2 rounded-md theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-        >
-          {t('extracted.cancel')}
-        </motion.button>
-        <motion.button
-          type="submit"
-          disabled={isSubmitting || beneficiaryExists !== true}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex-1 px-3 py-2 rounded-md accent-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-sm transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              {t('extracted.creating')}...
-            </>
-          ) : (
-            <>
-              <Plus className="w-5 h-5" />
-              {initialData ? t('applications.updateApplication') : t('applications.createApplication')}
-            </>
-          )}
-        </motion.button>
-      </div>
-    </form>
-  );
-};
-
 export default function ApplicationsPage() {
   const { user, profile } = useAuth();
   const { view } = useDashboardView();
-  const { theme } = useTheme();
   const { t } = useLocale();
   const [applications, setApplications] = useState<Application[]>([]);
   const [userBeneficiary, setUserBeneficiary] = useState<any>(null);
@@ -790,23 +160,13 @@ export default function ApplicationsPage() {
 
   // Status colors and icons
   const getStatusColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'approved': return 'text-green-300 bg-green-900/30';
-        case 'pending': return 'text-amber-300 bg-amber-900/30';
-        case 'in-review': return 'text-blue-300 bg-blue-900/30';
-        case 'rejected': return 'text-red-300 bg-red-900/30';
-        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
     switch (status) {
-      case 'approved': return 'text-green-700 bg-green-100';
-      case 'pending': return 'text-amber-700 bg-amber-100';
-      case 'in-review': return 'text-blue-700 bg-blue-100';
-      case 'rejected': return 'text-red-700 bg-red-100';
-      case 'documents-required': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'approved': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'in-review': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -929,9 +289,11 @@ export default function ApplicationsPage() {
     };
   }, [user]);
 
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const requestDeleteApplication = (id: string) => setDeleteTargetId(id);
+
   const deleteApplication = async (id: string) => {
-    if (!window.confirm(t('applications.confirmDeleteMessage'))) return;
-    
     try {
       await deleteDoc(doc(db, 'applications', id));
       setApplications(prev => prev.filter(app => app.id !== id));
@@ -1048,31 +410,35 @@ export default function ApplicationsPage() {
               </button>
             </div>
 
-            {/* New Application Form */}
+            {/* New / Edit Application Drawer */}
             <AnimatePresence>
               {showNewApplicationForm && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
-                >
-                  <NewApplicationForm
-                    onCancel={() => {
-                      setShowNewApplicationForm(false);
-                      setEditingApplication(null);
-                    }}
-                    initialData={editingApplication}
-                    onSaved={() => {
-                      setShowNewApplicationForm(false);
-                      setEditingApplication(null);
-                      showToast('success', t('applications.savedSuccess'));
-                    }}
-                    userBeneficiary={userBeneficiary}
-                  />
-                </motion.div>
+                <NewApplicationDrawer
+                  onCancel={() => {
+                    setShowNewApplicationForm(false);
+                    setEditingApplication(null);
+                  }}
+                  initialData={editingApplication}
+                  userBeneficiary={userBeneficiary}
+                  onSaved={() => {
+                    setShowNewApplicationForm(false);
+                    setEditingApplication(null);
+                    showToast('success', t('applications.savedSuccess'));
+                  }}
+                />
               )}
             </AnimatePresence>
+
+            {/* Delete Confirmation */}
+            <ConfirmDeleteModal
+              open={!!deleteTargetId}
+              message={t('applications.confirmDeleteMessage')}
+              onCancel={() => setDeleteTargetId(null)}
+              onConfirm={() => {
+                if (deleteTargetId) deleteApplication(deleteTargetId);
+                setDeleteTargetId(null);
+              }}
+            />
 
             {/* Applications List */}
             <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
@@ -1229,7 +595,7 @@ export default function ApplicationsPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteApplication(application.id);
+                                requestDeleteApplication(application.id);
                               }}
                               className={`p-1.5 rounded-md transition-colors ${
                                 selectedApplication?.id === application.id
@@ -1504,10 +870,10 @@ export default function ApplicationsPage() {
         <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
           {toasts.map(tst => {
             const toastClass = tst.type === 'success'
-              ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
+              ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
               : tst.type === 'error'
-                ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
-                : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
+                ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
+                : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
 
             return (
               <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">

@@ -675,26 +675,26 @@ const GrievancePage = () => {
 
   const getStatusColor = (status?: string) => {
     const colors = {
-      resolved: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100',
-      closed: theme === 'dark' ? 'text-emerald-300 bg-emerald-900/30' : 'text-emerald-700 bg-emerald-100',
-      'in-progress': theme === 'dark' ? 'text-blue-300 bg-blue-900/30' : 'text-blue-700 bg-blue-100',
-      open: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
-      pending: theme === 'dark' ? 'text-yellow-300 bg-yellow-900/30' : 'text-yellow-700 bg-yellow-100',
-      escalated: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100'
+      resolved: 'bg-green-500/10 text-green-600 dark:text-green-400',
+      closed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      'in-progress': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      open: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      pending: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+      escalated: 'bg-red-500/10 text-red-600 dark:text-red-400'
     };
     const key = (status || '').toLowerCase() as keyof typeof colors;
-    return colors[key] || 'text-gray-300 bg-gray-800';
+    return colors[key] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
   };
 
   const getPriorityColor = (priority?: string) => {
     const colors = {
-      urgent: theme === 'dark' ? 'text-purple-300 bg-purple-900/30' : 'text-purple-700 bg-purple-100',
-      high: theme === 'dark' ? 'text-red-300 bg-red-900/30' : 'text-red-700 bg-red-100',
-      medium: theme === 'dark' ? 'text-amber-300 bg-amber-900/30' : 'text-amber-700 bg-amber-100',
-      low: theme === 'dark' ? 'text-green-300 bg-green-900/30' : 'text-green-700 bg-green-100'
+      urgent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      high: 'bg-red-500/10 text-red-600 dark:text-red-400',
+      medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      low: 'bg-green-500/10 text-green-600 dark:text-green-400'
     };
     const key = (priority || '').toLowerCase() as keyof typeof colors;
-    return colors[key] || 'text-gray-300 bg-gray-800';
+    return colors[key] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
   };
 
   const getCategoryIcon = (category: string) => {

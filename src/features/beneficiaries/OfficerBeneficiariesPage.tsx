@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import ExportModal from '@/components/dashboard/ExportModal';
-import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
@@ -539,7 +538,6 @@ const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: {
 };
 
 const BeneficiariesPage = () => {
-  const { theme } = useTheme();
   const { t } = useLocale();
   const { profile, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -1484,80 +1482,41 @@ const BeneficiariesPage = () => {
   }, [isMobile]);
 
   const getStatusColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'verified': return 'text-green-300 bg-green-900/30';
-        case 'disbursed': return 'text-emerald-300 bg-emerald-900/30';
-        case 'pending-verification': return 'text-amber-300 bg-amber-900/30';
-        case 'rejected': return 'text-red-300 bg-red-900/30';
-        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
     switch (status) {
-      case 'verified': return 'text-green-700 bg-green-100';
-      case 'disbursed': return 'text-emerald-700 bg-emerald-100';
-      case 'pending-verification': return 'text-amber-700 bg-amber-100';
-      case 'rejected': return 'text-red-700 bg-red-100';
-      case 'documents-required': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'disbursed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+      case 'pending-verification': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
   const getVerificationColor = (status: string) => {
-    if (theme === 'dark') {
-      switch (status) {
-        case 'verified': return 'text-green-300 bg-green-900/30';
-        case 'pending': return 'text-amber-300 bg-amber-900/30';
-        case 'rejected': return 'text-red-300 bg-red-900/30';
-        case 'documents-required': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
     switch (status) {
-      case 'verified': return 'text-green-700 bg-green-100';
-      case 'pending': return 'text-amber-700 bg-amber-100';
-      case 'rejected': return 'text-red-700 bg-red-100';
-      case 'documents-required': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'documents-required': return 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    if (theme === 'dark') {
-      switch (priority) {
-        case 'high': return 'text-red-300 bg-red-900/30';
-        case 'medium': return 'text-amber-300 bg-amber-900/30';
-        case 'low': return 'text-green-300 bg-green-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
     switch (priority) {
-      case 'high': return 'text-red-700 bg-red-100';
-      case 'medium': return 'text-amber-700 bg-amber-100';
-      case 'low': return 'text-green-700 bg-green-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'high': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      case 'medium': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      case 'low': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
   const getCategoryColor = (category: string) => {
-    if (theme === 'dark') {
-      switch (category) {
-        case 'SC': return 'text-blue-300 bg-blue-900/30';
-        case 'ST': return 'text-green-300 bg-green-900/30';
-        case 'OBC': return 'text-purple-300 bg-purple-900/30';
-        default: return 'text-gray-300 bg-gray-800';
-      }
-    }
-
     switch (category) {
-      case 'SC': return 'text-blue-700 bg-blue-100';
-      case 'ST': return 'text-green-700 bg-green-100';
-      case 'OBC': return 'text-purple-700 bg-purple-100';
-      default: return 'text-gray-700 bg-gray-100';
+      case 'SC': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+      case 'ST': return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'OBC': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -1674,10 +1633,10 @@ const BeneficiariesPage = () => {
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map(tst => {
           const toastClass = tst.type === 'success'
-            ? (theme === 'light' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-green-900/30 border-green-800 text-green-200')
+            ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
             : tst.type === 'error'
-              ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-900/30 border-red-800 text-red-200')
-              : (theme === 'light' ? 'bg-gray-50 border-gray-200 text-gray-900' : 'bg-gray-900/30 border-gray-800 text-gray-200');
+              ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
+              : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
 
           return (
             <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
@@ -2043,13 +2002,13 @@ const BeneficiariesPage = () => {
                           </span>
                         </td>
                         <td className="px-3 py-2.5">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
                             <StatusIcon className="w-3 h-3" />
                             {beneficiary.status.replace('-', ' ')}
                           </span>
                         </td>
                         <td className="hidden xl:table-cell px-3 py-2.5">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
                             <VerificationIcon className="w-3 h-3" />
                             {beneficiary.verificationStatus.replace('-', ' ')}
                           </span>
@@ -2122,7 +2081,7 @@ const BeneficiariesPage = () => {
                           <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
                         </div>
                       </div>
-                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
                         <StatusIcon className="w-3 h-3" />
                         {beneficiary.status.replace('-', ' ')}
                       </span>
@@ -2136,12 +2095,12 @@ const BeneficiariesPage = () => {
 
                     <div className="mt-2.5 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
                           <VerificationIcon className="w-3 h-3" />
                           {beneficiary.verificationStatus.replace('-', ' ')}
                         </span>
                         {beneficiary.scStCertificate && (
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getCategoryColor(beneficiary.category)}`}>
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getCategoryColor(beneficiary.category)}`}>
                             <FileText className="w-3 h-3" />
                             Cert
                           </span>
@@ -2209,7 +2168,7 @@ const BeneficiariesPage = () => {
                       </div>
                     </div>
                     {beneficiary.priority && (
-                      <span className={`flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getPriorityColor(beneficiary.priority)}`}>
+                      <span className={`flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getPriorityColor(beneficiary.priority)}`}>
                         {beneficiary.priority}
                       </span>
                     )}
@@ -2224,11 +2183,11 @@ const BeneficiariesPage = () => {
 
                   <div className="mt-3 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
                         <StatusIcon className="w-3 h-3" />
                         {beneficiary.status.replace('-', ' ')}
                       </span>
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
                         <VerificationIcon className="w-3 h-3" />
                         {beneficiary.verificationStatus.replace('-', ' ')}
                       </span>
@@ -2317,10 +2276,10 @@ const BeneficiariesPage = () => {
             <div className="flex items-center gap-2.5 min-w-0">
               <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedBeneficiary.name}</h2>
               <span className="hidden sm:inline text-xs theme-text-muted font-mono flex-shrink-0">{selectedBeneficiary.id}</span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
                 {selectedBeneficiary.status.replace('-', ' ')}
               </span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
+              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
                 {selectedBeneficiary.verificationStatus.replace('-', ' ')}
               </span>
             </div>

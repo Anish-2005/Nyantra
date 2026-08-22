@@ -4,14 +4,18 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, orderBy, onSnapshot, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, orderBy, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useAuth } from '@/context/AuthContext';
 import { POA_OFFENCES } from "@/components/dashboard/POAOffencesTable";
 
 interface NewApplicationDrawerProps {
     onCancel: () => void;
     onCreated?: (newId: string) => void;
+    initialData?: any | null;
+    userBeneficiary?: any | null;
+    onSaved?: () => void;
 }
 
 const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
@@ -20,8 +24,11 @@ const Label = ({ children }: { children: React.ReactNode }) => (
     <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
 );
 
-const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps) => {
+const NewApplicationDrawer = ({ onCancel, onCreated, initialData, userBeneficiary, onSaved }: NewApplicationDrawerProps) => {
     const { t } = useLocale();
+    const { user } = useAuth();
+    const isEditing = !!initialData?.id;
+    const lockedBeneficiaryId = userBeneficiary?.id || (isEditing ? initialData.beneficiaryId : '');
     const [formData, setFormData] = useState({
         applicantName: '',
         aadhaar: '',
@@ -39,7 +46,16 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
         priority: 'medium',
         assignedOfficer: '',
         offenceCategory: '',
-        offenceType: ''
+        offenceType: '',
+        fatherName: '',
+        email: '',
+        address: '',
+        category: '',
+        age: '',
+        gender: '',
+        maritalStatus: '',
+        bankAccount: '',
+        ifsc: ''
     });
     const [beneficiaryExists, setBeneficiaryExists] = useState<boolean | null>(null);
     const [beneficiaryAutoFilled, setBeneficiaryAutoFilled] = useState<boolean>(false);
@@ -76,8 +92,92 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
         return () => unsubscribe();
     }, []);
 
+    // Prefill when editing an existing application or bound to the user's beneficiary
+    useEffect(() => {
+        const toDateStr = (val: any): string => {
+            if (!val) return '';
+            if (typeof val === 'string') {
+                const d = new Date(val);
+                return isNaN(d.getTime()) ? val.slice(0, 10) : d.toISOString().split('T')[0];
+            }
+            if (val?.toDate && typeof val.toDate === 'function') {
+                try { return val.toDate().toISOString().split('T')[0]; } catch { return ''; }
+            }
+            return '';
+        };
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                applicantName: initialData.applicantName || '',
+                aadhaar: initialData.aadhaar || '',
+                phone: initialData.phone || '',
+                district: initialData.district || '',
+                state: initialData.state || '',
+                actType: initialData.actType || '',
+                beneficiaryId: initialData.beneficiaryId || '',
+                incidentDate: toDateStr(initialData.incidentDate),
+                firReport: initialData.firReport || '',
+                medicalReport: initialData.medicalReport || '',
+                policeStation: initialData.policeStation || '',
+                caseNumber: initialData.caseNumber || '',
+                amount: String(initialData.amount || ''),
+                priority: initialData.priority || 'medium',
+                assignedOfficer: initialData.assignedOfficer || '',
+                offenceCategory: initialData.offenceCategory || '',
+                offenceType: initialData.offenceType || '',
+                fatherName: initialData.fatherName || '',
+                email: initialData.email || '',
+                address: initialData.address || '',
+                category: initialData.category || '',
+                age: initialData.age ? String(initialData.age) : '',
+                gender: initialData.gender || '',
+                maritalStatus: initialData.maritalStatus || '',
+                bankAccount: initialData.bankAccount || '',
+                ifsc: initialData.ifsc || ''
+            }));
+            if (initialData.beneficiaryId) setBeneficiaryExists(true);
+        } else if (userBeneficiary) {
+            setFormData(prev => ({
+                ...prev,
+                applicantName: userBeneficiary.name || userBeneficiary.fullName || '',
+                aadhaar: userBeneficiary.aadhaarNumber || userBeneficiary.aadhaar || '',
+                phone: userBeneficiary.phone || '',
+                district: userBeneficiary.district || '',
+                state: userBeneficiary.state || '',
+                actType: userBeneficiary.actType || '',
+                beneficiaryId: userBeneficiary.id || '',
+                incidentDate: toDateStr(userBeneficiary.incidentDate),
+                amount: userBeneficiary.reliefAmount ? String(userBeneficiary.reliefAmount) : prev.amount,
+                fatherName: userBeneficiary.fatherName || '',
+                email: userBeneficiary.email || '',
+                address: userBeneficiary.address || '',
+                category: userBeneficiary.category || '',
+                age: userBeneficiary.age ? String(userBeneficiary.age) : '',
+                gender: userBeneficiary.gender || '',
+                maritalStatus: userBeneficiary.maritalStatus || '',
+                bankAccount: userBeneficiary.bankAccount || '',
+                ifsc: userBeneficiary.ifsc || ''
+            }));
+            setBeneficiaryExists(true);
+        }
+    }, [initialData, userBeneficiary]);
+
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData(prev => {
+            const next = { ...prev, [field]: value };
+            if (field === 'offenceType' && value && prev.offenceCategory) {
+                const category = POA_OFFENCES[prev.offenceCategory as keyof typeof POA_OFFENCES];
+                if (category && value in category) {
+                    const compensation = category[value as keyof typeof category] as string | number;
+                    next.amount = compensation.toString();
+                }
+            }
+            if (field === 'actType' && value !== 'PoA Act') {
+                next.offenceCategory = '';
+                next.offenceType = '';
+            }
+            return next;
+        });
         if (field === 'beneficiaryId') setBeneficiaryExists(null);
     };
 
@@ -146,35 +246,72 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
                 return;
             }
 
-            const applicationsRef = collection(db, 'applications');
-            const newId = `APP${Date.now()}`;
-            await setDoc(doc(applicationsRef, newId), {
-                applicantName: formData.applicantName,
-                aadhaar: formData.aadhaar,
-                phone: formData.phone,
-                district: formData.district,
-                state: formData.state,
-                actType: formData.actType,
-                beneficiaryId: formData.beneficiaryId,
-                incidentDate: formData.incidentDate,
-                firReport: formData.firReport,
-                medicalReport: formData.medicalReport,
-                policeStation: formData.policeStation,
-                caseNumber: formData.caseNumber,
-                applicationDate: Timestamp.fromDate(new Date()),
-                status: 'pending',
-                amount: parseFloat(formData.amount) || 0,
-                priority: formData.priority,
-                assignedOfficer: formData.assignedOfficer,
-                documents: 0,
-                lastUpdate: Timestamp.fromDate(new Date()),
-                offenceCategory: formData.actType === 'PoA Act' ? formData.offenceCategory : '',
-                offenceType: formData.actType === 'PoA Act' ? formData.offenceType : '',
-                id: newId
-            });
-            onCreated?.(newId);
+            if (isEditing) {
+                const ref = doc(db, 'applications', initialData.id);
+                await updateDoc(ref, {
+                    applicantName: formData.applicantName,
+                    aadhaar: formData.aadhaar,
+                    phone: formData.phone,
+                    district: formData.district,
+                    state: formData.state,
+                    actType: formData.actType,
+                    beneficiaryId: formData.beneficiaryId,
+                    incidentDate: formData.incidentDate,
+                    firReport: formData.firReport || null,
+                    medicalReport: formData.medicalReport || null,
+                    policeStation: formData.policeStation || null,
+                    caseNumber: formData.caseNumber || null,
+                    fatherName: formData.fatherName || null,
+                    email: formData.email || null,
+                    address: formData.address || null,
+                    lastUpdate: Timestamp.fromDate(new Date()),
+                    status: initialData.status || 'pending',
+                    amount: parseFloat(formData.amount) || 0,
+                    priority: formData.priority,
+                    assignedOfficer: formData.assignedOfficer,
+                    documents: initialData.documents || 0,
+                    offenceCategory: formData.actType === 'PoA Act' ? (formData.offenceCategory || null) : '',
+                    offenceType: formData.actType === 'PoA Act' ? (formData.offenceType || null) : ''
+                });
+                onSaved?.();
+            } else {
+                const applicationsRef = collection(db, 'applications');
+                const newId = `APP${Date.now()}`;
+                const newApplication: Record<string, any> = {
+                    applicantName: formData.applicantName,
+                    aadhaar: formData.aadhaar,
+                    phone: formData.phone,
+                    district: formData.district,
+                    state: formData.state,
+                    actType: formData.actType,
+                    beneficiaryId: formData.beneficiaryId,
+                    incidentDate: formData.incidentDate,
+                    firReport: formData.firReport || null,
+                    medicalReport: formData.medicalReport || null,
+                    policeStation: formData.policeStation || null,
+                    caseNumber: formData.caseNumber || null,
+                    fatherName: formData.fatherName || null,
+                    email: formData.email || null,
+                    address: formData.address || null,
+                    applicationDate: Timestamp.fromDate(new Date()),
+                    status: 'pending',
+                    amount: parseFloat(formData.amount) || 0,
+                    priority: formData.priority,
+                    assignedOfficer: formData.assignedOfficer,
+                    documents: 0,
+                    lastUpdate: Timestamp.fromDate(new Date()),
+                    offenceCategory: formData.actType === 'PoA Act' ? formData.offenceCategory : '',
+                    offenceType: formData.actType === 'PoA Act' ? formData.offenceType : '',
+                    id: newId
+                };
+                if (userBeneficiary) {
+                    newApplication.ownerId = user?.uid;
+                }
+                await setDoc(doc(applicationsRef, newId), newApplication);
+                onCreated?.(newId);
+            }
         } catch (error) {
-            console.error('Error creating application:', error);
+            console.error('Error saving application:', error);
         } finally {
             setIsSubmitting(false);
         }
@@ -207,7 +344,7 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
                 {/* Header */}
                 <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
                     <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
-                        {t("applications.createANewReliefApplication")}
+                        {isEditing ? t('extracted.edit_application') : t("applications.createANewReliefApplication")}
                     </h2>
                     <button
                         onClick={onCancel}
@@ -230,21 +367,29 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
                                 </span>
                             )}
                         </div>
-                        <select
-                            required
-                            value={formData.beneficiaryId}
-                            onChange={(e) => handleBeneficiarySelect(e.target.value)}
-                            className={inputCls}
-                        >
-                            <option value="">{t('applications.selectBeneficiary') || 'Select Beneficiary'}</option>
-                            {beneficiaries.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.id} - {b.name} ({b.aadhaarNumber})
-                                </option>
-                            ))}
-                        </select>
-                        {beneficiaryExists === false && (
-                            <p className="text-red-500 text-xs mt-1.5">{t('applications.beneficiaryNotFound')}</p>
+                        {userBeneficiary ? (
+                            <div className="h-9 px-2.5 rounded-md border theme-border-glass theme-bg-glass flex items-center text-sm theme-text-primary tabular-nums">
+                                {lockedBeneficiaryId}
+                            </div>
+                        ) : (
+                            <>
+                                <select
+                                    required
+                                    value={formData.beneficiaryId}
+                                    onChange={(e) => handleBeneficiarySelect(e.target.value)}
+                                    className={inputCls}
+                                >
+                                    <option value="">{t('applications.selectBeneficiary') || 'Select Beneficiary'}</option>
+                                    {beneficiaries.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.id} - {b.name} ({b.aadhaarNumber})
+                                        </option>
+                                    ))}
+                                </select>
+                                {beneficiaryExists === false && (
+                                    <p className="text-red-500 text-xs mt-1.5">{t('applications.beneficiaryNotFound')}</p>
+                                )}
+                            </>
                         )}
                     </section>
 
@@ -397,12 +542,12 @@ const NewApplicationDrawer = ({ onCancel, onCreated }: NewApplicationDrawerProps
                         disabled={isSubmitting || !formData.beneficiaryId || beneficiaryExists === false}
                         className="flex-1 h-9 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isSubmitting ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                            <Plus className="w-3.5 h-3.5" />
-                        )}
-                        {isSubmitting ? `${t('extracted.creating')}...` : t('applications.createApplication')}
+                        {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        {isSubmitting
+                            ? `${t('extracted.saving')}...`
+                            : isEditing
+                                ? t('extracted.save_changes')
+                                : t('applications.createApplication')}
                     </button>
                 </div>
             </motion.aside>
