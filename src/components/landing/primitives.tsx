@@ -7,7 +7,7 @@ import type { LucideIcon } from 'lucide-react';
 export const EASE: [number, number, number, number] = [0.21, 0.47, 0.32, 0.98];
 
 const fadeRise = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 14 },
   visible: { opacity: 1, y: 0 },
 };
 
@@ -27,7 +27,7 @@ export function Reveal({ children, delay = 0, className, amount = 0.25 }: Reveal
       viewport={{ once: true, amount }}
       variants={{
         hidden: fadeRise.hidden,
-        visible: { ...fadeRise.visible, transition: { duration: 0.7, ease: EASE, delay } },
+        visible: { ...fadeRise.visible, transition: { duration: 0.5, ease: EASE, delay } },
       }}
     >
       {children}
@@ -38,7 +38,7 @@ export function Reveal({ children, delay = 0, className, amount = 0.25 }: Reveal
 export function Stagger({
   children,
   className,
-  stagger = 0.07,
+  stagger = 0.06,
   amount = 0.15,
 }: {
   children: React.ReactNode;
@@ -74,7 +74,7 @@ export function StaggerItem({
       className={className}
       variants={{
         hidden: fadeRise.hidden,
-        visible: { ...fadeRise.visible, transition: { duration: 0.6, ease: EASE } },
+        visible: { ...fadeRise.visible, transition: { duration: 0.45, ease: EASE } },
       }}
     >
       {children}
@@ -93,9 +93,9 @@ export function Section({ id, children, className = '', divided }: SectionProps)
   return (
     <section
       id={id}
-      className={`relative scroll-mt-20 ${divided ? 'border-t theme-border-glass' : ''} ${className}`}
+      className={`relative scroll-mt-16 ${divided ? 'border-t theme-border-glass' : ''} ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
     </section>
   );
 }
@@ -121,12 +121,12 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   const centered = align === 'center';
   return (
-    <Reveal className={`${centered ? 'text-center mx-auto' : 'text-left'} max-w-3xl mb-14 md:mb-20`}>
-      <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] theme-bg-glass theme-border-glass border theme-text-secondary">
-        {Icon && <Icon className="w-3.5 h-3.5 text-accent-gradient" />}
+    <Reveal className={`${centered ? 'text-center mx-auto' : 'text-left'} max-w-2xl mb-10 md:mb-12`}>
+      <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] theme-bg-glass theme-border-glass border theme-text-secondary">
+        {Icon && <Icon className="w-3 h-3 text-accent-gradient" />}
         {eyebrow}
       </span>
-      <h2 className="mt-5 text-3xl sm:text-4xl md:text-[2.75rem] font-bold tracking-tight theme-text-primary leading-tight">
+      <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight theme-text-primary leading-tight">
         {title}
         {highlight && (
           <>
@@ -138,8 +138,8 @@ export function SectionHeader({
       </h2>
       {lede && (
         <p
-          className={`mt-4 text-base sm:text-lg theme-text-secondary leading-relaxed ${
-            centered ? 'mx-auto max-w-2xl' : 'max-w-2xl'
+          className={`mt-3 text-sm sm:text-base theme-text-secondary leading-relaxed ${
+            centered ? 'mx-auto max-w-xl' : 'max-w-xl'
           }`}
         >
           {lede}
@@ -158,7 +158,7 @@ export function GlassCard({
 }) {
   return (
     <div
-      className={`theme-bg-card theme-border-card border backdrop-blur-xl rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_40px_-16px_rgba(0,0,0,0.18)] ${className}`}
+      className={`theme-bg-card theme-border-card border backdrop-blur-xl rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.15)] ${className}`}
     >
       {children}
     </div>
@@ -185,16 +185,16 @@ interface IconChipProps {
   shape?: 'rounded' | 'pill';
 }
 
-export function IconChip({ icon: Icon, tone = 'accent', size = 'md', shape = 'rounded' }: IconChipProps) {
+export function IconChip({ icon: Icon, tone = 'accent', size = 'sm', shape = 'rounded' }: IconChipProps) {
   const dims =
     size === 'sm'
       ? shape === 'pill'
-        ? 'w-9 h-9 rounded-full'
-        : 'w-9 h-9 rounded-lg'
+        ? 'w-8 h-8 rounded-full'
+        : 'w-8 h-8 rounded-lg'
       : shape === 'pill'
-        ? 'w-12 h-12 rounded-full'
-        : 'w-11 h-11 rounded-xl';
-  const iconDims = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+        ? 'w-10 h-10 rounded-full'
+        : 'w-10 h-10 rounded-lg';
+  const iconDims = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
   return (
     <div className={`${dims} shrink-0 bg-gradient-to-br ${TONE_GRADIENTS[tone]} flex items-center justify-center shadow-sm`}>
       <Icon className={`${iconDims} text-white`} />

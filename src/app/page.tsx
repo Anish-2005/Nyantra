@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import BackgroundAnimation from '../components/BackgroundAnimation';
 import ScrollToTopButton from '../components/landing/ScrollToTopButton';
-import ProgressBar from '../components/landing/ProgressBar';
 import Navigation from '../components/landing/Navigation';
 import Hero from '../components/landing/Hero';
 import Stats from '../components/landing/Stats';
@@ -75,9 +74,6 @@ const NyantraLanding = () => {
 
         {/* Floating Scroll to Top Button */}
         <ScrollToTopButton />
-
-        {/* Reading Progress Bar */}
-        <ProgressBar />
       </motion.div>
     </div>
   );

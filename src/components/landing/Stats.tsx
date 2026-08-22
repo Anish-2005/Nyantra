@@ -63,22 +63,22 @@ const Stats = () => {
   ];
 
   return (
-    <Section id="stats-section" divided className="py-20 sm:py-24">
+    <Section id="stats-section" divided className="py-14 sm:py-16">
       <SectionHeader
         eyebrow={t('stats.impactTitle')}
         title={t('stats.impactSubtitle')}
       />
 
-      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 gap-x-8">
+      <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6">
         {statItems.map((stat, i) => (
-          <StaggerItem key={i} className={`group ${i > 0 ? 'lg:border-l theme-border-glass lg:pl-10' : ''}`}>
+          <StaggerItem key={i} className={`${i > 0 ? 'lg:border-l theme-border-glass lg:pl-8' : ''}`}>
             <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
               <IconChip icon={stat.icon} tone={stat.tone} size="sm" />
-              <div className="mt-5 text-4xl xl:text-5xl font-bold tracking-tight theme-text-primary leading-none">
+              <div className="mt-3.5 text-3xl xl:text-[2rem] font-bold tracking-tight theme-text-primary leading-none">
                 {stat.value}
-                <span className="text-2xl font-semibold text-accent-gradient ml-1">{stat.suffix}</span>
+                <span className="text-lg font-semibold text-accent-gradient ml-0.5">{stat.suffix}</span>
               </div>
-              <p className="mt-3 text-sm font-medium theme-text-muted">{stat.label}</p>
+              <p className="mt-2 text-xs font-medium theme-text-muted">{stat.label}</p>
             </div>
           </StaggerItem>
         ))}

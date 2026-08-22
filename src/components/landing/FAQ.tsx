@@ -20,19 +20,19 @@ const FAQItem: React.FC<{ question: string; answer: string; index: number }> = (
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
         aria-controls={`faq-content-${index}`}
-        className="w-full flex items-center justify-between gap-6 px-6 py-5 text-left transition-colors hover:text-accent-primary"
+        className="w-full flex items-center justify-between gap-5 px-5 py-4 text-left transition-colors hover:text-accent-primary"
       >
-        <span className={`font-medium text-base sm:text-lg transition-colors ${open ? 'text-accent-gradient' : 'theme-text-primary'}`}>
+        <span className={`font-medium text-sm sm:text-[15px] transition-colors ${open ? 'text-accent-gradient' : 'theme-text-primary'}`}>
           {question}
         </span>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
-          transition={{ duration: 0.25 }}
-          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center border transition-colors ${
+          transition={{ duration: 0.2 }}
+          className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition-colors ${
             open ? 'accent-gradient text-white border-transparent' : 'theme-bg-glass theme-border-glass theme-text-muted'
           }`}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
         </motion.span>
       </button>
 
@@ -44,10 +44,10 @@ const FAQItem: React.FC<{ question: string; answer: string; index: number }> = (
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.28, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <p className="px-6 pb-6 text-sm sm:text-base leading-relaxed theme-text-secondary">{answer}</p>
+            <p className="px-5 pb-5 text-sm leading-relaxed theme-text-secondary">{answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -59,7 +59,7 @@ const FAQ: React.FC = () => {
   const { t } = useLocale();
 
   return (
-    <Section id="faq" divided className="py-24 sm:py-28">
+    <Section id="faq" divided className="py-16 sm:py-20">
       <SectionHeader
         eyebrow={t('faq.badge')}
         eyebrowIcon={HelpCircle}
@@ -69,7 +69,7 @@ const FAQ: React.FC = () => {
         lede={t('faq.description')}
       />
 
-      <GlassCard className="max-w-3xl mx-auto overflow-hidden divide-y theme-border-glass">
+      <GlassCard className="max-w-2xl mx-auto overflow-hidden divide-y theme-border-glass">
         {(JSON.parse(t('faq.items')) as FaqEntry[]).map((item, i) => (
           <FAQItem key={i} question={item.question} answer={item.answer} index={i} />
         ))}

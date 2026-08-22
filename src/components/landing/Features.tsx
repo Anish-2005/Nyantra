@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Shield, Zap, Database, Lock, TrendingUp, Users, Sparkles, CheckCircle } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import { Section, SectionHeader, Stagger, StaggerItem, GlassCard, IconChip } from './primitives';
@@ -62,7 +61,7 @@ const Features = () => {
   ];
 
   return (
-    <Section id="features" className="py-24 sm:py-28">
+    <Section id="features" className="py-16 sm:py-20">
       <SectionHeader
         eyebrow={t('features.title')}
         eyebrowIcon={Sparkles}
@@ -70,19 +69,19 @@ const Features = () => {
         lede={t('features.description')}
       />
 
-      <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+      <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature, i) => (
           <StaggerItem key={i}>
-            <GlassCard className="group h-full p-7 transition-all duration-300 hover:-translate-y-1.5 hover:border-accent-primary/40 hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.3)]">
+            <GlassCard className="group h-full p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent-primary/40 hover:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.25)]">
               <IconChip icon={feature.icon} tone={feature.tone} />
-              <h3 className="mt-5 text-lg font-semibold tracking-tight theme-text-primary transition-colors group-hover:text-accent-gradient">
+              <h3 className="mt-3.5 text-[15px] font-semibold tracking-tight theme-text-primary transition-colors group-hover:text-accent-gradient">
                 {feature.title}
               </h3>
-              <p className="mt-2 text-sm theme-text-secondary leading-relaxed">{feature.description}</p>
-              <ul className="mt-5 pt-5 border-t theme-border-glass space-y-2.5">
+              <p className="mt-1 text-sm theme-text-secondary leading-relaxed">{feature.description}</p>
+              <ul className="mt-4 pt-4 border-t theme-border-glass space-y-2">
                 {feature.points.map((item, j) => (
-                  <li key={j} className="flex items-start gap-2.5 text-sm theme-text-primary">
-                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                  <li key={j} className="flex items-start gap-2 text-[13px] theme-text-primary">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-500" />
                     <span>{item}</span>
                   </li>
                 ))}

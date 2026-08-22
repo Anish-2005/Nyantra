@@ -23,7 +23,7 @@ const Process = () => {
   }));
 
   return (
-    <Section id="process" divided className="py-24 sm:py-28">
+    <Section id="process" divided className="py-16 sm:py-20">
       <SectionHeader
         eyebrow={t('process.badge')}
         eyebrowIcon={Activity}
@@ -41,20 +41,20 @@ const Process = () => {
           }}
         />
 
-        <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+        <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {processSteps.map((step, i) => (
             <StaggerItem key={i}>
-              <GlassCard className="group relative h-full p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-accent-primary/40 hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.3)]">
-                <span className="absolute -top-2 right-4 text-[5.5rem] font-bold leading-none theme-text-muted opacity-[0.07] select-none pointer-events-none">
+              <GlassCard className="group relative h-full p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-accent-primary/40 hover:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.25)]">
+                <span className="absolute -top-1.5 right-3 text-7xl font-bold leading-none theme-text-muted opacity-[0.07] select-none pointer-events-none">
                   {step.step}
                 </span>
 
                 <IconChip icon={step.icon} tone={step.tone} />
-                <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-accent-gradient">{step.step}</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-tight theme-text-primary">{step.title}</h3>
-                <p className="mt-2 text-sm theme-text-secondary leading-relaxed">{step.description}</p>
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent-gradient">{step.step}</p>
+                <h3 className="mt-1 text-[15px] font-semibold tracking-tight theme-text-primary">{step.title}</h3>
+                <p className="mt-1.5 text-sm theme-text-secondary leading-relaxed">{step.description}</p>
 
-                <span className="absolute bottom-0 left-7 right-7 h-px bg-accent-gradient scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 rounded-full" />
+                <span className="absolute bottom-0 left-5 right-5 h-px bg-accent-gradient scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 rounded-full" />
               </GlassCard>
             </StaggerItem>
           ))}

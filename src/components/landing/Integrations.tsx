@@ -55,7 +55,7 @@ const Integrations: React.FC = () => {
   const { t } = useLocale();
 
   return (
-    <Section id="integrations" divided className="py-24 sm:py-28">
+    <Section id="integrations" divided className="py-16 sm:py-20">
       <SectionHeader
         eyebrow={t('integrations.badge')}
         eyebrowIcon={Database}
@@ -63,47 +63,39 @@ const Integrations: React.FC = () => {
         lede={t('integrations.description')}
       />
 
-      <Stagger className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <Stagger className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {INTEGRATIONS.map((integration) => (
           <StaggerItem key={integration.name.toLowerCase().replace(/\s+/g, '')}>
-            <GlassCard className="group relative h-full min-h-[200px] p-5 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1.5 hover:border-accent-primary/40 hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.3)]">
-              <a
-                href={integration.link}
-                aria-label={`Learn more about ${integration.name}`}
-                className="absolute top-3 right-3 w-7 h-7 rounded-full theme-bg-glass theme-border-glass border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <ArrowUpRight className="w-3.5 h-3.5 theme-text-secondary" />
-              </a>
-
-              <div className="w-16 h-16 rounded-xl bg-white border theme-border-glass p-2.5 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                <Image src={integration.logo} alt={`${integration.name} logo`} width={56} height={56} className="object-contain max-w-full max-h-full" />
+            <GlassCard className="group relative h-full min-h-[168px] p-4 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:border-accent-primary/40 hover:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.25)]">
+              <div className="w-12 h-12 rounded-lg bg-white border theme-border-glass p-1.5 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <Image src={integration.logo} alt={`${integration.name} logo`} width={44} height={44} className="object-contain max-w-full max-h-full" />
               </div>
 
-              <p className="mt-4 font-semibold text-base theme-text-primary leading-tight">{integration.name}</p>
-              <p className="mt-1 text-xs theme-text-muted line-clamp-2">{integration.desc}</p>
+              <p className="mt-2.5 font-semibold text-xs theme-text-primary leading-tight">{integration.name}</p>
+              <p className="mt-0.5 text-[11px] theme-text-muted line-clamp-2">{integration.desc}</p>
 
               <a
                 href={integration.link}
                 aria-label={`Learn more about ${integration.name}`}
-                className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-medium theme-text-secondary hover:text-accent-gradient transition-colors"
+                className="mt-auto pt-2.5 inline-flex items-center gap-1 text-[10px] font-medium theme-text-secondary hover:text-accent-gradient transition-colors"
               >
                 {t('integrations.learnMore')}
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <ArrowUpRight className="w-3 h-3" />
               </a>
             </GlassCard>
           </StaggerItem>
         ))}
       </Stagger>
 
-      <Reveal className="mt-14 text-center" amount={0.4}>
-        <p className="theme-text-secondary">{t('integrations.ctaDescription')}</p>
+      <Reveal className="mt-10 text-center" amount={0.4}>
+        <p className="text-sm theme-text-secondary">{t('integrations.ctaDescription')}</p>
         <a
           href="#"
           aria-label={t('integrations.ctaButton')}
-          className="group mt-5 inline-flex items-center gap-2 px-6 py-3 accent-gradient rounded-xl font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+          className="group mt-4 inline-flex items-center gap-2 px-5 py-2.5 accent-gradient rounded-lg text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:-translate-y-px active:translate-y-0"
         >
           {t('integrations.ctaButton')}
-          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         </a>
       </Reveal>
     </Section>
