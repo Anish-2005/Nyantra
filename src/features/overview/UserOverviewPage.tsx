@@ -339,7 +339,7 @@ export default function UserDashboard() {
                 transition={{ delay: 1.5 }}
                 className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
-                onClick={() => router.push('/user-dashboard/applications')}
+                onClick={() => router.push('/dashboard/applications')}
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bfdbfe' : 'rgba(30, 58, 138, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dbeafe' : 'rgba(30, 58, 138, 0.3)'}>
@@ -363,7 +363,7 @@ export default function UserDashboard() {
                 transition={{ delay: 1.6 }}
                 className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
-                onClick={() => router.push('/user-dashboard/applications')}
+                onClick={() => router.push('/dashboard/applications')}
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#bbf7d0' : 'rgba(20, 83, 45, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#dcfce7' : 'rgba(20, 83, 45, 0.3)'}>
@@ -387,7 +387,7 @@ export default function UserDashboard() {
                 transition={{ delay: 1.7 }}
                 className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
-                onClick={() => router.push('/user-dashboard/grievance')}
+                onClick={() => router.push('/dashboard/grievance')}
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fee2e2' : 'rgba(127, 29, 29, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#fef2f2' : 'rgba(127, 29, 29, 0.3)'}>
@@ -411,7 +411,7 @@ export default function UserDashboard() {
                 transition={{ delay: 1.8 }}
                 className="rounded-xl border p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 style={{ backgroundColor: currentColors.cardBg, borderColor: currentColors.cardBorder }}
-                onClick={() => router.push('/user-dashboard/beneficiaries')}
+                onClick={() => router.push('/dashboard/beneficiaries')}
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 transition-colors" style={{ backgroundColor: theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)', }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#f3e8ff' : 'rgba(88, 28, 135, 0.5)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme === 'light' ? '#faf5ff' : 'rgba(88, 28, 135, 0.3)'}>
@@ -468,7 +468,7 @@ export default function UserDashboard() {
                       {t('extracted.your_applications_will_appear_here') || 'Your applications will appear here once submitted'}
                     </p>
                     <button
-                      onClick={() => router.push('/user-dashboard/applications')}
+                      onClick={() => router.push('/dashboard/applications')}
                       className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm underline"
                     >
                       {t('extracted.create_your_first_application') || 'Create your first application'}

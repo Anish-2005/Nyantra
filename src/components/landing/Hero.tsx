@@ -54,8 +54,7 @@ const Hero = () => {
     }
 
     const role = profile?.role;
-    if (role === 'officer') router.push('/dashboard');
-    else if (role === 'user') router.push('/user-dashboard');
+    if (role === 'officer' || role === 'user') router.push('/dashboard');
     else router.push('/choose-role');
   };
 

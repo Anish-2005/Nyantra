@@ -92,7 +92,7 @@ export default function LoginPage() {
         if (p === null) router.push('/choose-role');
         else if (p?.role === 'officer') router.push('/dashboard');
         else if (p?.role === 'user') {
-          if (p.verified) router.push('/user-dashboard');
+          if (p.verified) router.push('/dashboard');
           else router.push('/verify');
         } else router.push('/choose-role');
       } catch (e) {
@@ -129,7 +129,7 @@ export default function LoginPage() {
           router.push('/choose-role');
         } else if (p?.role === 'officer') router.push('/dashboard');
         else if (p?.role === 'user') {
-          if (p.verified) router.push('/user-dashboard');
+          if (p.verified) router.push('/dashboard');
           else router.push('/verify');
         } else router.push('/choose-role');
       } catch (e) {
@@ -160,7 +160,7 @@ export default function LoginPage() {
 
     if (profile?.role === 'officer') router.push('/dashboard');
     else if (profile?.role === 'user') {
-      if (profile.verified) router.push('/user-dashboard');
+      if (profile.verified) router.push('/dashboard');
       else router.push('/verify');
     } else if (profile && !profile.role) {
       // profile exists but role not chosen yet

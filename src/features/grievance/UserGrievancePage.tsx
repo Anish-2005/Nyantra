@@ -550,7 +550,7 @@ export default function GrievancePage() {
             </p>
             {beneficiaries.length === 0 && (
               <a 
-                href="/user-dashboard/beneficiaries"
+                href="/dashboard/beneficiaries"
                 className="accent-gradient text-white px-6 py-2 rounded-lg inline-block"
               >
                 Go to Beneficiaries

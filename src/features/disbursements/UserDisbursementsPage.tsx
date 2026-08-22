@@ -139,7 +139,7 @@ export default function DisbursementsPage() {
                 ` : ''}
 
                 <div style="text-align: center; margin-top: 30px;">
-                  <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://nyantra.vercel.app'}/user-dashboard/disbursements"
+                  <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://nyantra.vercel.app'}/dashboard/disbursements"
                      style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">
                     View Details
                   </a>
@@ -150,8 +150,8 @@ export default function DisbursementsPage() {
                 <p>This is an automated notification from the Nyantra Direct Benefit Transfer System.</p>
                 <p>If you have any questions, please contact your assigned officer or use the grievance system.</p>
                 <p style="margin-top: 10px;">
-                  <a href="${window.location.origin}/user-dashboard/grievance" style="color: #3b82f6; text-decoration: none;">Submit a Grievance</a> |
-                  <a href="${window.location.origin}/user-dashboard" style="color: #3b82f6; text-decoration: none;">Dashboard</a>
+                  <a href="${window.location.origin}/dashboard/grievance" style="color: #3b82f6; text-decoration: none;">Submit a Grievance</a> |
+                  <a href="${window.location.origin}/dashboard" style="color: #3b82f6; text-decoration: none;">Dashboard</a>
                 </p>
               </div>
             </div>

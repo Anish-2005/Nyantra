@@ -1,8 +1,11 @@
-"use client";
+'use client';
 import dynamic from 'next/dynamic';
+import { useDashboardView } from '@/context/DashboardViewContext';
+import UserOverviewPage from '@/features/overview/UserOverviewPage';
 
-const Dashboard = dynamic(() => import('@/components/DashboardComponent'), { ssr: false });
+const OfficerOverviewPage = dynamic(() => import('@/components/DashboardComponent'), { ssr: false });
 
 export default function Page() {
-  return <Dashboard />;
+  const { view } = useDashboardView();
+  return view === 'officer' ? <OfficerOverviewPage /> : <UserOverviewPage />;
 }

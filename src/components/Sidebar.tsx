@@ -24,6 +24,7 @@ type Props = {
   open: boolean;
   setOpen: (open: boolean) => void;
   collapsed: boolean;
+  subtitle?: string;
 };
 
 export default function Sidebar({
@@ -33,6 +34,7 @@ export default function Sidebar({
   open,
   setOpen,
   collapsed = false,
+  subtitle,
 }: Props) {
   const { theme } = useTheme();
   const { signOutUser } = useAuth();
@@ -79,7 +81,7 @@ export default function Sidebar({
                     <h2 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                       {t('extracted.nyantra')}
                     </h2>
-                    <p className="text-xs theme-text-muted font-medium tracking-wide uppercase">{t('extracted.dbt_dashboard')}</p>
+                    <p className="text-xs theme-text-muted font-medium tracking-wide uppercase">{subtitle ?? t('extracted.dbt_dashboard')}</p>
                   </div>
                 </div>
                 <button
@@ -172,7 +174,7 @@ export default function Sidebar({
                   {t('extracted.nyantra')}
                 </span>
                 <span className="text-xs theme-text-muted font-medium tracking-wider uppercase truncate">
-                  {t('extracted.dbt_dashboard')}
+                  {subtitle ?? t('extracted.dbt_dashboard')}
                 </span>
               </motion.div>
             )}

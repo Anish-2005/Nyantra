@@ -79,7 +79,7 @@ export default function VerifyPage() {
     }
 
     if (profile?.role === 'user' && profile?.verified) {
-      router.push('/user-dashboard');
+      router.push('/dashboard');
       return;
     }
   }, [user, profile, loading, router]);
@@ -121,7 +121,7 @@ export default function VerifyPage() {
     // give AuthContext a moment to pick up changes
     setTimeout(() => {
       setVerifying(false);
-      router.push('/user-dashboard');
+      router.push('/dashboard');
     }, 600);
   };
 

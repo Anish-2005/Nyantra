@@ -64,7 +64,7 @@ export default function ChooseRolePage() {
       // role already chosen; redirect accordingly
       if (profile.role === 'officer') router.push('/dashboard');
       else if (profile.role === 'user') {
-        if (profile.verified) router.push('/user-dashboard');
+        if (profile.verified) router.push('/dashboard');
         else router.push('/verify');
       }
     }
