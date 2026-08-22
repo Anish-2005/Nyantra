@@ -7,18 +7,21 @@ import React, { useEffect, useState } from "react";
 interface ConfirmDeleteModalProps {
   open: boolean;
   message: string;
+  title?: string;
+  confirmLabel?: string;
   onCancel: () => void;
   onConfirm: () => void;
-  theme: string;
-  t: (key: string, options?: any) => string;
+  theme?: string;
+  t?: (key: string, options?: any) => string;
 }
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   open,
   message,
+  title,
+  confirmLabel = "Delete",
   onCancel,
   onConfirm,
-  t,
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -73,7 +76,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               <div className="flex items-center gap-2 min-w-0">
                 <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
                 <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
-                  {t("applications.confirmDeleteTitle")}
+                  {title || "Confirm Delete"}
                 </h2>
               </div>
               <button
@@ -102,7 +105,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                 onClick={onConfirm}
                 className="flex-1 h-9 rounded-md bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors"
               >
-                Delete
+                {confirmLabel}
               </button>
             </div>
           </motion.aside>

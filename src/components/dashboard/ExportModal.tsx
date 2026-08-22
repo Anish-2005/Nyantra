@@ -4,19 +4,23 @@ import { createPortal } from "react-dom";
 import { Download, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-interface ExportModalProps {
+interface ExportDrawerProps {
   open: boolean;
   onClose: () => void;
-  theme: string;
-  t: (key: string, options?: any) => string;
-  applications: any[];
-  filteredApplications: any[];
-  exportApplicationsData: (apps: any[]) => void;
-  exportApplicationsPDF: (apps: any[]) => void;
-  emailAddress: string;
-  setEmailAddress: (email: string) => void;
-  sendingEmail: boolean;
-  sendApplicationsEmail: (apps: any[], format: 'csv' | 'pdf') => void | Promise<void>;
+  items: any[];
+  filteredItems: any[];
+  onExportCsv: (items: any[]) => void;
+  onExportPdf: (items: any[]) => void;
+  /** Optional email delivery — section hidden when omitted */
+  emailAddress?: string;
+  setEmailAddress?: (email: string) => void;
+  sendingEmail?: boolean;
+  onSendEmail?: (items: any[], format: 'csv' | 'pdf') => void | Promise<void>;
+  /** Optional i18n labels */
+  title?: string;
+  subtitle?: string;
+  allTitle?: string;
+  filteredTitle?: string;
 }
 
 const btnGhost =
@@ -28,18 +32,21 @@ const Spinner = ({ invert }: { invert?: boolean }) => (
   <span className={`w-3 h-3 rounded-full border-2 border-t-transparent animate-spin ${invert ? 'border-white' : 'border-current'}`} />
 );
 
-const ExportModal: React.FC<ExportModalProps> = ({
+const ExportDrawer: React.FC<ExportDrawerProps> = ({
   open,
   onClose,
-  t,
-  applications,
-  filteredApplications,
-  exportApplicationsData,
-  exportApplicationsPDF,
+  items,
+  filteredItems,
+  onExportCsv,
+  onExportPdf,
   emailAddress,
   setEmailAddress,
   sendingEmail,
-  sendApplicationsEmail,
+  onSendEmail,
+  title = "Export",
+  subtitle,
+  allTitle = "All Records",
+  filteredTitle = "Filtered Results",
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -62,6 +69,11 @@ const ExportModal: React.FC<ExportModalProps> = ({
   }, [open, onClose]);
 
   if (!mounted) return null;
+
+  const groups = [
+    { title: allTitle, count: items.length, list: items },
+    { title: filteredTitle, count: filteredItems.length, list: filteredItems },
+  ];
 
   return createPortal(
     <AnimatePresence>
@@ -89,103 +101,96 @@ const ExportModal: React.FC<ExportModalProps> = ({
             role="dialog"
             aria-modal="true"
           >
-        {/* Header */}
-        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <Download className="w-4 h-4 theme-text-secondary shrink-0" />
-            <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
-              {t("applications.exportTitle") || "Export Applications"}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {/* Download */}
-          <section>
-            {[
-              { title: t("applications.exportAllTitle") || "All Applications", count: applications.length, apps: applications },
-              { title: t("applications.exportFilteredTitle") || "Filtered Results", count: filteredApplications.length, apps: filteredApplications },
-            ].map((group, gi) => (
-              <div key={gi} className={gi === 1 ? "mt-4 pt-4 border-t theme-border-glass" : ""}>
-                <div className="flex items-baseline justify-between mb-2">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary">{group.title}</h3>
-                  <span className="text-[11px] tabular-nums theme-text-muted">
-                    {group.count} {t("applications.records", { count: group.count })}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    disabled={group.apps.length === 0}
-                    onClick={() => { exportApplicationsData(group.apps); onClose(); }}
-                    className={btnGhost}
-                  >
-                    CSV
-                  </button>
-                  <button
-                    disabled={group.apps.length === 0}
-                    onClick={() => { exportApplicationsPDF(group.apps); onClose(); }}
-                    className={btnPrimary}
-                  >
-                    PDF
-                  </button>
-                </div>
+            {/* Header */}
+            <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{title}</h2>
+                {subtitle && <p className="text-[11px] theme-text-muted truncate">{subtitle}</p>}
               </div>
-            ))}
-          </section>
-
-          {/* Email */}
-          <section className="mt-4 pt-4 border-t theme-border-glass">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2">
-              {t("applications.emailExport")}
-            </h3>
-            <input
-              type="email"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
-              placeholder={t("applications.enterEmailAddress") || "Enter email address"}
-              className="w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
-            />
-            <div className="grid grid-cols-2 gap-2 mt-2.5">
               <button
-                disabled={!emailAddress.trim() || sendingEmail}
-                onClick={() => sendApplicationsEmail(applications, 'csv')}
-                className={btnGhost}
+                onClick={onClose}
+                aria-label="Close"
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
               >
-                {sendingEmail && <Spinner />} {t("applications.sendCsv")}
-              </button>
-              <button
-                disabled={!emailAddress.trim() || sendingEmail}
-                onClick={() => sendApplicationsEmail(applications, 'pdf')}
-                className={btnPrimary}
-              >
-                {sendingEmail && <Spinner invert />} {t("applications.sendPdf")}
-              </button>
-              <button
-                disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
-                onClick={() => sendApplicationsEmail(filteredApplications, 'csv')}
-                className={btnGhost}
-              >
-                {sendingEmail && <Spinner />} {t("applications.sendFilteredCsv")}
-              </button>
-              <button
-                disabled={!emailAddress.trim() || filteredApplications.length === 0 || sendingEmail}
-                onClick={() => sendApplicationsEmail(filteredApplications, 'pdf')}
-                className={btnPrimary}
-              >
-                {sendingEmail && <Spinner invert />} {t("applications.sendFilteredPdf")}
+                <X className="w-4 h-4" />
               </button>
             </div>
-          </section>
-        </div>
-      </motion.aside>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {/* Download */}
+              <section>
+                {groups.map((group, gi) => (
+                  <div key={gi} className={gi === 1 ? "mt-4 pt-4 border-t theme-border-glass" : ""}>
+                    <div className="flex items-baseline justify-between mb-2">
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary">{group.title}</h3>
+                      <span className="text-[11px] tabular-nums theme-text-muted">{group.count}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={group.list.length === 0}
+                        onClick={() => { onExportCsv(group.list); onClose(); }}
+                        className={btnGhost}
+                      >
+                        CSV
+                      </button>
+                      <button
+                        disabled={group.list.length === 0}
+                        onClick={() => { onExportPdf(group.list); onClose(); }}
+                        className={btnPrimary}
+                      >
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </section>
+
+              {/* Email */}
+              {onSendEmail && setEmailAddress && (
+                <section className="mt-4 pt-4 border-t theme-border-glass">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2">Email</h3>
+                  <input
+                    type="email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+                  />
+                  <div className="grid grid-cols-2 gap-2 mt-2.5">
+                    <button
+                      disabled={!emailAddress?.trim() || sendingEmail}
+                      onClick={() => onSendEmail(items, 'csv')}
+                      className={btnGhost}
+                    >
+                      {sendingEmail && <Spinner />} All · CSV
+                    </button>
+                    <button
+                      disabled={!emailAddress?.trim() || sendingEmail}
+                      onClick={() => onSendEmail(items, 'pdf')}
+                      className={btnPrimary}
+                    >
+                      {sendingEmail && <Spinner invert />} All · PDF
+                    </button>
+                    <button
+                      disabled={!emailAddress?.trim() || filteredItems.length === 0 || sendingEmail}
+                      onClick={() => onSendEmail(filteredItems, 'csv')}
+                      className={btnGhost}
+                    >
+                      {sendingEmail && <Spinner />} Filtered · CSV
+                    </button>
+                    <button
+                      disabled={!emailAddress?.trim() || filteredItems.length === 0 || sendingEmail}
+                      onClick={() => onSendEmail(filteredItems, 'pdf')}
+                      className={btnPrimary}
+                    >
+                      {sendingEmail && <Spinner invert />} Filtered · PDF
+                    </button>
+                  </div>
+                </section>
+              )}
+            </div>
+          </motion.aside>
         </>
       )}
     </AnimatePresence>,
@@ -193,4 +198,4 @@ const ExportModal: React.FC<ExportModalProps> = ({
   );
 };
 
-export default ExportModal;
+export default ExportDrawer;

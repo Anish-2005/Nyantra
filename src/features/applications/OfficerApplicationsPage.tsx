@@ -1065,20 +1065,22 @@ return (
       t={t}
     />
 
-    {/* Export Modal */}
+    {/* Export Drawer */}
     <ExportModal
       open={showExportModal}
       onClose={() => setShowExportModal(false)}
-      theme={theme}
-      t={t}
-      applications={applications}
-      filteredApplications={filteredApplications}
-      exportApplicationsData={exportApplicationsData}
-      exportApplicationsPDF={exportApplicationsPDF}
+      items={applications}
+      filteredItems={filteredApplications}
+      onExportCsv={exportApplicationsData}
+      onExportPdf={exportApplicationsPDF}
       emailAddress={emailAddress}
       setEmailAddress={setEmailAddress}
       sendingEmail={sendingEmail}
-      sendApplicationsEmail={sendApplicationsEmail}
+      onSendEmail={sendApplicationsEmail}
+      title={t("applications.exportTitle") || "Export Applications"}
+      subtitle={t("applications.exportSubtitle") || ""}
+      allTitle={t("applications.exportAllTitle") || "All Applications"}
+      filteredTitle={t("applications.exportFilteredTitle") || "Filtered Results"}
     />
 
     {/* New Application Drawer */}
