@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
+import { GradientOrbs } from "@/components/backgrounds/GradientOrbs";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import { collection, query, where, onSnapshot, limit, updateDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -336,18 +337,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
 
       <BackgroundAnimation />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-        <motion.div
-          className={`absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-15' : 'opacity-20'}`}
-          animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className={`absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl accent-gradient ${theme === 'dark' ? 'opacity-15' : 'opacity-20'}`}
-          animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      <GradientOrbs />
 
       <div className="flex min-h-screen relative z-10">
         <Sidebar
@@ -362,9 +352,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         />
 
         <div className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'}`}>
-          <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass">
-            <div className="flex items-center justify-between px-4 h-14 lg:px-6">
-              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass [padding-top:env(safe-area-inset-top)]">
+            <div className="flex items-center justify-between h-12 lg:h-14 px-3 sm:px-4 lg:px-6">
+              <div className="flex items-center gap-1 min-w-0 flex-1">
                 <button
                   onClick={() => setSidebarOpen(true)}
                   className="lg:hidden inline-flex p-2 rounded-md theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
@@ -373,10 +363,10 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                   <Menu className="w-[18px] h-[18px]" />
                 </button>
 
-                <div className="flex items-center gap-1.5 text-sm min-w-0 ml-1">
-                  <span className="theme-text-muted truncate">{isUserView ? t('extracted.applicant_portal') : t('extracted.dashboard')}</span>
-                  <ChevronRight className="w-3 h-3 theme-text-muted shrink-0 rotate-90" />
-                  <span className="font-medium theme-text-primary truncate">{breadcrumbLabel}</span>
+                <div className="flex items-center min-w-0 sm:ml-1">
+                  <span className="hidden sm:inline text-sm theme-text-muted truncate">{isUserView ? t('extracted.applicant_portal') : t('extracted.dashboard')}</span>
+                  <ChevronRight className="hidden sm:block w-3 h-3 mx-1.5 theme-text-muted shrink-0 rotate-90" />
+                  <span className="sm:text-sm text-[13px] font-semibold sm:font-medium tracking-tight theme-text-primary truncate">{breadcrumbLabel}</span>
                 </div>
               </div>
 
@@ -482,7 +472,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 top-full mt-2 w-80 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
+                          className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
                           style={{ background: dropdownSolidBg }}
                         >
                           <div className="p-3 border-b theme-border-glass">
@@ -506,17 +496,18 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                 <div className="relative">
                   <motion.button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-md hover:theme-bg-glass transition-colors"
+                    className="flex items-center gap-2 p-0.5 sm:pl-1 sm:pr-2 sm:py-1 rounded-md hover:theme-bg-glass transition-colors"
                     whileTap={{ scale: 0.98 }}
+                    aria-label="Account menu"
                   >
-                    <div className="w-6 h-6 rounded-full accent-gradient flex items-center justify-center text-white font-semibold text-[10px]">
+                    <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full accent-gradient flex items-center justify-center text-white font-semibold text-[10px]">
                       {userInitials}
                     </div>
                     <div className="hidden sm:block text-left">
                       <p className="text-xs font-medium theme-text-primary truncate max-w-24 leading-tight">{displayName}</p>
                       <p className="text-[10px] theme-text-muted leading-tight">{roleLabel}</p>
                     </div>
-                    <ChevronDown className={`w-3 h-3 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`hidden sm:block w-3 h-3 mr-0.5 theme-text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   <AnimatePresence>
@@ -526,7 +517,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-full mt-2 w-64 rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
+                        className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-1.5rem)] rounded-lg theme-bg-card border theme-border-glass shadow-lg backdrop-blur-xl py-2 z-50"
                         style={{ background: dropdownSolidBg }}
                       >
                         <div className="px-4 py-3 border-b theme-border-glass">

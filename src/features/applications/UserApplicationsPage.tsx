@@ -1,139 +1,25 @@
 "use client";
-import React, { useEffect, useState, useMemo, useRef, createElement } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardView } from '@/context/DashboardViewContext';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import NewApplicationDrawer from './NewApplicationDrawer';
-import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc, orderBy } from 'firebase/firestore';
+import ApplicationTrackerCard from './components/ApplicationTrackerCard';
+import type { Application, TranslateFn } from './helpers';
+import {
+  PageHeader,
+  FilterPills,
+  EmptyState,
+} from '@/components/dashboard/ui';
+import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import LoadingState from '@/components/LoadingState';
-import {
-  Plus, Edit, Trash, X, Check,
-  Clock, AlertCircle, FileText, Eye, ChevronDown
-} from 'lucide-react';
-
-// PoA Act Offences Data Structure
-const POA_OFFENCES = {
-  "1. Offences leading to Death / Murder": {
-    "Murder of SC/ST person": 825000,
-    "Death due to injury inflicted during atrocity": 825000,
-    "Death after rape / gang rape": 825000
-  },
-  "2. Rape and Sexual Offences": {
-    "Rape": 500000,
-    "Gang rape": 825000,
-    "Attempt to rape": 100000,
-    "Parading naked / semi-naked": 200000,
-    "Sexual harassment / use of criminal force": 100000
-  },
-  "3. Grievous Hurt / Injury": {
-    "Grievous hurt": 125000,
-    "Permanent disability": 500000,
-    "Partial disability": 250000,
-    "Acid attack – deformity / disability": 825000,
-    "Acid attack – injury without deformity": 500000
-  },
-  "4. Offences Against Women & Dignity": {
-    "Outraging modesty of SC/ST woman": 100000,
-    "Sexual exploitation / trafficking": 200000,
-    "Forced to work naked / semi-naked": 200000
-  },
-  "5. Property Damage / Arson": {
-    "Burning of house / arson": "225000-425000",
-    "Destruction of household / property": "100000-200000",
-    "Destruction of crops": 100000,
-    "Destruction of cattle / livestock": 60000
-  },
-  "6. Land & Economic Offences": {
-    "Wrongful dispossession from land": 200000,
-    "Destruction of standing crops": 100000,
-    "Economic boycott": 100000,
-    "Social boycott": 100000,
-    "Bonded labour / forced labour": 100000
-  },
-  "7. Caste Atrocity / Humiliation Offences": {
-    "Intentional insult, intimidation, caste abuse": 100000,
-    "Preventing entry into public place": 100000,
-    "Preventing access to public well/tank/roads": 100000,
-    "Compelling to eat inedible / obnoxious substances": 100000
-  },
-  "8. Kidnapping / Abduction": {
-    "Kidnapping SC/ST person": "100000-200000",
-    "Abduction with intent to outrage modesty": 200000
-  },
-  "9. Mental Torture / Harassment": {
-    "Harassing, humiliating, intimidating": 100000,
-    "Public humiliation": "100000-200000"
-  },
-  "10. Other Serious Offences": {
-    "Preventing from voting": 100000,
-    "Poll violence against SC/ST": 200000,
-    "False, malicious, vexatious legal cases": 100000
-  }
-};
-
-// Status → journey stage index (rejected = -1)
-const stageIndex = (status: string) => {
-  switch (status) {
-    case 'approved': return 2;
-    case 'in-review':
-    case 'documents-required': return 1;
-    case 'rejected': return -1;
-    default: return 0;
-  }
-};
-
-// Detail field for expanded tracker cards
-const Field = ({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) => (
-  <div className="min-w-0">
-    <div className="text-[11px] uppercase tracking-wider theme-text-muted mb-0.5">{label}</div>
-    <div className={`text-sm font-medium theme-text-primary truncate ${mono ? 'font-mono' : ''}`}>{value}</div>
-  </div>
-);
-
-// Application data type
-interface Application {
-  id: string;
-  ownerId: string;
-  applicantName: string;
-  aadhaar: string;
-  phone: string;
-  district: string;
-  state: string;
-  actType: string;
-  beneficiaryId: string;
-  incidentDate: string;
-  firReport?: string;
-  medicalReport?: string;
-  policeStation?: string;
-  caseNumber?: string;
-  applicationDate: string;
-  status: string;
-  amount: number;
-  priority: string;
-  assignedOfficer: string;
-  documents: number;
-  lastUpdate: string;
-  // common beneficiary fields
-  fatherName?: string;
-  email?: string;
-  address?: string;
-  registrationDate?: any;
-  category?: string;
-  age?: number | null;
-  gender?: string;
-  maritalStatus?: string;
-  bankAccount?: string;
-  ifsc?: string;
-  // PoA specific fields
-  offenceCategory?: string;
-  offenceType?: string;
-}
+import { Plus, AlertCircle, FileText } from 'lucide-react';
 
 export default function ApplicationsPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { view } = useDashboardView();
   const { t } = useLocale();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -154,61 +40,6 @@ export default function ApplicationsPage() {
     window.setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
   };
 
-  // Format helpers
-  const formatCurrency = (n?: number) => {
-    if (n == null) return '₹0';
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
-  };
-
-  const formatDate = (date: any) => {
-    if (!date) return '—';
-    try {
-      if (typeof date?.toDate === 'function') {
-        const d = date.toDate();
-        return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-      }
-      const d = new Date(date);
-      if (Number.isNaN(d.getTime())) return String(date);
-      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-    } catch { return String(date); }
-  };
-
-  // Status colors and icons
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'in-review': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'pending': Clock,
-      'in-review': Eye,
-      'approved': Check,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
-  // Get translated status text
-  const getTranslatedStatus = (status: string) => {
-    const safe = status ?? '';
-    const statusKey = `applications.status.${safe.replace('-', '_')}`;
-    return t(statusKey) || safe.replace('-', ' ');
-  };
-
-  // Get translated priority text
-  const getTranslatedPriority = (priority: string) => {
-    const priorityKey = `applications.priority.${priority.toLowerCase()}`;
-    return t(priorityKey) || priority;
-  };
-
   // Fetch user's applications and beneficiary
   useEffect(() => {
     if (!user) {
@@ -222,7 +53,7 @@ export default function ApplicationsPage() {
 
     // Fetch user's applications (no server-side orderBy to avoid requiring a composite index)
     const applicationsQuery = query(
-      collection(db, 'applications'), 
+      collection(db, 'applications'),
       where('ownerId', '==', user.uid)
     );
 
@@ -282,7 +113,7 @@ export default function ApplicationsPage() {
 
     // Fetch user's beneficiary
     const beneficiaryQuery = query(
-      collection(db, 'beneficiaries'), 
+      collection(db, 'beneficiaries'),
       where('ownerId', '==', user.uid)
     );
 
@@ -307,7 +138,10 @@ export default function ApplicationsPage() {
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const requestDeleteApplication = (id: string) => setDeleteTargetId(id);
+  const openNewApplication = () => {
+    setEditingApplication(null);
+    setShowNewApplicationForm(true);
+  };
 
   const deleteApplication = async (id: string) => {
     try {
@@ -328,16 +162,14 @@ export default function ApplicationsPage() {
   }, [applications, statusFilter]);
 
   // Statistics
-  const stats = useMemo(() => {
-    return {
-      total: applications.length,
-      pending: applications.filter(a => a.status === 'pending').length,
-      inReview: applications.filter(a => a.status === 'in-review').length,
-      approved: applications.filter(a => a.status === 'approved').length,
-      rejected: applications.filter(a => a.status === 'rejected').length,
-      documentsRequired: applications.filter(a => a.status === 'documents-required').length
-    };
-  }, [applications]);
+  const stats = useMemo(() => ({
+    total: applications.length,
+    pending: applications.filter(a => a.status === 'pending').length,
+    inReview: applications.filter(a => a.status === 'in-review').length,
+    approved: applications.filter(a => a.status === 'approved').length,
+    rejected: applications.filter(a => a.status === 'rejected').length,
+    documentsRequired: applications.filter(a => a.status === 'documents-required').length
+  }), [applications]);
 
   if (!user) {
     return (
@@ -367,390 +199,137 @@ export default function ApplicationsPage() {
 
   return (
     <div className="space-y-4 max-w-[1400px]">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3">
+      {/* Header */}
+      <PageHeader
+        title={t('extracted.my_applications')}
+        highlight={t('extracted.dashboard')}
+        subtitle={
+          stats.total > 0
+            ? t('extracted.you_have_applications', { count: stats.total })
+            : t('extracted.manage_your_relief_applications')
+        }
+      >
+        <button
+          onClick={openNewApplication}
+          disabled={!userBeneficiary}
+          className="h-9 px-3.5 accent-gradient text-white rounded-md inline-flex items-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t('extracted.new_application')}
+        </button>
+      </PageHeader>
+
+      {/* Beneficiary prerequisite */}
+      {!userBeneficiary && (
+        <div className="theme-bg-card border border-amber-500/40 rounded-xl p-4 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 grid place-items-center shrink-0">
+            <AlertCircle className="w-4 h-4" />
+          </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-              {t('extracted.my_applications')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
-            </h1>
-            <p className="text-xs theme-text-muted mt-0.5 truncate">
-              {stats.total > 0
-                ? t('extracted.you_have_applications', { count: stats.total })
-                : t('extracted.manage_your_relief_applications')}
-            </p>
+            <p className="text-sm font-medium theme-text-primary">{t('extracted.create_beneficiary_first')}</p>
+            <p className="text-xs theme-text-muted mt-0.5">{t('extracted.start_by_creating_application')}</p>
           </div>
-          <button
-            onClick={() => {
+        </div>
+      )}
+
+      {/* New / Edit Application Drawer */}
+      <AnimatePresence>
+        {showNewApplicationForm && (
+          <NewApplicationDrawer
+            onCancel={() => {
+              setShowNewApplicationForm(false);
               setEditingApplication(null);
-              setShowNewApplicationForm(true);
             }}
-            disabled={!userBeneficiary}
-            className="h-9 px-3.5 accent-gradient text-white rounded-md inline-flex items-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {t('extracted.new_application')}
-          </button>
-        </div>
-
-        {/* Beneficiary prerequisite */}
-        {!userBeneficiary && (
-          <div className="theme-bg-card border border-amber-500/40 rounded-xl p-4 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 grid place-items-center shrink-0">
-              <AlertCircle className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium theme-text-primary">{t('extracted.create_beneficiary_first')}</p>
-              <p className="text-xs theme-text-muted mt-0.5">{t('extracted.start_by_creating_application')}</p>
-            </div>
-          </div>
+            initialData={editingApplication}
+            userBeneficiary={userBeneficiary}
+            onSaved={() => {
+              setShowNewApplicationForm(false);
+              setEditingApplication(null);
+              showToast('success', t('applications.savedSuccess'));
+            }}
+          />
         )}
+      </AnimatePresence>
 
-        {/* New / Edit Application Drawer */}
-        <AnimatePresence>
-          {showNewApplicationForm && (
-            <NewApplicationDrawer
-              onCancel={() => {
-                setShowNewApplicationForm(false);
-                setEditingApplication(null);
-              }}
-              initialData={editingApplication}
-              userBeneficiary={userBeneficiary}
-              onSaved={() => {
-                setShowNewApplicationForm(false);
-                setEditingApplication(null);
-                showToast('success', t('applications.savedSuccess'));
-              }}
-            />
-          )}
-        </AnimatePresence>
+      {/* Delete Confirmation */}
+      <ConfirmDeleteModal
+        open={!!deleteTargetId}
+        message={t('applications.confirmDeleteMessage')}
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (deleteTargetId) deleteApplication(deleteTargetId);
+          setDeleteTargetId(null);
+        }}
+      />
 
-        {/* Delete Confirmation */}
-        <ConfirmDeleteModal
-          open={!!deleteTargetId}
-          message={t('applications.confirmDeleteMessage')}
-          onCancel={() => setDeleteTargetId(null)}
-          onConfirm={() => {
-            if (deleteTargetId) deleteApplication(deleteTargetId);
-            setDeleteTargetId(null);
-          }}
+      {/* Status filter pills */}
+      {stats.total > 0 && (
+        <FilterPills
+          value={statusFilter}
+          onChange={setStatusFilter}
+          hideEmpty
+          items={[
+            { key: 'all', label: t('applications.allStatuses'), count: stats.total },
+            { key: 'pending', label: t('applications.pending'), count: stats.pending },
+            { key: 'in-review', label: t('applications.inReview'), count: stats.inReview },
+            { key: 'approved', label: t('applications.approved'), count: stats.approved },
+            { key: 'documents-required', label: t('applications.documentsRequired'), count: stats.documentsRequired },
+            { key: 'rejected', label: t('applications.rejected'), count: stats.rejected },
+          ]}
         />
+      )}
 
-        {/* Status filter pills */}
-        {stats.total > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {[
-              { key: 'all', label: t('applications.allStatuses'), count: stats.total },
-              { key: 'pending', label: t('applications.pending'), count: stats.pending },
-              { key: 'in-review', label: t('applications.inReview'), count: stats.inReview },
-              { key: 'approved', label: t('applications.approved'), count: stats.approved },
-              { key: 'documents-required', label: t('applications.documentsRequired'), count: stats.documentsRequired },
-              { key: 'rejected', label: t('applications.rejected'), count: stats.rejected },
-            ].filter(s => s.key === 'all' || s.count > 0).map(s => (
-              <button
-                key={s.key}
-                onClick={() => setStatusFilter(s.key)}
-                className={`h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                  statusFilter === s.key
-                    ? 'accent-gradient text-white shadow-sm'
-                    : 'border theme-border-glass theme-bg-glass theme-text-muted hover:theme-text-primary'
-                }`}
-              >
-                {s.label}
-                <span className={`tabular-nums ${statusFilter === s.key ? 'opacity-80' : 'opacity-60'}`}>{s.count}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Tracker list */}
-        {filteredApplications.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="theme-bg-card theme-border-glass border rounded-xl px-6 py-16 text-center"
-          >
-            <div className="mx-auto w-16 h-16 rounded-2xl accent-gradient text-white grid place-items-center mb-4 shadow-lg">
-              <FileText className="w-7 h-7" />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
-              {applications.length === 0 ? t('extracted.no_applications_yet') : t('extracted.no_matching_applications')}
-            </h2>
-            <p className="text-sm theme-text-muted mt-1 max-w-md mx-auto">
-              {applications.length === 0
-                ? t('extracted.create_your_first_application')
-                : t('extracted.try_adjusting_search_terms')}
-            </p>
-            {applications.length === 0 && userBeneficiary && (
-              <button
-                onClick={() => {
-                  setEditingApplication(null);
-                  setShowNewApplicationForm(true);
-                }}
-                className="mt-5 h-10 px-4 rounded-md accent-gradient text-white text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2 transition-opacity"
-              >
-                <Plus className="w-4 h-4" />
-                {t('extracted.new_application')}
-              </button>
-            )}
-          </motion.div>
-        ) : (
-          <div className="space-y-2.5">
-            {filteredApplications.map((application) => {
-              const expanded = expandedId === application.id;
-              const rejected = application.status === 'rejected';
-              const currentStage = stageIndex(application.status);
-
-              return (
-                <motion.div
-                  key={application.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`theme-bg-card border rounded-xl overflow-hidden transition-colors ${
-                    expanded ? 'border-[var(--accent-primary)]' : 'theme-border-glass hover:theme-bg-hover'
-                  }`}
-                >
-                  {/* Card header — always visible */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setExpandedId(expanded ? null : application.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setExpandedId(expanded ? null : application.id);
-                      }
-                    }}
-                    className={`w-full text-left p-4 cursor-pointer focus:outline-none ${expanded ? 'theme-bg-glass' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg accent-gradient text-white grid place-items-center shrink-0 shadow-sm">
-                        <FileText className="w-4.5 h-4.5 w-[18px] h-[18px]" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <h4 className="text-sm font-semibold theme-text-primary truncate leading-tight">
-                            {application.applicantName || '—'}
-                          </h4>
-                          <span className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide shrink-0 ${getStatusColor(application.status)}`}>
-                            {createElement(getStatusIcon(application.status), { className: 'w-3 h-3' })}
-                            {getTranslatedStatus(application.status)}
-                          </span>
-                        </div>
-                        <p className="text-xs theme-text-muted truncate mt-0.5">
-                          <span className="font-mono">{application.id}</span>
-                          {' \u00b7 '}
-                          {formatDate(application.applicationDate)}
-                          {application.actType ? ` \u00b7 ${application.actType}` : ''}
-                        </p>
-                      </div>
-
-                      <div className="hidden md:block text-right shrink-0">
-                        <p className="text-sm font-semibold tabular-nums theme-text-primary leading-tight">
-                          {formatCurrency(application.amount)}
-                        </p>
-                        <p className="text-[11px] theme-text-muted mt-0.5">{application.district}</p>
-                      </div>
-
-                      <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => {
-                            setEditingApplication(application);
-                            setShowNewApplicationForm(true);
-                          }}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-blue-500 transition-colors"
-                          title={t('extracted.edit_application')}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => requestDeleteApplication(application.id)}
-                          className="p-1.5 rounded-md theme-text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors"
-                          title={t('extracted.delete_application')}
-                        >
-                          <Trash className="w-4 h-4" />
-                        </button>
-                        <ChevronDown
-                          className={`w-4 h-4 theme-text-muted transition-transform duration-200 ml-1 ${expanded ? 'rotate-180' : ''}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Compact journey strip */}
-                    <div className="flex items-center mt-3" aria-hidden="true">
-                      {[0, 1, 2, 3].map((i) => {
-                        const reached = !rejected && i <= Math.min(currentStage, 3);
-                        const isCurrent = !rejected && i === Math.min(currentStage, 3);
-                        return (
-                          <React.Fragment key={i}>
-                            {i > 0 && (
-                              <div
-                                className={`flex-1 h-px mx-1 ${reached ? 'bg-emerald-500/60' : 'bg-black/10 dark:bg-white/10'}`}
-                              />
-                            )}
-                            <span
-                              className={`block w-1.5 h-1.5 rounded-full transition-colors ${
-                                reached ? 'bg-emerald-500' : 'bg-black/15 dark:bg-white/20'
-                              } ${isCurrent ? 'ring-4 ring-emerald-500/20' : ''}`}
-                            />
-                          </React.Fragment>
-                        );
-                      })}
-                      <span className={`ml-2.5 sm:hidden inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(application.status)}`}>
-                        {createElement(getStatusIcon(application.status), { className: 'w-3 h-3' })}
-                        {getTranslatedStatus(application.status)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Expanded details */}
-                  <AnimatePresence>
-                    {expanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-4 pb-4 pt-1 border-t theme-border-glass space-y-4">
-                          {/* Full journey */}
-                          <div className="flex items-start pt-4 pb-1" aria-label={t('extracted.status')}>
-                            {[
-                              t('extracted.submitted'),
-                              t('applications.inReview'),
-                              t('extracted.approved'),
-                              t('extracted.disbursed'),
-                            ].map((label, i) => {
-                              const reached = !rejected && i <= currentStage;
-                              const isCurrent = !rejected && i === currentStage;
-                              return (
-                                <React.Fragment key={label}>
-                                  {i > 0 && (
-                                    <div
-                                      className={`flex-1 h-px mt-[7px] mx-1.5 ${reached ? 'bg-emerald-500/60' : 'bg-black/10 dark:bg-white/10'}`}
-                                    />
-                                  )}
-                                  <div className="flex flex-col items-center gap-1 shrink-0 min-w-0">
-                                    <span
-                                      className={`block w-2 h-2 rounded-full transition-colors ${reached ? 'bg-emerald-500' : 'bg-black/15 dark:bg-white/20'} ${isCurrent ? 'ring-4 ring-emerald-500/20' : ''}`}
-                                    />
-                                    <span
-                                      className={`text-[9px] uppercase tracking-wide whitespace-nowrap ${isCurrent ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'theme-text-muted'}`}
-                                    >
-                                      {label}
-                                    </span>
-                                  </div>
-                                </React.Fragment>
-                              );
-                            })}
-                          </div>
-
-                          {/* Applicant snapshot */}
-                          <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-                            <Field label={t('extracted.applicant')} value={application.applicantName || '—'} />
-                            <Field label={t('extracted.aadhaar_number')} value={application.aadhaar || '—'} mono />
-                            <Field label={t('extracted.phone_number')} value={application.phone || '—'} mono />
-                            <Field label={t('extracted.location')} value={`${application.district}, ${application.state}`} />
-                            <Field label={t('extracted.act_type')} value={application.actType || '—'} />
-                            <Field label={t('extracted.amount')} value={formatCurrency(application.amount)} />
-                            <Field label={t('extracted.priority')} value={getTranslatedPriority(application.priority)} />
-                            <Field label={t('extracted.beneficiary_id')} value={application.beneficiaryId || '—'} mono />
-                          </dl>
-
-                          {/* PoA Offence Information */}
-                          {application.actType === 'PoA Act' && (application.offenceCategory || application.offenceType) && (
-                            <div className="pt-3 border-t theme-border-glass">
-                              <div className="text-sm font-medium theme-text-primary mb-2.5">{t('applications.poa_act_offence_details')}</div>
-                              <div className="space-y-1.5">
-                                {application.offenceCategory && (
-                                  <div className="flex justify-between gap-3">
-                                    <span className="text-sm theme-text-muted">{t('applications.offence_category')}</span>
-                                    <span className="text-sm font-medium theme-text-primary text-right">{application.offenceCategory}</span>
-                                  </div>
-                                )}
-                                {application.offenceType && (
-                                  <div className="flex justify-between gap-3">
-                                    <span className="text-sm theme-text-muted">{t('applications.specific_offence')}</span>
-                                    <span className="text-sm font-medium theme-text-primary text-right">{application.offenceType}</span>
-                                  </div>
-                                )}
-                                {application.offenceCategory && application.offenceType && (
-                                  <div className="flex justify-between gap-3">
-                                    <span className="text-sm theme-text-muted">{t('applications.expected_compensation')}</span>
-                                    <span className="text-sm font-medium text-green-600 dark:text-green-400 text-right">
-                                      {(() => {
-                                        const category = POA_OFFENCES[application.offenceCategory as keyof typeof POA_OFFENCES];
-                                        const compensation = category && application.offenceType in category
-                                          ? category[application.offenceType as keyof typeof category] as string | number
-                                          : null;
-                                        if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-                                          return `\u20b9${compensation.replace("-", " - \u20b9")}`;
-                                        }
-                                        return compensation ? `\u20b9${(compensation as number).toLocaleString("en-IN")}` : "\u20b90";
-                                      })()}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Case Details */}
-                          {(application.incidentDate || application.firReport || application.medicalReport || application.policeStation || application.caseNumber) && (
-                            <div className="pt-3 border-t theme-border-glass">
-                              <div className="text-sm font-medium theme-text-primary mb-2.5">{t('applications.caseDetails')}</div>
-                              <dl className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
-                                {application.incidentDate && (
-                                  <Field label={t('extracted.incident_date')} value={new Date(application.incidentDate).toLocaleDateString()} />
-                                )}
-                                {application.firReport && (
-                                  <Field label={t('applications.firReport')} value={application.firReport} />
-                                )}
-                                {application.medicalReport && (
-                                  <Field label={t('applications.medicalReport')} value={application.medicalReport} />
-                                )}
-                                {application.policeStation && (
-                                  <Field label={t('applications.policeStation')} value={application.policeStation} />
-                                )}
-                                {application.caseNumber && (
-                                  <Field label={t('applications.caseNumber')} value={application.caseNumber} mono />
-                                )}
-                              </dl>
-                            </div>
-                          )}
-
-                          <p className="text-xs theme-text-muted pt-1">
-                            {t('extracted.submitted')}: {formatDate(application.applicationDate)}
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-        {/* Toast container */}
-        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-          {toasts.map(tst => {
-            const toastClass = tst.type === 'success'
-              ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
-              : tst.type === 'error'
-                ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
-                : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
-
-            return (
-              <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm">{tst.message}</div>
-                  <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
-                </div>
-              </div>
-            );
-          })}
+      {/* Tracker list */}
+      {filteredApplications.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title={applications.length === 0 ? t('extracted.no_applications_yet') : t('extracted.no_matching_applications')}
+          hint={
+            applications.length === 0
+              ? t('extracted.create_your_first_application')
+              : t('extracted.try_adjusting_search_terms')
+          }
+          actionIcon={Plus}
+          actionLabel={applications.length === 0 && userBeneficiary ? t('extracted.new_application') : undefined}
+          onAction={openNewApplication}
+        />
+      ) : (
+        <div className="space-y-2.5">
+          {filteredApplications.map((application) => (
+            <ApplicationTrackerCard
+              key={application.id}
+              application={application}
+              expanded={expandedId === application.id}
+              onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
+              onEdit={(a) => {
+                setEditingApplication(a);
+                setShowNewApplicationForm(true);
+              }}
+              onDelete={(id) => setDeleteTargetId(id)}
+              t={t as TranslateFn}
+            />
+          ))}
         </div>
+      )}
+      {/* Toast container */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {toasts.map(tst => {
+          const toastClass = tst.type === 'success'
+            ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
+            : tst.type === 'error'
+              ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
+              : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
+
+          return (
+            <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
+              <div className="flex items-center justify-between">
+                <div className="text-sm">{tst.message}</div>
+                <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

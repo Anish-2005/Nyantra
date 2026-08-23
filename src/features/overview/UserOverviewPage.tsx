@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import LoadingState from '@/components/LoadingState';
+import { StatBand } from '@/components/dashboard/ui';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -264,20 +265,7 @@ export default function UserDashboard() {
         {/* Left column */}
         <div className="lg:col-span-2 space-y-4 min-w-0">
           {/* Stat band */}
-          <div className="grid grid-cols-2 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
-            {statCells.map(({ label, value, icon: Icon }, i) => (
-              <div key={label} className={`theme-bg-card p-4 relative overflow-hidden group ${i === statCells.length - 1 && stats.totalApplications === 0 ? 'col-span-2 lg:col-span-1' : ''}`}>
-                <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
-                  <span className="w-6 h-6 rounded-md theme-bg-glass grid place-items-center shrink-0">
-                    <Icon className="w-3 h-3" />
-                  </span>
-                  <span className="truncate">{label}</span>
-                </div>
-                <p className="text-2xl font-semibold tracking-tight theme-text-primary mt-2 tabular-nums">{value}</p>
-                <div className="absolute inset-x-0 bottom-0 h-0.5 accent-gradient scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-              </div>
-            ))}
-          </div>
+          <StatBand cells={statCells} />
 
           {/* Pipeline */}
           <div className="theme-bg-card border theme-border-glass rounded-xl p-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">

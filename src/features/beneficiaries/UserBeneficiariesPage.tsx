@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, createElement } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
@@ -7,47 +7,30 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardView } from '@/context/DashboardViewContext';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import LoadingState from '@/components/LoadingState';
+import { PageHeader, EmptyState } from '@/components/dashboard/ui';
+import BeneficiaryHero from './components/BeneficiaryHero';
+import VerificationRail from './components/VerificationRail';
+import type { Beneficiary } from './helpers';
+import {
+  humanize,
+  formatDate,
+  getStatusColor,
+  getVerificationColor,
+  getStatusIcon,
+  getVerificationIcon,
+} from './helpers';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import {
-  Plus, Edit, Trash, Eye,
+  Plus,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
   Shield, FileText, File,
   Loader2, User, Landmark,
-  UserPlus, MapPin, Calendar, Phone
+  UserPlus, Phone
 } from 'lucide-react';
 
 // Display helper: tolerate missing enum-ish fields coming from Firestore
-const humanize = (v?: string | null) => (v ?? '').replace(/-/g, ' ');
-
-type Beneficiary = {
-  id: string;
-  ownerId: string;
-  name: string;
-  fatherName: string;
-  aadhaarNumber: string;
-  phone: string;
-  email: string;
-  district: string;
-  state: string;
-  address: string;
-  registrationDate: any;
-  priority: string;
-  assignedOfficer: string;
-  category: string;
-  age: number | null;
-  gender: string;
-  maritalStatus: string;
-  bankAccount: string;
-  ifsc: string;
-  status: string;
-  verificationStatus: string;
-  documents: number;
-  lastUpdate: any;
-  createdAt: any;
-  scStCertificate: string;
-};
 
 const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
 
@@ -608,61 +591,6 @@ export default function BeneficiariesPage() {
     }
   };
 
-  const formatDate = (date: any) => {
-    if (!date) return '—';
-    try {
-      if (typeof date?.toDate === 'function') {
-        const d = date.toDate();
-        return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-      }
-      const d = new Date(date);
-      if (Number.isNaN(d.getTime())) return String(date);
-      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-    } catch { return String(date); }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'disbursed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-      case 'pending-verification': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getVerificationColor = (status: string) => {
-    switch (status) {
-      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'pending-verification': Clock,
-      'verified': BadgeCheck,
-      'disbursed': Banknote,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
-  const getVerificationIcon = (status: string) => {
-    const icons = {
-      'verified': Shield,
-      'pending': Clock,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
   // Single-beneficiary model: one profile per user
   const profile = beneficiaries.length > 0 ? beneficiaries[0] : null;
 
@@ -672,7 +600,6 @@ export default function BeneficiariesPage() {
     { icon: Landmark, ok: !!profile.bankAccount && !!profile.ifsc, label: t('extracted.bank_account'), detail: profile.ifsc || t('extracted.not_provided') },
     { icon: FileText, ok: !!profile.scStCertificate, label: t('extracted.sc_st_certificate'), detail: profile.scStCertificate ? t('extracted.view_certificate') : t('extracted.not_provided') },
   ] : [];
-  const completedChecks = profileChecks.filter(c => c.ok).length;
 
   if (!user) {
     return (
@@ -703,29 +630,21 @@ export default function BeneficiariesPage() {
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between gap-3"
+      <PageHeader
+        title={t('extracted.beneficiary_management')}
+        highlight={t('extracted.dashboard')}
+        subtitle={t('extracted.manage_your_beneficiary_information')}
       >
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.beneficiary_management')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.manage_your_beneficiary_information')}
-          </p>
-        </div>
         {beneficiaries.length === 0 && (
           <button
             onClick={createNewBeneficiary}
-            className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity flex-shrink-0"
+            className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t('extracted.add_beneficiary')}</span>
           </button>
         )}
-      </motion.div>
+      </PageHeader>
 
       {/* Toast container */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
@@ -777,167 +696,35 @@ export default function BeneficiariesPage() {
 
       {/* Single Beneficiary Profile */}
       {!profile ? (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="theme-bg-card theme-border-glass border rounded-xl px-6 py-16 text-center"
-        >
-          <div className="mx-auto w-16 h-16 rounded-2xl accent-gradient text-white grid place-items-center mb-4 shadow-lg">
-            <UserPlus className="w-7 h-7" />
-          </div>
-          <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
-            {t('extracted.no_beneficiaries_yet')}
-          </h2>
-          <p className="text-sm theme-text-muted mt-1 max-w-md mx-auto">
-            {t('extracted.add_your_beneficiary_details_to_get_started')}
-          </p>
-          <button
-            onClick={createNewBeneficiary}
-            className="mt-5 h-10 px-4 rounded-md accent-gradient text-white text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            {t('extracted.add_beneficiary')}
-          </button>
-        </motion.div>
+        <EmptyState
+          icon={UserPlus}
+          title={t('extracted.no_beneficiaries_yet')}
+          hint={t('extracted.add_your_beneficiary_details_to_get_started')}
+          actionIcon={Plus}
+          actionLabel={t('extracted.add_beneficiary')}
+          onAction={createNewBeneficiary}
+        />
       ) : (
         <>
           {/* ID card hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden relative"
-          >
-            <div className="absolute inset-x-0 top-0 h-1 accent-gradient" aria-hidden="true" />
-            <div className="p-5 flex flex-col sm:flex-row sm:items-start gap-4">
-              <div className="w-14 h-14 rounded-xl accent-gradient text-white text-lg font-bold grid place-items-center uppercase shrink-0 shadow-md">
-                {(profile.name || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-                    {profile.name || '\u2014'}
-                  </h2>
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-500/10 text-blue-600 dark:text-blue-400 flex-shrink-0">
-                    {profile.category}
-                  </span>
-                </div>
-                <p className="text-xs theme-text-muted font-mono mt-0.5">{profile.id}</p>
-
-                <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(profile.status)}`}>
-                    {createElement(getStatusIcon(profile.status), { className: 'w-3 h-3' })}
-                    {humanize(profile.status)}
-                  </span>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getVerificationColor(profile.verificationStatus)}`}>
-                    {createElement(getVerificationIcon(profile.verificationStatus), { className: 'w-3 h-3' })}
-                    {humanize(profile.verificationStatus)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4 mt-3 flex-wrap text-xs theme-text-muted">
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
-                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate">{profile.district}, {profile.state}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 tabular-nums">
-                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                    {formatDate(profile.registrationDate)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto sm:flex-col lg:flex-row">
-                {profile.scStCertificate && (
-                  <a
-                    href={profile.scStCertificate}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-md border theme-border-glass grid place-items-center theme-text-muted hover:text-green-500 hover:theme-bg-glass transition-colors"
-                    title={t('extracted.view_certificate')}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </a>
-                )}
-                <button
-                  onClick={() => {
-                    setEditingBeneficiary(profile);
-                    setShowNewBeneficiaryForm(true);
-                  }}
-                  className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center justify-center gap-1.5 transition-opacity"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  {t('extracted.edit')}
-                </button>
-                <button
-                  onClick={() => confirmDelete(profile.id)}
-                  className="w-9 h-9 rounded-md border theme-border-glass grid place-items-center theme-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                  title={t('extracted.delete')}
-                >
-                  <Trash className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          <BeneficiaryHero
+            profile={profile}
+            onEdit={(b) => {
+              setEditingBeneficiary(b);
+              setShowNewBeneficiaryForm(true);
+            }}
+            onDelete={confirmDelete}
+            t={t}
+          />
 
           {/* Content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
             {/* Verification rail */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden lg:sticky lg:top-20"
-            >
-              <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.verification')}</h3>
-                <Shield className={`w-4 h-4 flex-shrink-0 ${completedChecks === profileChecks.length ? 'text-emerald-500' : 'theme-text-muted'}`} />
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="tabular-nums theme-text-primary leading-none">
-                    <span className="text-3xl font-semibold tracking-tight">{completedChecks}</span>
-                    <span className="text-base theme-text-muted">/{profileChecks.length}</span>
-                  </p>
-                  <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.completion_rate')}</span>
-                </div>
-                <div
-                  className="mt-2.5 h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden"
-                  role="progressbar"
-                  aria-valuenow={completedChecks}
-                  aria-valuemin={0}
-                  aria-valuemax={profileChecks.length}
-                >
-                  <div
-                    className="h-full rounded-full accent-gradient transition-all duration-500"
-                    style={{ width: `${profileChecks.length > 0 ? (completedChecks / profileChecks.length) * 100 : 0}%` }}
-                  />
-                </div>
-
-                <div className="mt-5 relative">
-                  <div className="absolute left-[15px] top-3 bottom-3 w-px bg-black/10 dark:bg-white/10" aria-hidden="true" />
-                  <div className="space-y-4 relative">
-                    {profileChecks.map(({ icon: Icon, ok, label, detail }) => (
-                      <div key={label} className="flex items-start gap-3 relative">
-                        <span
-                          className={`relative z-10 w-8 h-8 rounded-full grid place-items-center shrink-0 transition-colors ${
-                            ok ? 'bg-emerald-500 text-white shadow-sm' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </span>
-                        <div className="min-w-0 pt-0.5">
-                          <p className="text-xs font-semibold theme-text-primary truncate leading-tight">{label}</p>
-                          <p className="text-[11px] theme-text-muted truncate leading-tight mt-0.5">{detail}</p>
-                        </div>
-                        {!ok && <AlertCircle className="w-3.5 h-3.5 text-amber-500 ml-auto shrink-0 mt-1" />}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <VerificationRail
+              title={t('extracted.verification')}
+              completionLabel={t('extracted.completion_rate')}
+              checks={profileChecks}
+            />
 
             {/* Details */}
             <div className="lg:col-span-2 space-y-4 min-w-0">

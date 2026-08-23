@@ -3,41 +3,23 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import {
   Search, Download, Eye, X, FileText,
-  BarChart3,
-  Database,
-  Activity,
   CheckCircle2,
   Clock
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import { db } from '@/lib/firebase';
-
-// Report type definition
-type Report = {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  frequency: string;
-  status: 'completed' | 'processing' | 'scheduled' | 'failed';
-  fileSize: string | null;
-  fileFormat: string;
-  generatedDate: string | null;
-  generatedBy: string | null;
-  schedule: any;
-  lastRun: string | null;
-  nextRun: string | null;
-  recordCount: number | null;
-  description: string;
-  parameters: any;
-  downloadCount: number;
-  isScheduled: boolean;
-  recipients: string[];
-  columns: string[];
-  createdAt?: string;
-  updatedAt?: string;
-};
+import { PageHeader, StatBand, EmptyState } from '@/components/dashboard/ui';
+import ReportCard from './components/ReportCard';
+import type { Report } from './helpers';
+import {
+  CATEGORY_ICONS,
+  FORMAT_COLORS,
+  formatDate,
+  formatDateTime,
+  formatFileSize,
+  getStatusPillClass,
+} from './helpers';
 
 // Firestore-backed reports hook
 const useFirestoreReports = (setState: React.Dispatch<React.SetStateAction<Report[]>>) => {
@@ -82,81 +64,6 @@ const useFirestoreReports = (setState: React.Dispatch<React.SetStateAction<Repor
   }, [setState]);
 };
 
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  financial: Database,
-  compliance: FileText,
-  performance: BarChart3,
-  statistical: Activity,
-  analytical: BarChart3,
-  technical: Database
-};
-
-const getTypePillClass = (type: string) => {
-  switch ((type || '').toLowerCase()) {
-    case 'financial': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-    case 'compliance': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-    case 'performance': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-    case 'analytical': return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400';
-    case 'statistical': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-    case 'technical': return 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400';
-    default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-  }
-};
-
-const getFormatPillClass = (format: string) => {
-  switch ((format || '').toLowerCase()) {
-    case 'pdf': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-    case 'csv': return 'bg-teal-500/10 text-teal-600 dark:text-teal-400';
-    case 'excel':
-    case 'xlsx': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-    default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-  }
-};
-
-const getStatusPillClass = (status: string) => {
-  switch (status) {
-    case 'completed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-    case 'processing': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-    case 'scheduled': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-    case 'failed': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-    default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-  }
-};
-
-const formatDate = (s?: string | null) => {
-  if (!s) return '--';
-  try {
-    const d = new Date(s);
-    return new Intl.DateTimeFormat('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).format(d);
-  } catch {
-    return '--';
-  }
-};
-
-const formatDateTime = (s?: string | null) => {
-  if (!s) return '--';
-  try {
-    const d = new Date(s);
-    return new Intl.DateTimeFormat('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(d);
-  } catch {
-    return '--';
-  }
-};
-
-const formatFileSize = (size: string | null) => {
-  return size || '--';
-};
-
 const ghostBtn =
   "inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
@@ -170,123 +77,6 @@ const Item = ({ label, children }: { label: string; children: React.ReactNode })
 const Num = ({ children }: { children: React.ReactNode }) => (
   <span className="tabular-nums">{children}</span>
 );
-
-// Category → left spine color (card library metaphor)
-const SPINE_BG: Record<string, string> = {
-  financial: 'bg-blue-500/70',
-  compliance: 'bg-purple-500/70',
-  performance: 'bg-emerald-500/70',
-  analytical: 'bg-indigo-500/70',
-  statistical: 'bg-amber-500/70',
-  technical: 'bg-cyan-500/70',
-};
-
-// Format → composition-bar segment color
-const FORMAT_COLORS: Record<string, string> = {
-  pdf: 'bg-red-500',
-  csv: 'bg-teal-500',
-  excel: 'bg-green-500',
-  xlsx: 'bg-green-500',
-};
-
-const ReportCard = ({ report, selected, onOpen, onDownload, t }: {
-  report: Report;
-  selected: boolean;
-  onOpen: () => void;
-  onDownload: (e: React.MouseEvent) => void;
-  t: (key: string) => string;
-}) => {
-  const Icon = CATEGORY_ICONS[report.category] || FileText;
-
-  return (
-    <div
-      onClick={onOpen}
-      className={`p-3.5 rounded-lg border cursor-pointer transition-colors relative overflow-hidden ${
-        selected
-          ? 'border-[var(--accent-primary)] theme-bg-glass'
-          : 'theme-border-glass hover:theme-bg-hover'
-      }`}
-    >
-      <span className={`absolute left-0 inset-y-0 w-0.5 ${SPINE_BG[report.category] || 'bg-transparent'}`} />
-      <div className="flex items-start justify-between gap-2 mb-2.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-md theme-bg-glass flex items-center justify-center theme-text-secondary shrink-0">
-            <Icon className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-sm font-semibold theme-text-primary truncate leading-tight">
-              {report.name}
-            </h4>
-            <p className="text-xs theme-text-muted truncate mt-0.5 font-mono">
-              {report.id}
-            </p>
-          </div>
-        </div>
-        <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getTypePillClass(report.type)}`}>
-          {report.type}
-        </span>
-      </div>
-
-      {report.description && (
-        <p className="text-xs theme-text-secondary line-clamp-2 mb-3">
-          {report.description}
-        </p>
-      )}
-
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
-        <div className="min-w-0">
-          <dt className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.records')}</dt>
-          <dd className="text-sm font-medium tabular-nums theme-text-primary mt-0.5 truncate">{report.recordCount ?? '--'}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.size')}</dt>
-          <dd className="text-sm font-medium tabular-nums theme-text-primary mt-0.5 truncate">{formatFileSize(report.fileSize)}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.generated_date')}</dt>
-          <dd className="text-sm font-medium tabular-nums theme-text-primary mt-0.5 truncate">{formatDate(report.generatedDate)}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.frequency')}</dt>
-          <dd className="text-sm font-medium capitalize theme-text-primary mt-0.5 truncate">{report.frequency}</dd>
-        </div>
-      </dl>
-
-      <div className="flex items-center justify-between gap-2 pt-2.5 border-t theme-border-glass">
-        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusPillClass(report.status)}`}>
-            {report.status}
-          </span>
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getFormatPillClass(report.fileFormat)}`}>
-            {report.fileFormat}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-            className={ghostBtn}
-            title={t('extracted.view')}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('extracted.view')}</span>
-          </button>
-          <button
-            onClick={onDownload}
-            disabled={report.status !== 'completed'}
-            className={ghostBtn}
-            title={t('extracted.download')}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('extracted.download')}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const UserReportsPage = () => {
   const { t } = useLocale();
@@ -436,36 +226,22 @@ const UserReportsPage = () => {
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.reports')}{' '}
-            <span className="text-accent-gradient">{t('extracted.download')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.access_download_view_available_reports')}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={t('extracted.reports')}
+        highlight={t('extracted.download')}
+        subtitle={t('extracted.access_download_view_available_reports')}
+      />
 
       {/* Stats Band */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
-        {[
+      <StatBand
+        cols={4}
+        cells={[
           { label: t('extracted.total'), value: stats.total, icon: FileText },
           { label: t('extracted.completed'), value: stats.completed, icon: CheckCircle2 },
           { label: t('extracted.scheduled'), value: stats.scheduled, icon: Clock },
           { label: t('extracted.downloads'), value: stats.downloads, icon: Download }
-        ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="theme-bg-card p-3.5 relative overflow-hidden group">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
-              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">{label}</span>
-            </div>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{value}</p>
-            <div className="absolute inset-x-0 bottom-0 h-0.5 accent-gradient scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-          </div>
-        ))}
-      </div>
+        ]}
+      />
 
       {/* Format Composition */}
       <div className="theme-bg-card theme-border-glass border rounded-xl px-4 py-3">
@@ -560,15 +336,11 @@ const UserReportsPage = () => {
 
           {/* Empty State */}
           {filteredReports.length === 0 && (
-            <div className="text-center py-12 theme-bg-glass rounded-xl border theme-border-glass">
-              <FileText className="w-8 h-8 theme-text-muted mx-auto mb-3" />
-              <p className="text-sm font-medium theme-text-primary mb-1">
-                {t('extracted.no_reports_found')}
-              </p>
-              <p className="text-xs theme-text-muted">
-                {t('extracted.try_adjusting_filters')}
-              </p>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title={t('extracted.no_reports_found')}
+              hint={t('extracted.try_adjusting_filters')}
+            />
           )}
         </div>
       </div>

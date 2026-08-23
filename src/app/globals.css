@@ -211,6 +211,10 @@ body {
           scrollbar-color: #06b6d4 rgba(15, 23, 42, 0.5);
         }
 
+        /* Hidden scrollbar utility (horizontal pill rows etc.) */
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Custom Select Dropdown Styling */
 select {
   -webkit-appearance: none;

@@ -4,6 +4,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
 import LoadingState from '@/components/LoadingState';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import { PageHeader } from '@/components/dashboard/ui';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { MessageSquare, Pencil, Send, Star, Trash2 } from 'lucide-react';
@@ -164,14 +165,11 @@ export default function FeedbackPage() {
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header */}
-      <div>
-        <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-          {t('extracted.feedback') || 'Feedback'} <span className="text-accent-gradient">{t('extracted.center')}</span>
-        </h1>
-        <p className="text-xs theme-text-muted mt-0.5 truncate">
-          {t('extracted.share_your_thoughts') || 'Share your feedback and help us improve our services'}
-        </p>
-      </div>
+      <PageHeader
+        title={t('extracted.feedback') || 'Feedback'}
+        highlight={t('extracted.center')}
+        subtitle={t('extracted.share_your_thoughts') || 'Share your feedback and help us improve our services'}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Content */}

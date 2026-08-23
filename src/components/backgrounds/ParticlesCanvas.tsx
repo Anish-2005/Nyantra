@@ -25,16 +25,21 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
       const THREE = await import('three');
       if (cancelled) return;
 
+      const isMobile = window.innerWidth < 768;
+      const prefersReducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       const renderer = new THREE.WebGLRenderer({
         canvas: canvasRef.current!,
         alpha: true,
-        antialias: true
+        antialias: !isMobile
       });
 
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
       camera.position.z = 5;
       renderer.setClearColor(0x000000, 0);
 
@@ -50,7 +55,7 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
       } catch { }
 
       const particlesGeometry = new THREE.BufferGeometry();
-      const particlesCount = window.innerWidth < 768 ? 500 : 1000; // Reduce particles on mobile
+      const particlesCount = isMobile ? 350 : 1000;
       const posArray = new Float32Array(particlesCount * 3);
 
       for (let i = 0; i < particlesCount * 3; i++) {
@@ -79,7 +84,7 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
       });
 
       const linesPositions: number[] = [];
-      const lineCount = window.innerWidth < 768 ? 40 : 80; // Reduce lines on mobile
+      const lineCount = isMobile ? 30 : 80;
       for (let i = 0; i < lineCount; i++) {
         const x1 = (Math.random() - 0.5) * 8;
         const y1 = (Math.random() - 0.5) * 8;
@@ -94,34 +99,63 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
       const linesMesh = new THREE.LineSegments(linesGeometry, linesMaterial);
       scene.add(linesMesh);
 
-      let animationId: number | null = null;
-      const animate = () => {
-        if (cancelled) return;
-        animationId = requestAnimationFrame(animate);
+      // Render one frame even when animation is off (reduced motion)
+      const step = () => {
         particlesMesh.rotation.y += 0.0003;
         particlesMesh.rotation.x += 0.0001;
         linesMesh.rotation.y -= 0.0002;
+      };
+
+      let animationId: number | null = null;
+      const renderFrame = () => {
         try {
           renderer.render(scene, camera);
-        } catch (e) {
+        } catch {
           // suppress WebGL uniform/program-related errors which can occur on context loss
         }
       };
+      const animate = () => {
+        if (cancelled || document.hidden) {
+          animationId = null;
+          return;
+        }
+        animationId = requestAnimationFrame(animate);
+        step();
+        renderFrame();
+      };
 
-      animate();
+      if (prefersReducedMotion) {
+        renderFrame(); // static field, no loop
+      } else {
+        animate();
+      }
 
+      // Resume the loop when the tab becomes visible again
+      const handleVisibility = () => {
+        if (prefersReducedMotion || cancelled) return;
+        if (!document.hidden && animationId === null) animate();
+      };
+
+      let resizeTimer: ReturnType<typeof setTimeout> | null = null;
       const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderFrame();
+        }, 150);
       };
 
       window.addEventListener('resize', handleResize);
+      document.addEventListener('visibilitychange', handleVisibility);
 
       return () => {
         cancelled = true;
-        window.removeEventListener('resize', handleResize);
         if (animationId !== null) cancelAnimationFrame(animationId);
+        if (resizeTimer) clearTimeout(resizeTimer);
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener('visibilitychange', handleVisibility);
         renderer.dispose();
         particlesGeometry.dispose();
         particlesMaterial.dispose();
@@ -144,5 +178,3 @@ export const ParticlesCanvas: React.FC<ParticlesCanvasProps> = ({
     />
   );
 };
-
-

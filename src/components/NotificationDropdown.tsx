@@ -115,6 +115,7 @@ export default function NotificationDropdown({ anchorRef, triggerRef, isOpen, on
         top: `${top}px`,
         position: 'fixed',
         width: typeof width === 'number' ? `${width}px` : width,
+        maxWidth: 'calc(100vw - 1rem)',
         background: dropdownBgVar || bgFallback,
         border: `1px solid ${borderVar || borderFallback}`,
         color: textVar || textFallback,

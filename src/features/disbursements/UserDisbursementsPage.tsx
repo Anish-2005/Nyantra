@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import LoadingState from '@/components/LoadingState';
+import { PageHeader, StatBand } from '@/components/dashboard/ui';
 import { Banknote, CheckCircle, Clock, PlayCircle, X, XCircle } from 'lucide-react';
 
 const PILL_BASE =
@@ -566,21 +567,17 @@ export default function DisbursementsPage() {
   return (
     <div className="space-y-4 max-w-[1400px]" onClick={markPageAsViewed}>
       {/* Header Section */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.my_disbursements')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.track_your_payment_disbursements')}
-          </p>
-        </div>
+      <PageHeader
+        title={t('extracted.my_disbursements')}
+        highlight={t('extracted.dashboard')}
+        subtitle={t('extracted.track_your_payment_disbursements')}
+      >
         {newDisbursementAlerts.length > 0 && (
-          <span className="mt-1 shrink-0 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
+          <span className="mt-1 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
             {newDisbursementAlerts.length}
           </span>
         )}
-      </div>
+      </PageHeader>
 
       {/* Disbursement Alerts */}
       <AnimatePresence>
@@ -654,99 +651,65 @@ export default function DisbursementsPage() {
       </AnimatePresence>
 
       {/* Financial Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
-        <div className="theme-bg-card p-3.5">
-          <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-            {t('extracted.total_approved')}
-          </p>
-          <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-            {formatCurrency(total)}
-          </p>
-          <p className="text-[11px] theme-text-muted mt-0.5">
-            {t('extracted.across_disbursements')} {filteredDisbursements.length}
-          </p>
-        </div>
-
-        <div className="theme-bg-card p-3.5">
-          <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-            {t('extracted.completed')}
-          </p>
-          <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-            {formatCurrency(completedAmount)}
-          </p>
-          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
-            {overallCompletionPercentage}% received
-          </p>
-        </div>
-
-        <div className="theme-bg-card p-3.5">
-          <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-            {t('extracted.pending')}
-          </p>
-          <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-            {formatCurrency(pendingAmount)}
-          </p>
-          <p className="text-[11px] font-medium text-red-600 dark:text-red-400 mt-0.5 tabular-nums">
-            {100 - overallCompletionPercentage}% remaining
-          </p>
-        </div>
-
-        <div className="theme-bg-card p-3.5">
-          <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-            {t('extracted.successful_disbursements')}
-          </p>
-          <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-            {filteredDisbursements.filter(d => d.status === 'completed').length}
-          </p>
-          <p className="text-[11px] theme-text-muted mt-0.5">
-            {t('extracted.of')} {filteredDisbursements.length}
-          </p>
-        </div>
-      </div>
+      <StatBand
+        cells={[
+          {
+            label: t('extracted.total_approved'),
+            value: formatCurrency(total),
+            sub: <span className="theme-text-muted">{t('extracted.across_disbursements')} {filteredDisbursements.length}</span>,
+          },
+          {
+            label: t('extracted.completed'),
+            value: formatCurrency(completedAmount),
+            sub: <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">{overallCompletionPercentage}% received</span>,
+          },
+          {
+            label: t('extracted.pending'),
+            value: formatCurrency(pendingAmount),
+            sub: <span className="font-medium text-red-600 dark:text-red-400 tabular-nums">{100 - overallCompletionPercentage}% remaining</span>,
+          },
+          {
+            label: t('extracted.successful_disbursements'),
+            value: filteredDisbursements.filter(d => d.status === 'completed').length,
+            sub: <span className="theme-text-muted">{t('extracted.of')} {filteredDisbursements.length}</span>,
+          },
+        ]}
+      />
 
       {/* Progressive Payments Summary */}
       {progressiveDisbursements.length > 0 && (
-        <div className="grid grid-cols-3 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
-          <div className="theme-bg-card p-3.5">
-            <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              {t('disbursements.progressive_total')}
-            </p>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-              {formatCurrency(totalProgressiveAmount)}
-            </p>
-            <p className="text-[11px] theme-text-muted mt-0.5">
-              {progressiveDisbursements.length} {t('extracted.disbursements_found')}
-            </p>
-          </div>
-
-          <div className="theme-bg-card p-3.5">
-            <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              {t('disbursements.installments_released')}
-            </p>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-              {formatCurrency(completedProgressiveAmount)}
-            </p>
-            <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
-              {totalProgressiveAmount > 0
-                ? Math.round((completedProgressiveAmount / totalProgressiveAmount) * 100)
-                : 0}% released
-            </p>
-          </div>
-
-          <div className="theme-bg-card p-3.5">
-            <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              {t('disbursements.installments_remaining')}
-            </p>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-              {formatCurrency(pendingProgressiveAmount)}
-            </p>
-            <p className="text-[11px] font-medium text-red-600 dark:text-red-400 mt-0.5 tabular-nums">
-              {totalProgressiveAmount > 0
-                ? Math.round((pendingProgressiveAmount / totalProgressiveAmount) * 100)
-                : 0}% remaining
-            </p>
-          </div>
-        </div>
+        <StatBand
+          cols={3}
+          cells={[
+            {
+              label: t('disbursements.progressive_total'),
+              value: formatCurrency(totalProgressiveAmount),
+              sub: <span className="theme-text-muted">{progressiveDisbursements.length} {t('extracted.disbursements_found')}</span>,
+            },
+            {
+              label: t('disbursements.installments_released'),
+              value: formatCurrency(completedProgressiveAmount),
+              sub: (
+                <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+                  {totalProgressiveAmount > 0
+                    ? Math.round((completedProgressiveAmount / totalProgressiveAmount) * 100)
+                    : 0}% released
+                </span>
+              ),
+            },
+            {
+              label: t('disbursements.installments_remaining'),
+              value: formatCurrency(pendingProgressiveAmount),
+              sub: (
+                <span className="font-medium text-red-600 dark:text-red-400 tabular-nums">
+                  {totalProgressiveAmount > 0
+                    ? Math.round((pendingProgressiveAmount / totalProgressiveAmount) * 100)
+                    : 0}% remaining
+                </span>
+              ),
+            },
+          ]}
+        />
       )}
 
       {/* Disbursement History */}

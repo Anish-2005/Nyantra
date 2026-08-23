@@ -7,6 +7,7 @@ import { collection, query, onSnapshot, doc, setDoc, updateDoc, where, serverTim
 import { db } from '@/lib/firebase';
 import { useLocale } from '@/context/LocaleContext';
 import LoadingState from '@/components/LoadingState';
+import { PageHeader, StatBand } from '@/components/dashboard/ui';
 import {
   Plus, X, Search, Eye, Clock, Zap, CheckCircle2, AlertTriangle,
   Mic, MicOff, Send, Shield, MessageCircle, Loader2, FileText, MessageSquare
@@ -733,25 +734,20 @@ export default function GrievancePage() {
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.grievance_portal')} <span className="text-accent-gradient">{t('extracted.dashboard')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.file_and_track_grievances')}
-          </p>
-        </div>
-
+      <PageHeader
+        title={t('extracted.grievance_portal')}
+        highlight={t('extracted.dashboard')}
+        subtitle={t('extracted.file_and_track_grievances')}
+      >
         <button
           onClick={() => setShowNewGrievanceForm(true)}
           disabled={beneficiaries.length === 0}
-          className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-3.5 h-3.5" />
           {t('extracted.file_new_grievance')}
         </button>
-      </div>
+      </PageHeader>
 
       {loading || (user && beneficiaries.length === 0) ? (
         <LoadingState message={t('extracted.loading_grievances')} />
@@ -781,24 +777,14 @@ export default function GrievancePage() {
       ) : (
         <>
           {/* Stats hairline band */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
-            {[
+          <StatBand
+            cells={[
               { label: t('extracted.total'), value: grievances.length, icon: MessageSquare, dot: '' },
               { label: t('extracted.open_1'), value: openCount, icon: Clock, dot: 'bg-amber-500' },
               { label: t('extracted.in_progress'), value: inProgressCount, icon: Zap, dot: 'bg-blue-500' },
               { label: t('extracted.resolved'), value: resolvedCount, icon: CheckCircle2, dot: 'bg-emerald-500' },
-            ].map(({ label, value, icon: Icon, dot }) => (
-              <div key={label} className="theme-bg-card p-3.5 relative overflow-hidden group">
-                <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{label}</span>
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ml-auto ${dot || 'accent-gradient'}`} />
-                </div>
-                <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{value}</p>
-                <div className="absolute inset-x-0 bottom-0 h-0.5 accent-gradient scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-              </div>
-            ))}
-          </div>
+            ]}
+          />
 
           {/* Grievances List */}
           <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
