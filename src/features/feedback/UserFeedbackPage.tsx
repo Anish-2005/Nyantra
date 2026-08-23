@@ -7,20 +7,10 @@ import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import { PageHeader } from '@/components/dashboard/ui';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { MessageSquare, Pencil, Send, Star, Trash2 } from 'lucide-react';
-
-type Feedback = {
-  id: string;
-  userId: string;
-  subject: string;
-  message: string;
-  rating: number; // 1-5 stars
-  status: 'open' | 'in-review' | 'resolved';
-  createdAt: any;
-  updatedAt: any;
-};
-
-const INPUT_CLASS = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
+import { MessageSquare, Send, Star } from 'lucide-react';
+import type { Feedback } from './helpers';
+import { INPUT_CLASS } from './helpers';
+import FeedbackCard from './components/FeedbackCard';
 
 export default function FeedbackPage() {
   const { user } = useAuth();
@@ -132,27 +122,6 @@ export default function FeedbackPage() {
     } catch (error) {
       console.error('Error deleting feedback:', error);
       alert('Failed to delete feedback. Please try again.');
-    }
-  };
-
-  const getRatingStars = (value: number) => (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`w-3.5 h-3.5 ${star <= value ? 'fill-current text-amber-400' : 'theme-text-muted'}`}
-        />
-      ))}
-      <span className="ml-1 text-[11px] theme-text-muted tabular-nums">{value}/5</span>
-    </div>
-  );
-
-  const getStatusPillClass = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'in-review': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'resolved': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -294,58 +263,13 @@ export default function FeedbackPage() {
                 </div>
               ) : (
                 feedbacks.map((feedback) => (
-                  <div key={feedback.id} className="theme-bg-card theme-border-glass border rounded-lg p-3.5">
-                    <div className="flex items-start justify-between gap-3 mb-2.5">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-semibold text-sm theme-text-primary truncate leading-tight">
-                            {feedback.subject}
-                          </h4>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide shrink-0 ${getStatusPillClass(feedback.status)}`}>
-                            {(feedback.status ?? '').replace('-', ' ')}
-                          </span>
-                        </div>
-                        <div className="mt-1.5">
-                          {getRatingStars(feedback.rating)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => editFeedback(feedback)}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                          title={t('extracted.edit') || 'Edit'}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTargetId(feedback.id)}
-                          className="p-1.5 rounded-md theme-text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors"
-                          title={t('extracted.delete') || 'Delete'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-[13px] theme-text-secondary leading-relaxed">
-                      {feedback.message}
-                    </p>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 mt-2.5 pt-2.5 border-t theme-border-glass">
-                      <span className="text-[11px] theme-text-muted tabular-nums">
-                        {t('extracted.created') || 'Created'}: {feedback.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}
-                        {feedback.updatedAt && feedback.updatedAt.toDate?.().getTime() !== feedback.createdAt?.toDate?.().getTime() && (
-                          <span className="ml-2">
-                            • {t('extracted.updated') || 'Updated'}: {feedback.updatedAt.toDate?.().toLocaleDateString()}
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-[11px] theme-text-muted font-mono">
-                        #{feedback.id.slice(-6)}
-                      </span>
-                    </div>
-                  </div>
+                  <FeedbackCard
+                    key={feedback.id}
+                    feedback={feedback}
+                    onEdit={editFeedback}
+                    onDelete={setDeleteTargetId}
+                    t={t}
+                  />
                 ))
               )}
             </div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
@@ -11,44 +11,11 @@ import {
   FileText, Clock, CheckCircle2, Banknote,
   Plus, ClipboardList, ShieldAlert, Users, ArrowRight, AlertCircle
 } from 'lucide-react';
-
-type Submission = {
-  id: string;
-  applicantName?: string;
-  anonymous?: boolean;
-  firNumber?: string;
-  amountRequested?: number;
-  status?: string;
-  applicationDate?: any;
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  processing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  'in-review': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  'documents-required': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-  approved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  disbursed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
-};
-
-const STATUS_DOTS: Record<string, string> = {
-  pending: 'bg-amber-500',
-  processing: 'bg-blue-500',
-  'in-review': 'bg-blue-500',
-  'documents-required': 'bg-purple-500',
-  approved: 'bg-emerald-500',
-  completed: 'bg-emerald-500',
-  disbursed: 'bg-emerald-500',
-  rejected: 'bg-red-500',
-};
-
-const StatusBadge = ({ status }: { status?: string }) => (
-  <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${STATUS_STYLES[status || ''] || 'bg-gray-500/10 text-gray-500'}`}>
-    {status || '—'}
-  </span>
-);
+import type { Submission } from './helpers';
+import GreetingHero from './components/GreetingHero';
+import PipelineCard from './components/PipelineCard';
+import ActivityTimeline from './components/ActivityTimeline';
+import QuickActions from './components/QuickActions';
 
 export default function UserDashboard() {
   const { user, loading } = useAuth();
@@ -164,14 +131,6 @@ export default function UserDashboard() {
     return <LoadingState message={t('extracted.loading_dashboard') || "Loading your dashboard..."} />;
   }
 
-  // Greeting + localized long date (client-only render paths)
-  const hour = new Date().getHours();
-  const greetingKey = hour < 12 ? 'extracted.good_morning' : hour < 17 ? 'extracted.good_afternoon' : 'extracted.good_evening';
-  const firstName = (userName || '').split(' ')[0];
-  const dateLabel = new Date().toLocaleDateString(locale === 'hi' ? 'hi-IN' : 'en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long'
-  });
-
   const attentionCount = stats.pendingCount + stats.docsRequiredCount;
   const primaryHref = hasBeneficiary === false ? '/dashboard/beneficiaries' : '/dashboard/applications';
   const primaryLabel = hasBeneficiary === false ? t('extracted.set_up_profile') : t('extracted.new_application');
@@ -190,49 +149,17 @@ export default function UserDashboard() {
     { label: t('extracted.view_beneficiaries'), icon: Users, href: '/dashboard/beneficiaries', primary: false },
   ];
 
-  const approvalRate = stats.totalApplications > 0
-    ? Math.round((stats.approvedCount / stats.totalApplications) * 100)
-    : 0;
-  const ringStyle = {
-    background: `conic-gradient(var(--accent-primary) 0%, var(--accent-secondary) ${approvalRate}%, var(--glass-bg) ${approvalRate}%, var(--glass-bg) 100%)`,
-  };
-
-  const pipelineChips = [
-    { label: t('extracted.pending_applications'), count: stats.pendingCount, dot: 'bg-amber-500' },
-    { label: 'In review', count: stats.inReviewCount, dot: 'bg-blue-500' },
-    { label: t('extracted.approved_applications'), count: stats.approvedCount, dot: 'bg-emerald-500' },
-    { label: 'Rejected', count: stats.rejectedCount, dot: 'bg-red-500' },
-  ];
-
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Greeting hero */}
-      <section className="theme-bg-card theme-border-glass border rounded-xl relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-0.5 accent-gradient" aria-hidden="true" />
-        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full pointer-events-none opacity-[0.07]" style={{ background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)' }} aria-hidden="true" />
-        <div className="relative p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-              {t(greetingKey)}, <span className="text-accent-gradient">{firstName || '…'}</span>
-            </h1>
-            <p className="text-xs theme-text-muted mt-0.5 capitalize">{dateLabel} · {t('extracted.track_applications')}</p>
-          </div>
-          <button
-            onClick={() => router.push(primaryHref)}
-            className="hidden sm:inline-flex h-9 px-3.5 accent-gradient text-white rounded-md text-xs font-semibold items-center gap-1.5 hover:opacity-90 transition-opacity shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {primaryLabel}
-          </button>
-        </div>
-        <button
-          onClick={() => router.push(primaryHref)}
-          className="sm:hidden mx-5 mb-5 h-9 accent-gradient text-white rounded-md text-xs font-semibold inline-flex items-center justify-center gap-1.5"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {primaryLabel}
-        </button>
-      </section>
+      <GreetingHero
+        userName={userName}
+        locale={locale}
+        primaryHref={primaryHref}
+        primaryLabel={primaryLabel}
+        onNavigate={(href) => router.push(href)}
+        t={t}
+      />
 
       {/* Attention strip */}
       {hasBeneficiary === false ? (
@@ -268,116 +195,25 @@ export default function UserDashboard() {
           <StatBand cells={statCells} />
 
           {/* Pipeline */}
-          <div className="theme-bg-card border theme-border-glass rounded-xl p-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-            <div className="relative w-20 h-20 shrink-0 rounded-full grid place-items-center" style={ringStyle} role="img" aria-label={`${approvalRate}%`}>
-              <div className="absolute inset-[5px] rounded-full" style={{ background: 'var(--card-bg)' }} />
-              <span className="relative text-base font-semibold tracking-tight theme-text-primary tabular-nums">{approvalRate}%</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold theme-text-primary">{t('extracted.approval_rate')}</p>
-              <p className="text-xs theme-text-muted mt-0.5 leading-relaxed">
-                {t('extracted.approved_of_total', { approved: stats.approvedCount, total: stats.totalApplications })}
-                {stats.pendingCount > 0 && ` · ${t('extracted.in_progress_count', { count: stats.pendingCount })}`}
-              </p>
-              <div className="flex items-center gap-3 flex-wrap mt-2.5">
-                {pipelineChips.map(({ label, count, dot }) => (
-                  <span key={label} className={`inline-flex items-center gap-1.5 text-[11px] tabular-nums ${count > 0 ? 'theme-text-primary font-medium' : 'theme-text-muted opacity-60'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-                    {label} · {count}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+          <PipelineCard stats={stats} t={t} />
 
           {/* Recent activity — timeline */}
-          <div className="theme-bg-card border theme-border-glass rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b theme-border-glass">
-              <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.recent_activity')}</h3>
-              <button onClick={() => router.push('/dashboard/applications')} className="text-xs font-medium text-accent-gradient hover:opacity-80 transition-opacity">
-                {t('extracted.view_all')}
-              </button>
-            </div>
-
-            {dataLoading ? (
-              <div className="divide-y theme-border-glass">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="px-4 py-2.5 flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full theme-bg-glass animate-pulse" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-3 w-36 rounded theme-bg-glass animate-pulse" />
-                      <div className="h-2.5 w-24 rounded theme-bg-glass animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : recent.length === 0 ? (
-              <div className="px-4 py-10 text-center">
-                <FileText className="w-8 h-8 mx-auto theme-text-muted" />
-                <p className="mt-3 text-sm font-medium theme-text-primary">{t('extracted.no_submissions_yet')}</p>
-                <p className="mt-1 text-xs theme-text-muted">{t('extracted.your_applications_will_appear_here')}</p>
-                <button
-                  onClick={() => router.push('/dashboard/applications')}
-                  className="mt-3 text-xs font-medium text-accent-gradient hover:opacity-80 transition-opacity"
-                >
-                  {t('extracted.create_your_first_application')} →
-                </button>
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="absolute left-[19px] top-3 bottom-3 w-px theme-border-glass" style={{ background: 'var(--border-color, var(--glass-bg))' }} aria-hidden="true" />
-                {recent.map((submission) => (
-                  <button
-                    key={submission.id}
-                    onClick={() => router.push('/dashboard/applications')}
-                    className="group relative w-full flex items-center gap-3 px-4 py-2.5 text-left hover:theme-bg-hover transition-colors"
-                  >
-                    <span className={`relative z-10 w-2.5 h-2.5 shrink-0 rounded-full ring-4 ${STATUS_DOTS[submission.status || ''] || 'bg-gray-400'}`} style={{ '--tw-ring-color': 'var(--card-bg)' } as React.CSSProperties} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium theme-text-primary truncate leading-tight">
-                        {submission.applicantName ?? (submission.anonymous ? t('extracted.anonymous') : '—')}
-                      </p>
-                      <p className="text-xs theme-text-muted truncate leading-tight mt-0.5">
-                        FIR <span className="font-mono">{submission.firNumber || '—'}</span> · {submission.applicationDate ? new Date(submission.applicationDate.toDate ? submission.applicationDate.toDate() : submission.applicationDate).toLocaleDateString(locale === 'hi' ? 'hi-IN' : 'en-GB') : '—'}
-                      </p>
-                    </div>
-                    <div className="hidden sm:block text-sm font-medium theme-text-primary tabular-nums">
-                      ₹{Number(submission.amountRequested || 0).toLocaleString()}
-                    </div>
-                    <StatusBadge status={submission.status} />
-                    <ArrowRight className="w-3.5 h-3.5 theme-text-muted opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ActivityTimeline
+            recent={recent}
+            dataLoading={dataLoading}
+            locale={locale}
+            onNavigate={(href) => router.push(href)}
+            t={t}
+          />
         </div>
 
         {/* Right column */}
         <div className="min-w-0">
-          <div className="theme-bg-card border theme-border-glass rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b theme-border-glass">
-              <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.quick_actions')}</h3>
-            </div>
-            <div className="p-2 grid grid-cols-2 gap-1.5">
-              {QUICK_ACTIONS.map(({ label, icon: Icon, href, primary }) => (
-                <button
-                  key={label}
-                  onClick={() => router.push(href)}
-                  className={`group flex flex-col items-center justify-center gap-2 h-24 rounded-lg border p-2 text-center transition-colors ${
-                    primary
-                      ? 'accent-gradient border-transparent text-white hover:opacity-90'
-                      : 'theme-border-glass hover:theme-bg-hover hover:border-transparent'
-                  }`}
-                >
-                  <span className={`w-9 h-9 shrink-0 rounded-lg grid place-items-center ${primary ? 'bg-white/20' : 'theme-bg-glass'}`}>
-                    <Icon className={`w-4 h-4 ${primary ? 'text-white' : 'theme-text-secondary group-hover:text-[var(--accent-primary)]'} transition-colors`} />
-                  </span>
-                  <span className={`text-[11px] font-medium leading-tight ${primary ? 'text-white' : 'theme-text-primary'}`}>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickActions
+            actions={QUICK_ACTIONS}
+            onNavigate={(href) => router.push(href)}
+            t={t}
+          />
         </div>
       </div>
     </div>
