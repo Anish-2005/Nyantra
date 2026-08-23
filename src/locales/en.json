@@ -5076,7 +5076,9 @@
     "disburse": "Disburse",
     "alert_new": "New Disbursement",
     "alert_installment": "Installment Received",
-    "alert_completed": "Payment Completed"
+    "alert_completed": "Payment Completed",
+    "delete_title": "Delete Disbursement",
+    "delete_confirm": "Are you sure you want to delete this disbursement? This action cannot be undone."
   },
   "login": {
     "tagline": "Empowering Justice Through Technology",

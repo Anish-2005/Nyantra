@@ -264,9 +264,6 @@ export function useDisbursements(t: TFn) {
 
   // ---- Record actions ------------------------------------------------------
   const deleteRecord = useCallback(async (record: DisbursementRaw) => {
-    if (!confirm(`Are you sure you want to delete disbursement ${record.id}? This action cannot be undone.`)) {
-      return;
-    }
     try {
       await disbursementService.remove(record);
     } catch (error) {

@@ -9,6 +9,7 @@ interface ConfirmDeleteModalProps {
   message: string;
   title?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   onCancel: () => void;
   onConfirm: () => void;
   theme?: string;
@@ -20,6 +21,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   message,
   title,
   confirmLabel = "Delete",
+  cancelLabel = "Cancel",
   onCancel,
   onConfirm,
 }) => {
@@ -99,7 +101,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                 onClick={onCancel}
                 className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
               >
-                Cancel
+                {cancelLabel}
               </button>
               <button
                 onClick={onConfirm}

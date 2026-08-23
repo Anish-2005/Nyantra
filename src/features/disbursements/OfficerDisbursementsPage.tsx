@@ -5,16 +5,17 @@
  * All state/orchestration lives in useDisbursements; all UI lives in
  * components/disbursements.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { useDisbursements } from '@/hooks/useDisbursements';
 import { computeStats } from '@/utils/disbursementSelectors';
+import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
+import ExportModal from '@/components/dashboard/ExportModal';
 import {
   DisbursementDetailsPanel,
   DisbursementsCardGrid,
   DisbursementsHeader,
   DisbursementsTable,
-  ExportModal,
   FiltersToolbar,
   FinancialOverview,
   InstallmentControls,
@@ -29,6 +30,7 @@ import type { DisbursementRaw } from '@/models/Disbursement';
 export default function DisbursementsPage() {
   const { t } = useLocale();
   const ctl = useDisbursements(t);
+  const [deleteTarget, setDeleteTarget] = useState<DisbursementRaw | null>(null);
 
   const stats = useMemo(() => computeStats(ctl.allDisbursements), [ctl.allDisbursements]);
 
@@ -50,7 +52,7 @@ export default function DisbursementsPage() {
           <MobileDisbursementsList
             items={ctl.paginatedDisbursements}
             onView={ctl.setSelectedRecord}
-            onDelete={ctl.deleteRecord}
+            onDelete={setDeleteTarget}
           />
         );
       }
@@ -67,7 +69,7 @@ export default function DisbursementsPage() {
         <DisbursementsTable
           items={ctl.paginatedDisbursements}
           onView={ctl.setSelectedRecord}
-          onDelete={ctl.deleteRecord}
+          onDelete={setDeleteTarget}
           renderInstallmentCell={renderInstallmentCell}
         />
       );
@@ -76,7 +78,7 @@ export default function DisbursementsPage() {
       <DisbursementsCardGrid
         items={ctl.paginatedDisbursements}
         onView={ctl.setSelectedRecord}
-        onDelete={ctl.deleteRecord}
+        onDelete={setDeleteTarget}
         renderInstallmentControls={renderInstallmentCell}
       />
     );
@@ -148,19 +150,32 @@ export default function DisbursementsPage() {
 
       <ExportModal
         open={ctl.showExportModal}
-        allCount={ctl.allDisbursements.length}
-        filteredCount={ctl.filteredDisbursements.length}
+        onClose={() => ctl.setShowExportModal(false)}
+        items={ctl.allDisbursements}
+        filteredItems={ctl.filteredDisbursements}
+        onExportCsv={(items) => ctl.exportCsv(items)}
+        onExportPdf={(items) => ctl.exportPdf(items)}
         emailAddress={ctl.emailAddress}
         setEmailAddress={ctl.setEmailAddress}
         sendingEmail={ctl.sendingEmail}
-        onClose={() => ctl.setShowExportModal(false)}
-        onExportCsvAll={() => ctl.exportCsv(ctl.allDisbursements)}
-        onExportPdfAll={() => ctl.exportPdf(ctl.allDisbursements)}
-        onExportCsvFiltered={() => ctl.exportCsv(ctl.filteredDisbursements)}
-        onExportPdfFiltered={() => ctl.exportPdf(ctl.filteredDisbursements)}
-        onSendEmail={(scope, format) =>
-          ctl.sendEmail(scope === 'all' ? ctl.allDisbursements : ctl.filteredDisbursements, format)
-        }
+        onSendEmail={(items, format) => ctl.sendEmail(items, format)}
+        title={t('extracted.exportTitle') || 'Export Disbursements'}
+        subtitle={t('extracted.exportSubtitle') || 'Choose export format for disbursements data'}
+        allTitle={t('extracted.exportAllTitle') || 'All Disbursements'}
+        filteredTitle={t('extracted.exportFilteredTitle') || 'Filtered Results'}
+      />
+
+      <ConfirmDeleteModal
+        open={!!deleteTarget}
+        title={t('disbursements.delete_title') || 'Delete Disbursement'}
+        message={`${deleteTarget?.id ?? ''} — ${t('disbursements.delete_confirm')}`}
+        confirmLabel={t('extracted.delete')}
+        cancelLabel={t('extracted.cancel')}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) ctl.deleteRecord(deleteTarget);
+          setDeleteTarget(null);
+        }}
       />
     </div>
   );

@@ -12,4 +12,3 @@ export { InstallmentControls } from './InstallmentControls';
 export { PaginationBar } from './PaginationBar';
 export { DisbursementDetailsPanel } from './DisbursementDetailsPanel';
 export { ManualDisbursementForm } from './ManualDisbursementForm';
-export { ExportModal } from './ExportModal';

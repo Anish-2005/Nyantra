@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import type {
@@ -51,6 +53,25 @@ export function ManualDisbursementForm({
   onResetProgress,
 }: Props) {
   const { t } = useLocale();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll + close on Escape while drawer is open
+  useEffect(() => {
+    if (!form.showManualForm) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [form.showManualForm, onClose]);
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'completed') {
@@ -97,20 +118,37 @@ export function ManualDisbursementForm({
   const installmentPcts = selectedRecord?.installmentPercentages ?? [25, 50, 25];
   const selectInstallmentLabel = `${t('disbursements.select')} ${t('disbursements.installment_word')}`;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {form.showManualForm && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.25 }}
-          className="overflow-hidden"
-        >
-          <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden mb-1">
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 z-[60]"
+          />
+
+          {/* Panel */}
+          <motion.aside
+            key="panel"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            className="fixed inset-y-0 right-0 w-full max-w-lg z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
             {/* Header */}
-            <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
-              <h2 className="text-sm font-semibold theme-text-primary truncate">
+            <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
+              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
                 {form.editingFirestoreId
                   ? t('extracted.edit_disbursement') || 'Edit Disbursement'
                   : t('extracted.add_manual_disbursement')}
@@ -124,9 +162,9 @@ export function ManualDisbursementForm({
               </button>
             </div>
 
-            {/* Form grid */}
-            <div className="px-4 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label={`${t('extracted.beneficiary_id')} *`}>
                   <input
                     type="text"
@@ -249,7 +287,7 @@ export function ManualDisbursementForm({
                     {t('extracted.progressive_payment_progress') || 'Progressive Payment Progress'}
                   </p>
 
-                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 mb-3">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 mb-3">
                     <div>
                       <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
                         {t('extracted.current_progress') || 'Current Progress'}
@@ -294,15 +332,12 @@ export function ManualDisbursementForm({
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-end gap-2.5">
-                    <div className="min-w-0">
-                      <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5">
-                        {selectInstallmentLabel}
-                      </label>
+                  <div className="space-y-2.5">
+                    <Field label={selectInstallmentLabel}>
                       <select
                         value={selectedInstallment ?? ''}
                         onChange={(e) => setSelectedInstallment(e.target.value ? parseInt(e.target.value) : null)}
-                        className={`h-9 px-2.5 rounded-md ${fieldClass}`}
+                        className={fieldClass}
                       >
                         <option value="">{selectInstallmentLabel}</option>
                         {[1, 2, 3].map((n) =>
@@ -314,54 +349,57 @@ export function ManualDisbursementForm({
                           ) : null,
                         )}
                       </select>
+                    </Field>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={onResetProgress}
+                        className="flex-1 h-9 rounded-md border theme-border-glass text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                      >
+                        {t('extracted.reset_progress') || 'Reset Progress'}
+                      </button>
+                      <button
+                        onClick={onDisburseProgressive}
+                        disabled={
+                          (selectedRecord.completedInstallments || 0) >= 3 ||
+                          !selectedInstallment ||
+                          !form.transactionId.trim() ||
+                          !form.utrNumber.trim() ||
+                          !form.paymentMethod
+                        }
+                        className="flex-1 h-9 accent-gradient text-white rounded-md text-xs font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                      >
+                        {selectedInstallment
+                          ? `${t('disbursements.disburse')} ${t('disbursements.installment_word')} ${selectedInstallment}`
+                          : selectInstallmentLabel}
+                      </button>
                     </div>
-                    <button
-                      onClick={onDisburseProgressive}
-                      disabled={
-                        (selectedRecord.completedInstallments || 0) >= 3 ||
-                        !selectedInstallment ||
-                        !form.transactionId.trim() ||
-                        !form.utrNumber.trim() ||
-                        !form.paymentMethod
-                      }
-                      className="h-9 px-3.5 accent-gradient text-white rounded-md text-xs font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                    >
-                      {selectedInstallment
-                        ? `${t('disbursements.disburse')} ${t('disbursements.installment_word')} ${selectedInstallment}`
-                        : selectInstallmentLabel}
-                    </button>
-                    <button
-                      onClick={onResetProgress}
-                      className="h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                    >
-                      {t('extracted.reset_progress') || 'Reset Progress'}
-                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Footer buttons */}
-              <div className="flex justify-end gap-2 mt-4 pt-4 border-t theme-border-glass">
-                <button
-                  onClick={onClose}
-                  className="h-9 px-3.5 rounded-md border theme-border-glass text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                >
-                  {t('extracted.cancel')}
-                </button>
-                <button
-                  onClick={onSubmit}
-                  className="h-9 px-3.5 accent-gradient text-white rounded-md text-xs font-semibold hover:opacity-90 transition-opacity"
-                >
-                  {form.editingFirestoreId
-                    ? t('extracted.update_disbursement') || 'Update Disbursement'
-                    : t('extracted.add_disbursement')}
-                </button>
-              </div>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
+              <button
+                onClick={onClose}
+                className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-semibold hover:theme-bg-glass hover:theme-text-primary transition-colors"
+              >
+                {t('extracted.cancel')}
+              </button>
+              <button
+                onClick={onSubmit}
+                className="flex-1 h-9 accent-gradient text-white rounded-md text-xs font-semibold hover:opacity-90 transition-opacity"
+              >
+                {form.editingFirestoreId
+                  ? t('extracted.update_disbursement') || 'Update Disbursement'
+                  : t('extracted.add_disbursement')}
+              </button>
+            </div>
+          </motion.aside>
+        </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
