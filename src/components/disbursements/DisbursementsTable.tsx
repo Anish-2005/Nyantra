@@ -109,7 +109,7 @@ export function DisbursementsTable({ items, onView, onDelete, renderInstallmentC
                           <span>Progress</span>
                           <span>{disbursement.disbursementProgress?.toFixed(2)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${disbursement.disbursementProgress || 0}%` }}

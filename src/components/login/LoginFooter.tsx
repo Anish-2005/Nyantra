@@ -1,40 +1,39 @@
-import { motion } from 'framer-motion';
-import { ArrowRight, Shield } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 interface LoginFooterProps {
   isRegister: boolean;
   onToggleMode: () => void;
   isLoading: boolean;
+  t: (key: string) => string;
   className?: string;
 }
 
-export const LoginFooter = ({ isRegister, onToggleMode, isLoading, className = '' }: LoginFooterProps) => {
+export const LoginFooter = ({ isRegister, onToggleMode, isLoading, t, className = '' }: LoginFooterProps) => {
   return (
     <div className={className}>
-      <motion.div
-        className="mt-6 flex items-center justify-between text-sm"
-      >
+      <div className="mt-6 flex items-center justify-center gap-1.5 text-sm">
+        <span className="theme-text-muted">{isRegister ? t('login.toggle_to_sign_in') : t('login.toggle_to_register')}</span>
         <button
           onClick={onToggleMode}
-          className="text-accent-gradient font-medium flex items-center gap-1 hover:gap-2 transition-all"
+          className="font-semibold text-accent-gradient hover:opacity-80 transition-opacity"
           disabled={isLoading}
         >
-          {isRegister ? 'Have an account? Sign in' : 'Don\'t have an account? Sign up'}
-          <ArrowRight className="w-4 h-4" />
+          {isRegister ? t('login.sign_in_tab') : t('login.register_tab')}
         </button>
-        {!isRegister && (
-          <a href="#" className="theme-text-muted hover:text-accent-gradient transition-colors">
-            Forgot password?
-          </a>
-        )}
-      </motion.div>
+      </div>
 
-      <motion.p
-        className="mt-6 text-xs theme-text-muted text-center flex items-center justify-center gap-2"
-      >
-        <Shield className="w-3 h-3" />
-        Your data is securely encrypted and protected
-      </motion.p>
+      {!isRegister && (
+        <p className="mt-2 text-center">
+          <a href="#" className="text-xs theme-text-muted hover:text-accent-gradient transition-colors">
+            {t('extracted.forgot_password')}
+          </a>
+        </p>
+      )}
+
+      <p className="mt-6 pt-5 border-t theme-border-glass text-xs theme-text-muted text-center flex items-center justify-center gap-1.5">
+        <ShieldCheck className="w-3.5 h-3.5" />
+        {t('extracted.your_data_is_securely_encrypted_and_protected')}
+      </p>
     </div>
   );
 };

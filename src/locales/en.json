@@ -336,7 +336,8 @@
     "disbursements": {
       "recentDisbursements": "Recent Disbursements",
       "approvedPayments": "Approved payments ready for transfer",
-      "latestPaymentTransactions": "Latest payment transactions"
+      "latestPaymentTransactions": "Latest payment transactions",
+      "noRecords": "No disbursements found."
     },
     "reports": {
       "generatedReports": "Generated Reports",
@@ -394,7 +395,8 @@
       "notifications": "Notifications",
       "new": "New",
       "markAllRead": "Mark all as read",
-      "errorLoading": "Error loading dashboard data"
+      "errorLoading": "Error loading dashboard data",
+      "generationProgress": "Generation Progress"
     },
     "liveTracking": {
       "liveApplicationTracking": "Live Application Tracking",
@@ -421,7 +423,9 @@
       "error": "Error",
       "verified": "Verified",
       "completed": "Completed",
-      "processing": "Processing"
+      "processing": "Processing",
+      "maintenance": "Maintenance",
+      "down": "Down"
     },
     "access_download_view_available_reports": "Access and download available reports for your applications"
   },
@@ -609,7 +613,13 @@
     "sendPdf": "Send PDF",
     "sendFilteredCsv": "Send Filtered CSV",
     "sendFilteredPdf": "Send Filtered PDF",
-    "records": "records"
+    "records": "records",
+    "approved": "Approved",
+    "inReview": "In Review",
+    "documentsRequired": "Documents Required",
+    "savedSuccess": "Application saved successfully",
+    "deletedSuccess": "Application deleted successfully",
+    "deletedFailed": "Failed to delete application"
   },
   "extracted": {
     "enterBeneficiaryName": "Enter beneficiary name",
@@ -3646,7 +3656,62 @@
     "exportAllTitle": "All Disbursements",
     "exportFilteredTitle": "Filtered Results",
     "exportCsv": "Export CSV",
-    "exportPdf": "Export PDF"
+    "exportPdf": "Export PDF",
+    "adjust_amount": "Adjust Relief Amount",
+    "all_cases": "All Cases",
+    "all_fields_required_for_progressive": "All fields are required for progressive disbursement.",
+    "avg_first_response": "Avg First Response",
+    "bank_name": "Bank Name",
+    "beneficiary_feedback": "Beneficiary Feedback",
+    "beneficiary_not_found": "Beneficiary not found",
+    "beneficiary_updated": "Beneficiary updated successfully",
+    "choose_export_options": "Choose export options",
+    "choose_role": "Choose Your Role",
+    "click_create_to_get_started": "Click Create to get started",
+    "closed": "Closed",
+    "comprehensiveExport": "Comprehensive Export",
+    "comprehensiveExportDescription": "Export all data including analytics and summaries",
+    "create_beneficiary_first": "Create a beneficiary first",
+    "delete_application": "Delete Application",
+    "edit_application": "Edit Application",
+    "export_subtitle": "Select the data and format for your export",
+    "failed_create_beneficiary": "Failed to create beneficiary",
+    "father_name": "Father's Name",
+    "filtered_cases": "Filtered cases",
+    "five_star_percentage": "5-Star Percentage",
+    "high_priority_open": "High Priority Open",
+    "internal_reference": "Internal Reference",
+    "login_to_view_applications": "Please log in to view your applications",
+    "lookup_failed": "Lookup failed",
+    "needs_attention": "Needs Attention",
+    "no_disbursements_match_filters": "No disbursements match your filters",
+    "no_matching_applications": "No matching applications found",
+    "not_created": "Not created yet",
+    "officer_notes": "Officer Notes",
+    "open_over_7d": "Open > 7 Days",
+    "performance_overview": "Performance Overview",
+    "please_enter_valid_email": "Please enter a valid email address",
+    "provider_1": "Provider",
+    "rating_distribution": "Rating Distribution",
+    "resolution_rate": "Resolution Rate",
+    "secure_identity_verification_description": "Secure Aadhaar-based identity verification for Nyantra DBT portal beneficiaries.",
+    "select_installment_first": "Please select an installment to disburse.",
+    "select_your_role_description": "Select how you want to use Nyantra - as a beneficiary or as an officer.",
+    "send_message": "Send Message",
+    "sla_compliance": "SLA Compliance",
+    "sortOptions": {
+      "initiatedDate": "Initiated Date"
+    },
+    "sortOrderOptions": {
+      "highToLow": "High to Low",
+      "lowToHigh": "Low to High",
+      "pendingToCompleted": "Pending to Completed",
+      "completedToPending": "Completed to Pending"
+    },
+    "total_responses": "Total Responses",
+    "upload_download_note": "Upload .xlsx or .csv files, or download the template below.",
+    "verify_identity": "Verify Identity",
+    "view_file": "View File"
   },
   "extracted_grouped": {
     "misc": {
@@ -4979,5 +5044,56 @@
     "requestFailed": "Request failed",
     "blockchainNav": "Blockchain"
   },
-  "beneficiary_lowercase": "Beneficiary Lowercase"
+  "beneficiary_lowercase": "Beneficiary Lowercase",
+  "act_type": "Act Type",
+  "categories": "Categories",
+  "confirm_delete_beneficiary": "Are you sure you want to delete this beneficiary? This action cannot be undone.",
+  "confirm_delete_beneficiary_title": "Delete Beneficiary",
+  "deleted_failed": "Failed to delete",
+  "deleted_success": "Deleted successfully",
+  "initiated_date": "Initiated Date",
+  "loading_applications": "Loading applications…",
+  "loading_beneficiaries": "Loading beneficiaries…",
+  "loading_disbursements": "Loading disbursements…",
+  "loading_feedback": "Loading feedback…",
+  "location": "Location",
+  "no_permission_delete": "Insufficient permissions to delete beneficiary. Contact your administrator.",
+  "timeline_1": "Timeline",
+  "transaction_id": "Transaction ID",
+  "utr_number": "UTR Number",
+  "disbursements": {
+    "no_records": "No disbursements found."
+  },
+  "login": {
+    "tagline": "Empowering Justice Through Technology",
+    "headline_1": "Direct Benefits,",
+    "headline_highlight": "Delivered with Dignity",
+    "description": "Nyantra brings speed and transparency to social justice entitlements under the PCR & PoA Acts — from application to money in your bank.",
+    "feature_secure_title": "Bank-grade Security",
+    "feature_secure_desc": "Aadhaar-verified identities with encrypted, auditable records",
+    "feature_track_title": "Real-time Tracking",
+    "feature_track_desc": "Follow every application and disbursement as it happens",
+    "feature_dbt_title": "Direct DBT Transfers",
+    "feature_dbt_desc": "Benefits delivered straight to verified bank accounts via PFMS",
+    "stat_1_value": "99.5%",
+    "stat_1_label": "Verification accuracy",
+    "stat_2_value": "72%",
+    "stat_2_label": "Faster processing",
+    "stat_3_value": "100%",
+    "stat_3_label": "Transparent tracking",
+    "sign_in_tab": "Sign In",
+    "register_tab": "Register",
+    "sign_in_subtitle": "Sign in to continue to your dashboard",
+    "register_subtitle": "Create your account to get started",
+    "toggle_to_sign_in": "Have an account?",
+    "toggle_to_register": "Don't have an account?",
+    "sign_in_action": "Sign in",
+    "create_account_action": "Create account",
+    "welcome_back_title": "Welcome back",
+    "role_user_title": "I am a Beneficiary",
+    "role_user_desc": "Apply for benefits, track payments and raise grievances",
+    "role_officer_title": "I am an Officer",
+    "role_officer_desc": "Review applications, verify documents and manage disbursements",
+    "role_footer_note": "Your role can be updated later by platform administrators if needed."
+  }
 }

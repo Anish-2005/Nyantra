@@ -12,37 +12,38 @@ export const LoginHeader = ({ isRegister, t, className = '' }: LoginHeaderProps)
   const { theme } = useTheme();
 
   return (
-    <div className={`flex items-center gap-3 mb-6 ${className}`}>
+    <div className={`mb-8 ${className}`}>
       <motion.div
-        className="w-12 h-12 rounded-xl overflow-hidden bg-transparent"
-        whileHover={{ scale: 1.05, rotate: 5 }}
+        className="lg:hidden w-14 h-14 rounded-2xl theme-bg-glass border theme-border-glass flex items-center justify-center overflow-hidden mb-5"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.05 }}
       >
         <Image
           src={theme === 'dark' ? '/Logo-Dark.png' : '/Logo-Light.png'}
           alt={t('extracted.nyantra')}
-          width={48}
-          height={48}
+          width={56}
+          height={56}
           className="object-contain"
         />
       </motion.div>
-      <div>
-        <motion.h2
-          className="text-xl font-bold theme-text-primary"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          {isRegister ? 'Create your account' : 'Welcome back'}
-        </motion.h2>
-        <motion.p
-          className="text-sm theme-text-muted"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {isRegister ? 'Sign up to access the dashboard' : 'Sign in to continue to your dashboard'}
-        </motion.p>
-      </div>
+
+      <motion.h1
+        className="text-2xl font-bold tracking-tight theme-text-primary"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        {isRegister ? t('login.register_subtitle') : t('login.welcome_back_title')}
+      </motion.h1>
+      <motion.p
+        className="text-sm theme-text-muted mt-1.5"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+      >
+        {isRegister ? t('extracted.smart_dbt_platform') : t('login.sign_in_subtitle')}
+      </motion.p>
     </div>
   );
 };

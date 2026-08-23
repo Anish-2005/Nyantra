@@ -10,7 +10,7 @@ export const GoogleSignInButton = ({ onClick, isLoading, t, className = '' }: Go
     <button
       onClick={onClick}
       disabled={isLoading}
-      className={`w-full py-2.5 rounded-lg border theme-border-glass theme-bg-glass flex items-center justify-center gap-3 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`w-full py-3 rounded-xl border theme-border-glass theme-bg-glass flex items-center justify-center gap-3 theme-text-primary font-medium hover:shadow-md hover:border-accent-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {isLoading ? (
         <div className="w-5 h-5 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />

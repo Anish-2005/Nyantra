@@ -316,7 +316,7 @@ export default function LoginPage() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="w-full max-w-md"
+            className="w-full max-w-5xl"
           >
             {/* Theme & Language Toggles */}
             <div className="absolute top-4 right-4 flex items-center gap-2">

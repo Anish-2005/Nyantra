@@ -1,10 +1,8 @@
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { ChooseRoleHeader } from './ChooseRoleHeader';
-import { ChooseRoleStatusBadge } from './ChooseRoleStatusBadge';
 import { ChooseRoleUserCard } from './ChooseRoleUserCard';
 import { ChooseRoleOfficerCard } from './ChooseRoleOfficerCard';
-import { ChooseRoleDescriptions } from './ChooseRoleDescriptions';
 
 interface ChooseRoleMainCardProps {
   onPickUser: () => void;
@@ -14,46 +12,35 @@ interface ChooseRoleMainCardProps {
 }
 
 export const ChooseRoleMainCard = ({ onPickUser, onPickOfficer, t, className = '' }: ChooseRoleMainCardProps) => {
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100
-      }
-    }
-  };
-
   return (
     <motion.div
-      variants={itemVariants}
-      className={`theme-bg-card theme-border-card border rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden ${className}`}
+      variants={{
+        hidden: { y: 24, opacity: 0 },
+        visible: {
+          y: 0,
+          opacity: 1,
+          transition: { type: 'spring' as const, stiffness: 100 }
+        }
+      }}
+      className={`theme-bg-card theme-border-card border rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden ${className}`}
     >
-      {/* Background Accent */}
-      <div className="absolute inset-0 accent-gradient opacity-5 pointer-events-none z-0 rounded-xl" aria-hidden />
+      <div className="absolute inset-x-0 top-0 h-1 accent-gradient" aria-hidden />
+      <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full accent-gradient opacity-[0.07] blur-2xl pointer-events-none" aria-hidden />
 
       <div className="relative z-10">
-        <ChooseRoleHeader t={t} />
-        <ChooseRoleStatusBadge t={t} />
+        <ChooseRoleHeader t={t} centered />
 
         {/* Role Selection */}
-        <div className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4 mt-7">
           <ChooseRoleUserCard onClick={onPickUser} t={t} />
           <ChooseRoleOfficerCard onClick={onPickOfficer} t={t} />
         </div>
 
-        <ChooseRoleDescriptions t={t} />
-
         {/* Security Note */}
-        <motion.p
-          className="mt-6 text-xs theme-text-muted text-center flex items-center justify-center gap-2"
-          variants={itemVariants}
-        >
-          <Shield className="w-3 h-3" />
+        <p className="mt-7 pt-5 border-t theme-border-glass text-xs theme-text-muted text-center flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
           {t('extracted.your_role_can_be_updated_later_by_platform_administrators')}
-        </motion.p>
+        </p>
       </div>
     </motion.div>
   );

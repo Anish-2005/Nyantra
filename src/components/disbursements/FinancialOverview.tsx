@@ -37,7 +37,7 @@ export function FinancialOverview({
             <p className="text-2xl font-bold theme-text-primary">{formatCurrency(stats.disbursedAmount)}</p>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
             style={{ width: `${(stats.disbursedAmount / stats.totalAmount) * 100}%` }}

@@ -167,7 +167,7 @@ export default function ChooseRolePage() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="w-full max-w-md"
+            className="w-full max-w-2xl"
           >
             {/* Theme & Language Toggles */}
             <div className="absolute top-4 right-4 flex items-center gap-2">

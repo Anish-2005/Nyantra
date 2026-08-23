@@ -105,7 +105,7 @@ export function DisbursementDetailsPanel({ record, onClose, onEdit }: Props) {
               <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
                 <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')}</p>
                 <p className="font-medium theme-text-primary font-mono break-all">
-                  {record.utrNumber || 'उपलब्ध नहीं'}
+                  {record.utrNumber || t('extracted.not_available')}
                 </p>
               </div>
               <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
