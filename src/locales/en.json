@@ -3711,7 +3711,16 @@
     "total_responses": "Total Responses",
     "upload_download_note": "Upload .xlsx or .csv files, or download the template below.",
     "verify_identity": "Verify Identity",
-    "view_file": "View File"
+    "view_file": "View File",
+    "good_morning": "Good morning",
+    "good_afternoon": "Good afternoon",
+    "good_evening": "Good evening",
+    "approval_rate": "Approval rate",
+    "approved_of_total": "{{approved}} of {{total}} applications approved",
+    "in_progress_count": "{{count}} in progress",
+    "awaiting_action": "{{count}} applications need your attention",
+    "review_now": "Review now",
+    "set_up_profile": "Set up profile"
   },
   "extracted_grouped": {
     "misc": {

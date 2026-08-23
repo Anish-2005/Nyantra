@@ -29,6 +29,7 @@ export default function FeedbackPage() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [rating, setRating] = useState<number>(5);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -45,7 +46,17 @@ export default function FeedbackPage() {
     const unsubscribe = onSnapshot(feedbackQuery, (snapshot) => {
       const feedbackList: Feedback[] = [];
       snapshot.forEach((doc) => {
-        feedbackList.push({ id: doc.id, ...doc.data() } as Feedback);
+        const data = doc.data();
+        feedbackList.push({
+          id: doc.id,
+          userId: data.userId || '',
+          subject: data.subject || '',
+          message: data.message || '',
+          rating: typeof data.rating === 'number' ? data.rating : 5,
+          status: data.status || 'open',
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        } as Feedback);
       });
       // Sort by createdAt descending on the client side
       feedbackList.sort((a, b) => {
@@ -185,16 +196,19 @@ export default function FeedbackPage() {
                       key={star}
                       type="button"
                       onClick={() => setRating(star)}
-                      className="p-1 transition-colors"
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      className="p-1 transition-transform hover:scale-125 focus:outline-none"
                       title={String(star)}
+                      aria-label={`${star} / 5`}
                     >
                       <Star
-                        className={`w-5 h-5 transition-colors ${star <= rating ? 'fill-current text-amber-400 hover:text-amber-500' : 'theme-text-muted hover:text-amber-400'}`}
+                        className={`w-5 h-5 transition-colors ${star <= (hoveredRating || rating) ? 'fill-current text-amber-400' : 'theme-text-muted hover:text-amber-400/60'}`}
                       />
                     </button>
                   ))}
-                  <span className="ml-1.5 text-xs theme-text-muted">
-                    {rating} {t('extracted.feedback_analytics.outOf5Stars')}
+                  <span className="ml-1.5 text-xs theme-text-muted tabular-nums">
+                    {hoveredRating || rating} {t('extracted.feedback_analytics.outOf5Stars')}
                   </span>
                 </div>
               </div>
@@ -290,7 +304,7 @@ export default function FeedbackPage() {
                             {feedback.subject}
                           </h4>
                           <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide shrink-0 ${getStatusPillClass(feedback.status)}`}>
-                            {feedback.status.replace('-', ' ')}
+                            {(feedback.status ?? '').replace('-', ' ')}
                           </span>
                         </div>
                         <div className="mt-1.5">
@@ -350,23 +364,45 @@ export default function FeedbackPage() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-px theme-bg-glass">
-              <div className="theme-bg-card p-3.5">
-                <div className="text-[11px] uppercase tracking-wider theme-text-muted">
-                  {t('extracted.feedback_analytics.totalFeedback')}
-                </div>
-                <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
-                  {feedbacks.length}
-                </p>
-              </div>
-              <div className="theme-bg-card p-3.5">
-                <div className="text-[11px] uppercase tracking-wider theme-text-muted">
-                  {t('extracted.feedback_analytics.rating')}
-                </div>
-                <div className="flex items-center gap-1.5 text-xl font-semibold tabular-nums theme-text-primary mt-1">
-                  <Star className="w-4 h-4 fill-current text-amber-400 shrink-0" />
+            <div className="p-4">
+              <div className="flex items-end gap-3">
+                <span className="text-4xl font-semibold tracking-tight tabular-nums theme-text-primary leading-none">
                   {averageRating}
+                </span>
+                <div className="pb-0.5 min-w-0">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-3.5 h-3.5 ${star <= Math.round(Number(averageRating)) ? 'fill-current text-amber-400' : 'theme-text-muted'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] theme-text-muted mt-1 tabular-nums">
+                    {feedbacks.length} {t('extracted.feedback_analytics.totalFeedback').toLowerCase()}
+                  </p>
                 </div>
+              </div>
+
+              {/* Rating distribution */}
+              <div className="mt-4 space-y-1.5">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = feedbacks.filter(f => f.rating === star).length;
+                  const pct = feedbacks.length > 0 ? Math.round((count / feedbacks.length) * 100) : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-2">
+                      <span className="w-2.5 text-[11px] theme-text-muted tabular-nums text-right shrink-0">{star}</span>
+                      <Star className="w-3 h-3 fill-current text-amber-400 shrink-0" />
+                      <div className="flex-1 h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-amber-400 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-4 text-[11px] theme-text-muted tabular-nums shrink-0">{count}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

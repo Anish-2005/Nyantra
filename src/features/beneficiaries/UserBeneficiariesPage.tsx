@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, createElement } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
@@ -11,11 +11,15 @@ import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc
 import { db } from '@/lib/firebase';
 import { generateBeneficiaryId } from '@/lib/id';
 import {
-  Search, Filter, Plus, Edit, Trash, Eye,
+  Plus, Edit, Trash, Eye,
   Clock, AlertCircle, BadgeCheck, Banknote, X,
   Shield, FileText, File,
-  ChevronLeft, ChevronRight, Loader2, User
+  Loader2, User, Landmark,
+  UserPlus, MapPin, Calendar, Phone
 } from 'lucide-react';
+
+// Display helper: tolerate missing enum-ish fields coming from Firestore
+const humanize = (v?: string | null) => (v ?? '').replace(/-/g, ' ');
 
 type Beneficiary = {
   id: string;
@@ -445,21 +449,12 @@ export default function BeneficiariesPage() {
   const { user } = useAuth();
   const { view } = useDashboardView();
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
-  const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [showNewBeneficiaryForm, setShowNewBeneficiaryForm] = useState(false);
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [verificationFilter, setVerificationFilter] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const { t } = useLocale();
-  const detailRef = useRef<HTMLDivElement>(null);
 
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
   const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
@@ -511,10 +506,6 @@ export default function BeneficiariesPage() {
 
       setBeneficiaries(items);
       setLoading(false);
-
-      if (items.length > 0 && !selectedBeneficiary) {
-        setSelectedBeneficiary(items[0]);
-      }
     }, (error) => {
       console.error('Error fetching beneficiaries:', error);
       setLoading(false);
@@ -531,7 +522,6 @@ export default function BeneficiariesPage() {
 
     if (beneficiaries.length > 0) {
       showToast('info', t('extracted.only_one_beneficiary_allowed'));
-      setSelectedBeneficiary(beneficiaries[0]);
       return;
     }
 
@@ -569,8 +559,7 @@ export default function BeneficiariesPage() {
 
       const saved = { id: newId, ...newBeneficiary };
       setBeneficiaries([saved]);
-      setSelectedBeneficiary(saved);
-      setEditingBeneficiary({ ...saved, age: saved.age ?? 0 });
+      setEditingBeneficiary({ ...saved, age: saved.age ?? 0 } as Beneficiary);
       setShowNewBeneficiaryForm(true);
 
       showToast('success', t('extracted.beneficiary_created'));
@@ -582,13 +571,14 @@ export default function BeneficiariesPage() {
 
   const updateBeneficiary = async (savedBeneficiary: any) => {
     if (savedBeneficiary) {
+      // Merge over the existing record so system fields (status, verificationStatus, ...)
+      // never go missing when the form payload only contains editable fields
       setBeneficiaries(prev => {
         const exists = prev.some(b => b.id === savedBeneficiary.id);
         if (exists) return prev.map(b => b.id === savedBeneficiary.id ? { ...b, ...savedBeneficiary } : b);
         return [savedBeneficiary, ...prev];
       });
 
-      setSelectedBeneficiary(savedBeneficiary);
       showToast('success', t('extracted.beneficiary_updated'));
     }
   };
@@ -604,10 +594,6 @@ export default function BeneficiariesPage() {
     try {
       await deleteDoc(doc(db, 'beneficiaries', id));
       setBeneficiaries(prev => prev.filter(b => b.id !== id));
-
-      if (selectedBeneficiary?.id === id) {
-        setSelectedBeneficiary(null);
-      }
       if (editingBeneficiary?.id === id) {
         setEditingBeneficiary(null);
       }
@@ -677,60 +663,16 @@ export default function BeneficiariesPage() {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const filteredBeneficiaries = useMemo(() => {
-    let filtered = [...beneficiaries];
+  // Single-beneficiary model: one profile per user
+  const profile = beneficiaries.length > 0 ? beneficiaries[0] : null;
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(beneficiary =>
-        beneficiary.name.toLowerCase().includes(q) ||
-        beneficiary.id.toLowerCase().includes(q) ||
-        beneficiary.district.toLowerCase().includes(q) ||
-        beneficiary.aadhaarNumber.includes(searchQuery)
-      );
-    }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(beneficiary => beneficiary.status === statusFilter);
-    }
-
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(beneficiary => beneficiary.category === categoryFilter);
-    }
-
-    if (verificationFilter !== 'all') {
-      filtered = filtered.filter(beneficiary => beneficiary.verificationStatus === verificationFilter);
-    }
-
-    return filtered;
-  }, [beneficiaries, searchQuery, statusFilter, categoryFilter, verificationFilter]);
-
-  const stats = useMemo(() => ({
-    total: beneficiaries.length,
-    verified: beneficiaries.filter(b => b.verificationStatus === 'verified').length,
-    pendingVerification: beneficiaries.filter(b => b.verificationStatus === 'pending').length,
-    rejected: beneficiaries.filter(b => b.status === 'rejected').length,
-    documentsRequired: beneficiaries.filter(b => b.status === 'documents-required').length
-  }), [beneficiaries]);
-
-  const totalPages = Math.ceil(filteredBeneficiaries.length / itemsPerPage);
-  const paginatedBeneficiaries = filteredBeneficiaries.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalItems = filteredBeneficiaries.length;
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const endItem = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems);
-  const noPages = totalPages === 0;
-
-  const hasActiveFilters = statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all';
-
-  useEffect(() => {
-    if (selectedBeneficiary?.id) {
-      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [selectedBeneficiary?.id]);
+  // Verification completeness checks
+  const profileChecks = profile ? [
+    { icon: BadgeCheck, ok: !!profile.name && !!profile.aadhaarNumber, label: t('extracted.full_name'), detail: profile.name || t('extracted.not_provided') },
+    { icon: Landmark, ok: !!profile.bankAccount && !!profile.ifsc, label: t('extracted.bank_account'), detail: profile.ifsc || t('extracted.not_provided') },
+    { icon: FileText, ok: !!profile.scStCertificate, label: t('extracted.sc_st_certificate'), detail: profile.scStCertificate ? t('extracted.view_certificate') : t('extracted.not_provided') },
+  ] : [];
+  const completedChecks = profileChecks.filter(c => c.ok).length;
 
   if (!user) {
     return (
@@ -774,15 +716,15 @@ export default function BeneficiariesPage() {
             {t('extracted.manage_your_beneficiary_information')}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {beneficiaries.length === 0 && (
           <button
             onClick={createNewBeneficiary}
-            className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity"
+            className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5 transition-opacity flex-shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t('extracted.add_beneficiary')}</span>
           </button>
-        </div>
+        )}
       </motion.div>
 
       {/* Toast container */}
@@ -815,147 +757,6 @@ export default function BeneficiariesPage() {
         onConfirm={() => performDelete(deleteTargetId)}
       />
 
-      {/* Statistics band */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden"
-      >
-        {[
-          { labelKey: 'extracted.total', value: stats.total },
-          { labelKey: 'extracted.verified', value: stats.verified },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification },
-          { labelKey: 'extracted.rejected', value: stats.rejected },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired }
-        ].map((stat, idx) => (
-          <div key={idx} className="theme-bg-card p-3.5">
-            <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{t(stat.labelKey)}</p>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{stat.value}</p>
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Filters and Search Toolbar */}
-      <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b theme-border-glass flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-8 pr-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
-            />
-          </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${showFilters ? 'accent-gradient text-white' : 'theme-text-secondary hover:theme-bg-glass hover:theme-text-primary'}`}
-            >
-              <Filter className="w-3.5 h-3.5" />
-              <span>{t('extracted.filters')}</span>
-              {hasActiveFilters && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-            </button>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div>
-                  <Label>{t('extracted.status')}</Label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_statuses')}</option>
-                    <option value="verified">{t('extracted.verified')}</option>
-                    <option value="pending-verification">{t('extracted.pending_verification')}</option>
-                    <option value="rejected">{t('extracted.rejected')}</option>
-                    <option value="documents-required">{t('extracted.documents_required')}</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>{t('extracted.category_1')}</Label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_categories')}</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="OBC">OBC</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>{t('extracted.verification')}</Label>
-                  <select
-                    value={verificationFilter}
-                    onChange={(e) => setVerificationFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_verification')}</option>
-                    <option value="verified">{t('extracted.verified')}</option>
-                    <option value="pending">{t('extracted.pending')}</option>
-                    <option value="rejected">{t('extracted.rejected')}</option>
-                    <option value="documents-required">{t('extracted.documents_required')}</option>
-                  </select>
-                </div>
-              </div>
-
-              {hasActiveFilters && (
-                <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
-                  {statusFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Status: {statusFilter.replace('-', ' ')}
-                      <button onClick={() => setStatusFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear status filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {categoryFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Category: {categoryFilter}
-                      <button onClick={() => setCategoryFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear category filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {verificationFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Verification: {verificationFilter.replace('-', ' ')}
-                      <button onClick={() => setVerificationFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear verification filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setStatusFilter('all');
-                      setCategoryFilter('all');
-                      setVerificationFilter('all');
-                    }}
-                    className="px-2 py-1 rounded-md theme-bg-glass theme-text-muted text-xs font-medium hover:theme-text-primary transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
       {/* Add/Edit Beneficiary Drawer */}
       <AnimatePresence>
         {showNewBeneficiaryForm && (
@@ -974,321 +775,243 @@ export default function BeneficiariesPage() {
         )}
       </AnimatePresence>
 
-      {/* Beneficiaries List */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
-      >
-        {paginatedBeneficiaries.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mx-auto w-12 h-12 theme-bg-glass rounded-full flex items-center justify-center mb-3">
-              <User className="w-5 h-5 theme-text-muted" />
-            </div>
-            <p className="theme-text-muted mb-1">
-              {beneficiaries.length === 0 ? t('extracted.no_beneficiaries_yet') : t('extracted.try_adjusting_search_terms')}
-            </p>
-            {beneficiaries.length === 0 && (
-              <p className="text-sm theme-text-muted">
-                {t('extracted.click_create_to_get_started')}
-              </p>
-            )}
+      {/* Single Beneficiary Profile */}
+      {!profile ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="theme-bg-card theme-border-glass border rounded-xl px-6 py-16 text-center"
+        >
+          <div className="mx-auto w-16 h-16 rounded-2xl accent-gradient text-white grid place-items-center mb-4 shadow-lg">
+            <UserPlus className="w-7 h-7" />
           </div>
-        ) : (
-          <>
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b theme-border-glass">
-                  <tr>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary')}</th>
-                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.aadhaar_number')}</th>
-                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.phone')}</th>
-                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.email')}</th>
-                    <th className="hidden lg:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.location')}</th>
-                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.category_1')}</th>
-                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.registration_date')}</th>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.status')}</th>
-                    <th className="hidden xl:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.verification')}</th>
-                    <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedBeneficiaries.map((beneficiary) => {
-                    const StatusIcon = getStatusIcon(beneficiary.status);
-                    const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-
-                    return (
-                      <tr
-                        key={beneficiary.id}
-                        className={`border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors ${
-                          selectedBeneficiary?.id === beneficiary.id ? 'theme-bg-glass' : ''
-                        }`}
-                        onClick={() => setSelectedBeneficiary(beneficiary)}
-                      >
-                        <td className="py-2.5 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full accent-gradient text-white text-[11px] font-bold grid place-items-center uppercase flex-shrink-0">
-                              {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-medium theme-text-primary truncate">{beneficiary.name}</p>
-                              <p className="text-[11px] theme-text-muted font-mono truncate">{beneficiary.id}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="hidden lg:table-cell py-2.5 px-3 text-xs font-mono theme-text-primary">{beneficiary.aadhaarNumber}</td>
-                        <td className="hidden lg:table-cell py-2.5 px-3 text-[13px] theme-text-primary whitespace-nowrap">{beneficiary.phone}</td>
-                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary"><span className="block max-w-[160px] truncate">{beneficiary.email || '—'}</span></td>
-                        <td className="hidden lg:table-cell py-2.5 px-3">
-                          <p className="text-[13px] theme-text-primary">{beneficiary.district}</p>
-                          <p className="text-[11px] theme-text-muted">{beneficiary.state}</p>
-                        </td>
-                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary">{beneficiary.category}</td>
-                        <td className="hidden xl:table-cell py-2.5 px-3 text-[13px] theme-text-primary tabular-nums whitespace-nowrap">{formatDate(beneficiary.registrationDate)}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
-                            <StatusIcon className="w-3 h-3" />
-                            {beneficiary.status.replace('-', ' ')}
-                          </span>
-                        </td>
-                        <td className="hidden xl:table-cell py-2.5 px-3">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                            <VerificationIcon className="w-3 h-3" />
-                            {beneficiary.verificationStatus.replace('-', ' ')}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <div className="flex items-center justify-end gap-1">
-                            {beneficiary.scStCertificate && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-green-500 transition-colors"
-                                title="View Certificate"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingBeneficiary(beneficiary);
-                                setShowNewBeneficiaryForm(true);
-                              }}
-                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                              title={t('extracted.edit')}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
-                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-red-500 transition-colors"
-                              title={t('extracted.delete')}
-                            >
-                              <Trash className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile flat list */}
-            <div className="md:hidden">
-              {paginatedBeneficiaries.map((beneficiary) => {
-                const StatusIcon = getStatusIcon(beneficiary.status);
-                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-
-                return (
-                  <div
-                    key={beneficiary.id}
-                    className={`p-3.5 border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors ${
-                      selectedBeneficiary?.id === beneficiary.id ? 'theme-bg-glass' : ''
-                    }`}
-                    onClick={() => setSelectedBeneficiary(beneficiary)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-full accent-gradient text-white text-[11px] font-bold grid place-items-center uppercase flex-shrink-0">
-                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
-                          <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
-                        </div>
-                      </div>
-                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {beneficiary.status.replace('-', ' ')}
-                      </span>
-                    </div>
-
-                    <dl className="mt-2.5 space-y-1.5">
-                      <Pair label={t('extracted.aadhaar_number')} value={beneficiary.aadhaarNumber} mono />
-                      <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
-                      <Pair label={t('extracted.registration_date')} value={formatDate(beneficiary.registrationDate)} />
-                    </dl>
-
-                    <div className="mt-2.5 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                        <VerificationIcon className="w-3 h-3" />
-                        {beneficiary.verificationStatus.replace('-', ' ')}
-                      </span>
-                      <div className="flex items-center gap-0.5">
-                        {beneficiary.scStCertificate && (
-                          <button
-                            aria-label="View certificate"
-                            onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-green-500 transition-colors"
-                            title="View Certificate"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          aria-label="Edit beneficiary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingBeneficiary(beneficiary);
-                            setShowNewBeneficiaryForm(true);
-                          }}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                          title={t('extracted.edit')}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          aria-label="Delete beneficiary"
-                          onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-red-500 transition-colors"
-                          title={t('extracted.delete')}
-                        >
-                          <Trash className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t theme-border-glass">
-          <p className="text-xs theme-text-muted">
-            {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
+          <h2 className="text-lg font-semibold tracking-tight theme-text-primary">
+            {t('extracted.no_beneficiaries_yet')}
+          </h2>
+          <p className="text-sm theme-text-muted mt-1 max-w-md mx-auto">
+            {t('extracted.add_your_beneficiary_details_to_get_started')}
           </p>
-          {!noPages && (
-            <div className="flex items-center gap-1">
-              <button
-                disabled={currentPage === 1 || noPages}
-                onClick={() => setCurrentPage((p: number) => p - 1)}
-                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i).map((pageNum: number) => (
+          <button
+            onClick={createNewBeneficiary}
+            className="mt-5 h-10 px-4 rounded-md accent-gradient text-white text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2 transition-opacity"
+          >
+            <Plus className="w-4 h-4" />
+            {t('extracted.add_beneficiary')}
+          </button>
+        </motion.div>
+      ) : (
+        <>
+          {/* ID card hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden relative"
+          >
+            <div className="absolute inset-x-0 top-0 h-1 accent-gradient" aria-hidden="true" />
+            <div className="p-5 flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="w-14 h-14 rounded-xl accent-gradient text-white text-lg font-bold grid place-items-center uppercase shrink-0 shadow-md">
+                {(profile.name || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <h2 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
+                    {profile.name || '\u2014'}
+                  </h2>
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-500/10 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                    {profile.category}
+                  </span>
+                </div>
+                <p className="text-xs theme-text-muted font-mono mt-0.5">{profile.id}</p>
+
+                <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(profile.status)}`}>
+                    {createElement(getStatusIcon(profile.status), { className: 'w-3 h-3' })}
+                    {humanize(profile.status)}
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getVerificationColor(profile.verificationStatus)}`}>
+                    {createElement(getVerificationIcon(profile.verificationStatus), { className: 'w-3 h-3' })}
+                    {humanize(profile.verificationStatus)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 mt-3 flex-wrap text-xs theme-text-muted">
+                  <span className="inline-flex items-center gap-1.5 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{profile.district}, {profile.state}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 tabular-nums">
+                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                    {formatDate(profile.registrationDate)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto sm:flex-col lg:flex-row">
+                {profile.scStCertificate && (
+                  <a
+                    href={profile.scStCertificate}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-md border theme-border-glass grid place-items-center theme-text-muted hover:text-green-500 hover:theme-bg-glass transition-colors"
+                    title={t('extracted.view_certificate')}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </a>
+                )}
                 <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
+                  onClick={() => {
+                    setEditingBeneficiary(profile);
+                    setShowNewBeneficiaryForm(true);
+                  }}
+                  className="h-9 px-3.5 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 inline-flex items-center justify-center gap-1.5 transition-opacity"
                 >
-                  {pageNum}
+                  <Edit className="w-3.5 h-3.5" />
+                  {t('extracted.edit')}
                 </button>
-              ))}
-              <button
-                disabled={currentPage === totalPages || noPages}
-                onClick={() => setCurrentPage((p: number) => p + 1)}
-                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Beneficiary Detail Inspector */}
-      {selectedBeneficiary && (
-        <div ref={detailRef} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20">
-          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedBeneficiary.name}</h2>
-              <span className="hidden sm:inline text-xs theme-text-muted font-mono flex-shrink-0">{selectedBeneficiary.id}</span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
-                {selectedBeneficiary.status.replace('-', ' ')}
-              </span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
-                {selectedBeneficiary.verificationStatus.replace('-', ' ')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => {
-                  setEditingBeneficiary(selectedBeneficiary);
-                  setShowNewBeneficiaryForm(true);
-                }}
-                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                title={t('extracted.edit')}
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setSelectedBeneficiary(null)}
-                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="px-4 py-3.5">
-            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
-              <Pair label={t('extracted.full_name')} value={selectedBeneficiary.name} />
-              <Pair label={t('extracted.fatheraposs_name')} value={selectedBeneficiary.fatherName || '—'} />
-              <Pair label={t('extracted.aadhaar_number')} value={selectedBeneficiary.aadhaarNumber} mono />
-              <Pair label={t('extracted.beneficiary_id')} value={selectedBeneficiary.id} mono />
-              <Pair label={t('extracted.phone_number')} value={selectedBeneficiary.phone} />
-              <Pair label={t('extracted.email')} value={selectedBeneficiary.email || '—'} />
-              <Pair label={t('extracted.location')} value={`${selectedBeneficiary.district}, ${selectedBeneficiary.state}`} />
-              <Pair label={t('extracted.complete_address')} value={selectedBeneficiary.address || '—'} />
-              <Pair label={t('extracted.category_1') || 'Category'} value={selectedBeneficiary.category} />
-              <Pair label={t('extracted.age') || 'Age'} value={selectedBeneficiary.age ?? '—'} />
-              <Pair label={t('extracted.gender') || 'Gender'} value={selectedBeneficiary.gender || '—'} />
-              <Pair label={t('extracted.marital_status') || 'Marital Status'} value={selectedBeneficiary.maritalStatus || '—'} />
-              <Pair label={t('extracted.bank_account') || 'Bank Account'} value={selectedBeneficiary.bankAccount || '—'} mono />
-              <Pair label={t('extracted.ifsc_code') || 'IFSC'} value={selectedBeneficiary.ifsc || '—'} mono />
-              <Pair label={t('extracted.registered_on')} value={formatDate(selectedBeneficiary.createdAt)} />
-              <Pair label={t('extracted.last_updated')} value={formatDate(selectedBeneficiary.lastUpdate)} />
-            </dl>
-
-            <div className="mt-3.5 pt-3 border-t theme-border-glass flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5 theme-text-muted flex-shrink-0" />
-              <span className="text-[11px] uppercase tracking-wider theme-text-muted flex-shrink-0">{t('extracted.sc_st_certificate')}</span>
-              {selectedBeneficiary.scStCertificate ? (
-                <a
-                  href={selectedBeneficiary.scStCertificate}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[13px] font-medium underline underline-offset-2 theme-text-primary hover:opacity-80 transition-opacity truncate"
+                <button
+                  onClick={() => confirmDelete(profile.id)}
+                  className="w-9 h-9 rounded-md border theme-border-glass grid place-items-center theme-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                  title={t('extracted.delete')}
                 >
-                  {t('extracted.view_certificate')}
-                </a>
-              ) : (
-                <span className="text-[13px] theme-text-muted">{t('extracted.not_provided')}</span>
-              )}
+                  <Trash className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Content grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {/* Verification rail */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden lg:sticky lg:top-20"
+            >
+              <div className="px-4 py-3 border-b theme-border-glass flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.verification')}</h3>
+                <Shield className={`w-4 h-4 flex-shrink-0 ${completedChecks === profileChecks.length ? 'text-emerald-500' : 'theme-text-muted'}`} />
+              </div>
+
+              <div className="p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="tabular-nums theme-text-primary leading-none">
+                    <span className="text-3xl font-semibold tracking-tight">{completedChecks}</span>
+                    <span className="text-base theme-text-muted">/{profileChecks.length}</span>
+                  </p>
+                  <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.completion_rate')}</span>
+                </div>
+                <div
+                  className="mt-2.5 h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={completedChecks}
+                  aria-valuemin={0}
+                  aria-valuemax={profileChecks.length}
+                >
+                  <div
+                    className="h-full rounded-full accent-gradient transition-all duration-500"
+                    style={{ width: `${profileChecks.length > 0 ? (completedChecks / profileChecks.length) * 100 : 0}%` }}
+                  />
+                </div>
+
+                <div className="mt-5 relative">
+                  <div className="absolute left-[15px] top-3 bottom-3 w-px bg-black/10 dark:bg-white/10" aria-hidden="true" />
+                  <div className="space-y-4 relative">
+                    {profileChecks.map(({ icon: Icon, ok, label, detail }) => (
+                      <div key={label} className="flex items-start gap-3 relative">
+                        <span
+                          className={`relative z-10 w-8 h-8 rounded-full grid place-items-center shrink-0 transition-colors ${
+                            ok ? 'bg-emerald-500 text-white shadow-sm' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        <div className="min-w-0 pt-0.5">
+                          <p className="text-xs font-semibold theme-text-primary truncate leading-tight">{label}</p>
+                          <p className="text-[11px] theme-text-muted truncate leading-tight mt-0.5">{detail}</p>
+                        </div>
+                        {!ok && <AlertCircle className="w-3.5 h-3.5 text-amber-500 ml-auto shrink-0 mt-1" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Details */}
+            <div className="lg:col-span-2 space-y-4 min-w-0">
+              {/* Personal details */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b theme-border-glass flex items-center gap-2">
+                  <User className="w-4 h-4 theme-text-muted flex-shrink-0" />
+                  <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.personal_details')}</h3>
+                </div>
+                <div className="px-4 py-3.5">
+                  <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
+                    <Pair label={t('extracted.full_name')} value={profile.name || '\u2014'} />
+                    <Pair label={t('extracted.fatheraposs_name')} value={profile.fatherName || '\u2014'} />
+                    <Pair label={t('extracted.aadhaar_number')} value={profile.aadhaarNumber || '\u2014'} mono />
+                    <Pair label={t('extracted.age') || 'Age'} value={profile.age ?? '\u2014'} />
+                    <Pair label={t('extracted.gender') || 'Gender'} value={profile.gender || '\u2014'} />
+                    <Pair label={t('extracted.marital_status') || 'Marital Status'} value={profile.maritalStatus || '\u2014'} />
+                  </dl>
+                </div>
+              </motion.div>
+
+              {/* Contact & location */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.11 }}
+                className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b theme-border-glass flex items-center gap-2">
+                  <Phone className="w-4 h-4 theme-text-muted flex-shrink-0" />
+                  <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.contact')}</h3>
+                </div>
+                <div className="px-4 py-3.5">
+                  <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
+                    <Pair label={t('extracted.phone')} value={profile.phone || '\u2014'} mono />
+                    <Pair label={t('extracted.email')} value={profile.email || '\u2014'} />
+                    <Pair label={t('extracted.district') || 'District'} value={profile.district || '\u2014'} />
+                    <Pair label={t('extracted.state') || 'State'} value={profile.state || '\u2014'} />
+                    <Pair label={t('extracted.registered_on')} value={formatDate(profile.createdAt)} />
+                    <Pair label={t('extracted.last_updated')} value={formatDate(profile.lastUpdate)} />
+                  </dl>
+                  <div className="mt-3 pt-3 border-t theme-border-glass">
+                    <Pair label={t('extracted.complete_address')} value={profile.address || '\u2014'} />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Bank details */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.14 }}
+                className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b theme-border-glass flex items-center gap-2">
+                  <Landmark className="w-4 h-4 theme-text-muted flex-shrink-0" />
+                  <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.bank_account_details')}</h3>
+                </div>
+                <div className="px-4 py-3.5">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <Pair label={t('extracted.bank_account') || 'Bank Account'} value={profile.bankAccount || '\u2014'} mono />
+                    <Pair label={t('extracted.ifsc_code') || 'IFSC'} value={profile.ifsc || '\u2014'} mono />
+                  </dl>
+                </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </>
       )}
-    </div>
+      </div>
   );
 }

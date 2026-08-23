@@ -9,7 +9,7 @@ import { useLocale } from '@/context/LocaleContext';
 import LoadingState from '@/components/LoadingState';
 import {
   Plus, X, Search, Eye, Clock, Zap, CheckCircle2, AlertTriangle,
-  Mic, MicOff, Send, Shield, MessageCircle, Loader2, FileText
+  Mic, MicOff, Send, Shield, MessageCircle, Loader2, FileText, MessageSquare
 } from 'lucide-react';
 
 // Grievance type definition matching the admin page
@@ -783,17 +783,19 @@ export default function GrievancePage() {
           {/* Stats hairline band */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
             {[
-              { label: t('extracted.total'), value: grievances.length, dot: '' },
-              { label: t('extracted.open_1'), value: openCount, dot: 'bg-amber-500' },
-              { label: t('extracted.in_progress'), value: inProgressCount, dot: 'bg-blue-500' },
-              { label: t('extracted.resolved'), value: resolvedCount, dot: 'bg-emerald-500' },
-            ].map(({ label, value, dot }) => (
-              <div key={label} className="theme-bg-card p-3.5">
+              { label: t('extracted.total'), value: grievances.length, icon: MessageSquare, dot: '' },
+              { label: t('extracted.open_1'), value: openCount, icon: Clock, dot: 'bg-amber-500' },
+              { label: t('extracted.in_progress'), value: inProgressCount, icon: Zap, dot: 'bg-blue-500' },
+              { label: t('extracted.resolved'), value: resolvedCount, icon: CheckCircle2, dot: 'bg-emerald-500' },
+            ].map(({ label, value, icon: Icon, dot }) => (
+              <div key={label} className="theme-bg-card p-3.5 relative overflow-hidden group">
                 <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot || 'accent-gradient'}`} />
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">{label}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ml-auto ${dot || 'accent-gradient'}`} />
                 </div>
                 <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{value}</p>
+                <div className="absolute inset-x-0 bottom-0 h-0.5 accent-gradient scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
               </div>
             ))}
           </div>
@@ -856,13 +858,16 @@ export default function GrievancePage() {
                   filteredList.map((grievance) => (
                     <div
                       key={grievance.id}
-                      className={`p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                      className={`p-3.5 rounded-lg border cursor-pointer transition-colors relative overflow-hidden ${
                         selectedGrv?.id === grievance.id
                           ? 'border-[var(--accent-primary)] theme-bg-glass'
                           : 'theme-border-glass hover:theme-bg-hover'
                       }`}
                       onClick={() => setSelectedGrv(grievance)}
                     >
+                      {grievance.status === 'escalated' && (
+                        <span className="absolute left-0 inset-y-0 w-0.5 bg-red-500/80" />
+                      )}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
@@ -1000,7 +1005,6 @@ export default function GrievancePage() {
                       ) : (
                         [...(selectedGrv.communication || []), ...pendingMessages].map((comm, index) => {
                           const isOfficer = comm.type === 'officer' || comm.user === 'Officer' || comm.user === 'Admin' || comm.user === 'You';
-                          console.log('Message:', comm, 'isOfficer:', isOfficer);
                           return (
                             <div key={index} className={`flex ${isOfficer ? 'justify-start' : 'justify-end'}`}>
                               <div className={`max-w-[75%] flex flex-col ${isOfficer ? 'items-start' : 'items-end'}`}>

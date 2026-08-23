@@ -354,7 +354,7 @@ const ApplicationDetail: React.FC<ApplicationDetailProps> = ({
           <div className="space-y-3.5">
             <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
               <Item label={t("extracted.status")}>
-                <span className="capitalize">{app.status.replace("-", " ")}</span>
+                <span className="capitalize">{(app.status ?? "").replace("-", " ")}</span>
               </Item>
               <Item label={t("extracted.priority")}>
                 <span className="capitalize">{app.priority}</span>

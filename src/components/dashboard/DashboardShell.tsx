@@ -381,30 +381,17 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-1.5">
-                {/* Officer view switcher */}
+                {/* Officer/Applicant view switcher */}
                 {canSwitch && (
-                  <div className="hidden md:flex items-center gap-0.5 mr-1" role="group" aria-label="Switch dashboard view">
-                    <button
-                      onClick={() => handleSwitchView('officer')}
-                      disabled={view === 'officer'}
-                      aria-pressed={view === 'officer'}
-                      className={`h-8 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${view === 'officer'
-                        ? 'theme-bg-glass text-accent-gradient'
-                        : 'theme-text-muted hover:theme-text-primary'}`}
-                    >
-                      Officer
-                    </button>
-                    <button
-                      onClick={() => handleSwitchView('user')}
-                      disabled={view === 'user'}
-                      aria-pressed={view === 'user'}
-                      className={`h-8 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${view === 'user'
-                        ? 'theme-bg-glass text-accent-gradient'
-                        : 'theme-text-muted hover:theme-text-primary'}`}
-                    >
-                      Applicant
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleSwitchView(isUserView ? 'officer' : 'user')}
+                    className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 mr-1 text-[11px] font-semibold theme-text-secondary transition-colors hover:theme-bg-glass hover:theme-text-primary"
+                    aria-label="Switch dashboard view"
+                    title={isUserView ? 'Switch to officer view' : 'Switch to applicant view'}
+                  >
+                    <User className="w-3.5 h-3.5 shrink-0" />
+                    {isUserView ? 'Applicant' : 'Officer'}
+                  </button>
                 )}
 
                 {/* Mobile switcher */}

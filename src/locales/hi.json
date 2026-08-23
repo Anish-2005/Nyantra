@@ -3711,7 +3711,16 @@
     "total_responses": "कुल प्रतिक्रियाएँ",
     "upload_download_note": ".xlsx या .csv फ़ाइलें अपलोड करें, या नीचे दिया टेम्पलेट डाउनलोड करें।",
     "verify_identity": "पहचान सत्यापित करें",
-    "view_file": "फ़ाइल देखें"
+    "view_file": "फ़ाइल देखें",
+    "good_morning": "सुप्रभात",
+    "good_afternoon": "नमस्कार",
+    "good_evening": "शुभ संध्या",
+    "approval_rate": "स्वीकृति दर",
+    "approved_of_total": "{{total}} में से {{approved}} आवेदन स्वीकृत",
+    "in_progress_count": "{{count}} प्रगति पर",
+    "awaiting_action": "आपके {{count}} आवेदनों पर ध्यान देने की आवश्यकता है",
+    "review_now": "अब देखें",
+    "set_up_profile": "प्रोफ़ाइल बनाएं"
   },
   "extracted_grouped": {
     "misc": {

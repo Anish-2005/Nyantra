@@ -6,8 +6,8 @@ import {
   BarChart3,
   Database,
   Activity,
-  Grid3X3,
-  Table
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
@@ -171,6 +171,24 @@ const Num = ({ children }: { children: React.ReactNode }) => (
   <span className="tabular-nums">{children}</span>
 );
 
+// Category → left spine color (card library metaphor)
+const SPINE_BG: Record<string, string> = {
+  financial: 'bg-blue-500/70',
+  compliance: 'bg-purple-500/70',
+  performance: 'bg-emerald-500/70',
+  analytical: 'bg-indigo-500/70',
+  statistical: 'bg-amber-500/70',
+  technical: 'bg-cyan-500/70',
+};
+
+// Format → composition-bar segment color
+const FORMAT_COLORS: Record<string, string> = {
+  pdf: 'bg-red-500',
+  csv: 'bg-teal-500',
+  excel: 'bg-green-500',
+  xlsx: 'bg-green-500',
+};
+
 const ReportCard = ({ report, selected, onOpen, onDownload, t }: {
   report: Report;
   selected: boolean;
@@ -183,12 +201,13 @@ const ReportCard = ({ report, selected, onOpen, onDownload, t }: {
   return (
     <div
       onClick={onOpen}
-      className={`p-3.5 rounded-lg border cursor-pointer transition-colors ${
+      className={`p-3.5 rounded-lg border cursor-pointer transition-colors relative overflow-hidden ${
         selected
           ? 'border-[var(--accent-primary)] theme-bg-glass'
           : 'theme-border-glass hover:theme-bg-hover'
       }`}
     >
+      <span className={`absolute left-0 inset-y-0 w-0.5 ${SPINE_BG[report.category] || 'bg-transparent'}`} />
       <div className="flex items-start justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-md theme-bg-glass flex items-center justify-center theme-text-secondary shrink-0">
@@ -277,7 +296,6 @@ const UserReportsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to Firestore reports collection
@@ -344,6 +362,16 @@ const UserReportsPage = () => {
     scheduled: reports.filter(r => r.status === 'scheduled' || r.status === 'processing').length,
     downloads: reports.reduce((sum, r) => sum + (r.downloadCount || 0), 0)
   }), [reports]);
+
+  // Format distribution for composition bar
+  const formatSegments = useMemo(() => {
+    const counts = new Map<string, number>();
+    reports.forEach(r => {
+      const fmt = (r.fileFormat || 'other').toLowerCase();
+      counts.set(fmt, (counts.get(fmt) || 0) + 1);
+    });
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [reports]);
 
   const handleDownload = async (reportId: string) => {
     try {
@@ -423,16 +451,45 @@ const UserReportsPage = () => {
       {/* Stats Band */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
         {[
-          { label: t('extracted.total'), value: stats.total },
-          { label: t('extracted.completed'), value: stats.completed },
-          { label: t('extracted.scheduled'), value: stats.scheduled },
-          { label: t('extracted.downloads'), value: stats.downloads }
-        ].map(({ label, value }) => (
-          <div key={label} className="theme-bg-card p-3.5">
-            <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">{label}</p>
+          { label: t('extracted.total'), value: stats.total, icon: FileText },
+          { label: t('extracted.completed'), value: stats.completed, icon: CheckCircle2 },
+          { label: t('extracted.scheduled'), value: stats.scheduled, icon: Clock },
+          { label: t('extracted.downloads'), value: stats.downloads, icon: Download }
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="theme-bg-card p-3.5 relative overflow-hidden group">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">{label}</span>
+            </div>
             <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{value}</p>
+            <div className="absolute inset-x-0 bottom-0 h-0.5 accent-gradient scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
           </div>
         ))}
+      </div>
+
+      {/* Format Composition */}
+      <div className="theme-bg-card theme-border-glass border rounded-xl px-4 py-3">
+        <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
+          <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.format')}</span>
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            {(formatSegments.length > 0 ? formatSegments : []).map(([fmt, count]) => (
+              <span key={fmt} className="inline-flex items-center gap-1.5 text-[11px] theme-text-muted tabular-nums capitalize">
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${FORMAT_COLORS[fmt] || 'bg-gray-400'}`} />
+                {fmt} · {count}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="flex h-1.5 gap-px rounded-full overflow-hidden bg-black/5 dark:bg-white/10" aria-hidden="true">
+          {formatSegments.map(([fmt, count]) => (
+            <div
+              key={fmt}
+              className={FORMAT_COLORS[fmt] || 'bg-gray-400'}
+              style={{ flexGrow: count }}
+              title={`${fmt}: ${count}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Reports List */}
@@ -444,31 +501,6 @@ const UserReportsPage = () => {
           </h3>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex rounded-md theme-bg-glass theme-border-glass border p-0.5 shrink-0">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'grid'
-                    ? 'theme-bg-card text-accent-gradient shadow-sm'
-                    : 'theme-text-muted hover:theme-text-primary'
-                }`}
-                title={t('extracted.grid')}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'table'
-                    ? 'theme-bg-card text-accent-gradient shadow-sm'
-                    : 'theme-text-muted hover:theme-text-primary'
-                }`}
-                title={t('extracted.table')}
-              >
-                <Table className="w-4 h-4" />
-              </button>
-            </div>
-
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted" />
               <input
@@ -522,129 +554,9 @@ const UserReportsPage = () => {
 
         {/* Body */}
         <div className="p-2.5">
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-              {filteredReports.map(renderCard)}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Desktop Table View */}
-              <div className="hidden md:block rounded-lg border theme-border-glass overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="theme-bg-glass">
-                      <tr>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.report')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.type')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.category')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.records')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.size')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.generated_date')}
-                        </th>
-                        <th className="py-2 px-3 text-[11px] uppercase tracking-wider theme-text-muted font-medium">
-                          {t('extracted.actions')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y theme-border-glass">
-                      {filteredReports.map((report) => {
-                        const Icon = CATEGORY_ICONS[report.category] || FileText;
-                        return (
-                          <tr
-                            key={report.id}
-                            onClick={() => setSelectedReport(report)}
-                            className={`cursor-pointer transition-colors ${
-                              selectedReport?.id === report.id
-                                ? 'theme-bg-glass'
-                                : 'hover:theme-bg-hover'
-                            }`}
-                          >
-                            <td className="py-2.5 px-3">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-md theme-bg-glass flex items-center justify-center theme-text-secondary shrink-0">
-                                  <Icon className="w-3.5 h-3.5" />
-                                </div>
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium theme-text-primary truncate">
-                                  {report.name}
-                                </div>
-                                <div className="text-xs theme-text-muted truncate font-mono">
-                                  {report.id}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className="text-sm theme-text-primary capitalize">
-                              {report.type}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className="text-sm theme-text-primary capitalize">
-                              {report.category}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-sm theme-text-primary tabular-nums">
-                            {report.recordCount ?? '--'}
-                          </td>
-                          <td className="py-2.5 px-3 text-sm theme-text-primary tabular-nums">
-                            {formatFileSize(report.fileSize)}
-                          </td>
-                          <td className="py-2.5 px-3 text-sm theme-text-primary tabular-nums">
-                            {formatDate(report.generatedDate)}
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedReport(report);
-                                }}
-                                className={ghostBtn}
-                                title={t('extracted.view')}
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (report.status === 'completed') {
-                                    handleDownload(report.id);
-                                  }
-                                }}
-                                disabled={report.status !== 'completed'}
-                                className={ghostBtn}
-                                title={t('extracted.download')}
-                              >
-                                <Download className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden grid grid-cols-1 gap-2">
-                {filteredReports.map(renderCard)}
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+            {filteredReports.map(renderCard)}
+          </div>
 
           {/* Empty State */}
           {filteredReports.length === 0 && (

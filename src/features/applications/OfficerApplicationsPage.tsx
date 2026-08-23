@@ -150,7 +150,7 @@ const exportApplicationsPDF = (applications: Application[]) => {
         district: `${app.district}${app.state ? `, ${app.state}` : ''}`,
         actType: app.actType,
         amount: app.amount ? `₹${app.amount.toLocaleString('en-IN')}` : '₹0',
-        status: app.status.replace(/-/g, ' ').toUpperCase(),
+        status: (app.status ?? '').replace(/-/g, ' ').toUpperCase(),
         priority: app.priority.toUpperCase()
     }));
 
@@ -259,8 +259,9 @@ const ApplicationsPage = () => {
 
     // Get translated status text
     const getTranslatedStatus = (status: string) => {
-        const statusKey = `applications.status.${status.replace('-', '_')}`;
-        return t(statusKey) || status.replace('-', ' ');
+        const safe = status ?? '';
+        const statusKey = `applications.status.${safe.replace('-', '_')}`;
+        return t(statusKey) || safe.replace('-', ' ');
     };
 
     // Get translated priority text

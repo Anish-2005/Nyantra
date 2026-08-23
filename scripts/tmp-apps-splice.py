@@ -1,373 +1,14 @@
-"use client";
-import React, { useEffect, useState, useMemo, useRef, createElement } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLocale } from '@/context/LocaleContext';
-import { useAuth } from '@/context/AuthContext';
-import { useDashboardView } from '@/context/DashboardViewContext';
-import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
-import NewApplicationDrawer from './NewApplicationDrawer';
-import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, Timestamp, getDoc, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import LoadingState from '@/components/LoadingState';
-import {
-  Plus, Edit, Trash, X, Check,
-  Clock, AlertCircle, FileText, Eye, ChevronDown
-} from 'lucide-react';
+# One-shot splice: rebuild user applications render as tracker-style UI
+import io
 
-// PoA Act Offences Data Structure
-const POA_OFFENCES = {
-  "1. Offences leading to Death / Murder": {
-    "Murder of SC/ST person": 825000,
-    "Death due to injury inflicted during atrocity": 825000,
-    "Death after rape / gang rape": 825000
-  },
-  "2. Rape and Sexual Offences": {
-    "Rape": 500000,
-    "Gang rape": 825000,
-    "Attempt to rape": 100000,
-    "Parading naked / semi-naked": 200000,
-    "Sexual harassment / use of criminal force": 100000
-  },
-  "3. Grievous Hurt / Injury": {
-    "Grievous hurt": 125000,
-    "Permanent disability": 500000,
-    "Partial disability": 250000,
-    "Acid attack – deformity / disability": 825000,
-    "Acid attack – injury without deformity": 500000
-  },
-  "4. Offences Against Women & Dignity": {
-    "Outraging modesty of SC/ST woman": 100000,
-    "Sexual exploitation / trafficking": 200000,
-    "Forced to work naked / semi-naked": 200000
-  },
-  "5. Property Damage / Arson": {
-    "Burning of house / arson": "225000-425000",
-    "Destruction of household / property": "100000-200000",
-    "Destruction of crops": 100000,
-    "Destruction of cattle / livestock": 60000
-  },
-  "6. Land & Economic Offences": {
-    "Wrongful dispossession from land": 200000,
-    "Destruction of standing crops": 100000,
-    "Economic boycott": 100000,
-    "Social boycott": 100000,
-    "Bonded labour / forced labour": 100000
-  },
-  "7. Caste Atrocity / Humiliation Offences": {
-    "Intentional insult, intimidation, caste abuse": 100000,
-    "Preventing entry into public place": 100000,
-    "Preventing access to public well/tank/roads": 100000,
-    "Compelling to eat inedible / obnoxious substances": 100000
-  },
-  "8. Kidnapping / Abduction": {
-    "Kidnapping SC/ST person": "100000-200000",
-    "Abduction with intent to outrage modesty": 200000
-  },
-  "9. Mental Torture / Harassment": {
-    "Harassing, humiliating, intimidating": 100000,
-    "Public humiliation": "100000-200000"
-  },
-  "10. Other Serious Offences": {
-    "Preventing from voting": 100000,
-    "Poll violence against SC/ST": 200000,
-    "False, malicious, vexatious legal cases": 100000
-  }
-};
+P = 'src/features/applications/UserApplicationsPage.tsx'
+raw = io.open(P, encoding='utf-8', newline='').read()
+lines = raw.split('\n')
 
-// Status → journey stage index (rejected = -1)
-const stageIndex = (status: string) => {
-  switch (status) {
-    case 'approved': return 2;
-    case 'in-review':
-    case 'documents-required': return 1;
-    case 'rejected': return -1;
-    default: return 0;
-  }
-};
+start = next(i for i, l in enumerate(lines) if '{/* Header Section */}' in l)
+toast = next(i for i, l in enumerate(lines) if '{/* Toast container */}' in l)
 
-// Detail field for expanded tracker cards
-const Field = ({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) => (
-  <div className="min-w-0">
-    <div className="text-[11px] uppercase tracking-wider theme-text-muted mb-0.5">{label}</div>
-    <div className={`text-sm font-medium theme-text-primary truncate ${mono ? 'font-mono' : ''}`}>{value}</div>
-  </div>
-);
-
-// Application data type
-interface Application {
-  id: string;
-  ownerId: string;
-  applicantName: string;
-  aadhaar: string;
-  phone: string;
-  district: string;
-  state: string;
-  actType: string;
-  beneficiaryId: string;
-  incidentDate: string;
-  firReport?: string;
-  medicalReport?: string;
-  policeStation?: string;
-  caseNumber?: string;
-  applicationDate: string;
-  status: string;
-  amount: number;
-  priority: string;
-  assignedOfficer: string;
-  documents: number;
-  lastUpdate: string;
-  // common beneficiary fields
-  fatherName?: string;
-  email?: string;
-  address?: string;
-  registrationDate?: any;
-  category?: string;
-  age?: number | null;
-  gender?: string;
-  maritalStatus?: string;
-  bankAccount?: string;
-  ifsc?: string;
-  // PoA specific fields
-  offenceCategory?: string;
-  offenceType?: string;
-}
-
-export default function ApplicationsPage() {
-  const { user, profile } = useAuth();
-  const { view } = useDashboardView();
-  const { t } = useLocale();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [userBeneficiary, setUserBeneficiary] = useState<any>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
-  const [editingApplication, setEditingApplication] = useState<Application | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
-  const toastIdCounterRef = useRef(0);
-
-  // Toast helper
-  const showToast = (type: 'success' | 'error' | 'info', message: string, ttl = 4000) => {
-    toastIdCounterRef.current += 1;
-    const id = `toast-${toastIdCounterRef.current}`;
-    setToasts(prev => [...prev, { id, type, message }]);
-    window.setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
-  };
-
-  // Format helpers
-  const formatCurrency = (n?: number) => {
-    if (n == null) return '₹0';
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
-  };
-
-  const formatDate = (date: any) => {
-    if (!date) return '—';
-    try {
-      if (typeof date?.toDate === 'function') {
-        const d = date.toDate();
-        return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-      }
-      const d = new Date(date);
-      if (Number.isNaN(d.getTime())) return String(date);
-      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-    } catch { return String(date); }
-  };
-
-  // Status colors and icons
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'in-review': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'pending': Clock,
-      'in-review': Eye,
-      'approved': Check,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
-  // Get translated status text
-  const getTranslatedStatus = (status: string) => {
-    const safe = status ?? '';
-    const statusKey = `applications.status.${safe.replace('-', '_')}`;
-    return t(statusKey) || safe.replace('-', ' ');
-  };
-
-  // Get translated priority text
-  const getTranslatedPriority = (priority: string) => {
-    const priorityKey = `applications.priority.${priority.toLowerCase()}`;
-    return t(priorityKey) || priority;
-  };
-
-  // Fetch user's applications and beneficiary
-  useEffect(() => {
-    if (!user) {
-      setApplications([]);
-      setUserBeneficiary(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    // Fetch user's applications (no server-side orderBy to avoid requiring a composite index)
-    const applicationsQuery = query(
-      collection(db, 'applications'), 
-      where('ownerId', '==', user.uid)
-    );
-
-    const unsubscribeApplications = onSnapshot(applicationsQuery, (snapshot) => {
-      const apps: Application[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        apps.push({
-          id: doc.id,
-          ownerId: data.ownerId,
-          applicantName: data.applicantName || '',
-          aadhaar: data.aadhaar || '',
-          phone: data.phone || '',
-          district: data.district || '',
-          state: data.state || '',
-          actType: data.actType || '',
-          beneficiaryId: data.beneficiaryId || '',
-          incidentDate: data.incidentDate || '',
-          firReport: data.firReport || '',
-          medicalReport: data.medicalReport || '',
-          policeStation: data.policeStation || '',
-          caseNumber: data.caseNumber || '',
-          // copy stored beneficiary fields if present
-          fatherName: data.fatherName || '',
-          email: data.email || '',
-          address: data.address || '',
-          registrationDate: data.registrationDate || null,
-          category: data.category || '',
-          age: data.age || null,
-          gender: data.gender || '',
-          maritalStatus: data.maritalStatus || '',
-          bankAccount: data.bankAccount || '',
-          ifsc: data.ifsc || '',
-          // PoA specific fields
-          offenceCategory: data.offenceCategory || '',
-          offenceType: data.offenceType || '',
-          applicationDate: data.applicationDate?.toDate?.()?.toISOString() || '',
-          status: data.status || 'pending',
-          amount: data.amount || 0,
-          priority: data.priority || 'medium',
-          assignedOfficer: data.assignedOfficer || '',
-          documents: data.documents || 0,
-          lastUpdate: data.lastUpdate?.toDate?.()?.toISOString() || ''
-        });
-      });
-
-      // Sort client-side by applicationDate desc (ISO strings sort lexicographically)
-      apps.sort((a, b) => {
-        const da = a.applicationDate || '';
-        const dbs = b.applicationDate || '';
-        if (da === dbs) return 0;
-        return da < dbs ? 1 : -1; // newer first
-      });
-
-      setApplications(apps);
-    });
-
-    // Fetch user's beneficiary
-    const beneficiaryQuery = query(
-      collection(db, 'beneficiaries'), 
-      where('ownerId', '==', user.uid)
-    );
-
-    const unsubscribeBeneficiary = onSnapshot(beneficiaryQuery, (snapshot) => {
-      if (!snapshot.empty) {
-        const beneficiaryDoc = snapshot.docs[0];
-        setUserBeneficiary({
-          id: beneficiaryDoc.id,
-          ...beneficiaryDoc.data()
-        });
-      } else {
-        setUserBeneficiary(null);
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribeApplications();
-      unsubscribeBeneficiary();
-    };
-  }, [user]);
-
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  const requestDeleteApplication = (id: string) => setDeleteTargetId(id);
-
-  const deleteApplication = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'applications', id));
-      setApplications(prev => prev.filter(app => app.id !== id));
-      if (expandedId === id) setExpandedId(null);
-      showToast('success', t('applications.deletedSuccess'));
-    } catch (err) {
-      console.error('Error deleting application:', err);
-      showToast('error', t('applications.deletedFailed'));
-    }
-  };
-
-  // Filter applications (status pill filters)
-  const filteredApplications = useMemo(() => {
-    if (statusFilter === 'all') return applications;
-    return applications.filter(app => app.status === statusFilter);
-  }, [applications, statusFilter]);
-
-  // Statistics
-  const stats = useMemo(() => {
-    return {
-      total: applications.length,
-      pending: applications.filter(a => a.status === 'pending').length,
-      inReview: applications.filter(a => a.status === 'in-review').length,
-      approved: applications.filter(a => a.status === 'approved').length,
-      rejected: applications.filter(a => a.status === 'rejected').length,
-      documentsRequired: applications.filter(a => a.status === 'documents-required').length
-    };
-  }, [applications]);
-
-  if (!user) {
-    return (
-      <div className="p-5 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">{t('extracted.login_required')}</h3>
-          <p className="text-sm theme-text-muted mt-2">{t('extracted.login_to_view_applications')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (view !== 'user') {
-    return (
-      <div className="p-5 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">{t('extracted.applicant_only_access')}</h3>
-          <p className="text-sm theme-text-muted mt-2">{t('extracted.contact_admin_if_needed')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <LoadingState message={t('loading_applications')} />;
-  }
-
-  return (
-    <div className="space-y-4 max-w-[1400px]">
-        {/* Header */}
+NEW = '''        {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
@@ -530,7 +171,7 @@ export default function ApplicationsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
                           <h4 className="text-sm font-semibold theme-text-primary truncate leading-tight">
-                            {application.applicantName || '—'}
+                            {application.applicantName || '\u2014'}
                           </h4>
                           <span className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide shrink-0 ${getStatusColor(application.status)}`}>
                             {createElement(getStatusIcon(application.status), { className: 'w-3 h-3' })}
@@ -539,9 +180,9 @@ export default function ApplicationsPage() {
                         </div>
                         <p className="text-xs theme-text-muted truncate mt-0.5">
                           <span className="font-mono">{application.id}</span>
-                          {' \u00b7 '}
+                          {' \\u00b7 '}
                           {formatDate(application.applicationDate)}
-                          {application.actType ? ` \u00b7 ${application.actType}` : ''}
+                          {application.actType ? ` \\u00b7 ${application.actType}` : ''}
                         </p>
                       </div>
 
@@ -648,14 +289,14 @@ export default function ApplicationsPage() {
 
                           {/* Applicant snapshot */}
                           <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-                            <Field label={t('extracted.applicant')} value={application.applicantName || '—'} />
-                            <Field label={t('extracted.aadhaar_number')} value={application.aadhaar || '—'} mono />
-                            <Field label={t('extracted.phone_number')} value={application.phone || '—'} mono />
+                            <Field label={t('extracted.applicant')} value={application.applicantName || '\u2014'} />
+                            <Field label={t('extracted.aadhaar_number')} value={application.aadhaar || '\u2014'} mono />
+                            <Field label={t('extracted.phone_number')} value={application.phone || '\u2014'} mono />
                             <Field label={t('extracted.location')} value={`${application.district}, ${application.state}`} />
-                            <Field label={t('extracted.act_type')} value={application.actType || '—'} />
+                            <Field label={t('extracted.act_type')} value={application.actType || '\u2014'} />
                             <Field label={t('extracted.amount')} value={formatCurrency(application.amount)} />
                             <Field label={t('extracted.priority')} value={getTranslatedPriority(application.priority)} />
-                            <Field label={t('extracted.beneficiary_id')} value={application.beneficiaryId || '—'} mono />
+                            <Field label={t('extracted.beneficiary_id')} value={application.beneficiaryId || '\u2014'} mono />
                           </dl>
 
                           {/* PoA Offence Information */}
@@ -685,9 +326,9 @@ export default function ApplicationsPage() {
                                           ? category[application.offenceType as keyof typeof category] as string | number
                                           : null;
                                         if (compensation && typeof compensation === "string" && compensation.includes("-")) {
-                                          return `\u20b9${compensation.replace("-", " - \u20b9")}`;
+                                          return `\\u20b9${compensation.replace("-", " - \\u20b9")}`;
                                         }
-                                        return compensation ? `\u20b9${(compensation as number).toLocaleString("en-IN")}` : "\u20b90";
+                                        return compensation ? `\\u20b9${(compensation as number).toLocaleString("en-IN")}` : "\\u20b90";
                                       })()}
                                     </span>
                                   </div>
@@ -731,26 +372,8 @@ export default function ApplicationsPage() {
               );
             })}
           </div>
-        )}
-        {/* Toast container */}
-        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-          {toasts.map(tst => {
-            const toastClass = tst.type === 'success'
-              ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400'
-              : tst.type === 'error'
-                ? 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400'
-                : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
+        )}'''
 
-            return (
-              <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm">{tst.message}</div>
-                  <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-    </div>
-  );
-}
+out = lines[:start] + NEW.split('\n') + lines[toast:]
+io.open(P, 'w', encoding='utf-8', newline='').write('\n'.join(out))
+print('spliced ok: replaced', start + 1, '..', toast, '| new total', len(out))
