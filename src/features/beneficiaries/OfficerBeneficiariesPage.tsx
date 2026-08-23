@@ -1,541 +1,21 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import ExportModal from '@/components/dashboard/ExportModal';
 import { useLocale } from '@/context/LocaleContext';
 import { db } from '@/lib/firebase';
-import { generateBeneficiaryId } from '@/lib/id';
-import { collection, onSnapshot, query, orderBy, addDoc, setDoc, doc, updateDoc, deleteDoc, Timestamp, getDoc, limit, getDocs } from 'firebase/firestore';
-import { CldUploadWidget } from 'next-cloudinary';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
-import {
-  Search, Filter, Download, Plus, Eye, Edit,
-  ChevronLeft, ChevronRight, X,
-  Trash, FileText,
-  Upload, File, Loader2,
-  Clock, AlertCircle, Shield, BadgeCheck, Banknote
-} from 'lucide-react';
-
-// All data is Firestore-backed now. Removed local mock data to rely solely on Firestore.
-
-const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
-const inlineInputCls = "h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:border-[var(--accent-primary)] transition-colors";
-
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
-);
-
-const Pair = ({ label, value, mono }: { label: string; value: string | number; mono?: boolean }) => (
-  <div className="min-w-0">
-    <dt className="text-[11px] uppercase tracking-wider theme-text-muted truncate">{label}</dt>
-    <dd className={`text-[13px] font-medium theme-text-primary mt-0.5 truncate ${mono ? 'font-mono' : ''}`}>{value}</dd>
-  </div>
-);
-
-// New Beneficiary Form Component (client-side)
-const NewBeneficiaryForm = ({ onCancel, initialData, onSaved, showToast }: { 
-  onCancel: () => void, 
-  initialData?: any | null, 
-  onSaved?: ((saved?: any) => void) | undefined,
-  showToast: (type: 'success' | 'error' | 'info', message: string, ttl?: number) => void
-}) => {
-  const { t } = useLocale();
-  const [formData, setFormData] = useState({
-    name: '',
-    fatherName: '',
-    aadhaarNumber: '',
-    phone: '',
-    email: '',
-    district: '',
-    state: '',
-    address: '',
-    registrationDate: '',
-    priority: 'medium',
-    assignedOfficer: '',
-    category: 'SC',
-    age: '',
-    gender: '',
-    maritalStatus: '',
-    bankAccount: '',
-    ifsc: '',
-    scStCertificate: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
-    window.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [onCancel]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear validation error for this field when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    // Required field validations
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required';
-    }
-    if (!formData.aadhaarNumber.trim()) {
-      errors.aadhaarNumber = 'Aadhaar number is required';
-    } else if (!/^\d{12}$/.test(formData.aadhaarNumber)) {
-      errors.aadhaarNumber = 'Aadhaar number must be 12 digits';
-    }
-    if (!formData.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phone)) {
-      errors.phone = 'Phone number must be 10 digits';
-    }
-    // Email validation (optional but must be valid if provided)
-    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      errors.email = 'Please enter a valid email address';
-    }
-    if (!formData.district.trim()) {
-      errors.district = 'District is required';
-    }
-    if (!formData.state.trim()) {
-      errors.state = 'State is required';
-    }
-
-    // SC/ST Certificate validation - required when category is SC or ST
-    if ((formData.category === 'SC' || formData.category === 'ST') && !formData.scStCertificate.trim()) {
-      errors.scStCertificate = 'SC/ST certificate upload is required for SC/ST category';
-    }
-
-    // Bank account validation if provided
-    if (formData.bankAccount.trim() && !/^\d{9,18}$/.test(formData.bankAccount)) {
-      errors.bankAccount = 'Bank account number should be 9-18 digits';
-    }
-
-    // IFSC validation if provided
-    if (formData.ifsc.trim() && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc.toUpperCase())) {
-      errors.ifsc = 'Invalid IFSC code format';
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      const beneficiariesRef = collection(db, 'beneficiaries');
-      if (initialData && initialData.id) {
-        // update existing beneficiary
-        const regDate = formData.registrationDate
-          ? Timestamp.fromDate(new Date(formData.registrationDate))
-          : (initialData?.registrationDate && typeof initialData.registrationDate.toDate === 'function'
-            ? initialData.registrationDate
-            : (initialData?.registrationDate ? Timestamp.fromDate(new Date(initialData.registrationDate)) : Timestamp.fromDate(new Date())));
-
-        const updated = {
-          name: formData.name,
-          fatherName: formData.fatherName,
-          aadhaarNumber: formData.aadhaarNumber,
-          phone: formData.phone,
-          email: formData.email,
-          district: formData.district,
-          state: formData.state,
-          address: formData.address,
-          registrationDate: regDate,
-          priority: formData.priority,
-          assignedOfficer: formData.assignedOfficer,
-          category: formData.category,
-          age: parseInt(formData.age) || null,
-          gender: formData.gender || null,
-          maritalStatus: formData.maritalStatus || null,
-          bankAccount: formData.bankAccount || null,
-          ifsc: formData.ifsc || null,
-          scStCertificate: formData.scStCertificate,
-          lastUpdate: Timestamp.fromDate(new Date())
-        };
-
-        await updateDoc(doc(db, 'beneficiaries', initialData.id), updated);
-        const saved = { id: initialData.id, ...updated };
-        onSaved?.(saved);
-        onCancel();
-      } else {
-        const newBeneficiary = {
-          name: formData.name,
-          fatherName: formData.fatherName,
-          aadhaarNumber: formData.aadhaarNumber,
-          phone: formData.phone,
-          email: formData.email,
-          district: formData.district,
-          state: formData.state,
-          address: formData.address,
-          registrationDate: formData.registrationDate ? Timestamp.fromDate(new Date(formData.registrationDate)) : Timestamp.fromDate(new Date()),
-          status: 'pending-verification',
-          priority: formData.priority,
-          assignedOfficer: formData.assignedOfficer,
-          documents: 0,
-          lastUpdate: Timestamp.fromDate(new Date()),
-          verificationStatus: 'pending',
-          category: formData.category,
-          age: parseInt(formData.age) || null,
-          gender: formData.gender || null,
-          maritalStatus: formData.maritalStatus || null,
-          bankAccount: formData.bankAccount || null,
-          ifsc: formData.ifsc || null,
-          scStCertificate: formData.scStCertificate
-        };
-
-        // Generate beneficiary id starting with `BEN` followed by digits
-        const newId = generateBeneficiaryId();
-        const ref = doc(db, 'beneficiaries', newId);
-        await setDoc(ref, { ...newBeneficiary, id: newId });
-        const saved = { id: newId, ...newBeneficiary };
-        onSaved?.(saved);
-        onCancel();
-      }
-    } catch (err) {
-      console.error('Error adding/updating beneficiary:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Prefill form when editing
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name || '',
-        fatherName: initialData.fatherName || '',
-        aadhaarNumber: initialData.aadhaarNumber || '',
-        phone: initialData.phone || '',
-        email: initialData.email || '',
-        district: initialData.district || '',
-        state: initialData.state || '',
-        address: initialData.address || '',
-        registrationDate: initialData.registrationDate && initialData.registrationDate.toDate ? initialData.registrationDate.toDate().toISOString() : (initialData.registrationDate || ''),
-        priority: initialData.priority || 'medium',
-        assignedOfficer: initialData.assignedOfficer || '',
-        category: initialData.category || 'SC',
-        age: initialData.age ? String(initialData.age) : '',
-        gender: initialData.gender || '',
-        maritalStatus: initialData.maritalStatus || '',
-        bankAccount: initialData.bankAccount || '',
-        ifsc: initialData.ifsc || '',
-        scStCertificate: initialData.scStCertificate || ''
-      });
-    }
-  }, [initialData]);
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="absolute inset-0 bg-black/50"
-        onClick={onCancel}
-      />
-      <motion.aside
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="absolute inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
-      >
-        <div className="h-12 px-4 flex items-center justify-between border-b theme-border-glass flex-shrink-0">
-          <div>
-            <h3 className="text-sm font-semibold tracking-tight theme-text-primary">{initialData ? t('extracted.edit_beneficiary') : t('extracted.create_new_beneficiary')}</h3>
-            <p className="text-[11px] theme-text-muted">{initialData ? t('extracted.edit_beneficiary_description') : t('extracted.create_new_beneficiary_description')}</p>
-          </div>
-          <button type="button" onClick={onCancel} className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors" aria-label="Close">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form id="new-beneficiary-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-      <section>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.add_beneficiary')}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.full_name')}</label>
-            <input required value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.name ? 'border-red-500' : ''}`} />
-            {validationErrors.name && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.fatheraposs_name')}</label>
-            <input value={formData.fatherName} onChange={(e) => handleInputChange('fatherName', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.aadhaar_number')}</label>
-            <input value={formData.aadhaarNumber} onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.aadhaarNumber ? 'border-red-500' : ''}`} />
-            {validationErrors.aadhaarNumber && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.aadhaarNumber}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.phone_number')}</label>
-            <input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.phone ? 'border-red-500' : ''}`} />
-            {validationErrors.phone && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.email')}</label>
-            <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.email ? 'border-red-500' : ''}`} />
-            {validationErrors.email && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.district')}</label>
-            <input value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.district ? 'border-red-500' : ''}`} />
-            {validationErrors.district && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.district}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.state')}</label>
-            <input value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.state ? 'border-red-500' : ''}`} />
-            {validationErrors.state && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.state}</p>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.complete_address')}</label>
-            <input value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.verification_details')}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.sc_st_certificate')}</label>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setIsUploading(true);
-                      setUploadProgress(0);
-                      try {
-                        // Simple progress simulation
-                        const progressInterval = setInterval(() => {
-                          setUploadProgress(prev => Math.min(90, prev + 10));
-                        }, 200);
-
-                        const uploadFormData = new FormData();
-                        uploadFormData.append('file', file);
-                        uploadFormData.append('beneficiaryId', initialData?.id || 'temp');
-
-                        console.log('Starting upload...');
-                        const response = await fetch('/api/upload-certificate', {
-                          method: 'POST',
-                          body: uploadFormData,
-                        });
-
-                        clearInterval(progressInterval);
-                        setUploadProgress(100);
-
-                        console.log('Upload response status:', response.status);
-                        const result = await response.json();
-                        console.log('Upload result:', result);
-
-                        if (result.success) {
-                          console.log('Setting certificate URL:', result.url);
-                          setFormData(prev => ({ ...prev, scStCertificate: result.url }));
-                          setValidationErrors(prev => ({ ...prev, scStCertificate: '' }));
-                          showToast('success', 'Certificate uploaded successfully');
-                        } else {
-                          showToast('error', result.error || 'Upload failed');
-                        }
-                      } catch (error) {
-                        console.error('Upload error:', error);
-                        showToast('error', 'Failed to upload certificate. Please check your internet connection or enter URL manually.');
-                      } finally {
-                        setIsUploading(false);
-                        setUploadProgress(0);
-                      }
-                    }
-                  }}
-                  className={`flex-1 px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
-                  disabled={isSubmitting || isUploading}
-                />
-                <button
-                  type="button"
-                  onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
-                  className={`px-3.5 py-2 rounded-md theme-bg-glass theme-border-glass border theme-text-primary hover:bg-blue-500/10 transition-colors flex items-center gap-2 ${validationErrors.scStCertificate ? 'border-red-500' : ''}`}
-                  disabled={isSubmitting || isUploading}
-                >
-                  <Upload className="w-4 h-4" />
-                  {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload'}
-                </button>
-              </div>
-              {isUploading && (
-                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                  <div
-                    className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-sm theme-text-muted">or</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const url = prompt('Enter certificate URL:');
-                    if (url && url.trim()) {
-                      setFormData(prev => ({ ...prev, scStCertificate: url.trim() }));
-                      setValidationErrors(prev => ({ ...prev, scStCertificate: '' }));
-                      showToast('success', 'Certificate URL added manually');
-                    }
-                  }}
-                  className="text-sm text-blue-500 hover:text-blue-600 underline"
-                  disabled={isSubmitting || isUploading}
-                >
-                  Enter URL manually
-                </button>
-              </div>
-              {formData.scStCertificate && (
-                <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <File className="w-4 h-4 text-green-500" />
-                  <span className="text-sm theme-text-primary">Certificate uploaded successfully</span>
-                  <a
-                    href={formData.scStCertificate}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 text-sm underline"
-                  >
-                    View File
-                  </a>
-                </div>
-              )}
-              {validationErrors.scStCertificate && (
-                <p className="text-red-500 text-xs mt-1">{validationErrors.scStCertificate}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{t('extracted.personal_details')}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.age')}</label>
-            <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.gender')}</label>
-            <select value={formData.gender} onChange={(e) => handleInputChange('gender', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
-              <option value="">{t('extracted.select_gender')}</option>
-              <option value="Male">{t('extracted.male')}</option>
-              <option value="Female">{t('extracted.female')}</option>
-              <option value="Other">{t('extracted.other')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.category_1') || 'Category'}</label>
-            <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
-              <option value="SC">SC</option>
-              <option value="ST">ST</option>
-              <option value="OBC">OBC</option>
-              <option value="General">General</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.marital_status')}</label>
-            <select value={formData.maritalStatus} onChange={(e) => handleInputChange('maritalStatus', e.target.value)} className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary">
-              <option value="">{t('extracted.select_marital_status')}</option>
-              <option value="Single">{t('extracted.single')}</option>
-              <option value="Married">{t('extracted.married')}</option>
-              <option value="Divorced">{t('extracted.divorced')}</option>
-              <option value="Widowed">{t('extracted.widowed')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.bank_account')}</label>
-            <input value={formData.bankAccount} onChange={(e) => handleInputChange('bankAccount', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.bankAccount ? 'border-red-500' : ''}`} />
-            {validationErrors.bankAccount && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.bankAccount}</p>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium theme-text-muted mb-2">{t('extracted.ifsc_code')}</label>
-            <input value={formData.ifsc} onChange={(e) => handleInputChange('ifsc', e.target.value)} className={`w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary ${validationErrors.ifsc ? 'border-red-500' : ''}`} />
-            {validationErrors.ifsc && (
-              <p className="text-red-500 text-xs mt-1">{validationErrors.ifsc}</p>
-            )}
-          </div>
-        </div>
-
-      </section>
-    </form>
-
-    <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 flex-shrink-0">
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={isSubmitting || isUploading}
-        className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary hover:theme-bg-hover hover:theme-text-primary transition-colors text-sm font-medium disabled:opacity-50"
-      >
-        {t('extracted.cancel')}
-      </button>
-      <button
-        type="submit"
-        form="new-beneficiary-form"
-        disabled={isSubmitting || isUploading}
-        className="flex-1 h-9 rounded-md accent-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-      >
-        {isSubmitting ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          initialData ? t('extracted.save') : t('extracted.create')
-        )}
-      </button>
-    </div>
-      </motion.aside>
-    </div>,
-    document.body
-  );
-};
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { Download, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PageHeader, StatBand } from '@/components/dashboard/ui';
+import { buildOfficerBeneficiaryCsv, formatOfficerCurrency } from './helpers';
+import { downloadOfficerBeneficiariesCsv, exportOfficerBeneficiariesPdf, getOfficerBeneficiariesPdfBuffer } from './officerExporters';
+import OfficerBeneficiaryForm from './components/OfficerBeneficiaryForm';
+import OfficerBeneficiaryFilters from './components/OfficerBeneficiaryFilters';
+import OfficerBeneficiaryTable from './components/OfficerBeneficiaryTable';
+import OfficerBeneficiaryCards from './components/OfficerBeneficiaryCards';
+import OfficerBeneficiaryInspector from './components/OfficerBeneficiaryInspector';
 
 const BeneficiariesPage = () => {
   const { t } = useLocale();
@@ -578,253 +58,11 @@ const BeneficiariesPage = () => {
 
   // Export helpers
   const exportBeneficiariesData = (items: any[]) => {
-    const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'Email', 'District', 'State', 'SC/ST Certificate', t("beneficiary.sortOptions.registrationDate") || 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
-    const rows = items.map(b => {
-      const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
-        ? b.registrationDate.toDate().toISOString()
-        : (b.registrationDate || '');
-      return [
-        b.id,
-        b.name,
-        b.aadhaarNumber,
-        b.phone,
-        b.email || '',
-        b.district,
-        b.state,
-        b.scStCertificate || '',
-        reg,
-        b.status || '',
-        b.verificationStatus || '',
-        (b.disbursedAmount != null ? String(b.disbursedAmount) : '0'),
-        b.priority || '',
-        b.assignedOfficer || '',
-        String(b.documents || 0),
-        b.lastUpdate || '',
-        b.age || '',
-        b.gender || '',
-        b.maritalStatus || '',
-        b.bankAccount || '',
-        b.ifsc || ''
-      ];
-    });
-
-    const csv = [headers, ...rows].map(r => r.map(f => `"${(f ?? '')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `beneficiaries_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadOfficerBeneficiariesCsv(items, t);
   };
 
   const exportBeneficiariesPDF = (items: any[]) => {
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const contentWidth = pageWidth - (margin * 2);
-
-    // Professional header
-    doc.setFillColor(30, 64, 175);
-    doc.rect(0, 0, pageWidth, 35, 'F');
-
-    // Title
-    doc.setFontSize(20);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('NYANTRA - Beneficiaries Report', margin, 22);
-
-    // Subtitle
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
-
-    // Report metadata
-    doc.setFontSize(8);
-    doc.setTextColor(255, 255, 255);
-    const currentDate = new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    doc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
-    doc.text(`Total Records: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
-
-    let yPosition = 50;
-
-    // Summary section
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, yPosition, contentWidth, 25, 'F');
-
-    doc.setFontSize(12);
-    doc.setTextColor(30, 64, 175);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
-
-    // Summary stats
-    const statusCounts = items.reduce((acc, b) => {
-        acc[b.status] = (acc[b.status] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    const verificationCounts = items.reduce((acc, b) => {
-        acc[b.verificationStatus] = (acc[b.verificationStatus] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Total Beneficiaries: ${items.length}`, margin + 5, yPosition + 18);
-
-    yPosition += 35;
-
-    // Status breakdown
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 64, 175);
-    doc.text('Status Breakdown:', margin, yPosition);
-
-    yPosition += 8;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-
-    Object.entries(statusCounts).forEach(([status, count]) => {
-        const statusText = status.replace(/-/g, ' ').toUpperCase();
-        const percentage = (((count as number) / items.length) * 100).toFixed(1);
-        doc.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-        yPosition += 5;
-    });
-
-    yPosition += 10;
-
-    // Verification breakdown
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 64, 175);
-    doc.text('Verification Breakdown:', margin, yPosition);
-
-    yPosition += 8;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-
-    Object.entries(verificationCounts).forEach(([verification, count]) => {
-        const verificationText = verification.replace(/-/g, ' ').toUpperCase();
-        const percentage = (((count as number) / items.length) * 100).toFixed(1);
-        doc.text(`${verificationText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-        yPosition += 5;
-    });
-
-    yPosition += 10;
-
-    // Beneficiaries table
-    const tableColumns = [
-        { header: 'Beneficiary ID', dataKey: 'id', width: 30 },
-        { header: 'Name', dataKey: 'name', width: 35 },
-        { header: 'Phone', dataKey: 'phone', width: 30 },
-        { header: 'District', dataKey: 'district', width: 30 },
-        { header: 'Status', dataKey: 'status', width: 25 },
-        { header: 'Verification', dataKey: 'verificationStatus', width: 25 },
-        { header: 'Assigned Officer', dataKey: 'assignedOfficer', width: 35 }
-    ];
-
-    const tableRows = items.map(b => ({
-        id: b.id,
-        name: b.name,
-        phone: b.phone,
-        district: `${b.district}${b.state ? `, ${b.state}` : ''}`,
-        status: (b.status || '').toString().replace(/-/g, ' ').toUpperCase(),
-        verificationStatus: (b.verificationStatus || '').toString().replace(/-/g, ' ').toUpperCase(),
-        assignedOfficer: b.assignedOfficer || 'Not Assigned'
-    }));
-
-    // Check if we need a new page
-    if (yPosition > pageHeight - 60) {
-        doc.addPage();
-        yPosition = margin;
-    }
-
-    // Table header
-    doc.setFillColor(30, 64, 175);
-    doc.rect(margin, yPosition, contentWidth, 8, 'F');
-
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-
-    let xPos = margin + 2;
-    tableColumns.forEach(col => {
-        doc.text(col.header, xPos, yPosition + 5.5);
-        xPos += col.width;
-    });
-
-    yPosition += 10;
-
-    // Table rows
-    doc.setFontSize(7);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-
-    tableRows.forEach((row, index) => {
-        if (yPosition > pageHeight - 20) {
-            doc.addPage();
-            yPosition = margin;
-
-            // Repeat header on new page
-            doc.setFillColor(30, 64, 175);
-            doc.rect(margin, yPosition, contentWidth, 8, 'F');
-
-            doc.setFontSize(9);
-            doc.setTextColor(255, 255, 255);
-            doc.setFont('helvetica', 'bold');
-
-            xPos = margin + 2;
-            tableColumns.forEach(col => {
-                doc.text(col.header, xPos, yPosition + 5.5);
-                xPos += col.width;
-            });
-
-            yPosition += 10;
-            doc.setFontSize(7);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'normal');
-        }
-
-        // Alternate row colors
-        if (index % 2 === 0) {
-            doc.setFillColor(248, 250, 252);
-            doc.rect(margin, yPosition - 3, contentWidth, 6, 'F');
-        }
-
-        xPos = margin + 2;
-        tableColumns.forEach(col => {
-            const value = row[col.dataKey as keyof typeof row] || '';
-            doc.text(String(value), xPos, yPosition + 2);
-            xPos += col.width;
-        });
-
-        yPosition += 6;
-    });
-
-    // Footer
-    const footerY = pageHeight - 15;
-    doc.setFontSize(6);
-    doc.setTextColor(128, 128, 128);
-    doc.setFont('helvetica', 'italic');
-    doc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
-    doc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
-
-    // Save the PDF
-    doc.save(`nyantra_beneficiaries_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    exportOfficerBeneficiariesPdf(items);
   };
 
   // Email export function
@@ -846,246 +84,12 @@ const BeneficiariesPage = () => {
       let attachmentType: string;
 
       if (format === 'csv') {
-        const headers = ['Beneficiary ID', 'Name', 'Aadhaar', 'Phone', 'Email', 'District', 'State', 'SC/ST Certificate', t("beneficiary.sortOptions.registrationDate") || 'Registration Date', 'Status', 'Verification', 'Disbursed (INR)', 'Priority', 'Assigned Officer', 'Documents', 'Last Update', 'Age', 'Gender', 'Marital Status', 'Bank Account', 'IFSC'];
-        const rows = items.map(b => {
-          const reg = b.registrationDate && typeof b.registrationDate.toDate === 'function'
-            ? b.registrationDate.toDate().toISOString()
-            : (b.registrationDate || '');
-          return [
-            b.id,
-            b.name,
-            b.aadhaarNumber,
-            b.phone,
-            b.email || '',
-            b.district,
-            b.state,
-            b.scStCertificate || '',
-            reg,
-            b.status || '',
-            b.verificationStatus || '',
-            (b.disbursedAmount != null ? String(b.disbursedAmount) : '0'),
-            b.priority || '',
-            b.assignedOfficer || '',
-            String(b.documents || 0),
-            b.lastUpdate || '',
-            b.age || '',
-            b.gender || '',
-            b.maritalStatus || '',
-            b.bankAccount || '',
-            b.ifsc || ''
-          ];
-        });
-
-        attachmentData = [headers, ...rows].map(r => r.map(f => `"${(f ?? '')}"`).join(',')).join('\n');
+        attachmentData = buildOfficerBeneficiaryCsv(items, t);
         attachmentName = `beneficiaries_export_${new Date().toISOString().split('T')[0]}.csv`;
         attachmentType = 'text/csv';
       } else {
         // Generate PDF as base64
-        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = 20;
-        const contentWidth = pageWidth - (margin * 2);
-
-        // Professional header
-        doc.setFillColor(30, 64, 175);
-        doc.rect(0, 0, pageWidth, 35, 'F');
-
-        // Title
-        doc.setFontSize(20);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.text('NYANTRA - Beneficiaries Report', margin, 22);
-
-        // Subtitle
-        doc.setFontSize(10);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Direct Benefit Transfer System under PCR & PoA Acts', margin, 30);
-
-        // Report metadata
-        doc.setFontSize(8);
-        doc.setTextColor(255, 255, 255);
-        const currentDate = new Date().toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        doc.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
-        doc.text(`Total Records: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
-
-        let yPosition = 50;
-
-        // Summary section
-        doc.setFillColor(240, 240, 240);
-        doc.rect(margin, yPosition, contentWidth, 25, 'F');
-
-        doc.setFontSize(12);
-        doc.setTextColor(30, 64, 175);
-        doc.setFont('helvetica', 'bold');
-        doc.text('EXECUTIVE SUMMARY', margin + 5, yPosition + 8);
-
-        // Summary stats
-        const statusCounts = items.reduce((acc, b) => {
-            acc[b.status] = (acc[b.status] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-
-        const verificationCounts = items.reduce((acc, b) => {
-            acc[b.verificationStatus] = (acc[b.verificationStatus] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Total Beneficiaries: ${items.length}`, margin + 5, yPosition + 18);
-
-        yPosition += 35;
-
-        // Status breakdown
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 64, 175);
-        doc.text('Status Breakdown:', margin, yPosition);
-
-        yPosition += 8;
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0);
-
-        Object.entries(statusCounts).forEach(([status, count]) => {
-            const statusText = status.replace(/-/g, ' ').toUpperCase();
-            const percentage = (((count as number) / items.length) * 100).toFixed(1);
-            doc.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-            yPosition += 5;
-        });
-
-        yPosition += 10;
-
-        // Verification breakdown
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 64, 175);
-        doc.text('Verification Breakdown:', margin, yPosition);
-
-        yPosition += 8;
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0);
-
-        Object.entries(verificationCounts).forEach(([verification, count]) => {
-            const verificationText = verification.replace(/-/g, ' ').toUpperCase();
-            const percentage = (((count as number) / items.length) * 100).toFixed(1);
-            doc.text(`${verificationText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-            yPosition += 5;
-        });
-
-        yPosition += 10;
-
-        // Beneficiaries table
-        const tableColumns = [
-            { header: 'Beneficiary ID', dataKey: 'id', width: 30 },
-            { header: 'Name', dataKey: 'name', width: 35 },
-            { header: 'Phone', dataKey: 'phone', width: 30 },
-            { header: 'District', dataKey: 'district', width: 30 },
-            { header: 'Status', dataKey: 'status', width: 25 },
-            { header: 'Verification', dataKey: 'verificationStatus', width: 25 },
-            { header: 'Assigned Officer', dataKey: 'assignedOfficer', width: 35 }
-        ];
-
-        const tableRows = items.map(b => ({
-            id: b.id,
-            name: b.name,
-            phone: b.phone,
-            district: `${b.district}${b.state ? `, ${b.state}` : ''}`,
-            status: (b.status || '').toString().replace(/-/g, ' ').toUpperCase(),
-            verificationStatus: (b.verificationStatus || '').toString().replace(/-/g, ' ').toUpperCase(),
-            assignedOfficer: b.assignedOfficer || 'Not Assigned'
-        }));
-
-        // Check if we need a new page
-        if (yPosition > pageHeight - 60) {
-            doc.addPage();
-            yPosition = margin;
-        }
-
-        // Table header
-        doc.setFillColor(30, 64, 175);
-        doc.rect(margin, yPosition, contentWidth, 8, 'F');
-
-        doc.setFontSize(9);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-
-        let xPos = margin + 2;
-        tableColumns.forEach(col => {
-            doc.text(col.header, xPos, yPosition + 5.5);
-            xPos += col.width;
-        });
-
-        yPosition += 10;
-
-        // Table rows
-        doc.setFontSize(7);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
-
-        tableRows.forEach((row, index) => {
-            if (yPosition > pageHeight - 20) {
-                doc.addPage();
-                yPosition = margin;
-
-                // Repeat header on new page
-                doc.setFillColor(30, 64, 175);
-                doc.rect(margin, yPosition, contentWidth, 8, 'F');
-
-                doc.setFontSize(9);
-                doc.setTextColor(255, 255, 255);
-                doc.setFont('helvetica', 'bold');
-
-                xPos = margin + 2;
-                tableColumns.forEach(col => {
-                    doc.text(col.header, xPos, yPosition + 5.5);
-                    xPos += col.width;
-                });
-
-                yPosition += 10;
-                doc.setFontSize(7);
-                doc.setTextColor(0, 0, 0);
-                doc.setFont('helvetica', 'normal');
-            }
-
-            // Alternate row colors
-            if (index % 2 === 0) {
-                doc.setFillColor(248, 250, 252);
-                doc.rect(margin, yPosition - 3, contentWidth, 6, 'F');
-            }
-
-            xPos = margin + 2;
-            tableColumns.forEach(col => {
-                const value = row[col.dataKey as keyof typeof row] || '';
-                doc.text(String(value), xPos, yPosition + 2);
-                xPos += col.width;
-            });
-
-            yPosition += 6;
-        });
-
-        // Footer
-        const footerY = pageHeight - 15;
-        doc.setFontSize(6);
-        doc.setTextColor(128, 128, 128);
-        doc.setFont('helvetica', 'italic');
-        doc.text('This report is generated by Nyantra - Direct Benefit Transfer System', margin, footerY);
-        doc.text(`Page 1 of 1`, pageWidth - margin, footerY, { align: 'right' });
-
-        // Get PDF as buffer
-        const pdfBuffer = doc.output('arraybuffer');
-        attachmentData = Buffer.from(pdfBuffer);
+        attachmentData = getOfficerBeneficiariesPdfBuffer(items);
         attachmentName = `nyantra_beneficiaries_report_${new Date().toISOString().split('T')[0]}.pdf`;
         attachmentType = 'application/pdf';
       }
@@ -1234,6 +238,21 @@ const BeneficiariesPage = () => {
     return null;
   };
 
+  // Row action handlers shared by table/cards views
+  const openBeneficiaryDetail = (b: any) => {
+    setSelectedBeneficiaryLoading(true);
+    fetchFullBeneficiary(b.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); });
+  };
+
+  const editBeneficiary = (b: any) => {
+    setSelectedBeneficiaryLoading(true);
+    fetchFullBeneficiary(b.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); });
+  };
+
+  const openCertificate = (url: string) => {
+    window.open(url, '_blank');
+  };
+
   // Filter and sort beneficiaries
   const filteredBeneficiaries = useMemo(() => {
     let filtered = [...beneficiaries];
@@ -1331,13 +350,13 @@ const BeneficiariesPage = () => {
   // Statistics
   const stats = useMemo(() => {
     const disbursedAmount = disbursements.filter(d => d.status === 'completed').reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
-    
+
     // Calculate disbursed this month and last month
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    
+
     const thisMonthDisbursed = disbursements
       .filter(d => d.status === 'completed' && d.initiatedDate)
       .filter(d => {
@@ -1345,7 +364,7 @@ const BeneficiariesPage = () => {
         return date >= thisMonth && date < nextMonth;
       })
       .reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
-    
+
     const lastMonthDisbursed = disbursements
       .filter(d => d.status === 'completed' && d.initiatedDate)
       .filter(d => {
@@ -1353,9 +372,9 @@ const BeneficiariesPage = () => {
         return date >= lastMonth && date < thisMonth;
       })
       .reduce((sum, d) => sum + (d.disbursedAmount || 0), 0);
-    
+
     const percentageChange = lastMonthDisbursed > 0 ? ((thisMonthDisbursed - lastMonthDisbursed) / lastMonthDisbursed) * 100 : 0;
-    
+
     return {
       total: beneficiaries.length,
       verified: beneficiaries.filter(b => b.verificationStatus === 'verified').length,
@@ -1416,7 +435,7 @@ const BeneficiariesPage = () => {
           ifsc: data.ifsc || null
         });
       });
-      
+
       // Sort in memory to handle missing registrationDate
       items.sort((a, b) => {
         const aDateStr = a.registrationDate || '1970-01-01T00:00:00.000Z';
@@ -1425,7 +444,7 @@ const BeneficiariesPage = () => {
         const bDate = new Date(bDateStr);
         return bDate.getTime() - aDate.getTime();
       });
-      
+
       setBeneficiaries(items);
       setLoading(false);
     }, (error) => {
@@ -1481,96 +500,6 @@ const BeneficiariesPage = () => {
     if (isMobile) setViewMode('cards');
   }, [isMobile]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'disbursed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-      case 'pending-verification': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getVerificationColor = (status: string) => {
-    switch (status) {
-      case 'verified': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'documents-required': return 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'medium': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      case 'low': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'SC': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'ST': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'OBC': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      'pending-verification': Clock,
-      'verified': BadgeCheck,
-      'disbursed': Banknote,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
-  const getVerificationIcon = (status: string) => {
-    const icons = {
-      'verified': Shield,
-      'pending': Clock,
-      'rejected': X,
-      'documents-required': AlertCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
-  };
-
-  const formatActType = (val?: string) => {
-    if (!val) return '—';
-    const v = String(val).toLowerCase();
-    if (v.includes('pcr')) return t('extracted.pcr_act') || 'PCR Act';
-    if (v.includes('poa') || v.includes('poa')) return t('extracted.poa_act') || 'PoA Act';
-    return val;
-  };
-
-  // Deterministic formatting helpers to avoid SSR/client hydration mismatches
-  
-
-  const formatCurrency = (n?: number | null) => {
-    if (n == null || Number.isNaN(n)) return '₹0';
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n as number);
-  };
-
-  const formatDate = (s?: string | null) => {
-    if (!s) return '—';
-    try {
-      // Handle Firestore Timestamp
-      if (typeof (s as any)?.toDate === 'function') {
-        const d = (s as any).toDate();
-        return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-      }
-      const d = new Date(s as any);
-      if (Number.isNaN(d.getTime())) return String(s);
-      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-    } catch { return String(s); }
-  };
-
   const hasActiveFilters = statusFilter !== 'all' || categoryFilter !== 'all' || verificationFilter !== 'all' || sortBy !== 'registrationDate' || sortOrder !== 'desc';
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -1579,6 +508,14 @@ const BeneficiariesPage = () => {
       detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedBeneficiary?.id]);
+
+  const resetAllFilters = () => {
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setVerificationFilter('all');
+    setSortBy('registrationDate');
+    setSortOrder('desc');
+  };
 
   // Pagination helpers
   const totalItems = filteredBeneficiaries.length;
@@ -1598,18 +535,12 @@ const BeneficiariesPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between gap-3"
       >
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary">
-            {t("beneficiary.beneficiary")}{' '}
-            <span className="text-accent-gradient">{t("beneficiary.management")}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5">
-            {t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <PageHeader
+          title={t("beneficiary.beneficiary")}
+          highlight={t("beneficiary.management")}
+          subtitle={t('beneficiary.comprehensive_oversight_of_dbt_beneficiaries')}
+        >
           <button
             onClick={() => setShowExportModal(true)}
             className="h-9 px-3.5 rounded-md border theme-border-glass theme-text-secondary hover:theme-bg-hover hover:theme-text-primary transition-colors inline-flex items-center gap-1.5 text-xs font-medium"
@@ -1624,7 +555,7 @@ const BeneficiariesPage = () => {
             <Plus className="w-3.5 h-3.5" />
             <span>{t('extracted.add_beneficiary')}</span>
           </button>
-        </div>
+        </PageHeader>
       </motion.div>
 
       {/* New Beneficiary Form (moved below stats) - will render under statistics/cards when opened */}
@@ -1639,9 +570,9 @@ const BeneficiariesPage = () => {
               : 'bg-gray-500/10 border-gray-500/40 theme-text-primary';
 
           return (
-            <div key={tst.id} className={`max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
-              <div className="flex items-center justify-between">
-                <div className="text-sm">{tst.message}</div>
+            <div key={tst.id} className={`max-w-[calc(100vw-2rem)] sm:max-w-sm w-full p-3 rounded-md border shadow-sm ${toastClass}`} role="status">
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <div className="text-sm min-w-0">{tst.message}</div>
                 <button onClick={() => setToasts(prev => prev.filter(x => x.id !== tst.id))} className="ml-4 p-1 rounded hover:bg-gray-100">×</button>
               </div>
             </div>
@@ -1682,22 +613,19 @@ const BeneficiariesPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden"
       >
-        {[
-          { labelKey: 'extracted.total', value: stats.total },
-          { labelKey: 'extracted.verified', value: stats.verified },
-          { labelKey: 'extracted.pending', value: stats.pendingVerification },
-          { labelKey: 'extracted.rejected', value: stats.rejected },
-          { labelKey: 'extracted.documents_required', value: stats.documentsRequired },
-          { labelKey: 'SC', value: categoryStats.SC },
-          { labelKey: 'ST', value: categoryStats.ST }
-        ].map((stat, idx) => (
-          <div key={idx} className="theme-bg-card p-3.5">
-            <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{stat.labelKey === 'SC' || stat.labelKey === 'ST' ? stat.labelKey : t(stat.labelKey)}</p>
-            <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">{stat.value}</p>
-          </div>
-        ))}
+        <StatBand
+          cols={4}
+          cells={[
+            { label: t('extracted.total'), value: stats.total },
+            { label: t('extracted.verified'), value: stats.verified },
+            { label: t('extracted.pending'), value: stats.pendingVerification },
+            { label: t('extracted.rejected'), value: stats.rejected },
+            { label: t('extracted.documents_required'), value: stats.documentsRequired },
+            { label: 'SC', value: categoryStats.SC },
+            { label: 'ST', value: categoryStats.ST }
+          ]}
+        />
       </motion.div>
 
       {/* Financial band */}
@@ -1709,8 +637,8 @@ const BeneficiariesPage = () => {
       >
         <div className="theme-bg-card p-3.5 md:col-span-2">
           <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.total_disbursed_amount')}</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-semibold tabular-nums theme-text-primary">{formatCurrency(stats.disbursedAmount)}</span>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-1 min-w-0">
+            <span className="text-xl font-semibold tabular-nums theme-text-primary">{formatOfficerCurrency(stats.disbursedAmount)}</span>
             <span className={`text-[11px] font-medium ${stats.percentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {stats.percentageChange > 0 ? '+' : ''}{stats.percentageChange.toFixed(1)}% this month
             </span>
@@ -1724,198 +652,33 @@ const BeneficiariesPage = () => {
         </div>
       </motion.div>
 
-
-
       {/* Filters and Search Toolbar */}
-      <div className="theme-bg-card theme-border-glass border rounded-xl">
-        {/* Header row: search + view mode + filter toggle */}
-        <div className="px-4 py-3 border-b theme-border-glass flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t('extracted.search_by_name_aadhaar_id_or_district')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-8 pr-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
-            />
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center rounded-md border theme-border-glass p-0.5">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`h-7 px-2.5 rounded text-xs font-medium transition-colors ${viewMode === 'table' ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-text-primary'}`}
-              >
-                {t('extracted.table')}
-              </button>
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`h-7 px-2.5 rounded text-xs font-medium transition-colors ${viewMode === 'cards' ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-text-primary'}`}
-              >
-                {t('extracted.cards')}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`h-9 px-3 rounded-md border theme-border-glass inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${showFilters ? 'accent-gradient text-white' : 'theme-text-secondary hover:theme-bg-glass hover:theme-text-primary'}`}
-            >
-              <Filter className="w-3.5 h-3.5" />
-              <span>{t('extracted.filters')}</span>
-              {hasActiveFilters && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Expandable filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div>
-                  <Label>{t('extracted.status')}</Label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_statuses')}</option>
-                    <option value="verified">{t('extracted.verified')}</option>
-                    <option value="pending-verification">{t('extracted.pending_verification')}</option>
-                    <option value="rejected">{t('extracted.rejected')}</option>
-                    <option value="documents-required">{t('extracted.documents_required')}</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>{t('extracted.category_1')}</Label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_categories')}</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="OBC">OBC</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>{t('extracted.verification')}</Label>
-                  <select
-                    value={verificationFilter}
-                    onChange={(e) => setVerificationFilter(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="all">{t('extracted.all_verification')}</option>
-                    <option value="verified">{t('extracted.verified')}</option>
-                    <option value="pending">{t('extracted.pending')}</option>
-                    <option value="rejected">{t('extracted.rejected')}</option>
-                    <option value="documents-required">{t('extracted.documents_required')}</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>{t("beneficiary.sortBy") || "Sort By"}</Label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="registrationDate">{t("beneficiary.sortOptions.registrationDate") || "Registration Date"}</option>
-                    <option value="status">{t("beneficiary.sortOptions.status") || "Status"}</option>
-                    <option value="verification">{t("beneficiary.sortOptions.verification") || "Verification"}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="px-4 pb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div>
-                  <Label>{t("beneficiary.sortOrder") || "Sort Order"}</Label>
-                  <select
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                    className={inputCls}
-                  >
-                    <option value="desc">
-                      {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') :
-                        sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.verifiedToPending") || 'Verified to Pending') : (t("beneficiary.sortOrderOptions.newestFirst") || 'Newest First')}
-                    </option>
-                    <option value="asc">
-                      {sortBy === 'status' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') :
-                        sortBy === 'verification' ? (t("beneficiary.sortOrderOptions.pendingToVerified") || 'Pending to Verified') : (t("beneficiary.sortOrderOptions.oldestFirst") || 'Oldest First')}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters Display */}
-              {hasActiveFilters && (
-                <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
-                  {statusFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Status: {statusFilter.replace('-', ' ')}
-                      <button onClick={() => setStatusFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear status filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {categoryFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Category: {categoryFilter}
-                      <button onClick={() => setCategoryFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear category filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {verificationFilter !== 'all' && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Verification: {verificationFilter.replace('-', ' ')}
-                      <button onClick={() => setVerificationFilter('all')} className="rounded-full p-0.5 hover:theme-text-primary transition-colors" aria-label="Clear verification filter">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {(sortBy !== 'registrationDate' || sortOrder !== 'desc') && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md theme-bg-glass theme-text-secondary text-xs font-medium">
-                      Sort: {sortBy === 'status' ? 'Status' : sortBy === 'verificationStatus' || sortBy === 'verification' ? 'Verification' : 'Registration Date'} ({sortOrder === 'desc' ? 'Desc' : 'Asc'})
-                      <button
-                        onClick={() => {
-                          setSortBy('registrationDate');
-                          setSortOrder('desc');
-                        }}
-                        className="rounded-full p-0.5 hover:theme-text-primary transition-colors"
-                        aria-label="Reset sorting"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setStatusFilter('all');
-                      setCategoryFilter('all');
-                      setVerificationFilter('all');
-                      setSortBy('registrationDate');
-                      setSortOrder('desc');
-                    }}
-                    className="px-2 py-1 rounded-md theme-bg-glass theme-text-muted text-xs font-medium hover:theme-text-primary transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <OfficerBeneficiaryFilters
+        t={t}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        hasActiveFilters={hasActiveFilters}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        verificationFilter={verificationFilter}
+        onVerificationFilterChange={setVerificationFilter}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        onResetFilters={resetAllFilters}
+      />
 
       {/* New/Edit Beneficiary Drawer */}
       <AnimatePresence>
         {showNewBeneficiaryForm && (
-          <NewBeneficiaryForm
+          <OfficerBeneficiaryForm
             onCancel={() => { setShowNewBeneficiaryForm(false); setSelectedBeneficiary(null); }}
             initialData={selectedBeneficiary}
             showToast={showToast}
@@ -1943,6 +706,7 @@ const BeneficiariesPage = () => {
           />
         )}
       </AnimatePresence>
+
       {/* Beneficiaries List */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -1952,288 +716,31 @@ const BeneficiariesPage = () => {
         key={refreshKey}
       >
         {viewMode === 'table' ? (
-          <>
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b theme-border-glass">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary_id')}</th>
-                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.beneficiary')}</th>
-                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.aadhaar')}</th>
-                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.phone')}</th>
-                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.email')}</th>
-                    <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.district')}</th>
-                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.act_type')}</th>
-                    <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.status')}</th>
-                    <th className="hidden xl:table-cell px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.verification')}</th>
-                    <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap">{t('extracted.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedBeneficiaries.map((beneficiary) => {
-                    const StatusIcon = getStatusIcon(beneficiary.status);
-                    const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-
-                    return (
-                      <tr key={beneficiary.id} className="border-b theme-border-glass last:border-b-0 hover:theme-bg-hover transition-colors">
-                        <td className="px-3 py-2.5 text-xs font-mono theme-text-primary whitespace-nowrap">{beneficiary.id}</td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                              {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-medium theme-text-primary truncate">{beneficiary.name}</p>
-                              <p className="text-[11px] theme-text-muted truncate">{beneficiary.category}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="hidden lg:table-cell px-3 py-2.5 text-xs font-mono theme-text-primary">{beneficiary.aadhaarNumber}</td>
-                        <td className="hidden lg:table-cell px-3 py-2.5 text-[13px] theme-text-primary whitespace-nowrap">{beneficiary.phone}</td>
-                        <td className="hidden xl:table-cell px-3 py-2.5 text-[13px] theme-text-primary"><span className="block max-w-[160px] truncate">{beneficiary.email || '—'}</span></td>
-                        <td className="hidden lg:table-cell px-3 py-2.5">
-                          <p className="text-[13px] theme-text-primary">{beneficiary.district}</p>
-                          <p className="text-[11px] theme-text-muted">{beneficiary.state}</p>
-                        </td>
-                        <td className="hidden xl:table-cell px-3 py-2.5">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass theme-bg-glass theme-text-secondary whitespace-nowrap">
-                            {formatActType(beneficiary.actType)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
-                            <StatusIcon className="w-3 h-3" />
-                            {beneficiary.status.replace('-', ' ')}
-                          </span>
-                        </td>
-                        <td className="hidden xl:table-cell px-3 py-2.5">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                            <VerificationIcon className="w-3 h-3" />
-                            {beneficiary.verificationStatus.replace('-', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                              title={t('extracted.view')}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            {beneficiary.scStCertificate && (
-                              <button
-                                onClick={() => window.open(beneficiary.scStCertificate, '_blank')}
-                                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
-                                title="View Certificate"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                              title={t('extracted.edit')}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => confirmDelete(beneficiary.id)}
-                              disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                              title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
-                              className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
-                            >
-                              {deletingId === beneficiary.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash className="w-4 h-4" />
-                              )}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile flat list */}
-            <div className="md:hidden">
-              {paginatedBeneficiaries.map((beneficiary) => {
-                const StatusIcon = getStatusIcon(beneficiary.status);
-                const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-
-                return (
-                  <div
-                    key={beneficiary.id}
-                    className="p-4 border-b theme-border-glass last:border-b-0 cursor-pointer hover:theme-bg-hover transition-colors"
-                    onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                          {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
-                          <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
-                        </div>
-                      </div>
-                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {beneficiary.status.replace('-', ' ')}
-                      </span>
-                    </div>
-
-                    <dl className="mt-2.5 space-y-1.5">
-                      <Pair label={t('extracted.aadhaar')} value={beneficiary.aadhaarNumber} mono />
-                      <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
-                      <Pair label={t('extracted.act_type')} value={formatActType(beneficiary.actType)} />
-                    </dl>
-
-                    <div className="mt-2.5 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                          <VerificationIcon className="w-3 h-3" />
-                          {beneficiary.verificationStatus.replace('-', ' ')}
-                        </span>
-                        {beneficiary.scStCertificate && (
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getCategoryColor(beneficiary.category)}`}>
-                            <FileText className="w-3 h-3" />
-                            Cert
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {beneficiary.scStCertificate && (
-                          <button
-                            aria-label="View certificate"
-                            onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
-                            title="View Certificate"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          aria-label="Edit beneficiary"
-                          onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                          title={t('extracted.edit')}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          aria-label="Delete beneficiary"
-                          onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
-                          disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                          title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
-                        >
-                          {deletingId === beneficiary.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+          <OfficerBeneficiaryTable
+            t={t}
+            rows={paginatedBeneficiaries}
+            canDelete={!!profile && profile.role === 'officer'}
+            deletingId={deletingId}
+            onView={openBeneficiaryDetail}
+            onEdit={editBeneficiary}
+            onDelete={(b: any) => confirmDelete(b.id)}
+            onOpenCertificate={openCertificate}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {paginatedBeneficiaries.map((beneficiary) => {
-              const StatusIcon = getStatusIcon(beneficiary.status);
-              const VerificationIcon = getVerificationIcon(beneficiary.verificationStatus);
-
-              return (
-                <div
-                  key={beneficiary.id}
-                  className="theme-bg-card theme-border-glass border rounded-lg p-3.5 cursor-pointer hover:theme-bg-hover transition-colors"
-                  onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); }); }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-full accent-gradient flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
-                        {beneficiary.name.split(' ').map((n: string) => n[0]).join('')}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold theme-text-primary truncate">{beneficiary.name}</p>
-                        <p className="text-xs theme-text-muted font-mono truncate">{beneficiary.id}</p>
-                      </div>
-                    </div>
-                    {beneficiary.priority && (
-                      <span className={`flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getPriorityColor(beneficiary.priority)}`}>
-                        {beneficiary.priority}
-                      </span>
-                    )}
-                  </div>
-
-                  <dl className="mt-3 space-y-1.5">
-                    <Pair label={t('extracted.aadhaar')} value={beneficiary.aadhaarNumber} mono />
-                    <Pair label={t('extracted.location')} value={`${beneficiary.district}, ${beneficiary.state}`} />
-                    <Pair label={t('extracted.act_type')} value={formatActType(beneficiary.actType)} />
-                    <Pair label={t('extracted.assigned_officer')} value={beneficiary.assignedOfficer || '—'} />
-                  </dl>
-
-                  <div className="mt-3 pt-2.5 border-t theme-border-glass flex items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(beneficiary.status)}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {beneficiary.status.replace('-', ' ')}
-                      </span>
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(beneficiary.verificationStatus)}`}>
-                        <VerificationIcon className="w-3 h-3" />
-                        {beneficiary.verificationStatus.replace('-', ' ')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-0.5">
-                      {beneficiary.scStCertificate && (
-                        <button
-                          aria-label="View certificate"
-                          onClick={(e) => { e.stopPropagation(); window.open(beneficiary.scStCertificate, '_blank'); }}
-                          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-green-500 transition-colors"
-                          title="View Certificate"
-                        >
-                          <FileText className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        aria-label="Edit beneficiary"
-                        onClick={(e) => { e.stopPropagation(); setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(beneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                        title={t('extracted.edit')}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        aria-label="Delete beneficiary"
-                        onClick={(e) => { e.stopPropagation(); confirmDelete(beneficiary.id); }}
-                        disabled={deletingId === beneficiary.id || !profile || profile.role !== 'officer'}
-                        title={!profile || profile.role !== 'officer' ? t('extracted.no_permission_delete') || 'Insufficient permissions' : t('extracted.delete')}
-                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:text-red-500 transition-colors disabled:opacity-50"
-                      >
-                        {deletingId === beneficiary.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <OfficerBeneficiaryCards
+            t={t}
+            rows={paginatedBeneficiaries}
+            canDelete={!!profile && profile.role === 'officer'}
+            deletingId={deletingId}
+            onView={openBeneficiaryDetail}
+            onEdit={editBeneficiary}
+            onDelete={(b: any) => confirmDelete(b.id)}
+            onOpenCertificate={openCertificate}
+          />
         )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t theme-border-glass">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2.5 border-t theme-border-glass">
           <p className="text-xs theme-text-muted">
             {t('extracted.showing')} {startItem} {t('extracted.to')} {endItem} {t('extracted.of')} {totalItems}
           </p>
@@ -2242,7 +749,7 @@ const BeneficiariesPage = () => {
               <button
                 disabled={currentPage === 1 || noPages}
                 onClick={() => setCurrentPage((p: number) => p - 1)}
-                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                className="w-9 h-9 md:w-8 md:h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 aria-label="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -2251,7 +758,7 @@ const BeneficiariesPage = () => {
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
+                  className={`min-w-9 md:min-w-8 h-9 md:h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${currentPage === pageNum ? 'theme-bg-glass text-accent-gradient' : 'theme-text-muted hover:theme-bg-glass hover:theme-text-primary'}`}
                 >
                   {pageNum}
                 </button>
@@ -2259,7 +766,7 @@ const BeneficiariesPage = () => {
               <button
                 disabled={currentPage === totalPages || noPages}
                 onClick={() => setCurrentPage((p: number) => p + 1)}
-                className="w-8 h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                className="w-9 h-9 md:w-8 md:h-8 rounded-md flex items-center justify-center theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 aria-label="Next page"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -2271,99 +778,19 @@ const BeneficiariesPage = () => {
 
       {/* Beneficiary Detail Inspector */}
       {selectedBeneficiary && (
-        <div ref={detailRef} className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20">
-          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedBeneficiary.name}</h2>
-              <span className="hidden sm:inline text-xs theme-text-muted font-mono flex-shrink-0">{selectedBeneficiary.id}</span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getStatusColor(selectedBeneficiary.status)}`}>
-                {selectedBeneficiary.status.replace('-', ' ')}
-              </span>
-              <span className={`hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${getVerificationColor(selectedBeneficiary.verificationStatus)}`}>
-                {selectedBeneficiary.verificationStatus.replace('-', ' ')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => { setSelectedBeneficiaryLoading(true); fetchFullBeneficiary(selectedBeneficiary.id).then(data => { setSelectedBeneficiary(data); setSelectedBeneficiaryLoading(false); setShowNewBeneficiaryForm(true); }); }}
-                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                title={t('extracted.edit')}
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => { setSelectedBeneficiary(null); setDetailStatus(''); setDetailVerification(''); }}
-                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-hover hover:theme-text-primary transition-colors"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="px-4 py-3.5">
-            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
-              <Pair label={t('extracted.full_name')} value={selectedBeneficiary.name} />
-              <Pair label={t('extracted.father_name') || 'Father'} value={selectedBeneficiary.fatherName || '—'} />
-              <Pair label={t('extracted.aadhaar_number')} value={selectedBeneficiary.aadhaarNumber} mono />
-              <Pair label={t('extracted.phone_number')} value={selectedBeneficiary.phone} />
-              <Pair label={t('extracted.email')} value={selectedBeneficiary.email || '—'} />
-              <Pair label={t('extracted.location')} value={`${selectedBeneficiary.district}, ${selectedBeneficiary.state}`} />
-              <Pair label={t('extracted.act_type')} value={formatActType(selectedBeneficiary.actType)} />
-              <Pair label={t('extracted.category')} value={selectedBeneficiary.category} />
-              <Pair label={t('extracted.registration_date') || 'Registered'} value={formatDate(selectedBeneficiary.registrationDate)} />
-              <Pair label={t('extracted.age') || 'Age'} value={selectedBeneficiary.age ?? '—'} />
-              <Pair label={t('extracted.gender') || 'Gender'} value={selectedBeneficiary.gender || '—'} />
-              <Pair label={t('extracted.marital_status') || 'Marital Status'} value={selectedBeneficiary.maritalStatus || '—'} />
-              <Pair label={t('extracted.bank_name') || 'Bank'} value={selectedBeneficiary.bankName || '—'} />
-              <Pair label={t('extracted.ifsc_code') || 'IFSC'} value={selectedBeneficiary.ifsc || '—'} mono />
-              <Pair label={t('extracted.assigned_officer')} value={selectedBeneficiary.assignedOfficer || '—'} />
-              <Pair label={t('extracted.disbursed')} value={formatCurrency(selectedBeneficiary.disbursedAmount)} />
-            </dl>
-
-            <div className="mt-3.5 pt-3 border-t theme-border-glass flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5 theme-text-muted flex-shrink-0" />
-              <span className="text-[11px] uppercase tracking-wider theme-text-muted flex-shrink-0">{t('extracted.sc_st_certificate')}</span>
-              {selectedBeneficiary.scStCertificate ? (
-                <a
-                  href={selectedBeneficiary.scStCertificate}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[13px] font-medium underline underline-offset-2 theme-text-primary hover:opacity-80 transition-opacity truncate"
-                >
-                  {t('extracted.view_file') || 'View file'}
-                </a>
-              ) : (
-                <span className="text-[13px] theme-text-muted">Not provided</span>
-              )}
-            </div>
-
-            <div className="mt-3.5 pt-3 border-t theme-border-glass flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <select value={detailStatus} onChange={(e) => setDetailStatus(e.target.value)} className={`${inlineInputCls} flex-1`} aria-label={t('extracted.application_status')}>
-                  <option value="pending-verification">{t('extracted.pending_verification') || 'Pending Verification'}</option>
-                  <option value="verified">{t('extracted.verified') || 'Verified'}</option>
-                  <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
-                  <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
-                </select>
-                <button onClick={() => updateBeneficiaryStatus(selectedBeneficiary.id, detailStatus)} className="h-9 px-3 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors flex-shrink-0">
-                  {t('extracted.save')}
-                </button>
-              </div>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <select value={detailVerification} onChange={(e) => setDetailVerification(e.target.value)} className={`${inlineInputCls} flex-1`} aria-label={t('extracted.verification_status')}>
-                  <option value="pending">{t('extracted.pending') || 'Pending'}</option>
-                  <option value="verified">{t('extracted.verified') || 'Verified'}</option>
-                  <option value="rejected">{t('extracted.rejected') || 'Rejected'}</option>
-                  <option value="documents-required">{t('extracted.documents_required') || 'Documents Required'}</option>
-                </select>
-                <button onClick={() => updateBeneficiaryVerification(selectedBeneficiary.id, detailVerification)} className="h-9 px-3 rounded-md bg-green-600 text-white text-xs font-semibold hover:bg-green-500 transition-colors flex-shrink-0">
-                  {t('extracted.save')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <OfficerBeneficiaryInspector
+          t={t}
+          beneficiary={selectedBeneficiary}
+          detailRef={detailRef}
+          statusValue={detailStatus}
+          onStatusValueChange={setDetailStatus}
+          onSaveStatus={() => updateBeneficiaryStatus(selectedBeneficiary.id, detailStatus)}
+          verificationValue={detailVerification}
+          onVerificationValueChange={setDetailVerification}
+          onSaveVerification={() => updateBeneficiaryVerification(selectedBeneficiary.id, detailVerification)}
+          onClose={() => { setSelectedBeneficiary(null); setDetailStatus(''); setDetailVerification(''); }}
+          onEdit={() => editBeneficiary(selectedBeneficiary)}
+        />
       )}
     </div>
   );

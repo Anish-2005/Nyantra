@@ -1,115 +1,27 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useAuth } from '@/context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
-  Search, Download, Plus, Eye, Edit, Clock, Star, CheckCircle, AlertCircle, AlertOctagon,
-  MessageCircle, PhoneCall, UserCheck, FileText, X, Banknote, FileSearch, UserX, Zap,
-  Mail, MessageSquare, BarChart3, Shield, ArrowUpRight, ChevronDown, Mic, MicOff
+  Search, Download, Plus, Eye, Star, ChevronDown, ArrowUpRight,
+  AlertOctagon, UserCheck, FileText, BarChart3
 } from 'lucide-react';
-import { collection, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import ExportModal from '@/components/dashboard/ExportModal';
-
-const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
-
-const textareaCls = "w-full min-h-[80px] px-2.5 py-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors resize-y";
-
-const ghostBtn = "h-9 px-3 rounded-md border theme-border-glass theme-text-secondary font-medium hover:theme-bg-glass inline-flex items-center gap-1.5 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
-
-const primaryBtn = "h-9 px-3.5 rounded-md accent-gradient text-white font-semibold hover:opacity-90 inline-flex items-center gap-1.5 text-xs transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
-
-const iconBtn = "p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
-
-const pillCls = "inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide";
-
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
-);
-
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">{children}</h3>
-);
-
-const DetailItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="min-w-0">
-    <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</dt>
-    <dd className="text-[13px] font-medium theme-text-primary mt-0.5 truncate">{value ?? '\u2014'}</dd>
-  </div>
-);
-
-const StatCell = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="theme-bg-card p-3.5">
-    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</p>
-    <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">{value}</p>
-  </div>
-);
-
-// Web Speech API type declarations
-declare global {
-  interface SpeechRecognitionEvent extends Event {
-    readonly results: SpeechRecognitionResultList;
-    readonly resultIndex: number;
-  }
-
-  interface SpeechRecognition extends EventTarget {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    start(): void;
-    stop(): void;
-    abort(): void;
-    onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-    onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
-  }
-
-  const SpeechRecognition: {
-    prototype: SpeechRecognition;
-    new(): SpeechRecognition;
-  };
-
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
-
-// Grievance type definition (minimal fields used in this page)
-type Grievance = {
-  id: string;
-  beneficiaryId?: string;
-  beneficiaryName: string;
-  phone?: string;
-  email?: string;
-  district?: string;
-  state?: string;
-  actType?: string;
-  applicationId?: string;
-  category?: string;
-  subCategory?: string;
-  priority?: string;
-  status?: string;
-  assignedTo?: string;
-  assignedDate?: string;
-  createdDate?: string | null;
-  lastUpdated?: string;
-  resolutionDate?: string | null;
-  expectedResolution?: string;
-  description?: string;
-  attachments?: number;
-  communication?: any[];
-  escalationLevel?: number;
-  satisfactionRating?: number | null;
-  followUpRequired?: boolean;
-  relatedGrievances?: string[];
-};
+import { PageHeader, StatBand } from '@/components/dashboard/ui';
+import OfficerNewCaseDrawer from './components/OfficerNewCaseDrawer';
+import OfficerGrievanceCard from './components/OfficerGrievanceCard';
+import OfficerGrievanceTable from './components/OfficerGrievanceTable';
+import OfficerGrievanceInspector from './components/OfficerGrievanceInspector';
+import type { Grievance } from './helpers';
+import {
+  useFirestoreGrievances, ghostBtn, primaryBtn, iconBtn, pillCls, SectionTitle,
+  getOfficerStatusColor, getOfficerCategoryIcon
+} from './officerHelpers';
 
 // Feedback type definition
 type Feedback = {
@@ -123,332 +35,23 @@ type Feedback = {
   updatedAt: any;
 };
 
-// Firestore-backed grievances: hook-like function to subscribe and set state
-const useFirestoreGrievances = (setState: React.Dispatch<React.SetStateAction<Grievance[]>>) => {
-  useEffect(() => {
-    const q = query(collection(db, 'grievances'), orderBy('createdDate', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const items: Grievance[] = snapshot.docs.map((d) => {
-        const data = d.data() as any;
-        const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
-        const created = toIso(data?.createdDate);
-        const lastUpdated = toIso(data?.lastUpdated);
-        const resolutionDate = toIso(data?.resolutionDate);
-        const expectedResolution = toIso(data?.expectedResolution);
-        return {
-          id: d.id,
-          beneficiaryName: data.beneficiaryName || data.name || '\u2014',
-          beneficiaryId: data.beneficiaryId,
-          phone: data.phone,
-          email: data.email,
-          district: data.district,
-          state: data.state,
-          actType: data.actType,
-          applicationId: data.applicationId,
-          category: data.category,
-          subCategory: data.subCategory,
-          priority: data.priority,
-          status: data.status,
-          assignedTo: data.assignedTo,
-          assignedDate: data.assignedDate,
-          createdDate: created,
-          lastUpdated: lastUpdated,
-          resolutionDate: resolutionDate,
-          expectedResolution: expectedResolution,
-          description: data.description,
-          attachments: data.attachments || 0,
-          communication: data.communication || [],
-          escalationLevel: data.escalationLevel || 0,
-          satisfactionRating: data.satisfactionRating ?? null,
-          followUpRequired: data.followUpRequired || false,
-          relatedGrievances: data.relatedGrievances || []
-        };
-      });
-      setState(items);
-    });
-    return () => unsub();
-  }, [setState]);
-};
+// Module-scope quick-action definitions; icons resolved via React.createElement
+const OFFICER_QUICK_ACTIONS = [
+  { key: 'escalate', icon: AlertOctagon, labelKey: 'extracted.escalate_urgent_cases' },
+  { key: 'assign', icon: UserCheck, labelKey: 'extracted.assign_officers' },
+  { key: 'report', icon: FileText, labelKey: 'extracted.generate_report' },
+  { key: 'analytics', icon: BarChart3, labelKey: 'extracted.view_analytics' }
+];
 
-interface NewGrievanceDrawerProps {
-  initialData?: Grievance | null;
-  onClose: () => void;
-  onCreated?: (g: Grievance) => void;
-}
-
-const NewGrievanceDrawer = ({ initialData, onClose, onCreated }: NewGrievanceDrawerProps) => {
-  const { t } = useLocale();
-  const [mounted, setMounted] = useState(false);
-  const [beneficiaryId, setBeneficiaryId] = useState('');
-  const [beneficiaryName, setBeneficiaryName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [category, setCategory] = useState('disbursement-delay');
-  const [subCategory, setSubCategory] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const categories = [
-    { value: 'disbursement-delay', label: 'Disbursement Delay' },
-    { value: 'document-issues', label: 'Document Issues' },
-    { value: 'application-status', label: 'Application Status' },
-    { value: 'officer-behavior', label: 'Officer Behavior' },
-    { value: 'information-correction', label: 'Information Correction' },
-    { value: 'technical-issues', label: 'Technical Issues' }
-  ];
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Lock body scroll + close on Escape while drawer is open
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  const handleLookupBeneficiary = async (id: string) => {
-    setBeneficiaryName('');
-    if (!id) return;
-    try {
-      const snap = await getDoc(doc(db, 'beneficiaries', id));
-      if (snap.exists()) {
-        const data = snap.data() as any;
-        setBeneficiaryName(data.name || '');
-        setPhone(data.phone || '');
-        setEmail(data.email || '');
-        setError(null);
-      } else {
-        setError(t('extracted.beneficiary_not_found') || 'Beneficiary not found');
-      }
-    } catch (err) {
-      console.error('Lookup beneficiary error', err);
-      setError(t('extracted.lookup_failed') || 'Lookup failed');
-    }
-  };
-
-  // Prefill when editing
-  useEffect(() => {
-    if (!initialData) return;
-    setBeneficiaryId(initialData.beneficiaryId || '');
-    setBeneficiaryName(initialData.beneficiaryName || '');
-    setPhone(initialData.phone || '');
-    setEmail(initialData.email || '');
-    setCategory(initialData.category || 'disbursement-delay');
-    setSubCategory(initialData.subCategory || '');
-    setPriority((initialData.priority as any) || 'medium');
-    setDescription(initialData.description || '');
-  }, [initialData]);
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setError(null);
-    if (!beneficiaryId) return setError(t('extracted.enter_beneficiary_id') || 'Enter a beneficiary ID');
-    setIsSubmitting(true);
-    try {
-      // validate beneficiary exists
-      const snap = await getDoc(doc(db, 'beneficiaries', beneficiaryId));
-      if (!snap.exists()) {
-        setError(t('extracted.beneficiary_not_found') || 'Beneficiary not found');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const base: any = {
-        beneficiaryId,
-        beneficiaryName: beneficiaryName || (snap.data() as any).name || '',
-        phone: phone || (snap.data() as any).phone || null,
-        email: email || (snap.data() as any).email || null,
-        category,
-        subCategory: subCategory || null,
-        priority,
-        description: description || null,
-        status: initialData ? (initialData.status || 'open') : 'open',
-        lastUpdated: serverTimestamp(),
-        attachments: initialData ? (initialData.attachments || 0) : 0,
-        communication: initialData ? (initialData.communication || []) : [],
-        escalationLevel: initialData ? (initialData.escalationLevel || 0) : 0,
-        followUpRequired: initialData ? (initialData.followUpRequired || false) : false
-      };
-
-      if (initialData && initialData.id) {
-        // update existing grievance
-        await updateDoc(doc(db, 'grievances', initialData.id), { ...base, lastUpdated: serverTimestamp() });
-        const updated: Grievance = { ...initialData, ...base, lastUpdated: new Date().toISOString() } as Grievance;
-        onCreated?.(updated);
-        onClose();
-      } else {
-        // create with deterministic id: GRV-<timestamp>
-        const newId = `GRV-${Date.now()}`;
-        const payload = { ...base, createdDate: serverTimestamp() };
-        await setDoc(doc(db, 'grievances', newId), payload);
-        const created: Grievance = {
-          id: newId,
-          beneficiaryId: payload.beneficiaryId,
-          beneficiaryName: payload.beneficiaryName,
-          phone: payload.phone,
-          email: payload.email,
-          category: payload.category,
-          subCategory: payload.subCategory,
-          priority: payload.priority,
-          description: payload.description,
-          status: payload.status,
-          attachments: payload.attachments || 0,
-          communication: payload.communication || [],
-          escalationLevel: payload.escalationLevel || 0,
-          followUpRequired: payload.followUpRequired || false,
-          createdDate: new Date().toISOString(),
-          lastUpdated: new Date().toISOString()
-        };
-
-        onCreated?.(created);
-        onClose();
-      }
-    } catch (err) {
-      console.error('Create grievance failed', err);
-      setError(t('extracted.create_failed') || 'Failed to create grievance');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-black/50 z-[60]"
-      />
-
-      {/* Panel */}
-      <motion.aside
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
-          <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
-            {initialData ? (t('extracted.edit_case') || 'Edit Case') : (t('extracted.new_case') || 'New Case')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} id="new-grievance-form" className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-          <section>
-            <Label>{t('extracted.beneficiary_id') || 'Beneficiary ID'} *</Label>
-            <input
-              placeholder={t('extracted.beneficiary_id') || 'Beneficiary ID'}
-              value={beneficiaryId}
-              onChange={(e) => setBeneficiaryId(e.target.value)}
-              onBlur={() => handleLookupBeneficiary(beneficiaryId)}
-              className={inputCls}
-              required
-            />
-            {beneficiaryName && <p className="text-xs theme-text-muted mt-1.5">{beneficiaryName}</p>}
-          </section>
-
-          <section className="pt-4 border-t theme-border-glass">
-            <SectionTitle>{t('extracted.contact')}</SectionTitle>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('extracted.phone_number') || 'Phone Number'}</Label>
-                <input type="tel" placeholder={t('extracted.phone_number') || 'Phone Number'} value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
-              </div>
-              <div>
-                <Label>{t('extracted.email') || 'Email'}</Label>
-                <input type="email" placeholder={t('extracted.email') || 'Email'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
-              </div>
-            </div>
-          </section>
-
-          <section className="pt-4 border-t theme-border-glass">
-            <SectionTitle>{t('extracted.category_1') || 'Classification'}</SectionTitle>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('extracted.category_1') || 'Category'}</Label>
-                <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
-                  {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <Label>{t('extracted.sub_category') || 'Sub-category'}</Label>
-                <input placeholder={t('extracted.sub_category') || 'Sub-category'} value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className={inputCls} />
-              </div>
-            </div>
-          </section>
-
-          <section className="pt-4 border-t theme-border-glass">
-            <SectionTitle>{t('extracted.description') || 'Assessment'}</SectionTitle>
-            <div className="space-y-3">
-              <div>
-                <Label>{t('extracted.priority') || 'Priority'}</Label>
-                <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')} className={inputCls}>
-                  <option value="urgent">Urgent</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div>
-                <Label>{t('extracted.description') || 'Description'}</Label>
-                <textarea placeholder={t('extracted.description') || 'Description'} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={textareaCls} />
-              </div>
-            </div>
-          </section>
-
-          {error && <div className="text-sm text-red-500">{error}</div>}
-        </form>
-
-        <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
-          >
-            {t('extracted.cancel')}
-          </button>
-          <button
-            type="submit"
-            form="new-grievance-form"
-            disabled={isSubmitting}
-            className="flex-1 h-9 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (t('extracted.saving') || 'Saving...') : (initialData ? (t('extracted.save') || 'Save') : (t('extracted.create') || 'Create'))}
-          </button>
-        </div>
-      </motion.aside>
-    </>,
-    document.body
-  );
-};
+// Hairline inner stat cell for the border-b performance band (unique variant)
+const StatCell = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="theme-bg-card p-3.5">
+    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{label}</p>
+    <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">{value}</p>
+  </div>
+);
 
 const GrievancePage = () => {
-  const { theme } = useTheme();
   const { t } = useLocale();
   const { user, profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -673,44 +276,6 @@ const GrievancePage = () => {
     }
   }, [selectedGrievance?.id]);
 
-  const getStatusColor = (status?: string) => {
-    const colors = {
-      resolved: 'bg-green-500/10 text-green-600 dark:text-green-400',
-      closed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      'in-progress': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-      open: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      pending: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
-      escalated: 'bg-red-500/10 text-red-600 dark:text-red-400'
-    };
-    const key = (status || '').toLowerCase() as keyof typeof colors;
-    return colors[key] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-  };
-
-  const getPriorityColor = (priority?: string) => {
-    const colors = {
-      urgent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      high: 'bg-red-500/10 text-red-600 dark:text-red-400',
-      medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      low: 'bg-green-500/10 text-green-600 dark:text-green-400'
-    };
-    const key = (priority || '').toLowerCase() as keyof typeof colors;
-    return colors[key] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-  };
-
-  const getCategoryIcon = (category: string) => {
-    const icons = {
-      'disbursement-delay': Banknote,
-      'document-issues': FileText,
-      'application-status': FileSearch,
-      'officer-behavior': UserX,
-      'information-correction': Edit,
-      'technical-issues': Zap
-    };
-    return icons[category as keyof typeof icons] || AlertCircle;
-  };
-
-  const statuses = ['open', 'in-progress', 'pending', 'resolved', 'closed', 'escalated'];
-
   const updateGrievanceStatus = async (id: string, status: string) => {
     try {
       setStatusUpdating(id);
@@ -762,6 +327,16 @@ const GrievancePage = () => {
       setSelectedGrievance(prev => prev ? { ...prev, status: 'closed', lastUpdated: new Date().toISOString() } : prev);
     } catch (err) {
       console.error('Failed to resolve case', err);
+    }
+  };
+
+  // Quick action routing (same behaviors as the previous inline handlers)
+  const handleQuickAction = (key: string) => {
+    switch (key) {
+      case 'escalate': setShowExportModal(false); break;
+      case 'assign': setSelectedGrievance(null); break;
+      case 'report': setShowExportModal(true); break;
+      case 'analytics': setViewMode('list'); break;
     }
   };
 
@@ -1036,35 +611,30 @@ const GrievancePage = () => {
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.grievance')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.realtime_grievance_tracking_description')}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => setShowExportModal(true)} aria-label={t('extracted.export_data_1')} className={ghostBtn}>
-            <Download className="w-3.5 h-3.5" />
-            <span>{t('extracted.export_data')}</span>
-          </button>
-          <button onClick={() => setShowNewCaseModal(true)} className={primaryBtn}>
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('extracted.new_case')}</span>
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title={t('extracted.grievance')}
+        highlight={t('extracted.monitoring_center')}
+        subtitle={t('extracted.realtime_grievance_tracking_description')}
+      >
+        <button onClick={() => setShowExportModal(true)} aria-label={t('extracted.export_data_1')} className={ghostBtn}>
+          <Download className="w-3.5 h-3.5" />
+          <span>{t('extracted.export_data')}</span>
+        </button>
+        <button onClick={() => setShowNewCaseModal(true)} className={primaryBtn}>
+          <Plus className="w-3.5 h-3.5" />
+          <span>{t('extracted.new_case')}</span>
+        </button>
+      </PageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden">
-        <StatCell label={t('extracted.active_cases_label')} value={stats.open + stats.inProgress} />
-        <StatCell label={t('extracted.avg_resolution_label')} value={`${stats.avgResolutionTime}d`} />
-        <StatCell label={t('extracted.satisfaction_label')} value={`${stats.satisfactionRate}%`} />
-        <StatCell label={t('extracted.escalated_label')} value={stats.escalated} />
-      </div>
+      <StatBand
+        cells={[
+          { label: t('extracted.active_cases_label'), value: stats.open + stats.inProgress },
+          { label: t('extracted.avg_resolution_label'), value: `${stats.avgResolutionTime}d` },
+          { label: t('extracted.satisfaction_label'), value: `${stats.satisfactionRate}%` },
+          { label: t('extracted.escalated_label'), value: stats.escalated },
+        ]}
+      />
 
       {/* Toolbar + Cases */}
       <div className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden">
@@ -1073,7 +643,7 @@ const GrievancePage = () => {
             <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{t('extracted.active_cases')}</h2>
             <span className="text-xs theme-text-muted tabular-nums">({filteredGrievances.length})</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
               <input
@@ -1106,72 +676,14 @@ const GrievancePage = () => {
         {viewMode === 'dashboard' ? (
           <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
             {paginatedGrievances.map((grievance) => (
-              <div
+              <OfficerGrievanceCard
                 key={grievance.id}
-                onClick={() => setSelectedGrievance(grievance)}
-                className="theme-bg-card theme-border-glass border rounded-lg p-3.5 cursor-pointer hover:theme-bg-hover transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
-                      {grievance.beneficiaryName.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold theme-text-primary truncate">{grievance.beneficiaryName}</p>
-                      <p className="text-xs theme-text-muted truncate">{grievance.id}</p>
-                    </div>
-                  </div>
-                  <span className={`${pillCls} ${getPriorityColor(grievance.priority)} shrink-0`}>
-                    {grievance.priority ? grievance.priority.toUpperCase() : '-'}
-                  </span>
-                </div>
-
-                <p className="text-[13px] theme-text-secondary line-clamp-2 mb-2.5">{grievance.description}</p>
-
-                <div className="grid grid-cols-3 gap-x-4 gap-y-2 mb-2.5">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.files')}</p>
-                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">{grievance.attachments}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.messages')}</p>
-                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">{grievance.communication?.length ?? 0}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.escalation')}</p>
-                    <p className="text-[13px] font-medium theme-text-primary mt-0.5 tabular-nums">L{grievance.escalationLevel}</p>
-                  </div>
-                </div>
-
-                <div className="pt-2.5 border-t theme-border-glass flex items-center gap-2">
-                  <select
-                    onClick={(e) => e.stopPropagation()}
-                    value={grievance.status}
-                    onChange={(e) => { e.stopPropagation(); updateGrievanceStatus(grievance.id, e.target.value); }}
-                    className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(grievance.status)}`}
-                  >
-                    {statuses.map(s => (
-                      <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>
-                    ))}
-                  </select>
-                  <div className="ml-auto flex items-center gap-0.5">
-                    <button
-                      className={iconBtn}
-                      aria-label={`View ${grievance.id}`}
-                      onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      className={iconBtn}
-                      aria-label={`Edit ${grievance.id}`}
-                      onClick={(e) => { e.stopPropagation(); setSelectedGrievance(grievance); setShowNewCaseModal(true); }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+                grievance={grievance}
+                onUpdateStatus={updateGrievanceStatus}
+                onView={setSelectedGrievance}
+                onEdit={(g) => { setSelectedGrievance(g); setShowNewCaseModal(true); }}
+                t={t}
+              />
             ))}
             {paginatedGrievances.length === 0 && (
               <div className="md:col-span-2 py-10 text-center text-sm theme-text-muted">
@@ -1180,360 +692,37 @@ const GrievancePage = () => {
             )}
           </div>
         ) : (
-          <>
-            {/* Mobile Card View */}
-            <div className="lg:hidden p-3 grid grid-cols-1 gap-3">
-              {paginatedGrievances.map((g) => (
-                <div key={g.id} className="theme-bg-card theme-border-glass border rounded-lg p-3.5">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold theme-text-primary truncate">{g.beneficiaryName}</p>
-                      <p className="text-xs theme-text-muted truncate">{g.id} \u2022 {g.district}</p>
-                    </div>
-                    <span className={`${pillCls} ${getPriorityColor(g.priority)} shrink-0`}>
-                      {g.priority ? g.priority.toUpperCase() : '-'}
-                    </span>
-                  </div>
-                  <p className="text-[13px] theme-text-secondary line-clamp-2 mb-2.5">{g.description}</p>
-                  <div className="pt-2.5 border-t theme-border-glass flex items-center gap-2">
-                    <select
-                      value={g.status}
-                      onChange={(e) => updateGrievanceStatus(g.id, e.target.value)}
-                      className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(g.status)}`}
-                    >
-                      {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                    </select>
-                    <div className="ml-auto flex items-center gap-0.5">
-                      <button className={iconBtn} onClick={() => setSelectedGrievance(g)} aria-label={`View ${g.id}`}>
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className={iconBtn} onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} aria-label={`Edit ${g.id}`}>
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b theme-border-glass">
-                  <tr className="whitespace-nowrap">
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">ID</th>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.beneficiary')}</th>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.district')}</th>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.priority')}</th>
-                    <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.status')}</th>
-                    <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t('extracted.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border-glass">
-                  {paginatedGrievances.map((g) => (
-                    <tr key={g.id} className="hover:theme-bg-hover transition-colors">
-                      <td className="py-2.5 px-3 text-[13px] font-medium theme-text-primary whitespace-nowrap">{g.id}</td>
-                      <td className="py-2.5 px-3 text-[13px] theme-text-primary">{g.beneficiaryName}</td>
-                      <td className="py-2.5 px-3 text-[13px] theme-text-muted">{g.district}</td>
-                      <td className="py-2.5 px-3">
-                        <span className={`${pillCls} ${getPriorityColor(g.priority)}`}>{g.priority ? g.priority.toUpperCase() : '-'}</span>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <select
-                          value={g.status}
-                          onChange={(e) => updateGrievanceStatus(g.id, e.target.value)}
-                          className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border theme-border-glass cursor-pointer ${getStatusColor(g.status)}`}
-                        >
-                          {statuses.map(s => <option key={s} value={s}>{s.replace('-', ' ').toUpperCase()}</option>)}
-                        </select>
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <div className="inline-flex items-center gap-0.5">
-                          <button className={iconBtn} onClick={() => setSelectedGrievance(g)} aria-label={`View ${g.id}`}>
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button className={iconBtn} onClick={() => { setSelectedGrievance(g); setShowNewCaseModal(true); }} aria-label={`Edit ${g.id}`}>
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {paginatedGrievances.length === 0 && (
-                <div className="py-10 text-center text-sm theme-text-muted">{t('extracted.no_activity')}</div>
-              )}
-            </div>
-          </>
+          <OfficerGrievanceTable
+            grievances={paginatedGrievances}
+            onUpdateStatus={updateGrievanceStatus}
+            onView={setSelectedGrievance}
+            onEdit={(g) => { setSelectedGrievance(g); setShowNewCaseModal(true); }}
+            t={t}
+          />
         )}
       </div>
 
       {/* Grievance Detail Inspector */}
       {selectedGrievance && (
-        <section ref={detailRef} className="theme-bg-card theme-border-glass border rounded-lg overflow-hidden scroll-mt-20">
-          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
-            <div className="flex items-center gap-2 min-w-0">
-              <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{selectedGrievance.id}</h2>
-              <span className={`${pillCls} ${getPriorityColor(selectedGrievance.priority)} shrink-0`}>
-                {selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'}
-              </span>
-            </div>
-            <button onClick={() => setSelectedGrievance(null)} className={`${iconBtn} shrink-0`} aria-label="Close">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="px-4 border-b theme-border-glass flex overflow-x-auto">
-            {[
-              { id: 'overview', labelKey: 'extracted.tab_overview', icon: Eye },
-              { id: 'communication', labelKey: 'extracted.tab_communication', icon: MessageCircle },
-              { id: 'timeline', labelKey: 'extracted.tab_timeline', icon: Clock },
-              { id: 'documents', labelKey: 'extracted.tab_documents', icon: FileText },
-              { id: 'analytics', labelKey: 'extracted.tab_analytics', icon: BarChart3 }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2.5 -mb-px text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-[var(--accent-primary)] theme-text-primary'
-                    : 'border-transparent theme-text-muted hover:theme-text-primary'
-                }`}
-              >
-                <tab.icon className="w-3.5 h-3.5" />
-                {t((tab as any).labelKey)}
-              </button>
-            ))}
-          </div>
-
-          <div className="px-4 py-3.5">
-            {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
-                  <DetailItem label={t('extracted.beneficiary')} value={selectedGrievance.beneficiaryName || '\u2014'} />
-                  <DetailItem label="ID" value={selectedGrievance.beneficiaryId || '\u2014'} />
-                  <DetailItem label={t('extracted.phone_number') || 'Phone'} value={selectedGrievance.phone || '-'} />
-                  <DetailItem label={t('extracted.email') || 'Email'} value={selectedGrievance.email || '-'} />
-                  <DetailItem label={t('extracted.district')} value={`${selectedGrievance.district || '-'}, ${selectedGrievance.state || '-'}`} />
-                  <DetailItem label={t('extracted.act')} value={selectedGrievance.actType || '-'} />
-                </dl>
-
-                <div className="pt-4 border-t theme-border-glass">
-                  <SectionTitle>{t('extracted.case_details')}</SectionTitle>
-                  <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
-                    <DetailItem label={t('extracted.category')} value={selectedGrievance.category || '-'} />
-                    <DetailItem label={t('extracted.sub_category')} value={selectedGrievance.subCategory || '-'} />
-                    <DetailItem label={t('extracted.priority')} value={selectedGrievance.priority ? selectedGrievance.priority.toUpperCase() : '-'} />
-                    <DetailItem label={t('extracted.status')} value={selectedGrievance.status || '-'} />
-                    <DetailItem label={t('extracted.assigned_to')} value={selectedGrievance.assignedTo || '-'} />
-                    <DetailItem label={t('extracted.application_id')} value={selectedGrievance.applicationId || '\u2014'} />
-                  </dl>
-                </div>
-
-                <div className="pt-4 border-t theme-border-glass">
-                  <SectionTitle>{t('extracted.timestamps')}</SectionTitle>
-                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                    <DetailItem label={t('extracted.created')} value={selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '\u2014'} />
-                    <DetailItem label={t('extracted.last_updated')} value={selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '\u2014'} />
-                    <DetailItem label={t('extracted.expected_resolution')} value={selectedGrievance.expectedResolution ? new Date(selectedGrievance.expectedResolution).toLocaleString() : '\u2014'} />
-                    <DetailItem label={t('extracted.resolution_date')} value={selectedGrievance.resolutionDate ? new Date(selectedGrievance.resolutionDate).toLocaleString() : '\u2014'} />
-                  </dl>
-                </div>
-
-                <div className="pt-4 border-t theme-border-glass">
-                  <SectionTitle>{t('extracted.attachments_communication')}</SectionTitle>
-                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                    <DetailItem label={t('extracted.attachments_label')} value={selectedGrievance.attachments ?? 0} />
-                    <DetailItem label={t('extracted.messages_label')} value={selectedGrievance.communication?.length ?? 0} />
-                  </dl>
-                  {(selectedGrievance.communication?.length ?? 0) > 0 && (
-                    <div className="mt-3 space-y-1.5">
-                      {(selectedGrievance.communication ?? []).slice(0, 3).map((c, i) => (
-                        <div key={i} className="text-xs theme-text-muted">
-                          <span className="font-medium theme-text-secondary">{c.user || (t('extracted.user') || 'User')}:</span> {String(c.text || c.message || c.body || '\u2014')}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'communication' && (
-              <div className="space-y-3">
-                <div
-                  ref={chatRef}
-                  className="max-h-80 overflow-y-auto p-3 space-y-3 border theme-border-glass rounded-md theme-bg-glass scroll-smooth"
-                >
-                  {(selectedGrievance.communication ?? []).length === 0 && pendingMessages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageCircle className="w-8 h-8 theme-text-muted mx-auto mb-2 opacity-50" />
-                      <p className="text-sm theme-text-secondary">{t('extracted.no_messages') || 'No messages yet'}</p>
-                      <p className="text-xs theme-text-muted mt-1">{t('extracted.start_conversation') || 'Start a conversation with the beneficiary'}</p>
-                    </div>
-                  ) : (
-                    <>
-                      {(selectedGrievance.communication ?? []).map((c, i) => {
-                        const isOfficerMsg = c.type !== 'user';
-                        return (
-                          <div key={i} className={`max-w-[85%] sm:max-w-md rounded-lg border p-3 ${isOfficerMsg ? 'ml-auto bg-blue-500/10 border-blue-500/20' : 'mr-auto theme-bg-card theme-border-glass'}`}>
-                            <div className="flex items-center justify-between gap-3 mb-1">
-                              <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
-                                {isOfficerMsg ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))}
-                              </span>
-                              <span className="text-[10px] theme-text-muted">
-                                {c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}
-                              </span>
-                            </div>
-                            <p className="text-[13px] theme-text-primary break-words">{String(c.text || c.message || c.body || '')}</p>
-                          </div>
-                        );
-                      })}
-                      {pendingMessages.map((c, i) => (
-                        <div key={`pending-${i}`} className="max-w-[85%] sm:max-w-md ml-auto rounded-lg border p-3 opacity-60 bg-blue-500/10 border-blue-500/20">
-                          <div className="flex items-center justify-between gap-3 mb-1">
-                            <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{t('extracted.officer') || 'Officer'}</span>
-                            <span className="text-[10px] theme-text-muted">{t('extracted.sending') || 'Sending...'}</span>
-                          </div>
-                          <p className="text-[13px] theme-text-primary break-words">{c.text}</p>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                    placeholder={t('extracted.write_message') || 'Write a message...'}
-                    className={`${inputCls} flex-1`}
-                  />
-                  {recognition && (
-                    <button
-                      onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                      className={`h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md transition-colors ${
-                        isRecording ? 'bg-red-500 text-white animate-pulse' : 'border theme-border-glass theme-text-secondary hover:theme-bg-glass'
-                      }`}
-                      aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
-                      title={isRecording ? 'Stop recording' : 'Start voice recording'}
-                    >
-                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
-                  )}
-                  <button
-                    onClick={sendMessage}
-                    disabled={!newMessage.trim()}
-                    className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md accent-gradient text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                    aria-label={t('extracted.send_message') || 'Send message'}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'timeline' && (
-              <div className="space-y-4">
-                <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                  <DetailItem label={t('extracted.created')} value={selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).toLocaleString() : '\u2014'} />
-                  <DetailItem label={t('extracted.last_updated')} value={selectedGrievance.lastUpdated ? new Date(selectedGrievance.lastUpdated).toLocaleString() : '\u2014'} />
-                </dl>
-                <div className="pt-4 border-t theme-border-glass">
-                  <SectionTitle>{t('extracted.activity')}</SectionTitle>
-                  {(selectedGrievance.communication ?? []).length === 0 ? (
-                    <p className="text-sm theme-text-muted">{t('extracted.no_activity')}</p>
-                  ) : (
-                    <ul className="list-disc pl-5 space-y-2">
-                      {(selectedGrievance.communication ?? []).map((c, i) => (
-                        <li key={i} className="text-sm theme-text-muted flex items-start gap-2">
-                          {(c.type === 'officer' || c.user === 'Officer') && <Shield className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />}
-                          <span>
-                            {(c.type === 'officer' || c.user === 'Officer') ? (t('extracted.officer') || 'Officer') : (c.user || (t('extracted.user') || 'User'))} \u2014 {String(c.text || c.message || c.body || '')}
-                            <span className="text-xs block">{c.createdAt ? (new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()) : ''}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'documents' && (
-              <div className="space-y-4">
-                <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                  <DetailItem label={t('extracted.attachments_label')} value={selectedGrievance.attachments ?? 0} />
-                </dl>
-                <p className="text-xs theme-text-muted">{t('extracted.upload_download_note')}</p>
-                <div className="pt-4 border-t theme-border-glass">
-                  <Label>{t('extracted.add_document_not_implemented')}</Label>
-                  <input type="file" disabled className="block text-xs theme-text-muted" />
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'analytics' && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px theme-bg-glass theme-border-glass border rounded-lg overflow-hidden">
-                <div className="theme-bg-card p-3.5 text-center">
-                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{selectedGrievance.communication?.length ?? 0}</p>
-                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.messages')}</p>
-                </div>
-                <div className="theme-bg-card p-3.5 text-center">
-                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{selectedGrievance.attachments ?? 0}</p>
-                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.attachments_label')}</p>
-                </div>
-                <div className="theme-bg-card p-3.5 text-center">
-                  <p className="text-xl font-semibold tracking-tight theme-text-primary tabular-nums">{(() => {
-                    const created = selectedGrievance.createdDate ? new Date(selectedGrievance.createdDate).getTime() : Date.now();
-                    const diff = Date.now() - created;
-                    return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
-                  })()}</p>
-                  <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mt-1">{t('extracted.days_open')}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="px-4 py-3 border-t theme-border-glass flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => resolveCase()}
-              disabled={statusUpdating === selectedGrievance?.id || selectedGrievance?.status === 'closed'}
-              className={`${ghostBtn} ${statusUpdating === selectedGrievance?.id ? 'opacity-60 cursor-wait' : ''}`}
-            >
-              <CheckCircle className="w-3.5 h-3.5" />
-              {selectedGrievance?.status === 'closed' ? (t('extracted.resolved') || 'Resolved') : (t('extracted.resolve_case') || 'Resolve')}
-            </button>
-            {selectedGrievance?.phone ? (
-              <a href={`tel:${selectedGrievance.phone.trim()}`} target="_blank" rel="noreferrer" className={ghostBtn} aria-label={t('extracted.call_now')}>
-                <PhoneCall className="w-3.5 h-3.5" />
-                {t('extracted.call_now')}
-              </a>
-            ) : (
-              <button disabled className={ghostBtn} aria-disabled>
-                <PhoneCall className="w-3.5 h-3.5" />
-                {t('extracted.call_now')}
-              </button>
-            )}
-            {selectedGrievance?.email ? (
-              <a href={`mailto:${selectedGrievance.email.trim()}`} target="_blank" rel="noreferrer" className={ghostBtn} aria-label={t('extracted.send_email')}>
-                <Mail className="w-3.5 h-3.5" />
-                {t('extracted.send_email')}
-              </a>
-            ) : (
-              <button disabled className={ghostBtn} aria-disabled>
-                <Mail className="w-3.5 h-3.5" />
-                {t('extracted.send_email')}
-              </button>
-            )}
-            <button className={`${primaryBtn} ml-auto`}>
-              <AlertOctagon className="w-3.5 h-3.5" />
-              {t('extracted.escalate_case')}
-            </button>
-          </div>
-        </section>
+        <OfficerGrievanceInspector
+          grievance={selectedGrievance}
+          scrollRef={detailRef}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onClose={() => setSelectedGrievance(null)}
+          chatRef={chatRef}
+          pendingMessages={pendingMessages}
+          newMessage={newMessage}
+          onMessageChange={setNewMessage}
+          onSend={sendMessage}
+          recognition={recognition}
+          isRecording={isRecording}
+          onStartRecording={startVoiceRecording}
+          onStopRecording={stopVoiceRecording}
+          onResolve={resolveCase}
+          statusUpdating={statusUpdating}
+          t={t}
+        />
       )}
 
       {/* Sidebar + Performance */}
@@ -1545,23 +734,18 @@ const GrievancePage = () => {
               <h2 className="text-sm font-semibold tracking-tight theme-text-primary">{t('extracted.quick_actions')}</h2>
             </div>
             <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-              {[
-                { key: 'escalate', icon: AlertOctagon, labelKey: 'extracted.escalate_urgent_cases', onClick: () => setShowExportModal(false), badge: stats.escalated },
-                { key: 'assign', icon: UserCheck, labelKey: 'extracted.assign_officers', onClick: () => setSelectedGrievance(null) },
-                { key: 'report', icon: FileText, labelKey: 'extracted.generate_report', onClick: () => setShowExportModal(true) },
-                { key: 'analytics', icon: BarChart3, labelKey: 'extracted.view_analytics', onClick: () => setViewMode('list') }
-              ].map((action) => (
+              {OFFICER_QUICK_ACTIONS.map((action) => (
                 <button
                   key={action.key}
-                  onClick={action.onClick}
+                  onClick={() => handleQuickAction(action.key)}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-md border theme-border-glass theme-bg-glass text-left hover:theme-bg-hover transition-colors group"
                 >
                   <span className="w-7 h-7 rounded-md theme-bg-card theme-border-glass border inline-flex items-center justify-center shrink-0 group-hover:text-[var(--accent-primary)] transition-colors">
-                    <action.icon className="w-3.5 h-3.5" />
+                    {React.createElement(action.icon, { className: 'w-3.5 h-3.5' })}
                   </span>
                   <span className="text-[13px] font-medium theme-text-primary truncate">{t(action.labelKey)}</span>
-                  {'badge' in action && typeof action.badge === 'number' && action.badge > 0 ? (
-                    <span className="ml-auto pillCls text-[10px] bg-red-500/15 text-red-500 shrink-0 tabular-nums">{action.badge}</span>
+                  {action.key === 'escalate' && stats.escalated > 0 ? (
+                    <span className="ml-auto pillCls text-[10px] bg-red-500/15 text-red-500 shrink-0 tabular-nums">{stats.escalated}</span>
                   ) : null}
                 </button>
               ))}
@@ -1575,12 +759,11 @@ const GrievancePage = () => {
             </div>
             <ul className="p-3 space-y-2">
               {(Object.entries(categoryStats) as [string, number][]).map(([key, count]) => {
-                const Icon = getCategoryIcon(key);
                 const total = grievances.length || 1;
                 return (
                   <li key={key} className="flex items-center gap-2.5">
                     <span className="w-6 h-6 rounded-md theme-bg-glass inline-flex items-center justify-center shrink-0">
-                      <Icon className="w-3.5 h-3.5" />
+                      {React.createElement(getOfficerCategoryIcon(key), { className: 'w-3.5 h-3.5' })}
                     </span>
                     <span className="text-[13px] theme-text-secondary truncate capitalize">
                       {key.replace(/-/g, ' ')}
@@ -1623,28 +806,25 @@ const GrievancePage = () => {
               {[...grievances]
                 .sort((a, b) => new Date(b.lastUpdated || b.createdDate || 0).getTime() - new Date(a.lastUpdated || a.createdDate || 0).getTime())
                 .slice(0, 5)
-                .map((g) => {
-                  const Icon = getCategoryIcon(g.category || '');
-                  return (
-                    <li
-                      key={g.id}
-                      onClick={() => setSelectedGrievance(g)}
-                      className="flex items-center gap-2.5 px-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:theme-bg-hover transition-colors"
-                    >
-                      <span className="w-6 h-6 rounded-md theme-bg-glass inline-flex items-center justify-center shrink-0">
-                        <Icon className="w-3.5 h-3.5" />
-                      </span>
-                      <span className="text-[13px] font-medium theme-text-primary truncate">{g.beneficiaryName}</span>
-                      <ArrowUpRight className="w-3 h-3 theme-text-muted shrink-0 opacity-0 group-hover:opacity-100" />
-                      <span className="ml-auto text-xs theme-text-muted whitespace-nowrap hidden sm:inline">
-                        {new Date(g.lastUpdated || g.createdDate || Date.now()).toLocaleDateString()}
-                      </span>
-                      <span className={`${pillCls} ${getStatusColor(g.status)} shrink-0`}>
-                        {(g.status || '-').replace('-', ' ').toUpperCase()}
-                      </span>
-                    </li>
-                  );
-                })}
+                .map((g) => (
+                  <li
+                    key={g.id}
+                    onClick={() => setSelectedGrievance(g)}
+                    className="flex items-center gap-2.5 px-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:theme-bg-hover transition-colors"
+                  >
+                    <span className="w-6 h-6 rounded-md theme-bg-glass inline-flex items-center justify-center shrink-0">
+                      {React.createElement(getOfficerCategoryIcon(g.category || ''), { className: 'w-3.5 h-3.5' })}
+                    </span>
+                    <span className="text-[13px] font-medium theme-text-primary truncate">{g.beneficiaryName}</span>
+                    <ArrowUpRight className="w-3 h-3 theme-text-muted shrink-0 opacity-0 group-hover:opacity-100" />
+                    <span className="ml-auto text-xs theme-text-muted whitespace-nowrap hidden sm:inline">
+                      {new Date(g.lastUpdated || g.createdDate || Date.now()).toLocaleDateString()}
+                    </span>
+                    <span className={`${pillCls} ${getOfficerStatusColor(g.status)} shrink-0`}>
+                      {(g.status || '-').replace('-', ' ').toUpperCase()}
+                    </span>
+                  </li>
+                ))}
               {grievances.length === 0 && (
                 <li className="py-8 text-center text-sm theme-text-muted">{t('extracted.no_activity')}</li>
               )}
@@ -1660,7 +840,7 @@ const GrievancePage = () => {
             <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">{t('extracted.beneficiary_feedback')}</h2>
             <span className="text-xs theme-text-muted tabular-nums">({sortedFeedbacks.length})</span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
             <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted hidden sm:inline">{t('extracted.sort_by')}</span>
             <select
               value={feedbackSortBy}
@@ -1681,12 +861,14 @@ const GrievancePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px theme-bg-glass theme-border-glass border rounded-xl overflow-hidden">
-          <StatCell label={t('extracted.total_responses')} value={sortedFeedbacks.length} />
-          <StatCell label={t('extracted.average_rating')} value={sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((s, f) => s + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '\u2014'} />
-          <StatCell label={t('extracted.five_star_percentage')} value={sortedFeedbacks.length > 0 ? `${Math.round((sortedFeedbacks.filter(f => f.rating === 5).length / sortedFeedbacks.length) * 100)}%` : '0%'} />
-          <StatCell label={t('extracted.needs_attention')} value={sortedFeedbacks.filter(f => f.rating <= 2).length} />
-        </div>
+        <StatBand
+          cells={[
+            { label: t('extracted.total_responses'), value: sortedFeedbacks.length },
+            { label: t('extracted.average_rating'), value: sortedFeedbacks.length > 0 ? (sortedFeedbacks.reduce((s, f) => s + f.rating, 0) / sortedFeedbacks.length).toFixed(1) : '\u2014' },
+            { label: t('extracted.five_star_percentage'), value: sortedFeedbacks.length > 0 ? `${Math.round((sortedFeedbacks.filter(f => f.rating === 5).length / sortedFeedbacks.length) * 100)}%` : '0%' },
+            { label: t('extracted.needs_attention'), value: sortedFeedbacks.filter(f => f.rating <= 2).length },
+          ]}
+        />
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1781,7 +963,7 @@ const GrievancePage = () => {
 
       <AnimatePresence>
         {showNewCaseModal && (
-          <NewGrievanceDrawer
+          <OfficerNewCaseDrawer
             initialData={selectedGrievance}
             onClose={() => { setShowNewCaseModal(false); setSelectedGrievance(null); }}
             onCreated={(g) => { setSelectedGrievance(g); setShowNewCaseModal(false); }}

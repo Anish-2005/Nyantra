@@ -1,599 +1,412 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/context/LocaleContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Search, Download, Eye, X, FileText, DollarSign, TrendingUp,
-  Shield, CheckCircle,
-  BarChart3, PieChart,
-  Database,
-  Cpu, FileCheck, FilePlus, BookOpen, Share2,
-  ArrowUpRight,
-  Activity,
-  Calendar,
-  Clock,
-  Plus,
-  Edit,
-  Loader2
-} from 'lucide-react';
-import { collection, query, orderBy, onSnapshot, doc, getDocs, serverTimestamp, setDoc, updateDoc, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { Download, Plus } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc, serverTimestamp, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import ExportModal from '@/components/dashboard/ExportModal';
+import { PageHeader } from '@/components/dashboard/ui';
+import type { Report, OfficerActivityItem } from './helpers';
+import {
+  useOfficerFirestoreReports,
+  buildOfficerReportsCsv,
+  createOfficerReportsPdfDocument,
+} from './helpers';
+import OfficerReportsPanel from './components/OfficerReportsPanel';
+import OfficerReportInspector from './components/OfficerReportInspector';
+import OfficerAnalyticsSection from './components/OfficerAnalyticsSection';
+import OfficerNewReportDrawer from './components/OfficerNewReportDrawer';
 
-// Report type definition
-type Report = {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  frequency: string;
-  status: 'completed' | 'processing' | 'scheduled' | 'failed';
-  fileSize: string | null;
-  fileFormat: string;
-  generatedDate: string | null;
-  generatedBy: string | null;
-  schedule: any;
-  lastRun: string | null;
-  nextRun: string | null;
-  recordCount: number | null;
-  description: string;
-  parameters: any;
-  downloadCount: number;
-  isScheduled: boolean;
-  recipients: string[];
-  columns: string[];
-  createdAt?: string;
-  updatedAt?: string;
-};
+// Comprehensive system PDF+CSV export shared by toolbar button + quick action
+const runComprehensiveSystemExport = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+  try {
+    setLoading(true);
 
-const inputCls = "w-full h-9 px-2.5 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors";
+    // Fetch all data from different collections
+    const [applicationsSnap, disbursementsSnap, beneficiariesSnap, grievancesSnap, reportsSnap] = await Promise.all([
+      getDocs(collection(db, 'applications')),
+      getDocs(collection(db, 'disbursements')),
+      getDocs(collection(db, 'beneficiaries')),
+      getDocs(collection(db, 'grievances')),
+      getDocs(collection(db, 'reports'))
+    ]);
 
-const ghostBtn = "h-8 px-3 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed";
+    // Process applications data
+    const applications: any[] = applicationsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdDate: doc.data().applicationDate?.toDate?.()?.toISOString() || doc.data().applicationDate,
+      lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
+    }));
 
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">{children}</label>
-);
+    // Process disbursements data
+    const disbursements: any[] = disbursementsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+      disbursementDate: doc.data().disbursementDate?.toDate?.()?.toISOString() || doc.data().disbursementDate,
+      createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate
+    }));
 
-const Item = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="min-w-0">
-    <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{label}</dt>
-    <dd className="text-[13px] font-medium theme-text-primary mt-0.5 truncate">{children}</dd>
-  </div>
-);
+    // Process beneficiaries data
+    const beneficiaries: any[] = beneficiariesSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate,
+      lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
+    }));
 
-const STATUS_OPTIONS: Array<{ value: Report['status']; labelKey: string }> = [
-  { value: 'scheduled', labelKey: 'extracted.scheduled' },
-  { value: 'processing', labelKey: 'extracted.processing' },
-  { value: 'completed', labelKey: 'extracted.completed' },
-  { value: 'failed', labelKey: 'extracted.failed' }
-];
+    // Process grievances data
+    const grievances: any[] = grievancesSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate,
+      lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
+    }));
 
-// CSV builder shared by file download + email attachment
-const buildReportsCsv = (items: Report[]) => {
-  const headers = ['Report Name', 'Type', 'Category', 'Frequency', 'Status', 'File Size', 'Format', 'Generated Date', 'Generated By', 'Record Count', 'Download Count'];
-  const rows = items.map(r => [
-    r.name,
-    r.type,
-    r.category,
-    r.frequency,
-    r.status,
-    r.fileSize || '',
-    r.fileFormat,
-    r.generatedDate || '',
-    r.generatedBy || '',
-    r.recordCount || '',
-    r.downloadCount
-  ]);
-  return [headers, ...rows].map(r => r.map(f => `"${(f ?? '')}"`).join(',')).join('\n');
-};
+    // Process reports data
+    const reports: any[] = reportsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
+      generatedDate: doc.data().generatedDate?.toDate?.()?.toISOString() || doc.data().generatedDate
+    }));
 
-// PDF document builder shared by file download + email attachment
-const createReportsPdfDocument = (items: Report[]) => {
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    // Generate comprehensive PDF report
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    const margin = 36;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const margin = 20;
-  const contentWidth = pageWidth - (margin * 2);
+    // Title page
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 120, 'F');
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Comprehensive System Report', margin, 60);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Nyantra - Direct Benefit Transfer Platform', margin, 85);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB', {
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    })}`, margin, 105);
 
-  // Professional header
-  pdf.setFillColor(30, 64, 175);
-  pdf.rect(0, 0, pageWidth, 35, 'F');
+    // Executive Summary
+    doc.addPage();
+    doc.setFontSize(18);
+    doc.setTextColor(30, 64, 175);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Executive Summary', margin, 50);
 
-  // Title
-  pdf.setFontSize(20);
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('NYANTRA - Reports Export', margin, 22);
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    const summaryData = [
+      ['Total Applications', applications.length.toString()],
+      ['Total Disbursements', disbursements.length.toString()],
+      ['Total Beneficiaries', beneficiaries.length.toString()],
+      ['Active Grievances', grievances.filter((g: any) => g.status !== 'closed').length.toString()],
+      ['Total Reports Generated', reports.length.toString()],
+      ['Total Amount Disbursed', `₹${disbursements.reduce((sum: number, d: any) => sum + (d.disbursedAmount || 0), 0).toLocaleString('en-IN')}`]
+    ];
 
-  // Subtitle
-  pdf.setFontSize(10);
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Direct Benefit Transfer System Reports', margin, 30);
-
-  // Report metadata
-  pdf.setFontSize(8);
-  pdf.setTextColor(255, 255, 255);
-  const currentDate = new Date().toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  pdf.text(`Generated: ${currentDate}`, pageWidth - margin, 22, { align: 'right' });
-  pdf.text(`Total Reports: ${items.length}`, pageWidth - margin, 30, { align: 'right' });
-
-  let yPosition = 50;
-
-  // Summary section
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, yPosition, contentWidth, 25, 'F');
-
-  pdf.setFontSize(12);
-  pdf.setTextColor(30, 64, 175);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('REPORTS SUMMARY', margin + 5, yPosition + 8);
-
-  // Summary stats
-  const statusCounts = items.reduce((acc, r) => {
-    acc[r.status] = (acc[r.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const typeCounts = items.reduce((acc, r) => {
-    acc[r.type] = (acc[r.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  pdf.setFontSize(9);
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Total Reports: ${items.length}`, margin + 5, yPosition + 18);
-
-  yPosition += 35;
-
-  // Status breakdown
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(30, 64, 175);
-  pdf.text('Status Breakdown:', margin, yPosition);
-
-  yPosition += 8;
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(0, 0, 0);
-
-  Object.entries(statusCounts).forEach(([status, count]) => {
-    const statusText = status.replace(/-/g, ' ').toUpperCase();
-    const percentage = (((count as number) / items.length) * 100).toFixed(1);
-    pdf.text(`${statusText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-    yPosition += 5;
-  });
-
-  yPosition += 10;
-
-  // Type breakdown
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(30, 64, 175);
-  pdf.text('Type Breakdown:', margin, yPosition);
-
-  yPosition += 8;
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(0, 0, 0);
-
-  Object.entries(typeCounts).forEach(([type, count]) => {
-    const typeText = type.replace(/-/g, ' ').toUpperCase();
-    const percentage = (((count as number) / items.length) * 100).toFixed(1);
-    pdf.text(`${typeText}: ${count} (${percentage}%)`, margin + 5, yPosition);
-    yPosition += 5;
-  });
-
-  // Reports table
-  const tableColumns = [
-    { header: 'Report Name', width: 40 },
-    { header: 'Type', width: 25 },
-    { header: 'Category', width: 30 },
-    { header: 'Status', width: 25 },
-    { header: 'Generated', width: 30 },
-    { header: 'Records', width: 20 },
-    { header: 'Downloads', width: 20 }
-  ];
-
-  autoTable(pdf, {
-    head: [tableColumns.map(col => col.header)],
-    body: items.map(r => [
-      r.name,
-      r.type,
-      r.category,
-      r.status,
-      r.generatedDate || 'N/A',
-      r.recordCount || 'N/A',
-      r.downloadCount
-    ]),
-    startY: yPosition,
-    styles: {
-      fontSize: 7,
-      cellPadding: 3,
-    },
-    headStyles: {
-      fillColor: [30, 64, 175],
-      textColor: 255,
-      fontStyle: 'bold',
-    },
-    columnStyles: {
-      0: { cellWidth: 40 },
-      1: { cellWidth: 25 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 25 },
-      4: { cellWidth: 30 },
-      5: { cellWidth: 20 },
-      6: { cellWidth: 20 }
-    }
-  });
-
-  return pdf;
-};
-
-// Firestore-backed reports hook
-const useFirestoreReports = (setState: React.Dispatch<React.SetStateAction<Report[]>>) => {
-  useEffect(() => {
-    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const items: Report[] = snapshot.docs.map((d) => {
-        const data = d.data() as any;
-        const toIso = (v: any) => v && typeof v.toDate === 'function' ? v.toDate().toISOString() : (v ? String(v) : null);
-
-        return {
-          id: d.id,
-          name: data.name || 'Unnamed Report',
-          type: data.type || 'general',
-          category: data.category || 'analytical',
-          frequency: data.frequency || 'once',
-          status: data.status || 'completed',
-          fileSize: data.fileSize || null,
-          fileFormat: data.fileFormat || 'PDF',
-          generatedDate: toIso(data.generatedDate),
-          generatedBy: data.generatedBy,
-          schedule: data.schedule || null,
-          lastRun: toIso(data.lastRun),
-          nextRun: toIso(data.nextRun),
-          recordCount: data.recordCount || null,
-          description: data.description || '',
-          parameters: data.parameters || {},
-          downloadCount: data.downloadCount || 0,
-          isScheduled: data.isScheduled || false,
-          recipients: data.recipients || [],
-          columns: data.columns || [],
-          createdAt: toIso(data.createdAt),
-          updatedAt: toIso(data.updatedAt)
-        };
-      });
-      setState(items);
+    autoTable(doc, {
+      body: summaryData,
+      startY: 70,
+      styles: { fontSize: 11, cellPadding: 8 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 150 },
+        1: { cellWidth: 100, halign: 'right' }
+      },
+      theme: 'grid'
     });
-    return () => unsub();
-  }, [setState]);
-};
 
-// Create/Edit report portal drawer
-const NewReportDrawer = ({ onClose, onCreated, initialData }: { onClose: () => void; onCreated?: (r: Report) => void; initialData?: Report | null }) => {
-  const { t } = useLocale();
-  const [name, setName] = useState('');
-  const [type, setType] = useState('disbursement');
-  const [category, setCategory] = useState('financial');
-  const [frequency, setFrequency] = useState('once');
-  const [description, setDescription] = useState('');
-  const [format, setFormat] = useState('PDF');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+    // Applications Section
+    if (applications.length > 0) {
+      doc.addPage();
+      doc.setFontSize(16);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Applications Overview', margin, 50);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+      const appHeaders = [['ID', 'Beneficiary', 'Act Type', 'Status', 'Amount', 'Date']];
+      const appData = applications.slice(0, 50).map((app: any) => [
+        app.id.substring(0, 8) + '...',
+        app.beneficiaryName || 'N/A',
+        app.actType || 'N/A',
+        app.status || 'N/A',
+        app.requestedAmount ? `₹${app.requestedAmount.toLocaleString('en-IN')}` : 'N/A',
+        app.createdDate ? new Date(app.createdDate).toLocaleDateString() : 'N/A'
+      ]);
 
-  // Lock body scroll + close on Escape while drawer is open
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
+      autoTable(doc, {
+        head: appHeaders,
+        body: appData,
+        startY: 70,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 50 },
+          4: { cellWidth: 60 },
+          5: { cellWidth: 50 }
+        }
+      });
 
-  const reportTypes = [
-    { value: 'disbursement', label: t('extracted.report_type_disbursement') },
-    { value: 'verification', label: t('extracted.report_type_verification') },
-    { value: 'grievance', label: t('extracted.report_type_grievance') },
-    { value: 'financial', label: t('extracted.report_type_financial') },
-    { value: 'performance', label: t('extracted.report_type_performance') },
-    { value: 'analytical', label: t('extracted.report_type_analytical') }
-  ];
-
-  const categories = [
-    { value: 'financial', label: t('extracted.category_financial') },
-    { value: 'compliance', label: t('extracted.category_compliance') },
-    { value: 'performance', label: t('extracted.category_performance') },
-    { value: 'statistical', label: t('extracted.category_statistical') },
-    { value: 'analytical', label: t('extracted.category_analytical') },
-    { value: 'technical', label: t('extracted.category_technical') }
-  ];
-
-  const frequencies = [
-    { value: 'once', label: t('extracted.frequency_once') },
-    { value: 'daily', label: t('extracted.frequency_daily') },
-    { value: 'weekly', label: t('extracted.frequency_weekly') },
-    { value: 'monthly', label: t('extracted.frequency_monthly') },
-    { value: 'quarterly', label: t('extracted.frequency_quarterly') }
-  ];
-
-  const formats = [
-    { value: 'PDF', label: t('extracted.format_pdf') },
-    { value: 'Excel', label: t('extracted.format_excel') },
-    { value: 'CSV', label: t('extracted.format_csv') }
-  ];
-
-  // Prefill when editing
-  useEffect(() => {
-    if (!initialData) return;
-    setName(initialData.name || '');
-    setType(initialData.type || 'disbursement');
-    setCategory(initialData.category || 'financial');
-    setFrequency(initialData.frequency || 'once');
-    setDescription(initialData.description || '');
-    setFormat(initialData.fileFormat || 'PDF');
-  }, [initialData]);
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setError(null);
-    if (!name.trim()) {
-      setError(t('extracted.report_name_required') || 'Report name is required');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const baseData: any = {
-        name: name.trim(),
-        type,
-        category,
-        frequency,
-        description: description.trim(),
-        fileFormat: format,
-        status: 'processing',
-        downloadCount: 0,
-        isScheduled: frequency !== 'once',
-        parameters: {},
-        recipients: [],
-        columns: [],
-        lastUpdated: serverTimestamp()
-      };
-
-      if (initialData && initialData.id) {
-        // Update existing report
-        await updateDoc(doc(db, 'reports', initialData.id), baseData);
-        const updated: Report = { ...initialData, ...baseData, updatedAt: new Date().toISOString() };
-        onCreated?.(updated);
-        onClose();
-      } else {
-        // Create new report
-        const newId = `REP-${Date.now()}`;
-        const payload = {
-          ...baseData,
-          createdAt: serverTimestamp(),
-          generatedDate: serverTimestamp(),
-          generatedBy: 'System',
-          fileSize: null,
-          recordCount: null,
-          schedule: frequency !== 'once' ? {
-            frequency,
-            nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-            recipients: [],
-            format
-          } : null
-        };
-
-        await setDoc(doc(db, 'reports', newId), payload);
-
-        const created: Report = {
-          id: newId,
-          name: payload.name,
-          type: payload.type,
-          category: payload.category,
-          frequency: payload.frequency,
-          status: payload.status,
-          fileSize: payload.fileSize,
-          fileFormat: payload.fileFormat,
-          generatedDate: new Date().toISOString(),
-          generatedBy: payload.generatedBy,
-          schedule: payload.schedule,
-          lastRun: payload.lastRun,
-          nextRun: payload.nextRun,
-          recordCount: payload.recordCount,
-          description: payload.description,
-          parameters: payload.parameters,
-          downloadCount: payload.downloadCount,
-          isScheduled: payload.isScheduled,
-          recipients: payload.recipients,
-          columns: payload.columns,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        onCreated?.(created);
-        onClose();
+      if (applications.length > 50) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Showing first 50 of ${applications.length} applications`, margin, (doc as any).lastAutoTable.finalY + 20);
       }
-    } catch (err) {
-      console.error('Create report failed', err);
-      setError(t('extracted.create_failed') || 'Failed to create report');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
 
-  if (!mounted) return null;
+    // Disbursements Section
+    if (disbursements.length > 0) {
+      doc.addPage();
+      doc.setFontSize(16);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Disbursements Overview', margin, 50);
 
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-black/50 z-[60]"
-      />
+      const disbHeaders = [['ID', 'Application ID', 'Beneficiary', 'Amount', 'Status', 'Date']];
+      const disbData = disbursements.slice(0, 50).map((disb: any) => [
+        disb.id.substring(0, 8) + '...',
+        disb.applicationId?.substring(0, 8) + '...' || 'N/A',
+        disb.beneficiaryName || 'N/A',
+        disb.disbursedAmount ? `₹${disb.disbursedAmount.toLocaleString('en-IN')}` : 'N/A',
+        disb.status || 'N/A',
+        disb.disbursementDate ? new Date(disb.disbursementDate).toLocaleDateString() : 'N/A'
+      ]);
 
-      {/* Panel */}
-      <motion.aside
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Header */}
-        <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass shrink-0">
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold tracking-tight theme-text-primary truncate">
-              {initialData ? (t('extracted.edit_report') || 'Edit Report') : (t('extracted.new_report') || 'New Report')}
-            </h2>
-            <p className="text-[11px] theme-text-muted truncate">
-              {initialData ? (t('extracted.edit_report_description') || 'Edit the report details and save changes.') : (t('extracted.new_report_description') || 'Create a new report with custom parameters.')}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+      autoTable(doc, {
+        head: disbHeaders,
+        body: disbData,
+        startY: 70,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [34, 197, 94], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 60 },
+          4: { cellWidth: 50 },
+          5: { cellWidth: 50 }
+        }
+      });
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} id="new-report-form" className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-          {/* Details */}
-          <section>
-            <Label>{t('extracted.report_name') || 'Report Name'} *</Label>
-            <input
-              type="text"
-              required
-              placeholder={t('extracted.report_name_placeholder') || 'Enter report name'}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={inputCls}
-            />
-          </section>
+      if (disbursements.length > 50) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Showing first 50 of ${disbursements.length} disbursements`, margin, (doc as any).lastAutoTable.finalY + 20);
+      }
+    }
 
-          {/* Classification */}
-          <section className="pt-4 border-t theme-border-glass">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">
-              {t('extracted.category') || 'Category'}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('extracted.report_type') || 'Report Type'}</Label>
-                <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
-                  {reportTypes.map(rt => (
-                    <option key={rt.value} value={rt.value}>{rt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label>{t('extracted.category') || 'Category'}</Label>
-                <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
+    // Beneficiaries Section
+    if (beneficiaries.length > 0) {
+      doc.addPage();
+      doc.setFontSize(16);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Beneficiaries Overview', margin, 50);
 
-          {/* Schedule & Format */}
-          <section className="pt-4 border-t theme-border-glass">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">
-              {t('extracted.frequency') || 'Frequency'} · {t('extracted.format') || 'Format'}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>{t('extracted.frequency') || 'Frequency'}</Label>
-                <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className={inputCls}>
-                  {frequencies.map(freq => (
-                    <option key={freq.value} value={freq.value}>{freq.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label>{t('extracted.format') || 'Format'}</Label>
-                <select value={format} onChange={(e) => setFormat(e.target.value)} className={inputCls}>
-                  {formats.map(fmt => (
-                    <option key={fmt.value} value={fmt.value}>{fmt.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
+      const benHeaders = [['ID', 'Name', 'Phone', 'District', 'State', 'Category']];
+      const benData = beneficiaries.slice(0, 50).map((ben: any) => [
+        ben.id.substring(0, 8) + '...',
+        ben.name || 'N/A',
+        ben.phone || 'N/A',
+        ben.district || 'N/A',
+        ben.state || 'N/A',
+        ben.category || 'N/A'
+      ]);
 
-          {/* Description */}
-          <section className="pt-4 border-t theme-border-glass">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">
-              {t('extracted.description') || 'Description'}
-            </h3>
-            <textarea
-              placeholder={t('extracted.description_placeholder') || 'Enter report description'}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className={`${inputCls} h-auto py-2`}
-            />
-          </section>
+      autoTable(doc, {
+        head: benHeaders,
+        body: benData,
+        startY: 70,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [168, 85, 247], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 60 },
+          4: { cellWidth: 50 },
+          5: { cellWidth: 50 }
+        }
+      });
 
-          {error && <p className="text-red-500 text-xs">{error}</p>}
-        </form>
+      if (beneficiaries.length > 50) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Showing first 50 of ${beneficiaries.length} beneficiaries`, margin, (doc as any).lastAutoTable.finalY + 20);
+      }
+    }
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t theme-border-glass flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-9 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
-          >
-            {t('extracted.cancel')}
-          </button>
-          <button
-            type="submit"
-            form="new-report-form"
-            disabled={isSubmitting}
-            className="flex-1 h-9 accent-gradient text-white rounded-md inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FilePlus className="w-3.5 h-3.5" />}
-            {isSubmitting
-              ? t('extracted.saving') || 'Saving...'
-              : initialData
-                ? t('extracted.save') || 'Save'
-                : t('extracted.create_report') || 'Create Report'
-            }
-          </button>
-        </div>
-      </motion.aside>
-    </>,
-    document.body
-  );
+    // Grievances Section
+    if (grievances.length > 0) {
+      doc.addPage();
+      doc.setFontSize(16);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Grievances Overview', margin, 50);
+
+      const grievHeaders = [['ID', 'Beneficiary', 'Category', 'Priority', 'Status', 'Date']];
+      const grievData = grievances.slice(0, 50).map((griev: any) => [
+        griev.id.substring(0, 8) + '...',
+        griev.beneficiaryName || 'N/A',
+        griev.category || 'N/A',
+        griev.priority || 'N/A',
+        griev.status || 'N/A',
+        griev.createdDate ? new Date(griev.createdDate).toLocaleDateString() : 'N/A'
+      ]);
+
+      autoTable(doc, {
+        head: grievHeaders,
+        body: grievData,
+        startY: 70,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 70 },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 50 },
+          4: { cellWidth: 50 },
+          5: { cellWidth: 50 }
+        }
+      });
+
+      if (grievances.length > 50) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Showing first 50 of ${grievances.length} grievances`, margin, (doc as any).lastAutoTable.finalY + 20);
+      }
+    }
+
+    // Analytics Summary
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.setTextColor(30, 64, 175);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Analytics Summary', margin, 50);
+
+    // Calculate analytics
+    const totalAmount = disbursements.reduce((sum: number, d: any) => sum + (d.disbursedAmount || 0), 0);
+    const avgAmount = disbursements.length > 0 ? totalAmount / disbursements.length : 0;
+    const successRate = applications.length > 0 ? (disbursements.length / applications.length) * 100 : 0;
+
+    const analyticsData = [
+      ['Total Applications', applications.length.toString()],
+      ['Successful Disbursements', disbursements.length.toString()],
+      ['Success Rate', `${successRate.toFixed(1)}%`],
+      ['Total Beneficiaries Served', beneficiaries.length.toString()],
+      ['Total Amount Disbursed', `₹${totalAmount.toLocaleString('en-IN')}`],
+      ['Average Disbursement Amount', `₹${avgAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
+      ['Active Grievances', grievances.filter((g: any) => g.status !== 'closed').length.toString()],
+      ['Reports Generated', reports.length.toString()]
+    ];
+
+    autoTable(doc, {
+      body: analyticsData,
+      startY: 70,
+      styles: { fontSize: 11, cellPadding: 8 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 150 },
+        1: { cellWidth: 120, halign: 'right' }
+      },
+      theme: 'grid'
+    });
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 20, { align: 'right' });
+      doc.text('Generated by Nyantra DBT Platform', margin, pageHeight - 20);
+    }
+
+    doc.save(`comprehensive_report_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    // Also generate CSV with all data
+    const csvHeaders = [
+      'Data Type', 'ID', 'Name/Beneficiary', 'Type/Category', 'Status', 'Amount', 'Date', 'Details'
+    ];
+
+    const csvRows = [
+      // Applications
+      ...applications.map((app: any) => [
+        'Application',
+        app.id,
+        app.beneficiaryName || '',
+        app.actType || '',
+        app.status || '',
+        app.requestedAmount?.toString() || '',
+        app.createdDate || '',
+        `District: ${app.district || ''}, State: ${app.state || ''}`
+      ]),
+      // Disbursements
+      ...disbursements.map((disb: any) => [
+        'Disbursement',
+        disb.id,
+        disb.beneficiaryName || '',
+        disb.actType || '',
+        disb.status || '',
+        disb.disbursedAmount?.toString() || '',
+        disb.disbursementDate || '',
+        `Application: ${disb.applicationId || ''}`
+      ]),
+      // Beneficiaries
+      ...beneficiaries.map((ben: any) => [
+        'Beneficiary',
+        ben.id,
+        ben.name || '',
+        ben.category || '',
+        'Active',
+        '',
+        ben.createdDate || '',
+        `Phone: ${ben.phone || ''}, District: ${ben.district || ''}, State: ${ben.state || ''}`
+      ]),
+      // Grievances
+      ...grievances.map((griev: any) => [
+        'Grievance',
+        griev.id,
+        griev.beneficiaryName || '',
+        griev.category || '',
+        griev.status || '',
+        '',
+        griev.createdDate || '',
+        `Priority: ${griev.priority || ''}, Description: ${griev.description || ''}`
+      ])
+    ];
+
+    const csvContent = [csvHeaders, ...csvRows]
+      .map((row: any[]) => row.map((field: any) => `"${field}"`).join(','))
+      .join('\n');
+
+    const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvLink = document.createElement('a');
+    const csvUrl = URL.createObjectURL(csvBlob);
+    csvLink.setAttribute('href', csvUrl);
+    csvLink.setAttribute('download', `comprehensive_data_${new Date().toISOString().split('T')[0]}.csv`);
+    csvLink.style.visibility = 'hidden';
+    document.body.appendChild(csvLink);
+    csvLink.click();
+    document.body.removeChild(csvLink);
+
+  } catch (error) {
+    console.error('Error generating comprehensive report:', error);
+    alert('Error generating report. Please try again.');
+  } finally {
+    setLoading(false);
+  }
 };
 
 const ReportsPage = () => {
@@ -618,7 +431,7 @@ const ReportsPage = () => {
   const detailRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to Firestore reports collection
-  useFirestoreReports(setReports);
+  useOfficerFirestoreReports(setReports);
 
   // Scroll detail inspector into view on selection change
   useEffect(() => {
@@ -740,7 +553,7 @@ const ReportsPage = () => {
   }, [reports]);
 
   // Recent Activities
-  const recentActivities = useMemo(() => {
+  const recentActivities = useMemo<OfficerActivityItem[]>(() => {
     // Helper function to format time ago
     const formatTimeAgo = (dateString: string) => {
       const now = new Date();
@@ -753,13 +566,7 @@ const ReportsPage = () => {
       return t('extracted.days_ago', { time: Math.floor(diffInMinutes / 1440) });
     };
 
-    const activities: Array<{
-      action: string;
-      user: string;
-      time: string;
-      status: 'success' | 'info' | 'error';
-      timestamp: number;
-    }> = [];
+    const activities: OfficerActivityItem[] = [];
 
     // Add activities based on reports
     reports.forEach(report => {
@@ -802,62 +609,6 @@ const ReportsPage = () => {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 3);
   }, [reports, t]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-      case 'processing': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'scheduled': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      case 'failed': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    const icons = {
-      'financial': DollarSign,
-      'compliance': Shield,
-      'performance': TrendingUp,
-      'statistical': BarChart3,
-      'analytical': PieChart,
-      'audit': FileCheck,
-      'technical': Cpu
-    };
-    return icons[category as keyof typeof icons] || FileText;
-  };
-
-  const getFileFormatIcon = (format: string) => {
-    const icons = {
-      'PDF': FileText,
-      'Excel': BarChart3,
-      'CSV': Database
-    };
-    return icons[format as keyof typeof icons] || FileText;
-  };
-
-  const formatDate = (s?: string | null) => {
-    if (!s) return '--';
-    try {
-      const d = new Date(s);
-      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-    } catch {
-      return '--';
-    }
-  };
-
-  const formatDateTime = (s?: string | null) => {
-    if (!s) return '--';
-    try {
-      const d = new Date(s);
-      return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
-    } catch {
-      return '--';
-    }
-  };
-
-  const formatFileSize = (size: string | null) => {
-    return size || '--';
-  };
 
   const handleDownload = async (reportId: string) => {
     console.log('handleDownload called with reportId:', reportId);
@@ -1059,398 +810,9 @@ const ReportsPage = () => {
     }
   };
 
-  // Export utilities
-  const exportComprehensiveReport = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch all data from different collections
-      const [applicationsSnap, disbursementsSnap, beneficiariesSnap, grievancesSnap, reportsSnap] = await Promise.all([
-        getDocs(collection(db, 'applications')),
-        getDocs(collection(db, 'disbursements')),
-        getDocs(collection(db, 'beneficiaries')),
-        getDocs(collection(db, 'grievances')),
-        getDocs(collection(db, 'reports'))
-      ]);
-
-      // Process applications data
-      const applications: any[] = applicationsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdDate: doc.data().applicationDate?.toDate?.()?.toISOString() || doc.data().applicationDate,
-        lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
-      }));
-
-      // Process disbursements data
-      const disbursements: any[] = disbursementsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-        id: doc.id,
-        ...doc.data(),
-        disbursementDate: doc.data().disbursementDate?.toDate?.()?.toISOString() || doc.data().disbursementDate,
-        createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate
-      }));
-
-      // Process beneficiaries data
-      const beneficiaries: any[] = beneficiariesSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate,
-        lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
-      }));
-
-      // Process grievances data
-      const grievances: any[] = grievancesSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdDate: doc.data().createdDate?.toDate?.()?.toISOString() || doc.data().createdDate,
-        lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
-      }));
-
-      // Process reports data
-      const reports: any[] = reportsSnap.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-        generatedDate: doc.data().generatedDate?.toDate?.()?.toISOString() || doc.data().generatedDate
-      }));
-
-      // Generate comprehensive PDF report
-      const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-      const margin = 36;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-
-      // Title page
-      doc.setFillColor(30, 64, 175);
-      doc.rect(0, 0, pageWidth, 120, 'F');
-      doc.setFontSize(24);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Comprehensive System Report', margin, 60);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Nyantra - Direct Benefit Transfer Platform', margin, 85);
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB', {
-        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      })}`, margin, 105);
-
-      // Executive Summary
-      doc.addPage();
-      doc.setFontSize(18);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Executive Summary', margin, 50);
-
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'normal');
-      const summaryData = [
-        ['Total Applications', applications.length.toString()],
-        ['Total Disbursements', disbursements.length.toString()],
-        ['Total Beneficiaries', beneficiaries.length.toString()],
-        ['Active Grievances', grievances.filter((g: any) => g.status !== 'closed').length.toString()],
-        ['Total Reports Generated', reports.length.toString()],
-        ['Total Amount Disbursed', `₹${disbursements.reduce((sum: number, d: any) => sum + (d.disbursedAmount || 0), 0).toLocaleString('en-IN')}`]
-      ];
-
-      autoTable(doc, {
-        body: summaryData,
-        startY: 70,
-        styles: { fontSize: 11, cellPadding: 8 },
-        columnStyles: {
-          0: { fontStyle: 'bold', cellWidth: 150 },
-          1: { cellWidth: 100, halign: 'right' }
-        },
-        theme: 'grid'
-      });
-
-      // Applications Section
-      if (applications.length > 0) {
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.setTextColor(30, 64, 175);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Applications Overview', margin, 50);
-
-        const appHeaders = [['ID', 'Beneficiary', 'Act Type', 'Status', 'Amount', 'Date']];
-        const appData = applications.slice(0, 50).map((app: any) => [
-          app.id.substring(0, 8) + '...',
-          app.beneficiaryName || 'N/A',
-          app.actType || 'N/A',
-          app.status || 'N/A',
-          app.requestedAmount ? `₹${app.requestedAmount.toLocaleString('en-IN')}` : 'N/A',
-          app.createdDate ? new Date(app.createdDate).toLocaleDateString() : 'N/A'
-        ]);
-
-        autoTable(doc, {
-          head: appHeaders,
-          body: appData,
-          startY: 70,
-          styles: { fontSize: 8, cellPadding: 4 },
-          headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 80 },
-            2: { cellWidth: 60 },
-            3: { cellWidth: 50 },
-            4: { cellWidth: 60 },
-            5: { cellWidth: 50 }
-          }
-        });
-
-        if (applications.length > 50) {
-          doc.setFontSize(10);
-          doc.setTextColor(100, 100, 100);
-          doc.text(`Showing first 50 of ${applications.length} applications`, margin, (doc as any).lastAutoTable.finalY + 20);
-        }
-      }
-
-      // Disbursements Section
-      if (disbursements.length > 0) {
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.setTextColor(30, 64, 175);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Disbursements Overview', margin, 50);
-
-        const disbHeaders = [['ID', 'Application ID', 'Beneficiary', 'Amount', 'Status', 'Date']];
-        const disbData = disbursements.slice(0, 50).map((disb: any) => [
-          disb.id.substring(0, 8) + '...',
-          disb.applicationId?.substring(0, 8) + '...' || 'N/A',
-          disb.beneficiaryName || 'N/A',
-          disb.disbursedAmount ? `₹${disb.disbursedAmount.toLocaleString('en-IN')}` : 'N/A',
-          disb.status || 'N/A',
-          disb.disbursementDate ? new Date(disb.disbursementDate).toLocaleDateString() : 'N/A'
-        ]);
-
-        autoTable(doc, {
-          head: disbHeaders,
-          body: disbData,
-          startY: 70,
-          styles: { fontSize: 8, cellPadding: 4 },
-          headStyles: { fillColor: [34, 197, 94], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 60 },
-            2: { cellWidth: 70 },
-            3: { cellWidth: 60 },
-            4: { cellWidth: 50 },
-            5: { cellWidth: 50 }
-          }
-        });
-
-        if (disbursements.length > 50) {
-          doc.setFontSize(10);
-          doc.setTextColor(100, 100, 100);
-          doc.text(`Showing first 50 of ${disbursements.length} disbursements`, margin, (doc as any).lastAutoTable.finalY + 20);
-        }
-      }
-
-      // Beneficiaries Section
-      if (beneficiaries.length > 0) {
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.setTextColor(30, 64, 175);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Beneficiaries Overview', margin, 50);
-
-        const benHeaders = [['ID', 'Name', 'Phone', 'District', 'State', 'Category']];
-        const benData = beneficiaries.slice(0, 50).map((ben: any) => [
-          ben.id.substring(0, 8) + '...',
-          ben.name || 'N/A',
-          ben.phone || 'N/A',
-          ben.district || 'N/A',
-          ben.state || 'N/A',
-          ben.category || 'N/A'
-        ]);
-
-        autoTable(doc, {
-          head: benHeaders,
-          body: benData,
-          startY: 70,
-          styles: { fontSize: 8, cellPadding: 4 },
-          headStyles: { fillColor: [168, 85, 247], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 80 },
-            2: { cellWidth: 70 },
-            3: { cellWidth: 60 },
-            4: { cellWidth: 50 },
-            5: { cellWidth: 50 }
-          }
-        });
-
-        if (beneficiaries.length > 50) {
-          doc.setFontSize(10);
-          doc.setTextColor(100, 100, 100);
-          doc.text(`Showing first 50 of ${beneficiaries.length} beneficiaries`, margin, (doc as any).lastAutoTable.finalY + 20);
-        }
-      }
-
-      // Grievances Section
-      if (grievances.length > 0) {
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.setTextColor(30, 64, 175);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Grievances Overview', margin, 50);
-
-        const grievHeaders = [['ID', 'Beneficiary', 'Category', 'Priority', 'Status', 'Date']];
-        const grievData = grievances.slice(0, 50).map((griev: any) => [
-          griev.id.substring(0, 8) + '...',
-          griev.beneficiaryName || 'N/A',
-          griev.category || 'N/A',
-          griev.priority || 'N/A',
-          griev.status || 'N/A',
-          griev.createdDate ? new Date(griev.createdDate).toLocaleDateString() : 'N/A'
-        ]);
-
-        autoTable(doc, {
-          head: grievHeaders,
-          body: grievData,
-          startY: 70,
-          styles: { fontSize: 8, cellPadding: 4 },
-          headStyles: { fillColor: [239, 68, 68], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 70 },
-            2: { cellWidth: 60 },
-            3: { cellWidth: 50 },
-            4: { cellWidth: 50 },
-            5: { cellWidth: 50 }
-          }
-        });
-
-        if (grievances.length > 50) {
-          doc.setFontSize(10);
-          doc.setTextColor(100, 100, 100);
-          doc.text(`Showing first 50 of ${grievances.length} grievances`, margin, (doc as any).lastAutoTable.finalY + 20);
-        }
-      }
-
-      // Analytics Summary
-      doc.addPage();
-      doc.setFontSize(16);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Analytics Summary', margin, 50);
-
-      // Calculate analytics
-      const totalAmount = disbursements.reduce((sum: number, d: any) => sum + (d.disbursedAmount || 0), 0);
-      const avgAmount = disbursements.length > 0 ? totalAmount / disbursements.length : 0;
-      const successRate = applications.length > 0 ? (disbursements.length / applications.length) * 100 : 0;
-
-      const analyticsData = [
-        ['Total Applications', applications.length.toString()],
-        ['Successful Disbursements', disbursements.length.toString()],
-        ['Success Rate', `${successRate.toFixed(1)}%`],
-        ['Total Beneficiaries Served', beneficiaries.length.toString()],
-        ['Total Amount Disbursed', `₹${totalAmount.toLocaleString('en-IN')}`],
-        ['Average Disbursement Amount', `₹${avgAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
-        ['Active Grievances', grievances.filter((g: any) => g.status !== 'closed').length.toString()],
-        ['Reports Generated', reports.length.toString()]
-      ];
-
-      autoTable(doc, {
-        body: analyticsData,
-        startY: 70,
-        styles: { fontSize: 11, cellPadding: 8 },
-        columnStyles: {
-          0: { fontStyle: 'bold', cellWidth: 150 },
-          1: { cellWidth: 120, halign: 'right' }
-        },
-        theme: 'grid'
-      });
-
-      // Footer
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 20, { align: 'right' });
-        doc.text('Generated by Nyantra DBT Platform', margin, pageHeight - 20);
-      }
-
-      doc.save(`comprehensive_report_${new Date().toISOString().split('T')[0]}.pdf`);
-
-      // Also generate CSV with all data
-      const csvHeaders = [
-        'Data Type', 'ID', 'Name/Beneficiary', 'Type/Category', 'Status', 'Amount', 'Date', 'Details'
-      ];
-
-      const csvRows = [
-        // Applications
-        ...applications.map((app: any) => [
-          'Application',
-          app.id,
-          app.beneficiaryName || '',
-          app.actType || '',
-          app.status || '',
-          app.requestedAmount?.toString() || '',
-          app.createdDate || '',
-          `District: ${app.district || ''}, State: ${app.state || ''}`
-        ]),
-        // Disbursements
-        ...disbursements.map((disb: any) => [
-          'Disbursement',
-          disb.id,
-          disb.beneficiaryName || '',
-          disb.actType || '',
-          disb.status || '',
-          disb.disbursedAmount?.toString() || '',
-          disb.disbursementDate || '',
-          `Application: ${disb.applicationId || ''}`
-        ]),
-        // Beneficiaries
-        ...beneficiaries.map((ben: any) => [
-          'Beneficiary',
-          ben.id,
-          ben.name || '',
-          ben.category || '',
-          'Active',
-          '',
-          ben.createdDate || '',
-          `Phone: ${ben.phone || ''}, District: ${ben.district || ''}, State: ${ben.state || ''}`
-        ]),
-        // Grievances
-        ...grievances.map((griev: any) => [
-          'Grievance',
-          griev.id,
-          griev.beneficiaryName || '',
-          griev.category || '',
-          griev.status || '',
-          '',
-          griev.createdDate || '',
-          `Priority: ${griev.priority || ''}, Description: ${griev.description || ''}`
-        ])
-      ];
-
-      const csvContent = [csvHeaders, ...csvRows]
-        .map((row: any[]) => row.map((field: any) => `"${field}"`).join(','))
-        .join('\n');
-
-      const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const csvLink = document.createElement('a');
-      const csvUrl = URL.createObjectURL(csvBlob);
-      csvLink.setAttribute('href', csvUrl);
-      csvLink.setAttribute('download', `comprehensive_data_${new Date().toISOString().split('T')[0]}.csv`);
-      csvLink.style.visibility = 'hidden';
-      document.body.appendChild(csvLink);
-      csvLink.click();
-      document.body.removeChild(csvLink);
-
-    } catch (error) {
-      console.error('Error generating comprehensive report:', error);
-      alert('Error generating report. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Download reports list as CSV (shared export drawer handler)
   const exportReportsCsv = (items: Report[]) => {
-    const csvContent = buildReportsCsv(items);
+    const csvContent = buildOfficerReportsCsv(items);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -1464,7 +826,7 @@ const ReportsPage = () => {
 
   // Download reports list as PDF (shared export drawer handler)
   const exportReportsPdf = (items: Report[]) => {
-    createReportsPdfDocument(items).save(`reports_export_${new Date().toISOString().split('T')[0]}.pdf`);
+    createOfficerReportsPdfDocument(items).save(`reports_export_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // Email export function
@@ -1486,11 +848,11 @@ const ReportsPage = () => {
       let attachmentType: string;
 
       if (format === 'csv') {
-        attachmentData = buildReportsCsv(items);
+        attachmentData = buildOfficerReportsCsv(items);
         attachmentName = `reports_export_${new Date().toISOString().split('T')[0]}.csv`;
         attachmentType = 'text/csv';
       } else {
-        attachmentData = createReportsPdfDocument(items).output('datauristring').split(',')[1];
+        attachmentData = createOfficerReportsPdfDocument(items).output('datauristring').split(',')[1];
         attachmentName = `reports_export_${new Date().toISOString().split('T')[0]}.pdf`;
         attachmentType = 'application/pdf';
       }
@@ -1550,8 +912,6 @@ const ReportsPage = () => {
     }
   };
 
-  const categoryLabel = (category: string) => t(`extracted.category_${category}`) || category;
-
   const statCells: Array<{ label: string; value: string; delta?: string; down?: boolean }> = [
     { label: t('extracted.total_generated'), value: String(stats.total), delta: '+12%' },
     { label: t('extracted.completed'), value: String(stats.completed) },
@@ -1563,82 +923,35 @@ const ReportsPage = () => {
     { label: t('extracted.downloads'), value: String(stats.totalDownloads) }
   ];
 
-  const viewTabs = [
-    { mode: 'reports' as const, labelKey: 'extracted.reports', icon: FileText },
-    { mode: 'templates' as const, labelKey: 'extracted.templates', icon: BookOpen },
-    { mode: 'scheduled' as const, labelKey: 'extracted.scheduled', icon: Clock }
-  ];
-
-  const quickActions = [
-    { labelKey: 'extracted.generate_disbursement', icon: FilePlus, onClick: () => setShowNewReportModal(true) },
-    { labelKey: 'extracted.schedule_weekly', icon: Calendar, onClick: () => setShowNewReportModal(true) },
-    { labelKey: 'extracted.download_all', icon: Download, onClick: () => exportComprehensiveReport() },
-    { labelKey: 'extracted.view_templates', icon: BookOpen, onClick: () => setViewMode('templates') }
-  ];
-
-  const performanceMetrics = [
-    {
-      labelKey: 'extracted.completion_rate',
-      value: stats.successRate,
-      color: 'bg-emerald-500',
-      icon: CheckCircle,
-      description: t('extracted.reports_completed', { count: stats.completed, total: stats.total }),
-      showPercent: true
-    },
-    {
-      labelKey: 'extracted.download_engagement',
-      value: stats.totalDownloads,
-      color: 'bg-blue-500',
-      icon: Download,
-      description: t('extracted.total_downloads', { count: stats.totalDownloads }),
-      showPercent: false
-    },
-    {
-      labelKey: 'extracted.system_health',
-      value: Math.max(0, Math.min(100, 100 - (stats.failed * 10))),
-      color: stats.failed > 0 ? 'bg-red-500' : 'bg-emerald-500',
-      icon: Activity,
-      description: t('extracted.failed_reports', { count: stats.failed }),
-      showPercent: true
-    }
-  ];
-
   return (
     <div className="space-y-4 max-w-[1400px]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight theme-text-primary truncate">
-            {t('extracted.report_hub')} <span className="text-accent-gradient">{t('extracted.monitoring_center')}</span>
-          </h1>
-          <p className="text-xs theme-text-muted mt-0.5 truncate">
-            {t('extracted.generate_analyze_schedule_comprehensive_reports')}
-          </p>
-        </div>
+      <PageHeader
+        title={t('extracted.report_hub')}
+        highlight={t('extracted.monitoring_center')}
+        subtitle={t('extracted.generate_analyze_schedule_comprehensive_reports')}
+      >
+        <button
+          onClick={() => setShowExportModal(true)}
+          aria-label={t('extracted.export_data_1')}
+          className="h-9 px-3.5 rounded-md text-xs border theme-border-glass theme-text-secondary font-medium hover:theme-bg-glass inline-flex items-center gap-1.5 transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>{t('extracted.export_data')}</span>
+        </button>
+        <button
+          onClick={() => setShowNewReportModal(true)}
+          className="h-9 px-3.5 rounded-md accent-gradient text-white font-semibold hover:opacity-90 inline-flex items-center gap-1.5 text-xs transition-opacity"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{t('extracted.generate_report')}</span>
+        </button>
+      </PageHeader>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setShowExportModal(true)}
-            aria-label={t('extracted.export_data_1')}
-            className="h-9 px-3.5 rounded-md text-xs border theme-border-glass theme-text-secondary font-medium hover:theme-bg-glass inline-flex items-center gap-1.5 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{t('extracted.export_data')}</span>
-          </button>
-          <button
-            onClick={() => setShowNewReportModal(true)}
-            className="h-9 px-3.5 rounded-md accent-gradient text-white font-semibold hover:opacity-90 inline-flex items-center gap-1.5 text-xs transition-opacity"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('extracted.generate_report')}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats hairline band */}
+      {/* Stats hairline band (custom: delta chips + xl:8 columns don't fit StatBand API) */}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
         {statCells.map(cell => (
-          <div key={cell.label} className="theme-bg-card p-3.5">
+          <div key={cell.label} className="theme-bg-card p-3.5 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted truncate">{cell.label}</p>
               {cell.delta && (
@@ -1653,373 +966,56 @@ const ReportsPage = () => {
       </div>
 
       {/* Reports List */}
-      <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-        {/* Toolbar */}
-        <div className="px-4 py-3 border-b theme-border-glass flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold theme-text-primary truncate">{t('extracted.recent_reports')}</h2>
-            <p className="text-xs theme-text-muted mt-0.5 truncate">
-              {viewMode === 'templates' ? t('extracted.no_templates') : `${filteredReports.length} ${t('extracted.reports_found')}`}
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-            {/* Search */}
-            <div className="relative sm:w-52">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 theme-text-muted pointer-events-none" />
-              <input
-                type="text"
-                placeholder={t('extracted.search_reports')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-sm placeholder:theme-text-muted focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
-              />
-            </div>
-
-            {/* Full System Export */}
-            <button
-              onClick={() => exportComprehensiveReport()}
-              disabled={loading}
-              title={t('extracted.comprehensiveExportDescription') || ''}
-              className="h-9 px-3 rounded-md text-xs border theme-border-glass theme-text-secondary font-medium hover:theme-bg-glass inline-flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-              <span className="hidden lg:inline">{t('extracted.comprehensiveExport') || 'System Export'}</span>
-            </button>
-
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 theme-bg-glass rounded-md p-1">
-              {viewTabs.map(({ mode, labelKey, icon: Icon }) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`h-7 px-2.5 rounded-md text-xs font-medium inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
-                    viewMode === mode
-                      ? 'accent-gradient text-white'
-                      : 'theme-text-muted hover:theme-text-primary'
-                  }`}
-                >
-                  <Icon className="w-3 h-3" />
-                  <span className="hidden md:inline">{t(labelKey)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Cards Grid */}
-        <div className="p-3.5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-          {paginatedReports.length === 0 ? (
-            <div className="col-span-full py-10 text-center">
-              <p className="text-xs theme-text-muted">
-                {viewMode === 'templates'
-                  ? t('extracted.no_templates')
-                  : `${filteredReports.length} ${t('extracted.reports_found')}`}
-              </p>
-            </div>
-          ) : paginatedReports.map(report => {
-            const FormatIcon = getFileFormatIcon(report.fileFormat || 'PDF');
-            return (
-              <div
-                key={report.id}
-                className="theme-bg-card theme-border-glass border rounded-lg p-3.5 flex flex-col cursor-pointer hover:theme-bg-hover transition-colors"
-                onClick={() => setSelectedReport(report)}
-              >
-                {/* Title + status pill */}
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold theme-text-primary truncate">{report.name}</h3>
-                    <p className="text-[11px] theme-text-muted truncate font-mono mt-0.5">{report.id}</p>
-                  </div>
-                  <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(report.status)}`}>
-                    {report.status}
-                  </span>
-                </div>
-
-                {/* Description */}
-                {report.description && (
-                  <p className="text-xs theme-text-secondary line-clamp-2 leading-relaxed mb-2.5">
-                    {report.description}
-                  </p>
-                )}
-
-                {/* Meta definition pairs */}
-                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2 mb-3">
-                  <Item label={t('extracted.type')}>{report.type}</Item>
-                  <Item label={t('extracted.category')}>{categoryLabel(report.category)}</Item>
-                  <Item label={t('extracted.format')}>
-                    <span className="inline-flex items-center gap-1">
-                      <FormatIcon className="w-3 h-3 theme-text-muted shrink-0" />
-                      {report.fileFormat}
-                    </span>
-                  </Item>
-                  <Item label={t('extracted.frequency')}>
-                    <span className="capitalize">{report.frequency}</span>
-                  </Item>
-                  <Item label={t('extracted.records')}>{report.recordCount ?? '--'}</Item>
-                  <Item label={t('extracted.size')}>{formatFileSize(report.fileSize)}</Item>
-                  <Item label={t('extracted.downloads')}>{report.downloadCount}</Item>
-                  <Item label={t('extracted.generated_date')}>{formatDate(report.generatedDate)}</Item>
-                </dl>
-
-                {/* Footer hairline actions */}
-                <div className="mt-auto pt-2.5 border-t theme-border-glass flex items-center gap-1.5">
-                  <select
-                    value={report.status}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleStatusUpdate(report.id, e.target.value as Report['status']);
-                    }}
-                    className="h-8 px-2 rounded-md border theme-border-glass theme-bg-input theme-text-primary text-xs focus:outline-none focus:border-[var(--accent-primary)] transition-colors min-w-0 max-w-[130px]"
-                  >
-                    {STATUS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-                    ))}
-                  </select>
-                  <div className="flex items-center gap-1.5 ml-auto">
-                    <button
-                      title={t('extracted.download')}
-                      aria-label={t('extracted.download')}
-                      disabled={report.status !== 'completed'}
-                      onClick={(e) => { e.stopPropagation(); handleDownload(report.id); }}
-                      className={ghostBtn}
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      title={t('extracted.analyze')}
-                      aria-label={t('extracted.analyze')}
-                      onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}
-                      className={ghostBtn}
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
-                    {!report.isScheduled && (
-                      <button
-                        title={t('extracted.update_status') || 'Schedule'}
-                        aria-label={t('extracted.update_status') || 'Schedule'}
-                        onClick={(e) => { e.stopPropagation(); handleScheduleReport(report.id); }}
-                        className={ghostBtn}
-                      >
-                        <Clock className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <OfficerReportsPanel
+        t={t}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        loading={loading}
+        onSystemExport={() => runComprehensiveSystemExport(setLoading)}
+        filteredCount={filteredReports.length}
+        reports={paginatedReports}
+        onOpen={setSelectedReport}
+        onDownload={handleDownload}
+        onSchedule={handleScheduleReport}
+        onStatusUpdate={handleStatusUpdate}
+      />
 
       {/* Report Detail Inspector */}
       {selectedReport && (
-        <div
-          ref={detailRef}
-          className="theme-bg-card theme-border-glass border rounded-xl w-full overflow-hidden scroll-mt-20"
-          aria-live="polite"
-        >
-          {/* Header bar */}
-          <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
-            <div className="min-w-0 flex items-center gap-2.5">
-              <h2 className="text-sm font-semibold theme-text-primary truncate">{selectedReport.name}</h2>
-              <span className="text-xs theme-text-muted truncate hidden sm:inline">{selectedReport.id}</span>
-              <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(selectedReport.status)}`}>
-                {selectedReport.status}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={() => {
-                  if (selectedReport.status === 'completed') {
-                    handleDownload(selectedReport.id);
-                  }
-                }}
-                disabled={selectedReport.status !== 'completed'}
-                className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
-              >
-                <Download className="w-3 h-3" />
-                <span className="hidden sm:inline">{t('extracted.download')}</span>
-              </button>
-              <button
-                onClick={() => { setShowNewReportModal(true); }}
-                className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors inline-flex items-center gap-1.5"
-              >
-                <Edit className="w-3 h-3" />
-                <span className="hidden sm:inline">{t('extracted.edit')}</span>
-              </button>
-              <button
-                onClick={() => handleShare(selectedReport)}
-                className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors inline-flex items-center gap-1.5"
-              >
-                <Share2 className="w-3 h-3" />
-                <span className="hidden sm:inline">{t('extracted.share')}</span>
-              </button>
-              <button
-                onClick={() => setSelectedReport(null)}
-                className="p-1 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
-                aria-label={t('extracted.close_sidebar') || 'Close'}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Body */}
-          <div className="px-4 py-3.5 space-y-3.5">
-            <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
-              <Item label={t('extracted.type')}>{selectedReport.type}</Item>
-              <Item label={t('extracted.category')}>{categoryLabel(selectedReport.category)}</Item>
-              <Item label={t('extracted.frequency')}>
-                <span className="capitalize">{selectedReport.frequency}</span>
-              </Item>
-              <Item label={t('extracted.format')}>{selectedReport.fileFormat}</Item>
-              <Item label={t('extracted.record_count')}>{selectedReport.recordCount || '--'}</Item>
-              <Item label={t('extracted.file_size')}>{formatFileSize(selectedReport.fileSize)}</Item>
-              <Item label={t('extracted.download_count')}>{selectedReport.downloadCount}</Item>
-              <Item label={t('extracted.is_scheduled')}>
-                {selectedReport.isScheduled ? t('extracted.yes') : t('extracted.no')}
-              </Item>
-              <Item label={t('extracted.generated_by')}>{selectedReport.generatedBy || t('extracted.system')}</Item>
-              <Item label={t('extracted.generated_date')}>{formatDateTime(selectedReport.generatedDate)}</Item>
-              <Item label={t('extracted.last_run')}>{formatDateTime(selectedReport.lastRun)}</Item>
-              <Item label={t('extracted.next_run')}>{formatDateTime(selectedReport.nextRun)}</Item>
-            </dl>
-
-            {/* Description */}
-            <div className="pt-3 border-t theme-border-glass">
-              <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">
-                {t('extracted.description')}
-              </dt>
-              <dd className="text-sm theme-text-secondary leading-relaxed">
-                {selectedReport.description || '—'}
-              </dd>
-            </div>
-
-            {/* Status update */}
-            <div className="pt-3 border-t theme-border-glass">
-              <p className="text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1">
-                {t('extracted.update_status') || 'Update Status'}
-              </p>
-              <select
-                value={selectedReport.status}
-                onChange={(e) => handleStatusUpdate(selectedReport.id, e.target.value as Report['status'])}
-                className={`${inputCls} w-44`}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        <OfficerReportInspector
+          report={selectedReport}
+          containerRef={detailRef}
+          t={t}
+          onClose={() => setSelectedReport(null)}
+          onDownload={handleDownload}
+          onEdit={() => { setShowNewReportModal(true); }}
+          onShare={handleShare}
+          onStatusUpdate={handleStatusUpdate}
+        />
       )}
 
       {/* Analytics Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Performance Chart */}
-        <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b theme-border-glass">
-            <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.report_analytics')}</h3>
-          </div>
-          <div className="px-4 py-3.5 space-y-3">
-            {performanceMetrics.map((metric, idx) => (
-              <div key={idx} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <metric.icon className={`w-3.5 h-3.5 shrink-0 ${metric.color.replace('bg-', 'text-')}`} />
-                    <span className="text-xs theme-text-secondary truncate">{t(metric.labelKey)}</span>
-                  </div>
-                  <span className="text-sm font-semibold theme-text-primary tabular-nums shrink-0">
-                    {metric.value}{metric.showPercent ? '%' : ''}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className={`h-1.5 rounded-full ${metric.color} transition-all duration-1000`}
-                    style={{ width: metric.showPercent ? `${metric.value}%` : `${Math.min((metric.value / 10000) * 100, 100)}%` }}
-                  />
-                </div>
-                <div className="text-[11px] theme-text-muted">{metric.description}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b theme-border-glass">
-            <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.recent_activity')}</h3>
-          </div>
-          <div className="px-4 py-2">
-            {recentActivities.length > 0 ? (
-              <div className="divide-y theme-border-glass">
-                {recentActivities.map((activity, idx) => (
-                  <div key={idx} className="flex items-center gap-3 py-2.5">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      activity.status === 'success' ? 'bg-emerald-500' :
-                      activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium theme-text-primary truncate">{activity.action}</p>
-                      <p className="text-[11px] theme-text-muted truncate">{activity.user} • {activity.time}</p>
-                    </div>
-                    <ArrowUpRight className="w-3 h-3 theme-text-muted shrink-0" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-6 text-center">
-                <p className="text-xs theme-text-muted">{t('extracted.no_recent_activity')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Report Categories */}
-        <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b theme-border-glass">
-            <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.report_categories_header')}</h3>
-          </div>
-          <div className="px-4 py-2">
-            <div className="divide-y theme-border-glass">
-              {Object.entries(categoryStats).map(([category, count]) => {
-                const Icon = getCategoryIcon(category);
-                return (
-                  <div key={category} className="flex items-center justify-between gap-3 py-2.5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className="w-3.5 h-3.5 theme-text-muted shrink-0" />
-                      <span className="text-xs theme-text-primary truncate">{categoryLabel(category)}</span>
-                    </div>
-                    <span className="text-sm font-medium theme-text-primary tabular-nums shrink-0">{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b theme-border-glass">
-            <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.quick_actions_1')}</h3>
-          </div>
-          <div className="px-4 py-3.5 space-y-2">
-            {quickActions.map(action => (
-              <button
-                key={action.labelKey}
-                onClick={action.onClick}
-                disabled={loading}
-                className={`${ghostBtn} w-full !justify-start disabled:opacity-40`}
-              >
-                <action.icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{t(action.labelKey)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <OfficerAnalyticsSection
+        t={t}
+        stats={stats}
+        categoryStats={categoryStats}
+        recentActivities={recentActivities}
+        loading={loading}
+        onQuickAction={(id) => {
+          switch (id) {
+            case 'download_all':
+              runComprehensiveSystemExport(setLoading);
+              break;
+            case 'view_templates':
+              setViewMode('templates');
+              break;
+            default:
+              setShowNewReportModal(true);
+          }
+        }}
+      />
 
       {/* Shared Export Drawer */}
       <ExportModal
@@ -2042,7 +1038,7 @@ const ReportsPage = () => {
       {/* New/Edit Report Drawer */}
       <AnimatePresence>
         {showNewReportModal && (
-          <NewReportDrawer
+          <OfficerNewReportDrawer
             initialData={selectedReport}
             onClose={() => { setShowNewReportModal(false); setSelectedReport(null); }}
             onCreated={(r) => { setSelectedReport(r); setShowNewReportModal(false); }}
