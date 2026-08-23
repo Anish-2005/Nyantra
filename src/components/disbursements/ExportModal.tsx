@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import type { DisbursementRaw } from '@/models/Disbursement';
 
@@ -52,22 +52,21 @@ export function ExportModal({
             exit={{ scale: 0.98, opacity: 0 }}
             className="relative w-full max-w-md mx-4 p-6 rounded-xl theme-border-glass border shadow-lg theme-modal-solid"
           >
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex items-start justify-between mb-5">
               <div>
-                <h3 className="text-xl font-semibold theme-text-primary flex items-center gap-3">
-                  <Download className="w-5 h-5 text-accent-gradient" />
+                <h3 className="text-base font-semibold theme-text-primary">
                   {t('extracted.exportTitle') || 'Export Disbursements'}
                 </h3>
-                <p className="text-sm theme-text-muted mt-1">
+                <p className="text-xs theme-text-muted mt-0.5">
                   {t('extracted.exportSubtitle') || 'Choose export format for disbursements data'}
                 </p>
               </div>
               <button
                 onClick={onClose}
                 aria-label="Close export modal"
-                className="p-2 rounded-md theme-bg-glass hover:bg-red-500/10 transition-colors"
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors"
               >
-                <X className="w-5 h-5 theme-text-primary" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -77,19 +76,19 @@ export function ExportModal({
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-medium theme-text-primary">{t('extracted.exportAllTitle') || 'All Disbursements'}</h4>
-                    <p className="text-sm theme-text-muted">{allCount} records</p>
+                    <p className="text-sm theme-text-muted">{allCount} {t('extracted.records')}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => onExportCsvAll()}
-                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-bg-glass theme-text-primary hover:theme-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {t('extracted.exportCsv') || 'Export CSV'}
                   </button>
                   <button
                     onClick={() => onExportPdfAll()}
-                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md transition-shadow"
+                    className="flex-1 h-9 px-3 rounded-md text-xs font-semibold accent-gradient text-white hover:opacity-90 transition-shadow"
                   >
                     {t('extracted.exportPdf') || 'Export PDF'}
                   </button>
@@ -101,21 +100,21 @@ export function ExportModal({
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-medium theme-text-primary">{t('extracted.exportFilteredTitle') || 'Filtered Results'}</h4>
-                    <p className="text-sm theme-text-muted">{filteredCount} records</p>
+                    <p className="text-sm theme-text-muted">{filteredCount} {t('extracted.records')}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <button
                     disabled={filteredCount === 0}
                     onClick={() => onExportCsvFiltered()}
-                    className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-bg-glass theme-text-primary hover:theme-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {t('extracted.exportCsv') || 'Export CSV'}
                   </button>
                   <button
                     disabled={filteredCount === 0}
                     onClick={() => onExportPdfFiltered()}
-                    className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow"
+                    className="flex-1 h-9 px-3 rounded-md text-xs font-semibold accent-gradient text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-shadow"
                   >
                     {t('extracted.exportPdf') || 'Export PDF'}
                   </button>
@@ -131,7 +130,7 @@ export function ExportModal({
                     value={emailAddress}
                     onChange={(e) => setEmailAddress(e.target.value)}
                     placeholder={t('extracted.enterEmailAddress') || 'Enter email address'}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full h-9 px-2.5 rounded-md theme-bg-input theme-border-glass border theme-text-primary text-sm focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
                   />
                 </div>
                 <div className="space-y-2">
@@ -139,7 +138,7 @@ export function ExportModal({
                     <button
                       disabled={!emailAddress.trim() || sendingEmail}
                       onClick={() => onSendEmail('all', 'csv')}
-                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-bg-glass theme-text-primary hover:theme-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                       {t('extracted.sendCsv') || 'Send CSV'}
@@ -147,7 +146,7 @@ export function ExportModal({
                     <button
                       disabled={!emailAddress.trim() || sendingEmail}
                       onClick={() => onSendEmail('all', 'pdf')}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      className="flex-1 h-9 px-3 rounded-md text-xs font-semibold accent-gradient text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                       {t('extracted.sendPdf') || 'Send PDF'}
@@ -157,7 +156,7 @@ export function ExportModal({
                     <button
                       disabled={!emailAddress.trim() || filteredCount === 0 || sendingEmail}
                       onClick={() => onSendEmail('filtered', 'csv')}
-                      className="flex-1 px-4 py-2 rounded-lg border theme-border-glass text-sm hover:shadow-sm theme-bg-glass theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-bg-glass theme-text-primary hover:theme-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : null}
                       {t('extracted.sendFilteredCsv') || 'Send Filtered CSV'}
@@ -165,7 +164,7 @@ export function ExportModal({
                     <button
                       disabled={!emailAddress.trim() || filteredCount === 0 || sendingEmail}
                       onClick={() => onSendEmail('filtered', 'pdf')}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm accent-gradient text-white shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+                      className="flex-1 h-9 px-3 rounded-md text-xs font-semibold accent-gradient text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
                       {t('extracted.sendFilteredPdf') || 'Send Filtered PDF'}
@@ -180,3 +179,4 @@ export function ExportModal({
     </AnimatePresence>
   );
 }
+

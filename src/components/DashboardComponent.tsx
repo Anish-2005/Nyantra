@@ -61,6 +61,16 @@ const Sparkline = ({ index }: { index: number }) => (
   </div>
 );
 
+const SectionCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => (
+  <div className="theme-bg-card border theme-border-glass rounded-xl overflow-hidden">
+    <div className="flex items-center justify-between px-4 py-3 border-b theme-border-glass">
+      <h3 className="text-sm font-semibold theme-text-primary">{title}</h3>
+      {action}
+    </div>
+    {children}
+  </div>
+);
+
 const Dashboard = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -192,16 +202,6 @@ const Dashboard = () => {
 
   const funnelTotal = funnel.pending + funnel.review + funnel.completed;
   const pct = (n: number) => (funnelTotal > 0 ? (n / funnelTotal) * 100 : 0);
-
-  const SectionCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => (
-    <div className="theme-bg-card border theme-border-glass rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b theme-border-glass">
-        <h3 className="text-sm font-semibold theme-text-primary">{title}</h3>
-        {action}
-      </div>
-      {children}
-    </div>
-  );
 
   return (
     <div className="space-y-4 max-w-[1400px]">

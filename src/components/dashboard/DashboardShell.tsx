@@ -361,7 +361,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           subtitle={isUserView ? t('extracted.applicant_portal') : t('extracted.dbt_dashboard')}
         />
 
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'}`}>
+        <div className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'}`}>
           <header className="sticky top-0 z-40 backdrop-blur-xl theme-bg-nav border-b theme-border-glass">
             <div className="flex items-center justify-between px-4 h-14 lg:px-6">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">

@@ -922,7 +922,7 @@
     "beneficiaries_management": "लाभार्थी प्रबंधन",
     "track_and_manage_dbt_beneficiaries_under_pcrpoa_acts": "PCR/PoA अधिनियमों के अंतर्गत DBT लाभार्थियों का ट्रैक और प्रबंधन करें",
     "add_beneficiary": "लाभार्थी जोड़ें",
-    "financial_overview": "{/* वित्तीय सारांश */}",
+    "financial_overview": "वित्तीय अवलोकन",
     "total_relief_amount": "कुल राहत राशि",
     "disbursed_this_month": "इस महीने वितरित +12.5%",
     "beneficiaries_success_rate": "{{count}} लाभार्थी • {{rate}}% सफलता दर",
@@ -5062,7 +5062,21 @@
   "transaction_id": "लेनदेन आईडी",
   "utr_number": "यूटीआर नंबर",
   "disbursements": {
-    "no_records": "कोई वितरण नहीं मिला।"
+    "no_records": "कोई वितरण नहीं मिला।",
+    "progressive_total": "प्रगतिशील कुल",
+    "installments_released": "जारी किए गए किस्त",
+    "installments_remaining": "शेष किस्त",
+    "new_updates": "नए अपडेट",
+    "dismiss_all": "सभी हटाएँ",
+    "more_updates": "और अपडेट",
+    "pct_disbursed": "% वितरित",
+    "installment_word": "किस्त",
+    "installments_word": "किस्त",
+    "select": "चुनें",
+    "disburse": "वितरित करें",
+    "alert_new": "नया वितरण",
+    "alert_installment": "किस्त प्राप्त हुई",
+    "alert_completed": "भुगतान पूर्ण"
   },
   "login": {
     "tagline": "तकनीक के माध्यम से न्याय को सशक्त बनाना",

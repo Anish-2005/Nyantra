@@ -1,7 +1,6 @@
 'use client';
 
 export { DisbursementsHeader } from './DisbursementsHeader';
-export { DisbursementsPageChrome } from './DisbursementsPageChrome';
 export { StatsGrid } from './StatsGrid';
 export { FinancialOverview } from './FinancialOverview';
 export { MonthlyTrendChart } from './MonthlyTrendChart';

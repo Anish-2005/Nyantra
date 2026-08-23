@@ -1,89 +1,92 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { DollarSign, Heart, Scale } from 'lucide-react';
+import { Heart, Scale, Wallet } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import type { DisbursementRaw } from '@/models/Disbursement';
 import { computeActBreakdown } from '@/utils/disbursementSelectors';
 import { formatCurrency } from './shared';
 
-export function FinancialOverview({
-  stats,
-  items,
-}: {
+interface Props {
   stats: { disbursedAmount: number; totalAmount: number; pendingAmount: number };
   items: readonly DisbursementRaw[];
-}) {
+  className?: string;
+}
+
+export function FinancialOverview({ stats, items, className = '' }: Props) {
   const { t } = useLocale();
   const breakdown = computeActBreakdown(items);
+  const pct =
+    stats.totalAmount > 0
+      ? Math.min(100, Math.round((stats.disbursedAmount / stats.totalAmount) * 100))
+      : 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.15 }}
-      className="grid grid-cols-1 md:grid-cols-3 gap-4"
-    >
-      <motion.div
-        whileHover={{ y: -2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-sm theme-text-muted">{t('extracted.total_disbursed')} </p>
-            <p className="text-2xl font-bold theme-text-primary">{formatCurrency(stats.disbursedAmount)}</p>
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
-            style={{ width: `${(stats.disbursedAmount / stats.totalAmount) * 100}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between text-xs theme-text-muted mt-2">
-          <span>{t('extracted.total')}: {formatCurrency(stats.totalAmount)}</span>
-          <span>{t('extracted.pending')}: {formatCurrency(stats.pendingAmount)}</span>
-        </div>
-      </motion.div>
+    <div className={`theme-bg-card theme-border-glass border rounded-xl overflow-hidden flex flex-col ${className}`}>
+      <div className="flex items-center justify-between px-4 py-3 border-b theme-border-glass">
+        <h3 className="text-sm font-semibold theme-text-primary">{t('extracted.financial_overview')}</h3>
+        <span className="text-[11px] font-medium uppercase tracking-wider theme-text-muted tabular-nums">
+          {pct}% {t('extracted.disbursed')}
+        </span>
+      </div>
 
-      <motion.div
-        whileHover={{ y: -2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <Scale className="w-6 h-6 text-white" />
+      <div className="flex-1 divide-y theme-border-glass">
+        {/* Total disbursed */}
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+            <Wallet className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span className="truncate">{t('extracted.total_disbursed')}</span>
           </div>
-          <div>
-            <p className="text-sm theme-text-muted">{t('extracted.pcr_act_disbursements')} </p>
-            <p className="text-2xl font-bold theme-text-primary">{breakdown.pcrCount}</p>
+          <p className="text-xl font-semibold tracking-tight theme-text-primary mt-1 tabular-nums">
+            {formatCurrency(stats.disbursedAmount)}
+          </p>
+          <div className="mt-2.5 h-1 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+            <div
+              className="h-full rounded-full accent-gradient transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[11px] theme-text-muted mt-1.5 tabular-nums">
+            <span>{t('extracted.total')}: {formatCurrency(stats.totalAmount)}</span>
+            <span>{t('extracted.pending')}: {formatCurrency(stats.pendingAmount)}</span>
           </div>
         </div>
-        <p className="text-sm theme-text-secondary">
-          {formatCurrency(breakdown.pcrDisbursed)} {t('extracted.disbursed')}
-        </p>
-      </motion.div>
 
-      <motion.div
-        whileHover={{ y: -2 }}
-        className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-            <Heart className="w-6 h-6 text-white" />
+        {/* PCR Act */}
+        <div className="px-4 py-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 shrink-0 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+              <Scale className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium theme-text-primary truncate leading-tight">
+                {t('extracted.pcr_act_disbursements')}
+              </p>
+              <p className="text-[11px] theme-text-muted mt-0.5 tabular-nums">{breakdown.pcrCount}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm theme-text-muted">{t('extracted.poa_act_disbursements')} </p>
-            <p className="text-2xl font-bold theme-text-primary">{breakdown.poaCount}</p>
-          </div>
+          <p className="text-sm font-semibold theme-text-primary tabular-nums shrink-0">
+            {formatCurrency(breakdown.pcrDisbursed)}
+          </p>
         </div>
-        <p className="text-sm theme-text-secondary">
-          {formatCurrency(breakdown.poaDisbursed)} {t('extracted.disbursed')}
-        </p>
-      </motion.div>
-    </motion.div>
+
+        {/* PoA Act */}
+        <div className="px-4 py-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 shrink-0 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center">
+              <Heart className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium theme-text-primary truncate leading-tight">
+                {t('extracted.poa_act_disbursements')}
+              </p>
+              <p className="text-[11px] theme-text-muted mt-0.5 tabular-nums">{breakdown.poaCount}</p>
+            </div>
+          </div>
+          <p className="text-sm font-semibold theme-text-primary tabular-nums shrink-0">
+            {formatCurrency(breakdown.poaDisbursed)}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

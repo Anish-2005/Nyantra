@@ -594,13 +594,13 @@ export default function DisbursementsPage() {
             <div className="flex items-center justify-between">
               <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider theme-text-secondary">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                New Updates
+                {t('disbursements.new_updates')}
               </h3>
               <button
                 onClick={dismissAllAlerts}
                 className="h-7 px-2.5 rounded-md border theme-border-glass theme-text-secondary text-xs font-medium hover:theme-bg-glass transition-colors"
               >
-                Dismiss All
+                {t('disbursements.dismiss_all')}
               </button>
             </div>
 
@@ -624,9 +624,9 @@ export default function DisbursementsPage() {
                       }`}
                     />
                     <span className="text-[13px] font-medium theme-text-primary">
-                      {alert.type === 'new_disbursement' && 'New Disbursement'}
-                      {alert.type === 'installment_completed' && 'Installment Received'}
-                      {alert.type === 'status_completed' && 'Payment Completed'}
+                      {alert.type === 'new_disbursement' && t('disbursements.alert_new')}
+                      {alert.type === 'installment_completed' && t('disbursements.alert_installment')}
+                      {alert.type === 'status_completed' && t('disbursements.alert_completed')}
                     </span>
                   </div>
                   <p className="text-xs theme-text-secondary">{alert.message}</p>
@@ -646,7 +646,7 @@ export default function DisbursementsPage() {
 
             {newDisbursementAlerts.length > 3 && (
               <p className="text-xs theme-text-muted text-center">
-                +{newDisbursementAlerts.length - 3} more updates
+                +{newDisbursementAlerts.length - 3} {t('disbursements.more_updates')}
               </p>
             )}
           </motion.div>
@@ -709,7 +709,7 @@ export default function DisbursementsPage() {
         <div className="grid grid-cols-3 gap-px theme-bg-glass border theme-border-glass rounded-xl overflow-hidden">
           <div className="theme-bg-card p-3.5">
             <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              Progressive Total
+              {t('disbursements.progressive_total')}
             </p>
             <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
               {formatCurrency(totalProgressiveAmount)}
@@ -721,7 +721,7 @@ export default function DisbursementsPage() {
 
           <div className="theme-bg-card p-3.5">
             <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              Installments Released
+              {t('disbursements.installments_released')}
             </p>
             <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
               {formatCurrency(completedProgressiveAmount)}
@@ -735,7 +735,7 @@ export default function DisbursementsPage() {
 
           <div className="theme-bg-card p-3.5">
             <p className="text-[11px] uppercase tracking-wider theme-text-muted truncate">
-              Installments Remaining
+              {t('disbursements.installments_remaining')}
             </p>
             <p className="text-xl font-semibold tabular-nums theme-text-primary mt-1">
               {formatCurrency(pendingProgressiveAmount)}
@@ -852,7 +852,7 @@ export default function DisbursementsPage() {
                             <p className="font-medium text-sm theme-text-primary truncate">{disbursement.actType}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[11px] uppercase tracking-wider theme-text-muted">{'Payment Method'}</p>
+                            <p className="text-[11px] uppercase tracking-wider theme-text-muted">{t('extracted.payment_method')}</p>
                             <p className="font-medium text-sm theme-text-primary truncate">{disbursement.paymentMethod || '—'}</p>
                           </div>
                           <div className="min-w-0">
@@ -868,7 +868,8 @@ export default function DisbursementsPage() {
                           </span>
                           {disbursement.isProgressivePayment && (
                             <span className={`${PILL_BASE} theme-bg-glass theme-text-secondary shrink-0`}>
-                              {disbursement.completedInstallments || 0}/{disbursement.totalInstallments || 3} installments
+                              {disbursement.completedInstallments || 0}/{disbursement.totalInstallments || 3}{' '}
+                              {t('disbursements.installments_word')}
                             </span>
                           )}
                         </div>
@@ -892,7 +893,8 @@ export default function DisbursementsPage() {
                               />
                             </div>
                             <p className="text-[11px] theme-text-accent tabular-nums mt-1">
-                              {(disbursement.disbursementProgress ?? 0).toFixed(2)}% disbursed
+                              {(disbursement.disbursementProgress ?? 0).toFixed(2)}
+                              {t('disbursements.pct_disbursed')}
                             </p>
                           </div>
                         )}
@@ -900,8 +902,7 @@ export default function DisbursementsPage() {
                           <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1">
                             ✓ {t('extracted.disbursed')} {formatCurrency(disbursement.disbursedAmount)}
                           </p>
-                        )}
-                        {disbursement.status === 'failed' && disbursement.failureReason && (
+                        )}                        {disbursement.status === 'failed' && disbursement.failureReason && (
                           <p className="text-[11px] text-red-600 dark:text-red-400 mt-1 max-w-[180px] ml-auto">
                             {disbursement.failureReason}
                           </p>
@@ -954,10 +955,10 @@ export default function DisbursementsPage() {
                   <span className="text-[11px] theme-text-muted font-normal"> / {formatCurrency(selectedDisbursement.reliefAmount)}</span>
                 )}
               </Item>
-              <Item label={'Relief Amount'}>{formatCurrency(selectedDisbursement.reliefAmount)}</Item>
-              <Item label={'Net Amount'}>{formatCurrency(selectedDisbursement.netAmount)}</Item>
-              <Item label={'Transaction Fee'}>{formatCurrency(selectedDisbursement.transactionFee)}</Item>
-              <Item label={'Payment Method'}>{selectedDisbursement.paymentMethod || '—'}</Item>
+              <Item label={t('extracted.relief_amount')}>{formatCurrency(selectedDisbursement.reliefAmount)}</Item>
+              <Item label={t('extracted.net_amount')}>{formatCurrency(selectedDisbursement.netAmount)}</Item>
+              <Item label={t('extracted.transaction_fee')}>{formatCurrency(selectedDisbursement.transactionFee)}</Item>
+              <Item label={t('extracted.payment_method')}>{selectedDisbursement.paymentMethod || '—'}</Item>
               <Item label={t('extracted.act_type')}>{selectedDisbursement.actType}</Item>
               <Item label={t('extracted.initiated_date')}>
                 <span className="tabular-nums">{formatDate(selectedDisbursement.initiatedDate)}</span>
@@ -983,7 +984,8 @@ export default function DisbursementsPage() {
                     {(selectedDisbursement.disbursementProgress ?? 0).toFixed(2)}%
                   </p>
                   <span className="text-xs theme-text-muted tabular-nums shrink-0">
-                    {selectedDisbursement.completedInstallments || 0} of {selectedDisbursement.totalInstallments || 3} completed
+                    {selectedDisbursement.completedInstallments || 0} / {selectedDisbursement.totalInstallments || 3}{' '}
+                    {t('extracted.completed')}
                   </span>
                 </div>
 
@@ -1019,7 +1021,7 @@ export default function DisbursementsPage() {
                               }`}
                             />
                             <span className="text-[13px] theme-text-primary flex-1 min-w-0 truncate">
-                              Installment {i + 1}
+                              {t('disbursements.installment_word')} {i + 1}
                             </span>
                             {pct !== undefined && (
                               <span className="text-[11px] theme-text-muted tabular-nums">{pct}%</span>
@@ -1040,7 +1042,7 @@ export default function DisbursementsPage() {
 
                 {selectedDisbursement.nextInstallmentAmount && selectedDisbursement.nextInstallmentPercentage && (
                   <p className="text-[11px] theme-text-muted tabular-nums mt-2.5">
-                    Next: {formatCurrency(selectedDisbursement.nextInstallmentAmount)} ({selectedDisbursement.nextInstallmentPercentage}%)
+                    {t('extracted.next_installment')}: {formatCurrency(selectedDisbursement.nextInstallmentAmount)} ({selectedDisbursement.nextInstallmentPercentage}%)
                   </p>
                 )}
               </div>
@@ -1086,7 +1088,7 @@ export default function DisbursementsPage() {
                     </Item>
                   )}
                   {selectedDisbursement.utrNumber && (
-                    <Item label={'UTR Number'} className="col-span-2 md:col-span-2 lg:col-span-3">
+                    <Item label={t('extracted.utr_number')} className="col-span-2 md:col-span-2 lg:col-span-3">
                       <span className="font-mono break-all">{selectedDisbursement.utrNumber}</span>
                     </Item>
                   )}

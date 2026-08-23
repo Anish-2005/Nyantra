@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import type {
@@ -9,7 +9,7 @@ import type {
   DisbursementStatus,
 } from '@/models/Disbursement';
 import type { ManualFormState } from '@/hooks/useDisbursements';
-import { formatCurrency, lightSurface } from './shared';
+import { formatCurrency } from './shared';
 
 interface Props {
   form: ManualFormState;
@@ -25,7 +25,18 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed';
+  'w-full h-9 px-2.5 rounded-md theme-bg-input theme-border-glass border theme-text-primary placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm';
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 export function ManualDisbursementForm({
   form,
@@ -83,6 +94,9 @@ export function ManualDisbursementForm({
     Boolean(selectedRecord) &&
     Boolean(selectedRecord?.isProgressivePayment || selectedRecord?.actType?.toLowerCase().includes('poa'));
 
+  const installmentPcts = selectedRecord?.installmentPercentages ?? [25, 50, 25];
+  const selectInstallmentLabel = `${t('disbursements.select')} ${t('disbursements.installment_word')}`;
+
   return (
     <AnimatePresence>
       {form.showManualForm && (
@@ -90,280 +104,261 @@ export function ManualDisbursementForm({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
           className="overflow-hidden"
         >
-          <motion.div
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            className="theme-bg-card theme-border-glass border rounded-xl p-6 backdrop-blur-xl mb-6"
-          >
+          <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden mb-1">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold theme-text-primary">
+            <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+              <h2 className="text-sm font-semibold theme-text-primary truncate">
                 {form.editingFirestoreId
                   ? t('extracted.edit_disbursement') || 'Edit Disbursement'
                   : t('extracted.add_manual_disbursement')}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg theme-bg-glass theme-border-glass border hover:shadow-md transition-shadow"
+                className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
+                aria-label={t('extracted.close_sidebar') || 'Close'}
               >
-                <X className="w-5 h-5 theme-text-primary" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Form grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.beneficiary_id')} *
-                </label>
-                <input
-                  type="text"
-                  value={form.beneficiaryId}
-                  onChange={(e) => setFormField('beneficiaryId', e.target.value)}
-                  onBlur={(e) => {
-                    const id = e.target.value.trim();
-                    if (id) {
-                      setFormField('beneficiaryId', id);
-                    } else {
-                      // The hook clears available applications + application id.
-                      setFormField('beneficiaryId', '');
-                    }
-                  }}
-                  disabled={!!form.editingFirestoreId}
-                  className={fieldClass}
-                  placeholder={t('extracted.enter_beneficiary_id')}
-                />
-              </div>
+            <div className="px-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                <Field label={`${t('extracted.beneficiary_id')} *`}>
+                  <input
+                    type="text"
+                    value={form.beneficiaryId}
+                    onChange={(e) => setFormField('beneficiaryId', e.target.value)}
+                    onBlur={(e) => {
+                      const id = e.target.value.trim();
+                      if (id) {
+                        setFormField('beneficiaryId', id);
+                      } else {
+                        // The hook clears available applications + application id.
+                        setFormField('beneficiaryId', '');
+                      }
+                    }}
+                    disabled={!!form.editingFirestoreId}
+                    className={fieldClass}
+                    placeholder={t('extracted.enter_beneficiary_id')}
+                  />
+                </Field>
 
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.application_id')} *
-                </label>
-                <select
-                  value={form.applicationId}
-                  onChange={(e) => handleApplicationSelect(e.target.value)}
-                  disabled={availableApplications.length === 0 || !!form.editingFirestoreId}
-                  className={fieldClass}
-                >
-                  <option value="">
-                    {availableApplications.length === 0
-                      ? t('extracted.no_applications_found')
-                      : t('extracted.select_application')}
-                  </option>
-                  {availableApplications.map((app) => (
-                    <option key={app.id} value={app.id}>
-                      {app.id} - {app.actType || app.caseType} - {formatCurrency(app.amount)}
+                <Field label={`${t('extracted.application_id')} *`}>
+                  <select
+                    value={form.applicationId}
+                    onChange={(e) => handleApplicationSelect(e.target.value)}
+                    disabled={availableApplications.length === 0 || !!form.editingFirestoreId}
+                    className={fieldClass}
+                  >
+                    <option value="">
+                      {availableApplications.length === 0
+                        ? t('extracted.no_applications_found')
+                        : t('extracted.select_application')}
                     </option>
-                  ))}
-                </select>
+                    {availableApplications.map((app) => (
+                      <option key={app.id} value={app.id}>
+                        {app.id} - {app.actType || app.caseType} - {formatCurrency(app.amount)}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label={`${t('extracted.relief_amount')} *`}>
+                  <input
+                    type="number"
+                    value={form.reliefAmountText}
+                    onChange={(e) => setFormField('reliefAmountText', e.target.value)}
+                    disabled={!!form.editingFirestoreId}
+                    className={fieldClass}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </Field>
+
+                <Field label={t('extracted.status')}>
+                  <select
+                    value={form.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    className={fieldClass}
+                  >
+                    <option value="pending">{t('extracted.pending')}</option>
+                    <option value="in_progress">{t('extracted.in_progress')}</option>
+                    <option value="completed">{t('extracted.completed')}</option>
+                    <option value="failed">{t('extracted.failed')}</option>
+                    <option value="cancelled">{t('extracted.cancelled')}</option>
+                  </select>
+                </Field>
+
+                <Field label={t('extracted.act_type')}>
+                  <select
+                    value={form.actType}
+                    onChange={(e) => setFormField('actType', e.target.value)}
+                    disabled={!!form.editingFirestoreId}
+                    className={fieldClass}
+                  >
+                    <option value="relief">{t('extracted.relief')}</option>
+                    <option value="PCR Act">{t('extracted.pcr_act')}</option>
+                    <option value="PoA Act">{t('extracted.poa_act')}</option>
+                  </select>
+                </Field>
+
+                <Field label={t('extracted.transaction_id')}>
+                  <input
+                    type="text"
+                    value={form.transactionId}
+                    onChange={(e) => setFormField('transactionId', e.target.value)}
+                    className={fieldClass}
+                    placeholder={t('extracted.optional')}
+                  />
+                </Field>
+
+                <Field label={t('extracted.utr_number')}>
+                  <input
+                    type="text"
+                    value={form.utrNumber}
+                    onChange={(e) => setFormField('utrNumber', e.target.value)}
+                    className={fieldClass}
+                    placeholder={t('extracted.optional')}
+                  />
+                </Field>
+
+                <Field label={t('extracted.payment_method')}>
+                  <select
+                    value={form.paymentMethod}
+                    onChange={(e) => setFormField('paymentMethod', e.target.value)}
+                    className={fieldClass}
+                  >
+                    <option value="">{t('extracted.select_payment_method')}</option>
+                    <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
+                    <option value="upi">{t('extracted.upi')}</option>
+                    <option value="cash">{t('extracted.cash')}</option>
+                    <option value="cheque">{t('extracted.cheque')}</option>
+                  </select>
+                </Field>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.relief_amount')} *
-                </label>
-                <input
-                  type="number"
-                  value={form.reliefAmountText}
-                  onChange={(e) => setFormField('reliefAmountText', e.target.value)}
-                  disabled={!!form.editingFirestoreId}
-                  className={fieldClass}
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+              {/* Progressive Payment Progress Section */}
+              {showProgressive && selectedRecord && (
+                <div className="mt-4 pt-4 border-t theme-border-glass">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-3">
+                    {t('extracted.progressive_payment_progress') || 'Progressive Payment Progress'}
+                  </p>
 
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">{t('extracted.status')}</label>
-                <select
-                  value={form.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className={fieldClass}
-                >
-                  <option value="pending">{t('extracted.pending')}</option>
-                  <option value="in_progress">{t('extracted.in_progress')}</option>
-                  <option value="completed">{t('extracted.completed')}</option>
-                  <option value="failed">{t('extracted.failed')}</option>
-                  <option value="cancelled">{t('extracted.cancelled')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">{t('extracted.act_type')}</label>
-                <select
-                  value={form.actType}
-                  onChange={(e) => setFormField('actType', e.target.value)}
-                  disabled={!!form.editingFirestoreId}
-                  className={fieldClass}
-                >
-                  <option value="relief">{t('extracted.relief')}</option>
-                  <option value="PCR Act">{t('extracted.pcr_act')}</option>
-                  <option value="PoA Act">{t('extracted.poa_act')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.transaction_id')}
-                </label>
-                <input
-                  type="text"
-                  value={form.transactionId}
-                  onChange={(e) => setFormField('transactionId', e.target.value)}
-                  className={fieldClass}
-                  placeholder={t('extracted.optional')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.utr_number')}
-                </label>
-                <input
-                  type="text"
-                  value={form.utrNumber}
-                  onChange={(e) => setFormField('utrNumber', e.target.value)}
-                  className={fieldClass}
-                  placeholder={t('extracted.optional')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-primary mb-2">
-                  {t('extracted.payment_method')}
-                </label>
-                <select
-                  value={form.paymentMethod}
-                  onChange={(e) => setFormField('paymentMethod', e.target.value)}
-                  className={fieldClass}
-                >
-                  <option value="">{t('extracted.select_payment_method')}</option>
-                  <option value="bank_transfer">{t('extracted.bank_transfer')}</option>
-                  <option value="upi">{t('extracted.upi')}</option>
-                  <option value="cash">{t('extracted.cash')}</option>
-                  <option value="cheque">{t('extracted.cheque')}</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Progressive Payment Progress Section */}
-            {showProgressive && selectedRecord && (
-              <div className="mt-6 p-4 rounded-lg theme-bg-glass theme-border-glass border">
-                <h3 className="text-lg font-semibold theme-text-primary mb-4">
-                  {t('extracted.progressive_payment_progress') || 'Progressive Payment Progress'}
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <div className="text-sm theme-text-muted mb-1">
-                      {t('extracted.current_progress') || 'Current Progress'}
+                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 mb-3">
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                        {t('extracted.current_progress') || 'Current Progress'}
+                      </dt>
+                      <dd className="text-lg font-semibold tabular-nums theme-text-primary mt-0.5">
+                        {(selectedRecord.disbursementProgress ?? 0).toFixed(2)}%
+                      </dd>
                     </div>
-                    <div className="text-2xl font-bold theme-text-primary">
-                      {selectedRecord.disbursementProgress?.toFixed(2)}%
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                        {t('extracted.completed_installments') || 'Completed Installments'}
+                      </dt>
+                      <dd className="text-lg font-semibold tabular-nums theme-text-primary mt-0.5">
+                        {selectedRecord.completedInstallments || 0} / {selectedRecord.totalInstallments || 3}
+                      </dd>
                     </div>
-                  </div>
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                        {t('extracted.next_installment')}
+                      </dt>
+                      <dd className="text-sm font-semibold tabular-nums theme-text-primary mt-1">
+                        {selectedRecord.nextInstallmentAmount
+                          ? formatCurrency(selectedRecord.nextInstallmentAmount)
+                          : t('extracted.all_completed') || 'All Completed'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">
+                        {t('extracted.total_disbursed')}
+                      </dt>
+                      <dd className="text-sm font-semibold tabular-nums theme-text-primary mt-1">
+                        {formatCurrency(selectedRecord.disbursedAmount || 0)} /{' '}
+                        {formatCurrency(selectedRecord.reliefAmount)}
+                      </dd>
+                    </div>
+                  </dl>
 
-                  <div>
-                    <div className="text-sm theme-text-muted mb-1">
-                      {t('extracted.completed_installments') || 'Completed Installments'}
-                    </div>
-                    <div className="text-2xl font-bold theme-text-primary">
-                      {selectedRecord.completedInstallments || 0} / {selectedRecord.totalInstallments || 3}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-sm theme-text-muted mb-1">
-                      {t('extracted.next_installment') || 'Next Installment'}
-                    </div>
-                    <div className="text-lg font-semibold theme-text-primary">
-                      {selectedRecord.nextInstallmentAmount
-                        ? formatCurrency(selectedRecord.nextInstallmentAmount)
-                        : t('extracted.all_completed') || 'All Completed'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-sm theme-text-muted mb-1">Disbursed Amount</div>
-                    <div className="text-lg font-semibold theme-text-primary">
-                      {formatCurrency(selectedRecord.disbursedAmount || 0)} /{' '}
-                      {formatCurrency(selectedRecord.reliefAmount)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div className="mb-4 h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
                     <div
-                      className="bg-blue-600 dark:bg-blue-500 h-3 rounded-full transition-all duration-300"
+                      className="h-full rounded-full accent-gradient transition-all duration-300"
                       style={{ width: `${selectedRecord.disbursementProgress || 0}%` }}
                     />
                   </div>
-                </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium theme-text-primary mb-2">
-                    Select Installment to Disburse
-                  </label>
-                  <select
-                    value={selectedInstallment ?? ''}
-                    onChange={(e) => setSelectedInstallment(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                  >
-                    <option value="">Select Installment</option>
-                    <option value="1">Installment 1 (25%)</option>
-                    <option value="2">Installment 2 (50%)</option>
-                    <option value="3">Installment 3 (25%)</option>
-                  </select>
+                  <div className="flex flex-wrap items-end gap-2.5">
+                    <div className="min-w-0">
+                      <label className="block text-[11px] font-medium uppercase tracking-wider theme-text-muted mb-1.5">
+                        {selectInstallmentLabel}
+                      </label>
+                      <select
+                        value={selectedInstallment ?? ''}
+                        onChange={(e) => setSelectedInstallment(e.target.value ? parseInt(e.target.value) : null)}
+                        className={`h-9 px-2.5 rounded-md ${fieldClass}`}
+                      >
+                        <option value="">{selectInstallmentLabel}</option>
+                        {[1, 2, 3].map((n) =>
+                          n > (selectedRecord.completedInstallments || 0) ? (
+                            <option key={n} value={n}>
+                              {t('disbursements.installment_word')} {n}
+                              {installmentPcts[n - 1] !== undefined ? ` (${installmentPcts[n - 1]}%)` : ''}
+                            </option>
+                          ) : null,
+                        )}
+                      </select>
+                    </div>
+                    <button
+                      onClick={onDisburseProgressive}
+                      disabled={
+                        (selectedRecord.completedInstallments || 0) >= 3 ||
+                        !selectedInstallment ||
+                        !form.transactionId.trim() ||
+                        !form.utrNumber.trim() ||
+                        !form.paymentMethod
+                      }
+                      className="h-9 px-3.5 accent-gradient text-white rounded-md text-xs font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                    >
+                      {selectedInstallment
+                        ? `${t('disbursements.disburse')} ${t('disbursements.installment_word')} ${selectedInstallment}`
+                        : selectInstallmentLabel}
+                    </button>
+                    <button
+                      onClick={onResetProgress}
+                      className="h-9 px-3 rounded-md border theme-border-glass text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                    >
+                      {t('extracted.reset_progress') || 'Reset Progress'}
+                    </button>
+                  </div>
                 </div>
+              )}
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={onDisburseProgressive}
-                    disabled={
-                      (selectedRecord.completedInstallments || 0) >= 3 ||
-                      !selectedInstallment ||
-                      !form.transactionId.trim() ||
-                      !form.utrNumber.trim() ||
-                      !form.paymentMethod
-                    }
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
-                  >
-                    {selectedInstallment ? `Disburse Installment ${selectedInstallment}` : 'Select Installment'}
-                  </button>
-
-                  <button
-                    onClick={onResetProgress}
-                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
-                  >
-                    {t('extracted.reset_progress') || 'Reset Progress'}
-                  </button>
-                </div>
+              {/* Footer buttons */}
+              <div className="flex justify-end gap-2 mt-4 pt-4 border-t theme-border-glass">
+                <button
+                  onClick={onClose}
+                  className="h-9 px-3.5 rounded-md border theme-border-glass text-xs font-semibold theme-text-secondary hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                >
+                  {t('extracted.cancel')}
+                </button>
+                <button
+                  onClick={onSubmit}
+                  className="h-9 px-3.5 accent-gradient text-white rounded-md text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  {form.editingFirestoreId
+                    ? t('extracted.update_disbursement') || 'Update Disbursement'
+                    : t('extracted.add_disbursement')}
+                </button>
               </div>
-            )}
-
-            {/* Footer buttons */}
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 rounded-lg theme-bg-glass theme-border-glass border theme-text-primary hover:shadow-md transition-shadow"
-              >
-                {t('extracted.cancel')}
-              </button>
-              <button
-                onClick={onSubmit}
-                className="px-4 py-2 rounded-lg accent-gradient text-white shadow-lg hover:shadow-xl transition-shadow"
-              >
-                {form.editingFirestoreId
-                  ? t('extracted.update_disbursement') || 'Update Disbursement'
-                  : t('extracted.add_disbursement')}
-              </button>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -371,4 +366,3 @@ export function ManualDisbursementForm({
 }
 
 export type { ManualFormState };
-export { lightSurface };

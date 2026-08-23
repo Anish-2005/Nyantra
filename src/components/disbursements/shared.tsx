@@ -86,7 +86,3 @@ export function formatDateGB(s?: string | null): string {
     return s;
   }
 }
-
-/** Light-theme solid surface used across list rows/buttons (legacy inline style). */
-export const lightSurface = (theme: string) =>
-  theme === 'light' ? { background: 'rgba(255, 255, 255, 0.95)' } : undefined;

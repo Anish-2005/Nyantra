@@ -1,13 +1,17 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import {
-  Download, Edit, Fingerprint, MapPin, Phone, PlayCircle, RotateCcw, User, X,
-} from 'lucide-react';
+import { createElement } from 'react';
+import { X } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import type { DisbursementRaw } from '@/models/Disbursement';
-import { formatCurrency, formatDateGB, getStatusColor, getStatusIcon, lightSurface, translateStatus } from './shared';
+import {
+  formatCurrency,
+  formatDateGB,
+  getStatusColor,
+  getStatusIcon,
+  translateStatus,
+} from './shared';
 
 interface Props {
   record: DisbursementRaw;
@@ -15,222 +19,119 @@ interface Props {
   onEdit: (record: DisbursementRaw) => void;
 }
 
+function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`min-w-0 ${className || ''}`}>
+      <dt className="text-[11px] font-medium uppercase tracking-wider theme-text-muted">{label}</dt>
+      <dd className="text-[13px] font-medium theme-text-primary mt-0.5 break-words">{children}</dd>
+    </div>
+  );
+}
+
 export function DisbursementDetailsPanel({ record, onClose, onEdit }: Props) {
   const { t } = useLocale();
   const { theme } = useTheme();
-  const StatusIcon = getStatusIcon(record.status);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.3 }}
-      className="mt-6 theme-bg-card theme-border-glass border rounded-xl overflow-hidden"
-    >
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold theme-text-primary">{record.id}</h2>
-            <p className="theme-text-muted">
-              {t('extracted.disbursement_details') || 'वितरण विवरण'} • {record.actType}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onEdit(record)}
-              className="p-2 rounded-lg theme-bg-glass hover:bg-blue-500/20"
-            >
-              <Edit className="w-5 h-5 theme-text-primary" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onClose}
-              className="p-2 rounded-lg theme-bg-glass hover:bg-red-500/20"
-            >
-              <X className="w-5 h-5" />
-            </motion.button>
-          </div>
+    <div className="theme-bg-card theme-border-glass border rounded-xl overflow-hidden" aria-live="polite">
+      {/* Header Bar */}
+      <div className="h-12 px-4 flex items-center justify-between gap-3 border-b theme-border-glass">
+        <div className="min-w-0 flex items-center gap-2.5">
+          <h2 className="font-mono text-sm font-semibold theme-text-primary truncate">{record.id}</h2>
+          <span
+            className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(theme, record.status)}`}
+          >
+            {createElement(getStatusIcon(record.status), { className: 'w-3 h-3' })}
+            {translateStatus(t, record.status)}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:theme-text-primary transition-colors shrink-0"
+          aria-label={t('extracted.close_sidebar') || 'Close'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="px-4 py-3.5 space-y-4">
+        {/* Beneficiary Information */}
+        <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+          <Field label={t('extracted.beneficiary_name')}>{record.beneficiaryName}</Field>
+          <Field label={t('extracted.aadhaar_number')}>
+            <span className="font-mono">{record.aadhaarNumber}</span>
+          </Field>
+          <Field label={t('extracted.phone_number')}>
+            <span className="tabular-nums">{record.phone}</span>
+          </Field>
+          <Field label={t('extracted.location')}>
+            {record.district}, {record.state}
+          </Field>
+        </dl>
+
+        {/* Transaction Details */}
+        <div className="pt-3 border-t theme-border-glass">
+          <p className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">
+            {t('extracted.transaction_details_1')}
+          </p>
+          <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+            <Field label={t('extracted.transaction_id')} className="col-span-2 md:col-span-2 lg:col-span-3">
+              <span className="font-mono break-all">{record.transactionId}</span>
+            </Field>
+            <Field label={t('extracted.utr_number')} className="col-span-2 md:col-span-2 lg:col-span-3">
+              <span className="font-mono break-all">{record.utrNumber || t('extracted.not_available')}</span>
+            </Field>
+            <Field label={t('extracted.payment_method')}>{record.paymentMethod}</Field>
+            <Field label={t('extracted.relief_amount')}>
+              <span className="text-sm font-semibold tabular-nums">{formatCurrency(record.reliefAmount)}</span>
+            </Field>
+            <Field label={t('extracted.act_type')}>{record.actType}</Field>
+            {(record.retryCount ?? 0) > 0 && (
+              <Field label={t('extracted.retry_attempts')}>
+                <span className="tabular-nums">{record.retryCount}</span>
+              </Field>
+            )}
+            {record.failureReason && (
+              <Field label={t('extracted.failure_reason')} className="col-span-2 md:col-span-4 lg:col-span-6">
+                <span className="font-normal text-red-500 dark:text-red-400">{record.failureReason}</span>
+              </Field>
+            )}
+          </dl>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Beneficiary Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.beneficiary_information')}</h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <User className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs theme-text-muted">{t('extracted.beneficiary_name')}</p>
-                  <p className="font-medium theme-text-primary break-words">{record.beneficiaryName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <Fingerprint className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs theme-text-muted">{t('extracted.aadhaar_number')}</p>
-                  <p className="font-medium theme-text-primary break-all">{record.aadhaarNumber}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <Phone className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs theme-text-muted">{t('extracted.phone_number')}</p>
-                  <p className="font-medium theme-text-primary break-all">{record.phone}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <MapPin className="w-5 h-5 theme-text-muted flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs theme-text-muted">{t('extracted.location')}</p>
-                  <p className="font-medium theme-text-primary break-words">
-                    {record.district}, {record.state}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Transaction Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold theme-text-primary">{t('extracted.transaction_details_1')}</h3>
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">{t('extracted.transaction_id')}</p>
-                <p className="font-medium theme-text-primary font-mono break-all">{record.transactionId}</p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">{t('extracted.utr_number')}</p>
-                <p className="font-medium theme-text-primary font-mono break-all">
-                  {record.utrNumber || t('extracted.not_available')}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">{t('extracted.payment_method')}</p>
-                <p className="font-medium theme-text-primary">{record.paymentMethod}</p>
-              </div>
-              <div className="p-3 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-xs theme-text-muted mb-1">{t('extracted.relief_amount')}</p>
-                <p className="font-semibold text-lg theme-text-primary">{formatCurrency(record.reliefAmount)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Status and Timeline */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold theme-text-primary">
-              {t('extracted.timeline_1')} & {t('extracted.disbursement_status')}
-            </h3>
-            <div className="space-y-3">
-              <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-sm theme-text-muted mb-2">{t('extracted.disbursement_status')}</p>
-                <span
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${getStatusColor(theme, record.status)}`}
-                >
-                  <StatusIcon className="w-4 h-4" />
-                  {translateStatus(t, record.status)}
-                </span>
-                {record.failureReason && (
-                  <p className="text-sm theme-text-muted mt-2">
-                    <strong>{t('extracted.failure_reason')}</strong> {record.failureReason}
-                  </p>
-                )}
-                {(record.retryCount ?? 0) > 0 && (
-                  <p className="text-sm theme-text-muted mt-1">
-                    <strong>{t('extracted.retry_attempts')}</strong> {record.retryCount}
-                  </p>
-                )}
-              </div>
-              <div className="p-4 rounded-lg theme-bg-glass border theme-border-glass">
-                <p className="text-sm theme-text-muted mb-2">{t('timeline_1')}</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="theme-text-primary">{t('extracted.initiated')}</span>
-                    <span className="theme-text-muted">{formatDateGB(record.initiatedDate as string | null)}</span>
-                  </div>
-                  {record.completedDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="theme-text-primary">{t('extracted.completed')}</span>
-                      <span className="theme-text-muted">{formatDateGB(record.completedDate as string | null)}</span>
-                    </div>
-                  )}
-                  {record.disbursementDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="theme-text-primary">{t('extracted.disbursed')}</span>
-                      <span className="theme-text-muted">{formatDateGB(record.disbursementDate as string | null)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Timeline */}
+        <div className="pt-3 border-t theme-border-glass">
+          <p className="text-[11px] font-semibold uppercase tracking-wider theme-text-secondary mb-2.5">
+            {t('timeline_1')}
+          </p>
+          <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3">
+            <Field label={t('extracted.initiated')}>
+              <span className="tabular-nums">{formatDateGB(record.initiatedDate as string | null)}</span>
+            </Field>
+            {record.completedDate && (
+              <Field label={t('extracted.completed')}>
+                <span className="tabular-nums">{formatDateGB(record.completedDate as string | null)}</span>
+              </Field>
+            )}
+            {record.disbursementDate && (
+              <Field label={t('extracted.disbursed')}>
+                <span className="tabular-nums">{formatDateGB(record.disbursementDate as string | null)}</span>
+              </Field>
+            )}
+          </dl>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t theme-border-glass">
-          {record.status === 'failed' && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-              style={{
-                backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)',
-                color: theme === 'light' ? '#15803d' : '#86efac',
-                border:
-                  theme === 'light'
-                    ? '1px solid rgba(22, 163, 74, 0.3)'
-                    : '1px solid rgba(34, 197, 94, 0.3)',
-              }}
-            >
-              <RotateCcw className="w-5 h-5" />
-              {t('extracted.retry_disbursement')}
-            </motion.button>
-          )}
-          {record.status === 'pending' && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-              style={{
-                backgroundColor: theme === 'light' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)',
-                color: theme === 'light' ? '#1d4ed8' : '#93c5fd',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-              }}
-            >
-              <PlayCircle className="w-5 h-5" />
-              {t('extracted.initiate_payment')}
-            </motion.button>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 px-4 py-3 rounded-xl theme-bg-glass theme-border-glass border font-semibold flex items-center justify-center gap-2 theme-text-primary"
-            style={lightSurface(theme)}
+        {/* Edit */}
+        <div className="pt-3 border-t theme-border-glass flex justify-end">
+          <button
+            onClick={() => onEdit(record)}
+            className="h-8 px-3 rounded-md accent-gradient text-white text-xs font-semibold hover:opacity-90 transition-opacity"
           >
-            <Download className="w-5 h-5" />
-            {t('extracted.download_receipt')}
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-            style={{
-              backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.2)',
-              color: theme === 'light' ? '#dc2626' : '#fca5a5',
-              border:
-                theme === 'light'
-                  ? '1px solid rgba(220, 38, 38, 0.3)'
-                  : '1px solid rgba(239, 68, 68, 0.3)',
-            }}
-          >
-            <X className="w-5 h-5" />
-            {t('extracted.cancel_disbursement')}
-          </motion.button>
+            {t('extracted.edit')}
+          </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

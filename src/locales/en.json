@@ -913,7 +913,7 @@
     "beneficiaries_management": "Beneficiaries Management",
     "track_and_manage_dbt_beneficiaries_under_pcrpoa_acts": "Track and manage DBT beneficiaries under PCR/PoA Acts",
     "add_beneficiary": "Add Beneficiary",
-    "financial_overview": "{/* Financial Overview */}",
+    "financial_overview": "Financial Overview",
     "total_relief_amount": "Total Relief Amount",
     "disbursed_this_month": "Disbursed +12.5% this month",
     "beneficiaries_success_rate": "{{count}} beneficiaries • {{rate}}% success rate",
@@ -5062,7 +5062,21 @@
   "transaction_id": "Transaction ID",
   "utr_number": "UTR Number",
   "disbursements": {
-    "no_records": "No disbursements found."
+    "no_records": "No disbursements found.",
+    "progressive_total": "Progressive Total",
+    "installments_released": "Installments Released",
+    "installments_remaining": "Installments Remaining",
+    "new_updates": "New Updates",
+    "dismiss_all": "Dismiss All",
+    "more_updates": "more updates",
+    "pct_disbursed": "% disbursed",
+    "installment_word": "Installment",
+    "installments_word": "installments",
+    "select": "Select",
+    "disburse": "Disburse",
+    "alert_new": "New Disbursement",
+    "alert_installment": "Installment Received",
+    "alert_completed": "Payment Completed"
   },
   "login": {
     "tagline": "Empowering Justice Through Technology",
