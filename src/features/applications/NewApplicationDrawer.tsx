@@ -337,7 +337,7 @@ const NewApplicationDrawer = ({ onCancel, onCreated, initialData, userBeneficiar
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                className="fixed inset-y-0 right-0 w-full max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
+                className="fixed inset-y-0 right-0 w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md z-[70] theme-drawer backdrop-blur-2xl border-l theme-border-glass flex flex-col shadow-2xl"
                 role="dialog"
                 aria-modal="true"
             >

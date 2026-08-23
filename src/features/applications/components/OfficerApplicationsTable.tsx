@@ -1,6 +1,5 @@
 "use client";
 import React, { createElement } from 'react';
-import { motion } from 'framer-motion';
 import { Eye, Edit, Trash } from 'lucide-react';
 import type { OfficerApplication, TranslateFn } from '../helpers';
 import {
@@ -11,10 +10,16 @@ import {
   getStatusIcon,
   getTranslatedPriority,
 } from '../helpers';
+import OfficerApplicationCard from './OfficerApplicationCard';
+
+const th =
+  "py-2.5 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted whitespace-nowrap";
+const iconBtn =
+  "p-2 sm:p-1.5 rounded-md theme-text-muted hover:theme-bg-glass transition-colors";
 
 /**
- * Officer applications "table" view: scrollable data table on ≥sm screens
- * with a compact summary-card list fallback on mobile.
+ * Officer applications "table" view: scrollable data table on ≥md screens
+ * with the canonical list-card fallback below md.
  */
 export default function OfficerApplicationsTable({
   applications,
@@ -31,20 +36,21 @@ export default function OfficerApplicationsTable({
 }) {
   return (
     <div className="w-full flex flex-col overflow-hidden">
-      <div className="hidden sm:block overflow-x-auto">
+      {/* Data table — md+ only */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full table-auto">
           <thead className="border-b theme-border-glass">
             <tr className="whitespace-nowrap">
-              <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.application_id")}</th>
-              <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.applicant")}</th>
-              <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted min-w-[120px]">{t("applications.beneficiaryId")}</th>
-              <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.district")}</th>
-              <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.act_type")}</th>
-              <th className="hidden md:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("applications.caseDetails")}</th>
-              <th className="hidden md:table-cell py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.amount")}</th>
-              <th className="py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.status")}</th>
-              <th className="hidden sm:table-cell py-2 px-3 text-left text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.priority")}</th>
-              <th className="py-2 px-3 text-right text-[11px] font-semibold uppercase tracking-wider theme-text-muted">{t("extracted.actions")}</th>
+              <th className={th}>{t("extracted.application_id")}</th>
+              <th className={th}>{t("extracted.applicant")}</th>
+              <th className={`${th} min-w-[120px]`}>{t("applications.beneficiaryId")}</th>
+              <th className={th}>{t("extracted.district")}</th>
+              <th className={`${th} hidden lg:table-cell`}>{t("extracted.act_type")}</th>
+              <th className={`${th} hidden lg:table-cell`}>{t("applications.caseDetails")}</th>
+              <th className={`${th} text-right hidden lg:table-cell`}>{t("extracted.amount")}</th>
+              <th className={th}>{t("extracted.status")}</th>
+              <th className={th}>{t("extracted.priority")}</th>
+              <th className={`${th} text-right`}>{t("extracted.actions")}</th>
             </tr>
           </thead>
 
@@ -52,44 +58,41 @@ export default function OfficerApplicationsTable({
             {applications.map((app) => {
               const StatusIcon = getStatusIcon(app.status);
               return (
-                <motion.tr
+                <tr
                   key={app.id}
                   id={`app-row-${app.id}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`transition-colors ${highlightId === app.id ? 'bg-blue-500/10' : 'hover:theme-bg-hover'}`}
+                  className={`transition-colors duration-150 ${highlightId === app.id ? 'bg-blue-500/10' : 'hover:theme-bg-hover'}`}
                 >
-                  <td className="py-2.5 px-3 font-medium theme-text-primary truncate text-xs max-w-[140px]">{app.id}</td>
+                  <td className="py-2.5 px-3 font-mono theme-text-secondary truncate text-xs max-w-[140px]">{app.id}</td>
 
                   <td className="py-2.5 px-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
-                        {app.applicantName.split(" ").map((n: string) => n[0]).join("")}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-md theme-bg-glass grid place-items-center shrink-0">
+                        {createElement(StatusIcon, { className: 'w-4 h-4 theme-text-secondary' })}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-medium theme-text-primary truncate leading-tight">{app.applicantName}</span>
+                        <span className="font-semibold theme-text-primary truncate leading-tight text-sm">{app.applicantName}</span>
                         <span className="text-xs theme-text-muted truncate leading-tight">{app.phone}</span>
                       </div>
                     </div>
                   </td>
 
-                  <td className="hidden sm:table-cell py-2.5 px-3 text-xs theme-text-secondary tabular-nums min-w-[120px] max-w-[160px] truncate">
+                  <td className="py-2.5 px-3 text-xs theme-text-secondary tabular-nums min-w-[120px] max-w-[160px] truncate">
                     {app.beneficiaryId || "-"}
                   </td>
 
-                  <td className="hidden sm:table-cell py-2.5 px-3 max-w-[140px]">
-                    <span className="text-sm theme-text-primary truncate block">{app.district}</span>
+                  <td className="py-2.5 px-3 max-w-[140px]">
+                    <span className="text-sm font-medium theme-text-primary truncate block">{app.district}</span>
                     <span className="text-xs theme-text-muted truncate block">{app.state}</span>
                   </td>
 
-                  <td className="hidden md:table-cell py-2.5 px-3">
+                  <td className="hidden lg:table-cell py-2.5 px-3">
                     <span className="inline-block rounded-md px-1.5 py-0.5 text-[11px] font-medium theme-bg-glass theme-text-secondary truncate max-w-[160px]">
                       {app.actType}
                     </span>
                   </td>
 
-                  <td className="hidden md:table-cell py-2.5 px-3 text-xs theme-text-secondary">
+                  <td className="hidden lg:table-cell py-2.5 px-3 text-xs theme-text-secondary">
                     <div className="space-y-0.5">
                       {app.incidentDate && <div>{new Date(app.incidentDate).toLocaleDateString()}</div>}
                       {app.firReport && <div>FIR {app.firReport}</div>}
@@ -97,7 +100,7 @@ export default function OfficerApplicationsTable({
                     </div>
                   </td>
 
-                  <td className="hidden md:table-cell py-2.5 px-3 text-sm font-semibold theme-text-primary truncate text-right tabular-nums">
+                  <td className="hidden lg:table-cell py-2.5 px-3 text-sm font-semibold theme-text-primary truncate text-right tabular-nums">
                     {formatOfficerCurrency(app.amount)}
                   </td>
 
@@ -112,7 +115,7 @@ export default function OfficerApplicationsTable({
                     </span>
                   </td>
 
-                  <td className="hidden sm:table-cell py-2.5 px-3">
+                  <td className="py-2.5 px-3">
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${getPriorityColor(
                         app.priority
@@ -125,15 +128,17 @@ export default function OfficerApplicationsTable({
                   <td className="py-2.5 px-3">
                     <div className="flex justify-end gap-0.5">
                       <button
-                        title="View"
-                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-blue-500 transition-colors"
+                        title={t('extracted.view')}
+                        aria-label={t('extracted.view')}
+                        className={iconBtn}
                         onClick={() => onView(app)}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        title="Edit"
-                        className="p-1.5 rounded-md theme-text-muted hover:theme-bg-glass hover:text-blue-500 transition-colors"
+                        title={t('extracted.edit')}
+                        aria-label={t('extracted.edit')}
+                        className={iconBtn}
                         onClick={(e) => {
                           e.stopPropagation();
                           onView(app);
@@ -142,8 +147,9 @@ export default function OfficerApplicationsTable({
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        title="Delete"
-                        className="p-1.5 rounded-md theme-text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                        title={t('extracted.delete')}
+                        aria-label={t('extracted.delete')}
+                        className={`${iconBtn} hover:bg-red-500/10 hover:text-red-500`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onDelete(app.id);
@@ -153,39 +159,24 @@ export default function OfficerApplicationsTable({
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               );
             })}
           </tbody>
         </table>
       </div>
 
-      {/* Mobile Card View */}
-      <div className="sm:hidden grid grid-cols-1 gap-3 p-3">
+      {/* Mobile card view — below md */}
+      <div className="md:hidden grid grid-cols-1 gap-3 p-3">
         {applications.map((app) => (
-          <motion.div
+          <OfficerApplicationCard
             key={app.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="theme-bg-glass theme-border-glass border rounded-lg p-3"
-          >
-            <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
-              <p className="text-sm font-medium theme-text-primary truncate min-w-0">{app.applicantName}</p>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border shrink-0 ${getPriorityColor(app.priority)}`}>
-                {app.priority}
-              </span>
-            </div>
-            <div className="space-y-1 text-sm theme-text-secondary min-w-0">
-              <p className="truncate"><strong>ID:</strong> {app.id}</p>
-              <p className="truncate"><strong>{t("applications.beneficiaryId")}:</strong> {app.beneficiaryId || "-"}</p>
-              <p className="truncate"><strong>{t("extracted.district_1")}</strong> {app.district}, {app.state}</p>
-              <p className="truncate"><strong>{t("extracted.act_type_1")}</strong> {app.actType}</p>
-              {app.incidentDate && <p><strong>{t("extracted.incident_date")}:</strong> {new Date(app.incidentDate).toLocaleDateString()}</p>}
-              {app.firReport && <p className="truncate"><strong>{t("applications.firReport")}:</strong> {app.firReport}</p>}
-              {app.caseNumber && <p className="truncate"><strong>{t("applications.caseNumber")}:</strong> {app.caseNumber}</p>}
-              <p><strong>{t("extracted.amount_1")}</strong> {formatOfficerCurrency(app.amount)}</p>
-            </div>
-          </motion.div>
+            application={app}
+            highlighted={highlightId === app.id}
+            t={t}
+            onView={onView}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </div>

@@ -93,6 +93,15 @@ const STATUS_ICONS = {
 export const getStatusIcon = (status: string) =>
   STATUS_ICONS[status as keyof typeof STATUS_ICONS] || Clock;
 
+/** Status → left spine strip color for officer cards */
+export const STATUS_SPINE: Record<string, string> = {
+  pending: 'bg-amber-500/70',
+  'in-review': 'bg-blue-500/70',
+  approved: 'bg-emerald-500/70',
+  rejected: 'bg-red-500/70',
+  'documents-required': 'bg-purple-500/70'
+};
+
 export const getTranslatedStatus = (t: TranslateFn, status: string) => {
   const safe = status ?? '';
   return t(`applications.status.${safe.replace('-', '_')}`) || safe.replace('-', ' ');

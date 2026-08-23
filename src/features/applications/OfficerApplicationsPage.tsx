@@ -6,22 +6,22 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ApplicationDetail from '@/components/dashboard/ApplicationDetail';
-import FiltersSearch from '@/components/dashboard/FiltersSearch';
 import PrintHeader from '@/components/dashboard/PrintHeader';
 import ConfirmDeleteModal from '@/components/dashboard/ConfirmDeleteModal';
 import ExportModal from '@/components/dashboard/ExportModal';
-import StatisticsCards from '@/components/dashboard/StatisticsCards';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, Timestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import {
-    Download, Plus, ChevronLeft, ChevronRight
+    Download, Plus, ChevronLeft, ChevronRight, Loader2, SearchX
 } from 'lucide-react';
 
 import { POA_OFFENCES } from "@/components/dashboard/POAOffencesTable";
-import { PageHeader } from '@/components/dashboard/ui';
+import { EmptyState, PageHeader } from '@/components/dashboard/ui';
 import NewApplicationDrawer from './NewApplicationDrawer';
 import OfficerApplicationsTable from './components/OfficerApplicationsTable';
 import OfficerApplicationsCardGrid from './components/OfficerApplicationsCardGrid';
+import OfficerApplicationsStats from './components/OfficerApplicationsStats';
+import OfficerApplicationsToolbar from './components/OfficerApplicationsToolbar';
 import type { OfficerApplication } from './helpers';
 import {
     buildApplicationsCsv,
@@ -32,6 +32,10 @@ import {
     formatOfficerCurrency,
     sliderStyles,
 } from './helpers';
+
+/** Module-scope spinning loader icon for the kit EmptyState (static component) */
+const LoadingIcon = ({ className }: { className?: string }) =>
+    React.createElement(Loader2, { className: `${className ?? ''} animate-spin` });
 
 const ApplicationsPage = () => {
     const { theme } = useTheme();
@@ -468,7 +472,7 @@ return (
                     prev.filter((x) => x.id !== toast.id)
                   )
                 }
-                className="ml-4 p-1 rounded hover:bg-gray-100"
+                className="ml-2 p-2 -m-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors theme-text-muted"
               >
                 ×
               </button>
@@ -527,12 +531,11 @@ return (
     {/* Main Content */}
     <>
       {/* Statistics Cards */}
-      <StatisticsCards stats={stats} theme={theme} t={t} />
+      <OfficerApplicationsStats stats={stats} t={t} />
 
 
         {/* Filters and Search */}
-        <FiltersSearch
-          theme={theme}
+        <OfficerApplicationsToolbar
           t={t}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -550,25 +553,29 @@ return (
           setSortBy={setSortBy}
           sortOrder={sortOrder}
           setSortOrder={setSortOrder}
+          stats={stats}
         />
 
         {/* Applications List */}
+        {loading ? (
+          <EmptyState
+            icon={LoadingIcon}
+            title={t("extracted.loading_applications")}
+          />
+) : filteredApplications.length === 0 ? (
+  <EmptyState
+    icon={SearchX}
+    title={applications.length === 0 ? t('extracted.no_applications_yet') : t('extracted.no_matching_applications')}
+    hint={t('extracted.try_adjusting_search_terms')}
+  />
+) : (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="theme-bg-card theme-border-glass border rounded-xl backdrop-blur-sm shadow-sm overflow-hidden"
         >
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                <p className="theme-text-secondary">
-                  {t("extracted.loading_applications")}
-                </p>
-              </div>
-            </div>
-) : viewMode === "table" ? (
+          {viewMode === "table" ? (
   <OfficerApplicationsTable
     applications={paginatedApplications}
     highlightId={highlightId}
@@ -600,7 +607,7 @@ return (
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p: number) => p - 1)}
-                className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                className="w-10 h-10 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -613,7 +620,7 @@ return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${
+                      className={`min-w-10 sm:min-w-8 h-10 sm:h-8 px-2 rounded-md text-xs font-semibold tabular-nums transition-colors ${
                         currentPage === pageNum
                           ? "theme-bg-glass text-accent-gradient"
                           : "theme-text-muted hover:theme-bg-glass hover:theme-text-primary"
@@ -627,13 +634,14 @@ return (
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p: number) => p + 1)}
-                className="w-8 h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
+                className="w-10 h-10 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-md theme-text-secondary disabled:opacity-40 hover:theme-bg-glass hover:theme-text-primary transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         </motion.div>
+)}
     </>
 
     {/* Application Detail Inline Section */}
